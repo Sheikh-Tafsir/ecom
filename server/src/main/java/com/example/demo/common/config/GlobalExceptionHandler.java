@@ -1,0 +1,114 @@
+package com.example.demo.common.config;
+
+import com.example.demo.common.exception.InvalidAccessTokenException;
+import com.example.demo.common.exception.InvalidRefreshTokenException;
+import com.example.demo.common.exception.JsrValidationException;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.NoResultException;
+import jakarta.validation.ValidationException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import static com.example.demo.common.utils.ResponseUtils.error;
+import static com.example.demo.common.utils.ResponseUtils.getErrorsFromMethodArgNotValidException;
+
+@Slf4j
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    private static final String ACCESS_TOKEN_INVALID = "Access Token is invalid or expired";
+
+    private static final String REFRESH_TOKEN_INVALID = "Refresh Token is invalid or expired";
+
+    private static final String PERMISSION_DENIED = "Permission Denied";
+
+    private static final String NOT_FOUND = "No result found";
+
+    private static final String SOMETHING_WENT_WRONG = "Something went wrong";
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<?> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+        log.error("Request body is missing or unreadable", ex);
+        return error("Request body is missing or malformed", HttpStatus.BAD_REQUEST);
+    }
+
+    // 401
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<?> handleInvalidCredentialsExceptions(BadCredentialsException ex) {
+        log.error("Authentication credential exception caught:", ex);
+        return error(ex.getMessage(), HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(InvalidAccessTokenException.class)
+    public ResponseEntity<?> handleAccessTokenInvalidExceptions(InvalidAccessTokenException ex) {
+        log.error("Access token exception caught:", ex);
+        return error(ACCESS_TOKEN_INVALID, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<?> handleRefreshTokenInvalidException(InvalidRefreshTokenException ex) {
+        log.error("Refresh token exception caught:", ex);
+        return error(REFRESH_TOKEN_INVALID, HttpStatus.UNAUTHORIZED);
+    }
+
+    // 403
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<?> handleAccessDeniedException(AccessDeniedException ex) {
+        log.error("Access denied exception caught:", ex);
+        return error(PERMISSION_DENIED, HttpStatus.FORBIDDEN);
+    }
+
+    // 404
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<?> handleEntityNotFoundException(EntityNotFoundException ex) {
+        log.error("Entity not found exception caught:", ex);
+        return error(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(NoResultException.class)
+    public ResponseEntity<?> handleNoResultException(NoResultException ex) {
+        log.error("No Result found exception caught:", ex);
+        return error(NOT_FOUND, HttpStatus.NOT_FOUND);
+    }
+
+    // 422
+    @ExceptionHandler(JsrValidationException.class)
+    public ResponseEntity<?> handleJsrValidationExceptions(JsrValidationException ex) {
+        log.error("JSR Validation exception caught:", ex);
+        return error(ex.getErrors(), HttpStatusCode.valueOf(422));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
+        log.error("Method arg Validation exception caught:", ex);
+        return error(getErrorsFromMethodArgNotValidException(ex), HttpStatusCode.valueOf(422));
+    }
+
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<?> handleValidationException(ValidationException ex) {
+        log.error("Validation exception caught:", ex);
+        return error(ex.getMessage(), HttpStatusCode.valueOf(422));
+    }
+
+    // 500
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<?> handleRuntimeException(RuntimeException ex) {
+        log.error("Runtime exception caught:", ex);
+        return error(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    // Handle all other exceptions
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<?> handleAllExceptions(Exception ex) {
+        log.error("Unhandled exception caught:", ex);
+        return error(SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+}

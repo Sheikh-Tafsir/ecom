@@ -1,0 +1,84 @@
+spring:
+  application.name: demo
+  servlet.multipart.enabled: true
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: postgres
+    driver-class-name: ${DB_DRIVER_CLASS}
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+      dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      username: ${REDIS_USERNAME}
+      password: ${REDIS_PASSWORD}
+      url: ${REDIS_URL}
+
+  rabbitmq:
+    host: ${MQ_HOST}
+    port: ${MQ_PORT}
+    username: ${MQ_USERNAME}
+    password: ${MQ_PASSWORD}
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 2000
+          max-retries: 3
+  http:
+    converters:
+      preferred-json-mapper: jackson
+
+cors.allowed.origins: ${CORS_ALLOWED_ORIGINS}
+
+server.port: 8080
+
+logging:
+  level:
+    root: INFO
+    com.seroter.azure_basic_app: DEBUG
+    org.springframework.web.multipart: DEBUG
+
+  # Customize log pattern
+  pattern.console: '%d{yyyy-MM-dd HH:mm:ss} - %level - %logger{36} - %msg%n'
+
+jwt:
+  access:
+    token:
+      value: your-access-secret-key-should-be-long-and-random
+      validity: 1800000
+
+  refresh:
+    token:
+      value: your-refresh-secret-key-should-be-long-and-random
+      validity: 604800000
+
+refresh.cookie.validity: 604800
+
+cloudinary:
+  cloud:
+    name: ${CLOUDINARY_CLOUD_NAME}
+  api:
+    key: ${CLOUDINARY_API_KEY}
+    secret: ${CLOUDINARY_API_SECRET}
+
+# RabbitMQ configuration
+mail:
+  queue: mail.queue
+  exchange: mail.exchange
+  routing-key: mail.send
+
+service:
+  queue: service.queue
+  exchange: service.exchange
+  routing-key: service.events.#
+
