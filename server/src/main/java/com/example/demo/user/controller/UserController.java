@@ -1,5 +1,6 @@
 package com.example.demo.user.controller;
 
+import com.example.demo.common.enums.UserStatus;
 import com.example.demo.user.service.UserService;
 import com.example.demo.common.dto.ApiResponse;
 import com.example.demo.common.model.User;
@@ -11,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import static com.example.demo.common.enums.UserStatus.BANNED;
+
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
@@ -21,7 +24,10 @@ public class UserController {
     private final MessageService messageService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<User>>> findAll(Pageable pageable, @RequestParam(required = false) String role, @RequestParam(required = false) String status) {
+    public ResponseEntity<ApiResponse<Page<User>>> findAll(Pageable pageable,
+                                                           @RequestParam(required = false) String role,
+                                                           @RequestParam(required = false) UserStatus status) {
+
         Page<User> users = userService.findAll(pageable, role, status);
         return ResponseUtils.ok(users, messageService.get("successfully.found", "User List"));
     }
@@ -34,7 +40,7 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
-        userService.delete(id);
+        userService.delete(id, BANNED);
         return ResponseUtils.ok(messageService.get("successfully.deleted", "User"));
     }
 }

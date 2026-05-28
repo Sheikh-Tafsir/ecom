@@ -203,7 +203,7 @@ public class AuthService {
         save(user, resetPasswordOtpRequest.password());
     }
 
-    private TokenDto getTokens(User user) {
+    public TokenDto getTokens(User user) {
         if (!user.isActive()) {
             throw new ValidationException("User is " + user.getStatus().getValue());
         }

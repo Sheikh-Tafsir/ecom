@@ -1,5 +1,6 @@
 package com.example.demo.product.repository;
 
+import com.example.demo.common.enums.ProductStatus;
 import com.example.demo.common.model.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +15,11 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("""
                 SELECT p FROM Product p
                 WHERE (:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%')))
+                AND p.status <> :status
             """)
-    Page<Product> findAllByName(@Param("name") String name, Pageable pageable);
+    Page<Product> findAllByNameAndExcludeStatus(
+            @Param("name") String name,
+            @Param("status") ProductStatus status,
+            Pageable pageable
+    );
 }

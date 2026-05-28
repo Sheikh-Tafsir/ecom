@@ -1,42 +1,39 @@
 package com.example.demo.product.validator;
 
 import com.example.demo.common.validator.CommonValidator;
-import com.example.demo.product.dto.ProductRequest;
+import com.example.demo.product.dto.CreateProductRequest;
+import com.example.demo.product.dto.UpdateProductRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
-import org.springframework.validation.Validator;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
-public class ProductValidator implements Validator {
+public class ProductValidator {
 
     public static final int MAX_IMAGE_COUNT = 5;
 
     private final CommonValidator commonValidator;
 
-    @Override
-    public boolean supports(Class<?> clazz) {
-        return clazz.equals(ProductRequest.class);
+    public void validateCreate(CreateProductRequest request, Errors errors) {
+        extracted(request.images(), errors);
     }
 
-    @Override
-    public void validate(@NonNull Object target, @NonNull Errors errors) {
-        ProductRequest request = (ProductRequest) target;
+    public void validateUpdate(UpdateProductRequest request, Errors errors) {
+        extracted(request.images(), errors);
+    }
 
-        if (request.images() == null || request.images().isEmpty()) {
-            return;
-        }
-
-        if (request.images().size() > MAX_IMAGE_COUNT) {
+    private void extracted(Set<MultipartFile> request, Errors errors) {
+        if (request.size() > MAX_IMAGE_COUNT) {
             errors.rejectValue("images", "error.file.quantity", new Object[]{MAX_IMAGE_COUNT},
                     "Cannot upload more than " + MAX_IMAGE_COUNT + " files");
             return;
         }
 
-        for (MultipartFile image : request.images()) {
+        for (MultipartFile image : request) {
             commonValidator.validateImage(image, false, "images", errors);
         }
     }

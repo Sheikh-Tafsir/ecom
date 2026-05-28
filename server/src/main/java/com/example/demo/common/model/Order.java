@@ -35,6 +35,10 @@ public class Order extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private OrderStatus status = OrderStatus.CREATED;
 
+    public boolean isCancelledOrRejected() {
+        return status == OrderStatus.CANCELLED || status == OrderStatus.REJECTED;
+    }
+
     public void addItem(Product product, int quantity) {
         OrderItem existingOrderItem = getItem(product.getId());
 
@@ -45,18 +49,18 @@ public class Order extends BaseEntity {
             items.add(item);
         }
 
-        recalculateTotal();
+        calculateTotal();
     }
 
     public void removeItem(Long productId) {
         items.removeIf(i -> i.getProduct().getId().equals(productId));
-        recalculateTotal();
+        calculateTotal();
     }
 
     public void increaseItem(Long productId, int qty) {
         OrderItem item = getItem(productId);
         item.increaseQuantity(qty);
-        recalculateTotal();
+        calculateTotal();
     }
 
     public void decreaseItem(Long productId, int qty) {
@@ -67,7 +71,7 @@ public class Order extends BaseEntity {
             removeItem(productId);
         }
 
-        recalculateTotal();
+        calculateTotal();
     }
 
     private OrderItem getItem(Long productId) {
@@ -77,7 +81,7 @@ public class Order extends BaseEntity {
                 .orElse(null);
     }
 
-    private void recalculateTotal() {
+    private void calculateTotal() {
         this.totalPrice = items.stream()
                 .map(OrderItem::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);

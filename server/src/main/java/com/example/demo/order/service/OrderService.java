@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static com.example.demo.common.utils.Utils.getValidPageable;
 import static org.springframework.util.StringUtils.hasText;
 
 @Service
@@ -33,7 +34,7 @@ public class OrderService {
 
     public Page<OrderResponse> findAll(Pageable pageable, String status) {
         OrderStatus orderStatus = hasText(status) ? OrderStatus.fromValue(status) : null;
-        return orderRepository.findAllByStatus(orderStatus, pageable).map(OrderResponse::new);
+        return orderRepository.findAllByStatus(orderStatus, getValidPageable(pageable)).map(OrderResponse::new);
     }
 
     public Page<OrderResponse> findByUser(Long userId, Pageable pageable) {
@@ -58,13 +59,8 @@ public class OrderService {
     public OrderResponse updateStatus(Long id, OrderStatus status) {
         Order order = findByIdHelper(id);
 
-        if (isCancellationStatus(order.getStatus()) && !isCancellationStatus(status)) {
-            throw new ValidationException("Cancelled order cannot be reopened");
-        }
-
-        if (isCancellationStatus(status) && !isCancellationStatus(order.getStatus())) {
-            order.getItems()
-                    .forEach(item -> productService.increaseStock(item.getProduct(), item.getQuantity()));
+        if (order.isCancelledOrRejected() && !status.isCancellationOrRejection()) {
+            throw new RuntimeException("Cancelled order cannot be reopened");
         }
 
         order.setStatus(status);
@@ -72,10 +68,10 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderResponse addItem(Long orderId, CreateOrderItemRequest request) {
+    public OrderResponse addItem(Long orderId, CreateOrderItemRequest orderItemRequest) {
         Order order = findByIdHelper(orderId);
         ensureOrderIsModifiable(order);
-        addProduct(order, request);
+        addProduct(order, orderItemRequest);
 
         return new OrderResponse(orderRepository.save(order));
     }
@@ -84,10 +80,8 @@ public class OrderService {
     public OrderResponse increaseItem(Long orderId, Long productId, int quantity) {
         Order order = findByIdHelper(orderId);
         ensureOrderIsModifiable(order);
-        Product product = productService.findEntityById(productId);
-        getItem(order, productId);
 
-        productService.decreaseStock(product, quantity);
+        getItem(order, productId);
         order.increaseItem(productId, quantity);
 
         return new OrderResponse(orderRepository.save(order));
@@ -103,7 +97,6 @@ public class OrderService {
             throw new ValidationException("Quantity is greater than order item quantity");
         }
 
-        productService.increaseStock(item.getProduct(), quantity);
         order.decreaseItem(productId, quantity);
 
         return new OrderResponse(orderRepository.save(order));
@@ -113,9 +106,6 @@ public class OrderService {
     public OrderResponse removeItem(Long orderId, Long productId) {
         Order order = findByIdHelper(orderId);
         ensureOrderIsModifiable(order);
-        OrderItem item = getItem(order, productId);
-
-        productService.increaseStock(item.getProduct(), item.getQuantity());
         order.removeItem(productId);
 
         return new OrderResponse(orderRepository.save(order));
@@ -124,20 +114,7 @@ public class OrderService {
     @Transactional
     public void delete(Long id) {
         Order order = findByIdHelper(id);
-
-        if (!isCancellationStatus(order.getStatus())) {
-            order.getItems()
-                    .forEach(item -> productService.increaseStock(item.getProduct(), item.getQuantity()));
-        }
-
         orderRepository.delete(order);
-    }
-
-    private void addProduct(Order order, CreateOrderItemRequest request) {
-        Product product = productService.findEntityById(request.productId());
-
-        productService.decreaseStock(product, request.quantity());
-        order.addItem(product, request.quantity());
     }
 
     private Order findByIdHelper(Long id) {
@@ -145,20 +122,21 @@ public class OrderService {
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Order", id)));
     }
 
-    private OrderItem getItem(Order order, Long productId) {
-        return order.getItems().stream()
-                .filter(item -> item.getProduct().getId().equals(productId))
-                .findFirst()
-                .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "OrderItem", productId)));
-    }
-
-    private boolean isCancellationStatus(OrderStatus status) {
-        return status == OrderStatus.CANCELLED || status == OrderStatus.REJECTED;
+    private void addProduct(Order order, CreateOrderItemRequest request) {
+        Product product = productService.findByIdHelper(request.productId());
+        order.addItem(product, request.quantity());
     }
 
     private void ensureOrderIsModifiable(Order order) {
         if (order.getStatus() != OrderStatus.CREATED) {
-            throw new ValidationException("Only created orders can be modified");
+            throw new RuntimeException("Only created orders can be modified");
         }
+    }
+
+    public OrderItem getItem(Order order, Long productId) {
+        return order.getItems().stream()
+                .filter(item -> item.getProduct().getId().equals(productId))
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "OrderItem", productId)));
     }
 }

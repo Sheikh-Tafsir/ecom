@@ -7,33 +7,29 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum UserStatus {
+public enum ProductStatus {
 
-    NOT_VERIFIED("Not Verified"),
+    COMING_SOON("Coming Soon"),
 
-    ACTIVE("Active"),
+    AVAILABLE("Available"),
 
-    SUSPENDED("Suspended"),
+    STOCK_OUT("Stock Out"),
 
-    INACTIVE("Inactive"),
-
-    DELETED("Deleted"),
-
-    BANNED("Banned");
+    DISCONTINUED("discontinued");
 
     @JsonValue
     private final String value;
 
     @JsonCreator
-    public static UserStatus fromValue(String value) {
+    public static ProductStatus fromValue(String value) {
         if (value == null) return null;
 
-        for (UserStatus status : values()) {
+        for (ProductStatus status : values()) {
             if (status.value.equalsIgnoreCase(value) || status.name().equalsIgnoreCase(value)) {
                 return status;
             }
         }
 
-        throw new IllegalArgumentException("Invalid User Status: " + value);
+        throw new IllegalArgumentException("Invalid Product Status: " + value);
     }
 }

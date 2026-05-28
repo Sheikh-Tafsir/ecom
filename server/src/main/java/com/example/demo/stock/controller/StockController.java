@@ -1,0 +1,112 @@
+package com.example.demo.stock.controller;
+
+import com.example.demo.common.dto.ApiResponse;
+import com.example.demo.common.helper.CommonHelper;
+import com.example.demo.common.service.MessageService;
+import com.example.demo.common.utils.ResponseUtils;
+import com.example.demo.stock.dto.CreateStockItemRequest;
+import com.example.demo.stock.dto.CreateStockRequest;
+import com.example.demo.stock.dto.StockResponse;
+import com.example.demo.stock.dto.UpdateStockItemRequest;
+import com.example.demo.stock.dto.UpdateStockRequest;
+import com.example.demo.stock.service.StockService;
+import com.example.demo.stock.validator.StockValidator;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/stocks")
+@RequiredArgsConstructor
+public class StockController {
+
+    private final StockValidator stockValidator;
+
+    private final CommonHelper commonHelper;
+
+    private final StockService stockService;
+
+    private final MessageService messageService;
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<Page<StockResponse>>> findAll(Pageable pageable) {
+        Page<StockResponse> stocks = stockService.findAll(pageable);
+        return ResponseUtils.ok(stocks, messageService.get("successfully.found", "Stock List"));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<StockResponse>> findById(@PathVariable Long id) {
+        StockResponse stock = stockService.findById(id);
+        return ResponseUtils.ok(stock, messageService.get("successfully.found", "Stock"));
+    }
+
+    @PostMapping
+    public ResponseEntity<ApiResponse<StockResponse>> create(@Valid @RequestBody CreateStockRequest stockRequest,
+                                                             BindingResult bindingResult) {
+
+        stockValidator.validateCreate(stockRequest, bindingResult);
+        commonHelper.checkErrors(bindingResult);
+
+        StockResponse stock = stockService.create(stockRequest);
+        return ResponseUtils.created(stock, messageService.get("entity.creating", "Stock"));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<StockResponse>> update(@PathVariable Long id,
+                                                             @Valid @RequestBody UpdateStockRequest stockRequest,
+                                                             BindingResult bindingResult) {
+        stockValidator.validateUpdate(stockRequest, bindingResult);
+        commonHelper.checkErrors(bindingResult);
+
+        StockResponse stock = stockService.update(id, stockRequest);
+        return ResponseUtils.ok(stock, messageService.get("successfully.updated", "Stock"));
+    }
+
+    @PostMapping("/{id}/items")
+    public ResponseEntity<ApiResponse<StockResponse>> addItem(@PathVariable Long id,
+                                                              @Valid @RequestBody CreateStockItemRequest itemRequest,
+                                                              BindingResult bindingResult) {
+
+        stockValidator.validateCreateItem(itemRequest, bindingResult);
+        commonHelper.checkErrors(bindingResult);
+
+        StockResponse stock = stockService.addItem(id, itemRequest);
+        return ResponseUtils.ok(stock, messageService.get("successfully.updated", "Stock"));
+    }
+
+    @PutMapping("/{stockId}/items/{itemId}")
+    public ResponseEntity<ApiResponse<StockResponse>> updateItem(@PathVariable Long stockId,
+                                                                 @PathVariable Long itemId,
+                                                                 @Valid @RequestBody UpdateStockItemRequest itemRequest,
+                                                                 BindingResult bindingResult) {
+        stockValidator.validateUpdateItem(itemRequest, bindingResult);
+        commonHelper.checkErrors(bindingResult);
+
+        StockResponse stock = stockService.updateItem(stockId, itemId, itemRequest);
+        return ResponseUtils.ok(stock, messageService.get("successfully.updated", "Stock"));
+    }
+
+    @DeleteMapping("/{stockId}/items/{itemId}")
+    public ResponseEntity<ApiResponse<StockResponse>> removeItem(@PathVariable Long stockId,
+                                                                 @PathVariable Long itemId) {
+        StockResponse stock = stockService.removeItem(stockId, itemId);
+        return ResponseUtils.ok(stock, messageService.get("successfully.updated", "Stock"));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+        stockService.delete(id);
+        return ResponseUtils.ok(messageService.get("successfully.deleted", "Stock"));
+    }
+}

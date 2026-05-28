@@ -2,7 +2,7 @@ package com.example.demo.order.controller;
 
 import com.example.demo.common.dto.ApiResponse;
 import com.example.demo.common.dto.CustomUserDetails;
-import com.example.demo.common.exception.JsrValidationException;
+import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.common.utils.ResponseUtils;
 import com.example.demo.order.dto.CreateOrderRequest;
@@ -36,6 +36,8 @@ public class OrderController {
 
     private final OrderValidator orderValidator;
 
+    private final CommonHelper commonHelper;
+
     private final OrderService orderService;
 
     private final MessageService messageService;
@@ -67,7 +69,7 @@ public class OrderController {
                                                              BindingResult bindingResult,
                                                              @AuthenticationPrincipal CustomUserDetails userDetails) {
         orderValidator.validate(orderRequest, bindingResult);
-        checkErrors(bindingResult);
+        commonHelper.checkErrors(bindingResult);
 
         OrderResponse order = orderService.create(orderRequest, userDetails.user());
         return ResponseUtils.created(order, messageService.get("entity.creating", "Order"));
@@ -85,7 +87,7 @@ public class OrderController {
                                                               @Valid @RequestBody CreateOrderItemRequest itemRequest,
                                                               BindingResult bindingResult) {
         orderValidator.validateItem(itemRequest, bindingResult);
-        checkErrors(bindingResult);
+        commonHelper.checkErrors(bindingResult);
 
         OrderResponse order = orderService.addItem(id, itemRequest);
         return ResponseUtils.ok(order, messageService.get("successfully.updated", "Order"));
@@ -118,11 +120,5 @@ public class OrderController {
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         orderService.delete(id);
         return ResponseUtils.ok(messageService.get("successfully.deleted", "Order"));
-    }
-
-    private void checkErrors(BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            throw new JsrValidationException(bindingResult);
-        }
     }
 }

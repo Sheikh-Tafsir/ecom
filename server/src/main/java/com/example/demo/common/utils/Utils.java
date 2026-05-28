@@ -1,7 +1,10 @@
 package com.example.demo.common.utils;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.util.StringUtils;
 
+import java.util.Collection;
 import java.util.Random;
 
 public final class Utils {
@@ -9,8 +12,8 @@ public final class Utils {
     private Utils() {
     }
 
-    public static boolean isNull(String value) {
-        return value == null || value.trim().isEmpty();
+    public static boolean isNull(String s) {
+        return s == null || s.trim().isEmpty();
     }
 
     public static String generatePassword(String name) {
@@ -49,5 +52,24 @@ public final class Utils {
 
     public static String getModelListName(String modelName) {
         return modelName + " list";
+    }
+
+    public static boolean isEmpty(Collection c) {
+        return c == null || c.isEmpty();
+    }
+
+    public static Pageable getValidPageable(Pageable pageable) {
+        int pageSize = 24;
+        return getValidPageable(pageable, pageSize);
+    }
+
+    public static Pageable getValidPageable(Pageable pageable, int maxSize) {
+        int size = Math.min(pageable.getPageSize(), maxSize);
+
+        return PageRequest.of(
+                pageable.getPageNumber(),
+                size,
+                pageable.getSort()
+        );
     }
 }

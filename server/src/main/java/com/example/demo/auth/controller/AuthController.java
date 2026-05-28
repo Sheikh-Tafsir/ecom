@@ -4,7 +4,7 @@ import com.example.demo.auth.dto.*;
 import com.example.demo.auth.service.AuthService;
 import com.example.demo.auth.validator.AuthValidator;
 import com.example.demo.common.dto.ApiResponse;
-import com.example.demo.common.exception.JsrValidationException;
+import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.common.service.RateLimiterService;
 import com.example.demo.common.utils.ResponseUtils;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,19 +24,19 @@ import static com.example.demo.auth.service.AuthService.REFRESH_TOKEN_COOKIE_NAM
 @RequiredArgsConstructor
 public class AuthController {
 
+    private final AuthValidator authValidator;
+
+    private final CommonHelper commonHelper;
+
     private final AuthService authService;
 
     private final RateLimiterService rateLimiterService;
-
-    private final AuthValidator authValidator;
 
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<Void>> signup(@Valid @RequestBody SignupRequest signupRequest, BindingResult bindingResult) {
         authValidator.validateSignup(signupRequest, bindingResult);
 
-        if (bindingResult.hasErrors()) {
-            throw new JsrValidationException(bindingResult);
-        }
+        commonHelper.checkErrors(bindingResult);
 
         authService.signup(signupRequest);
 
@@ -91,9 +91,7 @@ public class AuthController {
 
         authValidator.validatePasswords(resetPasswordOtpVerificationRequest.password(), resetPasswordOtpVerificationRequest.confirmPassword(), bindingResult);
 
-        if (bindingResult.hasErrors()) {
-            throw new JsrValidationException(bindingResult);
-        }
+        commonHelper.checkErrors(bindingResult);
 
         authService.verifyResetPasswordOtp(resetPasswordOtpVerificationRequest);
         return ResponseUtils.ok("Password Reset successful");

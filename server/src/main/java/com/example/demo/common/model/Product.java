@@ -1,5 +1,6 @@
 package com.example.demo.common.model;
 
+import com.example.demo.common.enums.ProductStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,21 +25,19 @@ public class Product extends BaseEntity {
     @Column(nullable = false)
     private String name;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ProductImage> images = new HashSet<>();
-
     @Column(nullable = false)
     private BigDecimal price = BigDecimal.ZERO;
 
     private int quantity;
 
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ProductImage> images = new HashSet<>();
+
+    @Enumerated(EnumType.STRING)
+    private ProductStatus status = ProductStatus.COMING_SOON;
+
     public void addImage(ProductImage image) {
         images.add(image);
         image.setProduct(this);
-    }
-
-    public void clearImages() {
-        images.forEach(image -> image.setProduct(null));
-        images.clear();
     }
 }

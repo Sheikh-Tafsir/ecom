@@ -1,11 +1,12 @@
 package com.example.demo.product.controller;
 
 import com.example.demo.common.dto.ApiResponse;
-import com.example.demo.common.exception.JsrValidationException;
+import com.example.demo.common.helper.CommonHelper;
+import com.example.demo.common.model.Product;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.common.utils.ResponseUtils;
-import com.example.demo.product.dto.ProductRequest;
-import com.example.demo.product.dto.ProductResponse;
+import com.example.demo.product.dto.CreateProductRequest;
+import com.example.demo.product.dto.UpdateProductRequest;
 import com.example.demo.product.service.ProductService;
 import com.example.demo.product.validator.ProductValidator;
 import jakarta.validation.Valid;
@@ -31,41 +32,47 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class ProductController {
 
-    private final ProductService productService;
-
     private final ProductValidator productValidator;
+
+    private final CommonHelper commonHelper;
+
+    private final ProductService productService;
 
     private final MessageService messageService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<ProductResponse>>> findAll(Pageable pageable,
+    public ResponseEntity<ApiResponse<Page<Product>>> findAll(Pageable pageable,
                                                                       @RequestParam(required = false) String name) {
-        Page<ProductResponse> products = productService.findAll(pageable, name);
+        Page<Product> products = productService.findAll(pageable, name);
         return ResponseUtils.ok(products, messageService.get("successfully.found", "Product List"));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ProductResponse>> findById(@PathVariable Long id) {
-        ProductResponse product = productService.findById(id);
+    public ResponseEntity<ApiResponse<Product>> findById(@PathVariable Long id) {
+        Product product = productService.findById(id);
         return ResponseUtils.ok(product, messageService.get("successfully.found", "Product"));
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<ProductResponse>> create(@Valid @ModelAttribute ProductRequest productRequest,
+    public ResponseEntity<ApiResponse<Product>> create(@Valid @ModelAttribute CreateProductRequest productRequest,
                                                                BindingResult bindingResult) throws IOException {
-        validate(productRequest, bindingResult);
 
-        ProductResponse product = productService.create(productRequest);
+        productValidator.validateCreate(productRequest, bindingResult);
+        commonHelper.checkErrors(bindingResult);
+
+        Product product = productService.create(productRequest);
         return ResponseUtils.created(product, messageService.get("entity.creating", "Product"));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<ProductResponse>> update(@PathVariable Long id,
-                                                               @Valid @ModelAttribute ProductRequest productRequest,
-                                                               BindingResult bindingResult) throws IOException {
-        validate(productRequest, bindingResult);
+    public ResponseEntity<ApiResponse<Product>> update(@PathVariable Long id,
+                                                       @Valid @ModelAttribute UpdateProductRequest productRequest,
+                                                       BindingResult bindingResult) throws IOException {
 
-        ProductResponse product = productService.update(id, productRequest);
+        productValidator.validateUpdate(productRequest, bindingResult);
+        commonHelper.checkErrors(bindingResult);
+
+        Product product = productService.update(id, productRequest);
         return ResponseUtils.ok(product, messageService.get("successfully.updated", "Product"));
     }
 
@@ -73,13 +80,5 @@ public class ProductController {
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         productService.delete(id);
         return ResponseUtils.ok(messageService.get("successfully.deleted", "Product"));
-    }
-
-    private void validate(ProductRequest productRequest, BindingResult bindingResult) {
-        productValidator.validate(productRequest, bindingResult);
-
-        if (bindingResult.hasErrors()) {
-            throw new JsrValidationException(bindingResult);
-        }
     }
 }

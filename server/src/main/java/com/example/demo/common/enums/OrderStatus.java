@@ -32,5 +32,9 @@ public enum OrderStatus {
 
         throw new IllegalArgumentException("Invalid Order Status: " + value);
     }
+
+    public boolean isCancellationOrRejection() {
+        return this == CANCELLED || this == REJECTED;
+    }
 }
 
