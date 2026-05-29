@@ -3,6 +3,7 @@ package com.example.demo.order.service;
 import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.common.enums.OrderStatus;
 import com.example.demo.common.model.Order;
+import com.example.demo.common.model.OrderItem;
 import com.example.demo.common.model.Product;
 import com.example.demo.common.model.User;
 import com.example.demo.common.service.MessageService;
@@ -12,7 +13,9 @@ import com.example.demo.order.dto.OrderResponse;
 import com.example.demo.order.dto.UpdateOrderStatusRequest;
 import com.example.demo.order.repository.OrderRepository;
 import com.example.demo.product.service.ProductService;
+import com.example.demo.stock.service.StockService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,11 +34,13 @@ import static com.example.demo.common.utils.Utils.getValidPageable;
 @RequiredArgsConstructor
 public class OrderService {
 
-    private final OrderRepository orderRepository;
-
     private final ProductService productService;
 
     private final MessageService messageService;
+
+    private final OrderRepository orderRepository;
+
+    private final StockService stockService;
 
     @PreAuthorize(HAS_ROLE_ADMIN)
     public Page<OrderResponse> findAll(Pageable pageable, OrderStatus status) {
@@ -88,6 +93,10 @@ public class OrderService {
             if (!status.canBeSetByUser()) {
                 throw new AccessDeniedException("User cannot set this status");
             }
+        }
+
+        if (status == OrderStatus.ACCEPTED) {
+            consumeStock(order);
         }
 
         order.setStatus(status);
@@ -153,6 +162,18 @@ public class OrderService {
     private void addProduct(Order order, CreateOrderItemRequest request) {
         Product product = productService.findByIdHelper(request.productId());
         order.addItem(product, request.quantity());
+    }
+
+    private void consumeStock(Order order) {
+        order.getItems().forEach(this::consumeStock);
+    }
+
+    private void consumeStock(OrderItem orderItem) {
+        Product product = orderItem.getProduct();
+        int quantityToConsume = orderItem.getQuantity();
+
+        productService.consume(product, quantityToConsume);
+        stockService.consume(product, quantityToConsume);
     }
 
 //    private void ensureOrderIsModifiable(Order order) {

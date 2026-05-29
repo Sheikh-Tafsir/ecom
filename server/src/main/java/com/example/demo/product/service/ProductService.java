@@ -95,6 +95,15 @@ public class ProductService {
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Product", id)));
     }
 
+    public void consume(Product product, int quantity) {
+        if (product.getQuantity() < quantity) {
+            throw new RuntimeException("Product quantity is not available for product id: " + product.getId());
+        }
+
+        product.setQuantity(product.getQuantity() - quantity);
+        productRepository.save(product);
+    }
+
     private void addImages(Product product, Set<MultipartFile> images) throws IOException {
         if (isEmpty(images)) {
             return;
@@ -114,11 +123,4 @@ public class ProductService {
 //        product.setQuantity(product.getQuantity() + quantity);
 //    }
 //
-//    public void decreaseQuantity(Product product, int quantity) {
-//        if (product.getQuantity() < quantity) {
-//            throw new RuntimeException("Product stock is not available for product id: " + product.getId());
-//        }
-//
-//        product.setQuantity(product.getQuantity() - quantity);
-//    }
 }

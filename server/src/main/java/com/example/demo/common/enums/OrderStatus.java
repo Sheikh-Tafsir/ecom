@@ -12,7 +12,7 @@ import java.util.EnumSet;
 public enum OrderStatus {
 
     CREATED("Created"),
-    CONFIRMED("Confirmed"),
+    ACCEPTED("Accepted"),
     SHIPPED("Shipped"),     // dispatched
     DELIVERED("Delivered"), // received by customer
     PAID("Paid"),           // payment successful
@@ -45,11 +45,11 @@ public enum OrderStatus {
         }
 
         return switch (this) {
-            case CREATED -> newStatus == CONFIRMED
+            case CREATED -> newStatus == ACCEPTED
                     || newStatus == CANCELLED
                     || newStatus == REJECTED;
 
-            case CONFIRMED -> newStatus == SHIPPED
+            case ACCEPTED -> newStatus == SHIPPED
                     || newStatus == CANCELLED;
 
             case SHIPPED -> newStatus == DELIVERED;
@@ -63,7 +63,7 @@ public enum OrderStatus {
     }
 
     public boolean canBeSetByAdmin() {
-        return EnumSet.of(CONFIRMED, SHIPPED, DELIVERED, PAID).contains(this);
+        return EnumSet.of(ACCEPTED, SHIPPED, DELIVERED, PAID).contains(this);
     }
 
     public boolean canBeSetByUser() {

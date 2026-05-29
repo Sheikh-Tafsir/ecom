@@ -7,7 +7,6 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.NoResultException;
 import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -18,7 +17,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import static com.example.demo.common.utils.ResponseUtils.error;
-import static com.example.demo.common.utils.ResponseUtils.getErrorsFromMethodArgNotValidException;
 
 @Slf4j
 @RestControllerAdvice
@@ -34,62 +32,62 @@ public class GlobalExceptionHandler {
 
     private static final String SOMETHING_WENT_WRONG = "Something went wrong";
 
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<?> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
-        log.error("Request body is missing or unreadable", ex);
-        return error("Request body is missing or malformed", HttpStatus.BAD_REQUEST);
-    }
+//    @ExceptionHandler(HttpMessageNotReadableException.class)
+//    public ResponseEntity<?> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+//        log.error("Request body is missing or unreadable", ex);
+//        return error("Request body is missing or malformed", HttpStatusCode.valueOf(400));
+//    }
 
     // 401
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<?> handleInvalidCredentialsExceptions(BadCredentialsException ex) {
         log.error("Authentication credential exception caught:", ex);
-        return error(ex.getMessage(), HttpStatus.UNAUTHORIZED);
+        return error(ex.getMessage(), HttpStatusCode.valueOf(401));
     }
 
     @ExceptionHandler(InvalidAccessTokenException.class)
     public ResponseEntity<?> handleAccessTokenInvalidExceptions(InvalidAccessTokenException ex) {
         log.error("Access token exception caught:", ex);
-        return error(ACCESS_TOKEN_INVALID, HttpStatus.UNAUTHORIZED);
+        return error(ACCESS_TOKEN_INVALID, HttpStatusCode.valueOf(401));
     }
 
     @ExceptionHandler(InvalidRefreshTokenException.class)
     public ResponseEntity<?> handleRefreshTokenInvalidException(InvalidRefreshTokenException ex) {
         log.error("Refresh token exception caught:", ex);
-        return error(REFRESH_TOKEN_INVALID, HttpStatus.UNAUTHORIZED);
+        return error(REFRESH_TOKEN_INVALID, HttpStatusCode.valueOf(401));
     }
 
     // 403
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<?> handleAccessDeniedException(AccessDeniedException ex) {
         log.error("Access denied exception caught:", ex);
-        return error(PERMISSION_DENIED, HttpStatus.FORBIDDEN);
+        return error(PERMISSION_DENIED,HttpStatusCode.valueOf(403));
     }
 
     // 404
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<?> handleEntityNotFoundException(EntityNotFoundException ex) {
         log.error("Entity not found exception caught:", ex);
-        return error(ex.getMessage(), HttpStatus.NOT_FOUND);
+        return error(ex.getMessage(), HttpStatusCode.valueOf(404));
     }
 
     @ExceptionHandler(NoResultException.class)
     public ResponseEntity<?> handleNoResultException(NoResultException ex) {
         log.error("No Result found exception caught:", ex);
-        return error(NOT_FOUND, HttpStatus.NOT_FOUND);
+        return error(NOT_FOUND, HttpStatusCode.valueOf(404));
     }
 
     // 422
     @ExceptionHandler(JsrValidationException.class)
     public ResponseEntity<?> handleJsrValidationExceptions(JsrValidationException ex) {
         log.error("JSR Validation exception caught:", ex);
-        return error(ex.getErrors(), HttpStatusCode.valueOf(422));
+        return error(ex.getBindingResult());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         log.error("Method arg Validation exception caught:", ex);
-        return error(getErrorsFromMethodArgNotValidException(ex), HttpStatusCode.valueOf(422));
+        return error(ex.getBindingResult());
     }
 
     @ExceptionHandler(ValidationException.class)
@@ -102,13 +100,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<?> handleRuntimeException(RuntimeException ex) {
         log.error("Runtime exception caught:", ex);
-        return error(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        return error(SOMETHING_WENT_WRONG, HttpStatusCode.valueOf(500));
     }
 
     // Handle all other exceptions
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleAllExceptions(Exception ex) {
         log.error("Unhandled exception caught:", ex);
-        return error(SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+        return error(SOMETHING_WENT_WRONG, HttpStatusCode.valueOf(500));
     }
 }

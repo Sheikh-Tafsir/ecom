@@ -11,6 +11,7 @@ import com.example.demo.stock.dto.CreateStockRequest;
 import com.example.demo.stock.dto.StockResponse;
 import com.example.demo.stock.dto.UpdateStockItemRequest;
 import com.example.demo.stock.dto.UpdateStockRequest;
+import com.example.demo.stock.repository.StockItemRepository;
 import com.example.demo.stock.repository.StockRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ValidationException;
@@ -31,6 +32,8 @@ import static com.example.demo.common.utils.Utils.getValidPageable;
 public class StockService {
 
     private final StockRepository stockRepository;
+
+    private final StockItemRepository stockItemRepository;
 
     private final ProductService productService;
 
@@ -130,6 +133,26 @@ public class StockService {
         stockRepository.delete(stock);
     }
 
+    public void consume(Product product, int quantityToConsume) {
+        List<StockItem> stockItems = stockItemRepository.findAvailableByProductIdOrderByOldest(product.getId());
+
+        for (StockItem item : stockItems) {
+            if (quantityToConsume <= 0) {
+                break;
+            }
+
+            int available = item.getRemaining();
+            int consumed = Math.min(available, quantityToConsume);
+
+            item.setRemaining(available - consumed);
+            quantityToConsume -= consumed;
+        }
+
+        if (quantityToConsume > 0) {
+            throw new ValidationException("Insufficient stock for product id: " + product.getId());
+        }
+    }
+
     private Stock findByIdHelper(Long id) {
         return stockRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Stock", id)));
@@ -166,8 +189,8 @@ public class StockService {
 
     private void updateItem(Stock stock, Long itemId, UpdateStockItemRequest request) {
         StockItem item = getItem(stock, itemId);
-        int quantityDelta = request.quantity() - item.getQuantity();
-        int updatedRemaining = item.getRemaining() + quantityDelta;
+        int quantityChange = request.quantity() - item.getQuantity();
+        int updatedRemaining = item.getRemaining() + quantityChange;
 
         if (updatedRemaining < 0) {
             throw new IllegalArgumentException("Quantity cannot be less than consumed stock");
@@ -177,7 +200,7 @@ public class StockService {
         item.setCost(request.cost());
         item.setRemaining(updatedRemaining);
 
-        applyProductQuantityDelta(item.getProduct(), quantityDelta);
+        applyProductQuantityChange(item.getProduct(), quantityChange);
     }
 
     private StockItem getItem(Stock stock, Long itemId) {
@@ -189,14 +212,14 @@ public class StockService {
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "StockItem", itemId)));
     }
 
-    private void applyProductQuantityDelta(Product product, int quantityDelta) {
-        if (quantityDelta > 0) {
-            product.setQuantity(product.getQuantity() + quantityDelta);
+    private void applyProductQuantityChange(Product product, int quantityChange) {
+        if (quantityChange > 0) {
+            product.setQuantity(product.getQuantity() + quantityChange);
             return;
         }
 
-        if (quantityDelta < 0) {
-            decreaseProductQuantity(product, quantityDelta * -1);
+        if (quantityChange < 0) {
+            decreaseProductQuantity(product, quantityChange * -1);
         }
     }
 }
