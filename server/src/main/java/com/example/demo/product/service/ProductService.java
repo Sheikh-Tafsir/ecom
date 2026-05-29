@@ -1,5 +1,6 @@
 package com.example.demo.product.service;
 
+import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.common.model.Product;
 import com.example.demo.common.model.ProductImage;
 import com.example.demo.common.service.CloudinaryService;
@@ -23,6 +24,7 @@ import java.util.Set;
 
 import static com.example.demo.common.enums.ProductStatus.DISCONTINUED;
 import static com.example.demo.common.utils.FileUtils.fileExists;
+import static com.example.demo.common.utils.SecurityConstants.HAS_ROLE_ADMIN;
 import static com.example.demo.common.utils.SecurityUtil.isAdmin;
 import static com.example.demo.common.utils.Utils.isEmpty;
 import static com.example.demo.common.utils.Utils.getValidPageable;
@@ -39,20 +41,20 @@ public class ProductService {
 
     private final MessageService messageService;
 
-    public Page<Product> findAll(Pageable pageable, String name) {
-        return productRepository.findAllByNameAndExcludeStatus(name, isAdmin() ? null : DISCONTINUED, getValidPageable(pageable));
+    public Page<Product> findAll(Pageable pageable, String name, CustomUserDetails userDetails) {
+        return productRepository.findAllByNameAndExcludeStatus(name, isAdmin(userDetails) ? null : DISCONTINUED, getValidPageable(pageable));
     }
 
-    public Product findById(Long id) {
+    public Product findById(Long id, CustomUserDetails userDetails) {
         Product product = findByIdHelper(id);
-        if (!isAdmin()) {
+        if (!isAdmin(userDetails)) {
             throw new AccessDeniedException("Product discontinued, cannot access by regular user");
         }
 
         return product;
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(HAS_ROLE_ADMIN)
     @Transactional
     public Product create(CreateProductRequest request) throws IOException {
         Product product = modelMapper.map(request, Product.class);
@@ -61,7 +63,7 @@ public class ProductService {
         return productRepository.save(product);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(HAS_ROLE_ADMIN)
     @Transactional
     public Product update(Long id, UpdateProductRequest request) throws IOException {
         Product product = findByIdHelper(id);
@@ -80,7 +82,7 @@ public class ProductService {
         return productRepository.save(product);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(HAS_ROLE_ADMIN)
     @Transactional
     public void delete(Long id) {
         Product product = findByIdHelper(id);

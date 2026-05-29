@@ -1,5 +1,6 @@
 package com.example.demo.stock.service;
 
+import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.common.model.Product;
 import com.example.demo.common.model.Stock;
 import com.example.demo.common.model.StockItem;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+import static com.example.demo.common.utils.SecurityConstants.HAS_ROLE_ADMIN;
 import static com.example.demo.common.utils.Utils.getValidPageable;
 
 @Service
@@ -34,23 +36,23 @@ public class StockService {
 
     private final MessageService messageService;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(HAS_ROLE_ADMIN)
     public Page<StockResponse> findAll(Pageable pageable) {
         return stockRepository.findAll(getValidPageable(pageable)).map(StockResponse::new);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(HAS_ROLE_ADMIN)
     public StockResponse findById(Long id) {
         return new StockResponse(findByIdHelper(id));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(HAS_ROLE_ADMIN)
     @Transactional
-    public StockResponse create(CreateStockRequest request) {
+    public StockResponse create(CreateStockRequest request, CustomUserDetails userDetails) {
         Stock stock = new Stock();
 
         request.items().forEach(itemRequest -> {
-            Product product = productService.findById(itemRequest.productId());
+            Product product = productService.findById(itemRequest.productId(), userDetails);
             product.setQuantity(product.getQuantity() + itemRequest.quantity());
 
             stock.addItem(product, itemRequest.quantity(), itemRequest.cost());
@@ -59,13 +61,12 @@ public class StockService {
         return new StockResponse(stockRepository.save(stock));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(HAS_ROLE_ADMIN)
     @Transactional
     public StockResponse update(Long id, UpdateStockRequest request) {
         Stock stock = findByIdHelper(id);
 
-        List<StockItem> removedItems = stock.getItems()
-                .stream()
+        List<StockItem> removedItems = stock.getItems().stream()
                 .filter(item -> request.items().stream()
                         .noneMatch(itemRequest ->
                                 item.getId().equals(itemRequest.id())
@@ -87,7 +88,7 @@ public class StockService {
         return new StockResponse(stockRepository.save(stock));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(HAS_ROLE_ADMIN)
     @Transactional
     public StockResponse addItem(Long stockId, CreateStockItemRequest request) {
         Stock stock = findByIdHelper(stockId);
@@ -97,7 +98,7 @@ public class StockService {
         return new StockResponse(stockRepository.save(stock));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(HAS_ROLE_ADMIN)
     @Transactional
     public StockResponse updateItem(Long stockId, Long itemId, UpdateStockItemRequest request) {
         Stock stock = findByIdHelper(stockId);
@@ -107,7 +108,7 @@ public class StockService {
         return new StockResponse(stockRepository.save(stock));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(HAS_ROLE_ADMIN)
     @Transactional
     public StockResponse removeItem(Long stockId, Long itemId) {
         Stock stock = findByIdHelper(stockId);
@@ -118,7 +119,7 @@ public class StockService {
         return new StockResponse(stockRepository.save(stock));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(HAS_ROLE_ADMIN)
     @Transactional
     public void delete(Long id) {
         Stock stock = findByIdHelper(id);
@@ -154,7 +155,9 @@ public class StockService {
 
     private void ensureProductDoesNotExist(Stock stock, Long productId) {
         boolean exists = stock.getItems().stream()
-                .anyMatch(item -> item.getProduct().getId().equals(productId));
+                .anyMatch(item ->
+                        item.getProduct().getId().equals(productId)
+                );
 
         if (exists) {
             throw new ValidationException("Duplicate product is not allowed");
@@ -173,12 +176,15 @@ public class StockService {
         item.setQuantity(request.quantity());
         item.setCost(request.cost());
         item.setRemaining(updatedRemaining);
+
         applyProductQuantityDelta(item.getProduct(), quantityDelta);
     }
 
     private StockItem getItem(Stock stock, Long itemId) {
         return stock.getItems().stream()
-                .filter(item -> item.getId().equals(itemId))
+                .filter(item ->
+                        item.getId().equals(itemId)
+                )
                 .findFirst()
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "StockItem", itemId)));
     }

@@ -1,6 +1,7 @@
 package com.example.demo.stock.controller;
 
 import com.example.demo.common.dto.ApiResponse;
+import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.common.utils.ResponseUtils;
@@ -16,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -53,12 +55,13 @@ public class StockController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<StockResponse>> create(@Valid @RequestBody CreateStockRequest stockRequest,
-                                                             BindingResult bindingResult) {
+                                                             BindingResult bindingResult,
+                                                             @AuthenticationPrincipal  CustomUserDetails userDetails) {
 
         stockValidator.validateCreate(stockRequest, bindingResult);
         commonHelper.checkErrors(bindingResult);
 
-        StockResponse stock = stockService.create(stockRequest);
+        StockResponse stock = stockService.create(stockRequest,userDetails);
         return ResponseUtils.created(stock, messageService.get("entity.creating", "Stock"));
     }
 

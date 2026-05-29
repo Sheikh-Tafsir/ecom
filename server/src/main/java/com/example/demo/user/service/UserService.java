@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 
 import static com.example.demo.common.utils.FileUtils.fileExists;
+import static com.example.demo.common.utils.SecurityConstants.HAS_ROLE_ADMIN;
 import static com.example.demo.common.utils.Utils.getValidPageable;
 
 @Slf4j
@@ -42,12 +43,12 @@ public class UserService {
 
     private final MessageService messageService;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(HAS_ROLE_ADMIN)
     public Page<User> findAll(Pageable pageable, String role, UserStatus status) {
         return userRepository.findByRoleAndStatus(roleService.findByName(role), status, getValidPageable(pageable));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(HAS_ROLE_ADMIN)
     @Cacheable("usersById")
     public User findById(Long id) {
         return findByIdHelper(id);
@@ -66,7 +67,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(HAS_ROLE_ADMIN)
     @Caching(evict = {
             @CacheEvict(value = "usersById", key = "#id")
     })

@@ -1,0 +1,13 @@
+package com.example.demo.order.dto;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+
+import java.util.List;
+
+public record UpdateOrderRequest (
+
+        @NotEmpty
+        List<@Valid UpdateOrderItemRequest> items
+){
+}

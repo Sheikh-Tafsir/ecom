@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.EnumSet;
+
 @Getter
 @AllArgsConstructor
 public enum OrderStatus {
@@ -35,6 +37,37 @@ public enum OrderStatus {
 
     public boolean isCancellationOrRejection() {
         return this == CANCELLED || this == REJECTED;
+    }
+
+    public boolean canTransitionTo(OrderStatus newStatus) {
+        if (newStatus == null) {
+            return false;
+        }
+
+        return switch (this) {
+            case CREATED -> newStatus == CONFIRMED
+                    || newStatus == CANCELLED
+                    || newStatus == REJECTED;
+
+            case CONFIRMED -> newStatus == SHIPPED
+                    || newStatus == CANCELLED;
+
+            case SHIPPED -> newStatus == DELIVERED;
+
+            case DELIVERED -> newStatus == PAID;
+
+            case PAID -> false;
+
+            case CANCELLED, REJECTED -> false;
+        };
+    }
+
+    public boolean canBeSetByAdmin() {
+        return EnumSet.of(CONFIRMED, SHIPPED, DELIVERED, PAID).contains(this);
+    }
+
+    public boolean canBeSetByUser() {
+        return EnumSet.of(CANCELLED).contains(this);
     }
 }
 

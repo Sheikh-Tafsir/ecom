@@ -2,13 +2,14 @@ package com.example.demo.order.controller;
 
 import com.example.demo.common.dto.ApiResponse;
 import com.example.demo.common.dto.CustomUserDetails;
+import com.example.demo.common.enums.OrderStatus;
 import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.common.utils.ResponseUtils;
 import com.example.demo.order.dto.CreateOrderRequest;
 import com.example.demo.order.dto.CreateOrderItemRequest;
 import com.example.demo.order.dto.OrderResponse;
-import com.example.demo.order.dto.UpdateOrderItemQuantityRequest;
+import com.example.demo.order.dto.UpdateOrderItemRequest;
 import com.example.demo.order.dto.UpdateOrderStatusRequest;
 import com.example.demo.order.service.OrderService;
 import com.example.demo.order.validator.OrderValidator;
@@ -44,7 +45,7 @@ public class OrderController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<OrderResponse>>> findAll(Pageable pageable,
-                                                                    @RequestParam(required = false) String status) {
+                                                                    @RequestParam(required = false) OrderStatus status) {
 
         Page<OrderResponse> orders = orderService.findAll(pageable, status);
         return ResponseUtils.ok(orders, messageService.get("successfully.found", "Order List"));
@@ -59,8 +60,9 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<OrderResponse>> findById(@PathVariable Long id) {
-        OrderResponse order = orderService.findById(id);
+    public ResponseEntity<ApiResponse<OrderResponse>> findById(@PathVariable Long id,
+                                                               @AuthenticationPrincipal CustomUserDetails userDetails) {
+        OrderResponse order = orderService.findById(id, userDetails);
         return ResponseUtils.ok(order, messageService.get("successfully.found", "Order"));
     }
 
@@ -77,44 +79,43 @@ public class OrderController {
 
     @PutMapping("/{id}/status")
     public ResponseEntity<ApiResponse<OrderResponse>> updateStatus(@PathVariable Long id,
-                                                                   @Valid @RequestBody UpdateOrderStatusRequest request) {
-        OrderResponse order = orderService.updateStatus(id, request.status());
+                                                                   @Valid @RequestBody UpdateOrderStatusRequest request,
+                                                                   @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        OrderResponse order = orderService.updateStatus(id, request, userDetails);
         return ResponseUtils.ok(order, messageService.get("successfully.updated", "Order"));
     }
 
-    @PostMapping("/{id}/items")
-    public ResponseEntity<ApiResponse<OrderResponse>> addItem(@PathVariable Long id,
-                                                              @Valid @RequestBody CreateOrderItemRequest itemRequest,
-                                                              BindingResult bindingResult) {
-        orderValidator.validateItem(itemRequest, bindingResult);
-        commonHelper.checkErrors(bindingResult);
-
-        OrderResponse order = orderService.addItem(id, itemRequest);
-        return ResponseUtils.ok(order, messageService.get("successfully.updated", "Order"));
-    }
-
-    @PutMapping("/{orderId}/items/{productId}/increase")
-    public ResponseEntity<ApiResponse<OrderResponse>> increaseItem(@PathVariable Long orderId,
-                                                                   @PathVariable Long productId,
-                                                                   @Valid @RequestBody UpdateOrderItemQuantityRequest request) {
-        OrderResponse order = orderService.increaseItem(orderId, productId, request.quantity());
-        return ResponseUtils.ok(order, messageService.get("successfully.updated", "Order"));
-    }
-
-    @PutMapping("/{orderId}/items/{productId}/decrease")
-    public ResponseEntity<ApiResponse<OrderResponse>> decreaseItem(@PathVariable Long orderId,
-                                                                   @PathVariable Long productId,
-                                                                   @Valid @RequestBody UpdateOrderItemQuantityRequest request) {
-        OrderResponse order = orderService.decreaseItem(orderId, productId, request.quantity());
-        return ResponseUtils.ok(order, messageService.get("successfully.updated", "Order"));
-    }
-
-    @DeleteMapping("/{orderId}/items/{productId}")
-    public ResponseEntity<ApiResponse<OrderResponse>> removeItem(@PathVariable Long orderId,
-                                                                 @PathVariable Long productId) {
-        OrderResponse order = orderService.removeItem(orderId, productId);
-        return ResponseUtils.ok(order, messageService.get("successfully.updated", "Order"));
-    }
+//    @PostMapping("/{id}/items")
+//    public ResponseEntity<ApiResponse<OrderResponse>> addItem(@PathVariable Long id,
+//                                                              @Valid @RequestBody CreateOrderItemRequest itemRequest) {
+//
+//        OrderResponse order = orderService.addItem(id, itemRequest);
+//        return ResponseUtils.ok(order, messageService.get("successfully.updated", "Order"));
+//    }
+//
+//    @PutMapping("/{orderId}/items/{productId}/increase")
+//    public ResponseEntity<ApiResponse<OrderResponse>> increaseItem(@PathVariable Long orderId,
+//                                                                   @PathVariable Long productId,
+//                                                                   @Valid @RequestBody UpdateOrderItemRequest request) {
+//        OrderResponse order = orderService.increaseItem(orderId, productId, request.quantity());
+//        return ResponseUtils.ok(order, messageService.get("successfully.updated", "Order"));
+//    }
+//
+//    @PutMapping("/{orderId}/items/{productId}/decrease")
+//    public ResponseEntity<ApiResponse<OrderResponse>> decreaseItem(@PathVariable Long orderId,
+//                                                                   @PathVariable Long productId,
+//                                                                   @Valid @RequestBody UpdateOrderItemRequest request) {
+//        OrderResponse order = orderService.decreaseItem(orderId, productId, request.quantity());
+//        return ResponseUtils.ok(order, messageService.get("successfully.updated", "Order"));
+//    }
+//
+//    @DeleteMapping("/{orderId}/items/{productId}")
+//    public ResponseEntity<ApiResponse<OrderResponse>> removeItem(@PathVariable Long orderId,
+//                                                                 @PathVariable Long productId) {
+//        OrderResponse order = orderService.removeItem(orderId, productId);
+//        return ResponseUtils.ok(order, messageService.get("successfully.updated", "Order"));
+//    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {

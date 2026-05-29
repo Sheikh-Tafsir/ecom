@@ -1,6 +1,7 @@
 package com.example.demo.product.controller;
 
 import com.example.demo.common.dto.ApiResponse;
+import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.common.model.Product;
 import com.example.demo.common.service.MessageService;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -42,20 +44,22 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<Product>>> findAll(Pageable pageable,
-                                                                      @RequestParam(required = false) String name) {
-        Page<Product> products = productService.findAll(pageable, name);
+                                                              @RequestParam(required = false) String name,
+                                                              @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        Page<Product> products = productService.findAll(pageable, name, userDetails);
         return ResponseUtils.ok(products, messageService.get("successfully.found", "Product List"));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Product>> findById(@PathVariable Long id) {
-        Product product = productService.findById(id);
+    public ResponseEntity<ApiResponse<Product>> findById(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Product product = productService.findById(id, userDetails);
         return ResponseUtils.ok(product, messageService.get("successfully.found", "Product"));
     }
 
     @PostMapping
     public ResponseEntity<ApiResponse<Product>> create(@Valid @ModelAttribute CreateProductRequest productRequest,
-                                                               BindingResult bindingResult) throws IOException {
+                                                       BindingResult bindingResult) throws IOException {
 
         productValidator.validateCreate(productRequest, bindingResult);
         commonHelper.checkErrors(bindingResult);

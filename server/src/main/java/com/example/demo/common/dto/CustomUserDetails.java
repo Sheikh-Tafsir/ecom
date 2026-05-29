@@ -30,4 +30,8 @@ public record CustomUserDetails(User user) implements UserDetails {
     public String getEmail() {
         return user.getEmail();
     }
+
+    public Long getId() {
+        return user.getId();
+    }
 }

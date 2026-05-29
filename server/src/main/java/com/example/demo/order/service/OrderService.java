@@ -1,26 +1,31 @@
 package com.example.demo.order.service;
 
+import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.common.enums.OrderStatus;
 import com.example.demo.common.model.Order;
-import com.example.demo.common.model.OrderItem;
 import com.example.demo.common.model.Product;
 import com.example.demo.common.model.User;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.order.dto.CreateOrderRequest;
 import com.example.demo.order.dto.CreateOrderItemRequest;
 import com.example.demo.order.dto.OrderResponse;
+import com.example.demo.order.dto.UpdateOrderStatusRequest;
 import com.example.demo.order.repository.OrderRepository;
 import com.example.demo.product.service.ProductService;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static com.example.demo.common.utils.SecurityConstants.ADMIN_OR_OWNER_EXCEPTION;
+import static com.example.demo.common.utils.SecurityConstants.HAS_ROLE_ADMIN;
+import static com.example.demo.common.utils.SecurityUtil.isAdmin;
+import static com.example.demo.common.utils.SecurityUtil.isAdminOrOwner;
 import static com.example.demo.common.utils.Utils.getValidPageable;
-import static org.springframework.util.StringUtils.hasText;
 
 @Service
 @RequiredArgsConstructor
@@ -32,17 +37,22 @@ public class OrderService {
 
     private final MessageService messageService;
 
-    public Page<OrderResponse> findAll(Pageable pageable, String status) {
-        OrderStatus orderStatus = hasText(status) ? OrderStatus.fromValue(status) : null;
-        return orderRepository.findAllByStatus(orderStatus, getValidPageable(pageable)).map(OrderResponse::new);
+    @PreAuthorize(HAS_ROLE_ADMIN)
+    public Page<OrderResponse> findAll(Pageable pageable, OrderStatus status) {
+        return orderRepository.findAllByStatus(status, getValidPageable(pageable)).map(OrderResponse::new);
     }
 
     public Page<OrderResponse> findByUser(Long userId, Pageable pageable) {
-        return orderRepository.findByUser_Id(userId, pageable).map(OrderResponse::new);
+        return orderRepository.findByUser_Id(userId, getValidPageable(pageable)).map(OrderResponse::new);
     }
 
-    public OrderResponse findById(Long id) {
-        return new OrderResponse(findByIdHelper(id));
+    public OrderResponse findById(Long id, CustomUserDetails userDetails) {
+        Order order = findByIdHelper(id);
+        if (!isAdminOrOwner(id, userDetails)) {
+            throw new AccessDeniedException(ADMIN_OR_OWNER_EXCEPTION);
+        }
+
+        return new OrderResponse(order);
     }
 
     @Transactional
@@ -56,60 +66,78 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderResponse updateStatus(Long id, OrderStatus status) {
+    public OrderResponse updateStatus(Long id, UpdateOrderStatusRequest request, CustomUserDetails userDetails) {
         Order order = findByIdHelper(id);
+        OrderStatus status = request.status();
 
         if (order.isCancelledOrRejected() && !status.isCancellationOrRejection()) {
-            throw new RuntimeException("Cancelled order cannot be reopened");
+            throw new RuntimeException("Cancelled/Rejected order cannot be reopened");
+        }
+
+        if (!order.getStatus().canTransitionTo(status)) {
+            throw new RuntimeException("Invalid order status transition");
+        }
+
+        boolean isAdmin = isAdmin(userDetails);
+
+        if (isAdmin) {
+            if (!status.canBeSetByAdmin()) {
+                throw new AccessDeniedException("Admin cannot set this status");
+            }
+        } else {
+            if (!status.canBeSetByUser()) {
+                throw new AccessDeniedException("User cannot set this status");
+            }
         }
 
         order.setStatus(status);
-        return new OrderResponse(orderRepository.save(order));
-    }
-
-    @Transactional
-    public OrderResponse addItem(Long orderId, CreateOrderItemRequest orderItemRequest) {
-        Order order = findByIdHelper(orderId);
-        ensureOrderIsModifiable(order);
-        addProduct(order, orderItemRequest);
 
         return new OrderResponse(orderRepository.save(order));
     }
 
-    @Transactional
-    public OrderResponse increaseItem(Long orderId, Long productId, int quantity) {
-        Order order = findByIdHelper(orderId);
-        ensureOrderIsModifiable(order);
+//    @Transactional
+//    public OrderResponse addItem(Long orderId, CreateOrderItemRequest orderItemRequest) {
+//        Order order = findByIdHelper(orderId);
+//        ensureOrderIsModifiable(order);
+//        addProduct(order, orderItemRequest);
+//
+//        return new OrderResponse(orderRepository.save(order));
+//    }
 
-        getItem(order, productId);
-        order.increaseItem(productId, quantity);
-
-        return new OrderResponse(orderRepository.save(order));
-    }
-
-    @Transactional
-    public OrderResponse decreaseItem(Long orderId, Long productId, int quantity) {
-        Order order = findByIdHelper(orderId);
-        ensureOrderIsModifiable(order);
-        OrderItem item = getItem(order, productId);
-
-        if (quantity > item.getQuantity()) {
-            throw new ValidationException("Quantity is greater than order item quantity");
-        }
-
-        order.decreaseItem(productId, quantity);
-
-        return new OrderResponse(orderRepository.save(order));
-    }
-
-    @Transactional
-    public OrderResponse removeItem(Long orderId, Long productId) {
-        Order order = findByIdHelper(orderId);
-        ensureOrderIsModifiable(order);
-        order.removeItem(productId);
-
-        return new OrderResponse(orderRepository.save(order));
-    }
+//    @Transactional
+//    public OrderResponse increaseItem(Long orderId, Long productId, int quantity) {
+//        Order order = findByIdHelper(orderId);
+//        ensureOrderIsModifiable(order);
+//
+//        getItem(order, productId);
+//        order.increaseItem(productId, quantity);
+//
+//        return new OrderResponse(orderRepository.save(order));
+//    }
+//
+//    @Transactional
+//    public OrderResponse decreaseItem(Long orderId, Long productId, int quantity) {
+//        Order order = findByIdHelper(orderId);
+//        ensureOrderIsModifiable(order);
+//        OrderItem item = getItem(order, productId);
+//
+//        if (quantity > item.getQuantity()) {
+//            throw new ValidationException("Quantity is greater than order item quantity");
+//        }
+//
+//        order.decreaseItem(productId, quantity);
+//
+//        return new OrderResponse(orderRepository.save(order));
+//    }
+//
+//    @Transactional
+//    public OrderResponse removeItem(Long orderId, Long productId) {
+//        Order order = findByIdHelper(orderId);
+//        ensureOrderIsModifiable(order);
+//        order.removeItem(productId);
+//
+//        return new OrderResponse(orderRepository.save(order));
+//    }
 
     @Transactional
     public void delete(Long id) {
@@ -127,16 +155,16 @@ public class OrderService {
         order.addItem(product, request.quantity());
     }
 
-    private void ensureOrderIsModifiable(Order order) {
-        if (order.getStatus() != OrderStatus.CREATED) {
-            throw new RuntimeException("Only created orders can be modified");
-        }
-    }
+//    private void ensureOrderIsModifiable(Order order) {
+//        if (order.getStatus() != OrderStatus.CREATED) {
+//            throw new RuntimeException("Only created orders can be modified");
+//        }
+//    }
 
-    public OrderItem getItem(Order order, Long productId) {
-        return order.getItems().stream()
-                .filter(item -> item.getProduct().getId().equals(productId))
-                .findFirst()
-                .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "OrderItem", productId)));
-    }
+//    public OrderItem getItem(Order order, Long productId) {
+//        return order.getItems().stream()
+//                .filter(item -> item.getProduct().getId().equals(productId))
+//                .findFirst()
+//                .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "OrderItem", productId)));
+//    }
 }
