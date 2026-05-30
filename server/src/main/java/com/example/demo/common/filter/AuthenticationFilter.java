@@ -22,7 +22,7 @@ import java.io.IOException;
 
 import static com.example.demo.common.config.SecurityConfig.AUTH_URL;
 import static com.example.demo.common.config.SecurityConfig.PUBLIC_URLS;
-import static com.example.demo.common.utils.ResponseUtils.filterError;
+import static com.example.demo.common.utils.ResponseUtils.error;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -64,7 +64,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
         try {
             if (!jwtService.isAccessTokenValid(token)) {
-                filterError(response, HttpStatus.UNAUTHORIZED, "Invalid or expired JWT token");
+                error(response, HttpStatus.UNAUTHORIZED, "Invalid or expired JWT token");
                 return;
             }
 
@@ -80,7 +80,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
             chain.doFilter(request, response);
         } catch (Exception ex) {
-            filterError(response, HttpStatus.UNAUTHORIZED, "Error validating JWT token");
+            error(response, HttpStatus.UNAUTHORIZED, "Error validating JWT token");
         }
     }
 }

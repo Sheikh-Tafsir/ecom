@@ -14,7 +14,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-import static com.example.demo.common.utils.ResponseUtils.filterError;
+import static com.example.demo.common.utils.ResponseUtils.error;
 import static com.example.demo.common.utils.SecurityUtil.getUserDetails;
 
 @Component
@@ -28,11 +28,20 @@ public class RateLimiterFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
 
+        String uri = request.getRequestURI();
         String ip = request.getRemoteAddr();
         String email = getEmailFromContext();
 
-        if (!rateLimiterService.isApiRequestAllowed(email, ip)) {
-            filterError(response, HttpStatus.TOO_MANY_REQUESTS, "Too many attempts. Try again later");
+        boolean allowed;
+
+        if (uri.startsWith("/auth")) {
+            allowed = rateLimiterService.isAuthRequestAllowed(email, ip);
+        } else {
+            allowed = rateLimiterService.isApiRequestAllowed(email, ip);
+        }
+
+        if (!allowed) {
+            error(response, HttpStatus.TOO_MANY_REQUESTS, "Too many attempts. Try again later");
             return;
         }
 

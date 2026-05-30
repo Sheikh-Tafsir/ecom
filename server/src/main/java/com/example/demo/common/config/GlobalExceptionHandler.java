@@ -2,14 +2,13 @@ package com.example.demo.common.config;
 
 import com.example.demo.common.exception.InvalidAccessTokenException;
 import com.example.demo.common.exception.InvalidRefreshTokenException;
-import com.example.demo.common.exception.JsrValidationException;
+import com.example.demo.common.exception.MultipleValidationException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.NoResultException;
 import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -78,8 +77,8 @@ public class GlobalExceptionHandler {
     }
 
     // 422
-    @ExceptionHandler(JsrValidationException.class)
-    public ResponseEntity<?> handleJsrValidationExceptions(JsrValidationException ex) {
+    @ExceptionHandler(MultipleValidationException.class)
+    public ResponseEntity<?> handleMultipleValidationExceptions(MultipleValidationException ex) {
         log.error("Multiple Validation:", ex);
         return error(ex.getBindingResult());
     }

@@ -71,7 +71,7 @@ public final class ResponseUtils {
     }
 
     //filter error
-    public static void filterError(HttpServletResponse response, HttpStatus httpStatus, String message) throws IOException {
+    public static void error(HttpServletResponse response, HttpStatus httpStatus, String message) throws IOException {
         Map<String, List<String>> errors = new HashMap<>();
         errors.put(GLOBAL_ERROR, List.of(message));
 

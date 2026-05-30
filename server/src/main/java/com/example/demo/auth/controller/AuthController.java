@@ -5,12 +5,10 @@ import com.example.demo.auth.service.AuthService;
 import com.example.demo.auth.validator.AuthValidator;
 import com.example.demo.common.dto.ApiResponse;
 import com.example.demo.common.helper.CommonHelper;
-import com.example.demo.common.service.RateLimiterService;
 import com.example.demo.common.utils.ResponseUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -30,12 +28,9 @@ public class AuthController {
 
     private final AuthService authService;
 
-    private final RateLimiterService rateLimiterService;
-
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<Void>> signup(@Valid @RequestBody SignupRequest signupRequest, BindingResult bindingResult) {
         authValidator.validateSignup(signupRequest, bindingResult);
-
         commonHelper.checkErrors(bindingResult);
 
         authService.signup(signupRequest);
@@ -43,9 +38,16 @@ public class AuthController {
         return ResponseUtils.created("Signup OTP send to mail");
     }
 
-    @PostMapping("/signup/otp/verify")
-    public ResponseEntity<ApiResponse<String>> signupOtpVerification(@Valid @RequestBody VerifySignupOtpRequest otpVerificationRequest,
-                                                                     HttpServletResponse response) {
+    @PostMapping("/signup/resend")
+    public ResponseEntity<ApiResponse<Void>> resendSignupOtp(@Valid @RequestBody OtpEmailRequest resetSignupOtpRequest) {
+        authService.resendSignupOtp(resetSignupOtpRequest);
+
+        return ResponseUtils.created("Signup OTP again send to mail");
+    }
+
+    @PostMapping("/signup/verify")
+    public ResponseEntity<ApiResponse<String>> verifySignupOtp(@Valid @RequestBody VerifySignupOtpRequest otpVerificationRequest,
+                                                               HttpServletResponse response) {
 
         TokenDto tokenDto = authService.verifySignupOtp(otpVerificationRequest);
         authService.addRefreshCookie(response, tokenDto);
@@ -54,10 +56,8 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<String>> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response) {
-        if (!rateLimiterService.isLoginAttemptAllowed(loginRequest.email())) {
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(null);
-        }
+    public ResponseEntity<ApiResponse<String>> login(@Valid @RequestBody LoginRequest loginRequest,
+                                                     HttpServletResponse response) {
 
         TokenDto tokenDto = authService.login(loginRequest);
         authService.addRefreshCookie(response, tokenDto);
@@ -65,7 +65,7 @@ public class AuthController {
         return ResponseUtils.ok(tokenDto.getAccessToken(), "Login successful!");
     }
 
-    @PostMapping("/login/google")
+    @PostMapping("/google-login")
     public ResponseEntity<ApiResponse<String>> loginWithGoogle(@RequestBody Map<String, String> request, HttpServletResponse response) {
         TokenDto tokenDto = authService.loginWithGoogle(request);
         authService.addRefreshCookie(response, tokenDto);
@@ -80,12 +80,18 @@ public class AuthController {
     }
 
     @PostMapping("/password-reset")
-    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest) {
-        authService.resetPassword(resetPasswordRequest);
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody OtpEmailRequest request) {
+        authService.resetPassword(request);
         return ResponseUtils.ok("Password Reset OTP send to mail");
     }
 
-    @PostMapping("/password-reset/verify-otp")
+    @PostMapping("/password-reset/resend")
+    public ResponseEntity<ApiResponse<Void>> resendResetPasswordOtp(@Valid @RequestBody OtpEmailRequest request) {
+        authService.resetPassword(request);
+        return ResponseUtils.ok("Password Reset OTP again send to mail");
+    }
+
+    @PostMapping("/password-reset/verify")
     public ResponseEntity<ApiResponse<Void>> verifyResetPasswordOtp(@Valid @RequestBody VerifyResetPasswordOtpRequest resetPasswordOtpVerificationRequest,
                                                                     BindingResult bindingResult) {
 

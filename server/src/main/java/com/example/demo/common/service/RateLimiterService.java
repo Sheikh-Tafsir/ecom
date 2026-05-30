@@ -11,22 +11,29 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class RateLimiterService {
 
-    private static final String LOGIN_EMAIL_KEY_PREFIX = "login:";
+    private static final String AUTH_EMAIL_KEY_PREFIX = "auth:email:";
+    private static final String AUTH_IP_KEY_PREFIX = "auth:ip:";
     private static final String API_EMAIL_KEY_PREFIX = "api:email:";
     private static final String API_IP_KEY_PREFIX = "api:ip:";
 
-    private static final int MAX_LOGIN_ATTEMPTS = 5;
-    private static final int MAX_API_REQUESTS = 10;
+    private static final int MAX_AUTH_REQUESTS = 3;
+    private static final int MAX_API_REQUESTS = 20;
     private static final int WINDOW_SECONDS = 60;
 
     private final StringRedisTemplate redisTemplate;
 
-    public boolean isWithinLimit(Map<String, Integer> keysAndLimits) {
-        for (Map.Entry<String, Integer> entry : keysAndLimits.entrySet()) {
+    public boolean isWithinLimit(Map<String, Integer> limitsPerKey) {
+        for (Map.Entry<String, Integer> entry : limitsPerKey.entrySet()) {
+
             String key = entry.getKey();
             int maxLimit = entry.getValue();
 
             Long count = redisTemplate.opsForValue().increment(key);
+
+            if (count == null) {
+                throw new IllegalStateException("Redis increment failed");
+            }
+
             if (count == 1) {
                 redisTemplate.expire(key, Duration.ofSeconds(WINDOW_SECONDS));
             }
@@ -39,8 +46,15 @@ public class RateLimiterService {
         return true;
     }
 
-    public boolean isLoginAttemptAllowed(String email) {
-        return isWithinLimit(Map.of(LOGIN_EMAIL_KEY_PREFIX + email, MAX_LOGIN_ATTEMPTS));
+    public boolean isAuthRequestAllowed(String email, String ip) {
+        if (email == null) {
+            return isWithinLimit(Map.of(AUTH_IP_KEY_PREFIX + ip, MAX_AUTH_REQUESTS));
+        }
+
+        return isWithinLimit(Map.of(
+                AUTH_EMAIL_KEY_PREFIX + email, MAX_AUTH_REQUESTS,
+                AUTH_IP_KEY_PREFIX + ip, MAX_AUTH_REQUESTS
+        ));
     }
 
     public boolean isApiRequestAllowed(String email, String ip) {
