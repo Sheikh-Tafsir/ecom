@@ -82,3 +82,16 @@ service:
   exchange: service.exchange
   routing-key: service.events.#
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  api-docs.path: /v3/api-docs
+  swagger-ui.url: /v3/api-docs
+

@@ -53,9 +53,7 @@ public class ProfileController {
     public ResponseEntity<ApiResponse<String>> updateProfile(@Valid @ModelAttribute UpdateProfileRequest updateProfileRequest,
                                                              BindingResult bindingResult,
                                                              @AuthenticationPrincipal CustomUserDetails userDetails,
-                                                             HttpServletResponse response) throws IOException {
-//
-//        log.info("Multipart file: {}", updateProfileRequest.image());
+                                                             HttpServletResponse response) throws IOException {;
 
         profileUpdateRequestValidator.validate(updateProfileRequest, bindingResult);
         commonHelper.checkErrors(bindingResult);

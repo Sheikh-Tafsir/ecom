@@ -96,7 +96,6 @@ public class AuthController {
                                                                     BindingResult bindingResult) {
 
         authValidator.validatePasswords(resetPasswordOtpVerificationRequest.password(), resetPasswordOtpVerificationRequest.confirmPassword(), bindingResult);
-
         commonHelper.checkErrors(bindingResult);
 
         authService.verifyResetPasswordOtp(resetPasswordOtpVerificationRequest);
