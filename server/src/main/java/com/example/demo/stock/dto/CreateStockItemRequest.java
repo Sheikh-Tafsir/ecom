@@ -10,8 +10,9 @@ public record CreateStockItemRequest(
         @NotNull
         Long productId,
 
+        @NotNull
         @Min(1)
-        int quantity,
+        Integer quantity,
 
         @NotNull
         BigDecimal cost

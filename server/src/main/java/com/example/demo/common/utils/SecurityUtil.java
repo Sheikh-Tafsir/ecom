@@ -12,8 +12,12 @@ public final class SecurityUtil {
     private SecurityUtil() {
     }
 
-    public static boolean isAdminOrOwner(Long userId, CustomUserDetails userDetails) {
-        return isAdmin(userDetails) || userDetails.getId().equals(userId);
+    public static boolean isOwnerOrAdmin(Long userId, CustomUserDetails userDetails) {
+        return isOwner(userId, userDetails) || isAdmin(userDetails);
+    }
+
+    public static boolean isOwner(Long userId, CustomUserDetails userDetails) {
+        return userDetails.getId().equals(userId);
     }
 
     public static boolean isAdmin(CustomUserDetails userDetails) {

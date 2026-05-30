@@ -8,7 +8,8 @@ public record CreateOrderItemRequest(
         @NotNull
         Long productId,
 
+        @NotNull
         @Min(1)
-        int quantity
+        Integer quantity
 ) {
 }

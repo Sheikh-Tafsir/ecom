@@ -2,6 +2,7 @@ package com.example.demo.order.service;
 
 import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.common.enums.OrderStatus;
+import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.common.model.Order;
 import com.example.demo.common.model.OrderItem;
 import com.example.demo.common.model.Product;
@@ -15,7 +16,6 @@ import com.example.demo.order.repository.OrderRepository;
 import com.example.demo.product.service.ProductService;
 import com.example.demo.stock.service.StockService;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,10 +24,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.example.demo.common.utils.SecurityConstants.ADMIN_OR_OWNER_EXCEPTION;
 import static com.example.demo.common.utils.SecurityConstants.HAS_ROLE_ADMIN;
 import static com.example.demo.common.utils.SecurityUtil.isAdmin;
-import static com.example.demo.common.utils.SecurityUtil.isAdminOrOwner;
 import static com.example.demo.common.utils.Utils.getValidPageable;
 
 @Service
@@ -41,6 +39,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
 
     private final StockService stockService;
+    private final CommonHelper commonHelper;
 
     @PreAuthorize(HAS_ROLE_ADMIN)
     public Page<OrderResponse> findAll(Pageable pageable, OrderStatus status) {
@@ -53,9 +52,7 @@ public class OrderService {
 
     public OrderResponse findById(Long id, CustomUserDetails userDetails) {
         Order order = findByIdHelper(id);
-        if (!isAdminOrOwner(id, userDetails)) {
-            throw new AccessDeniedException(ADMIN_OR_OWNER_EXCEPTION);
-        }
+        commonHelper.checkOwnerOrAdmin(order.getUser().getId(), userDetails);
 
         return new OrderResponse(order);
     }
@@ -87,11 +84,11 @@ public class OrderService {
 
         if (isAdmin) {
             if (!status.canBeSetByAdmin()) {
-                throw new AccessDeniedException("Admin cannot set this status");
+                throw new AccessDeniedException("Admin with id: "+ id + " attempting to set status with user owner access");
             }
         } else {
             if (!status.canBeSetByUser()) {
-                throw new AccessDeniedException("User cannot set this status");
+                throw new AccessDeniedException("User with id: "+ id + " attempting to set status with admin access");
             }
         }
 

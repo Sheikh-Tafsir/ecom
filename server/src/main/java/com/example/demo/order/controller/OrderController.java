@@ -7,9 +7,7 @@ import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.common.utils.ResponseUtils;
 import com.example.demo.order.dto.CreateOrderRequest;
-import com.example.demo.order.dto.CreateOrderItemRequest;
 import com.example.demo.order.dto.OrderResponse;
-import com.example.demo.order.dto.UpdateOrderItemRequest;
 import com.example.demo.order.dto.UpdateOrderStatusRequest;
 import com.example.demo.order.service.OrderService;
 import com.example.demo.order.validator.OrderValidator;
@@ -62,6 +60,7 @@ public class OrderController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<OrderResponse>> findById(@PathVariable Long id,
                                                                @AuthenticationPrincipal CustomUserDetails userDetails) {
+
         OrderResponse order = orderService.findById(id, userDetails);
         return ResponseUtils.ok(order, messageService.get("successfully.found", "Order"));
     }
@@ -70,6 +69,7 @@ public class OrderController {
     public ResponseEntity<ApiResponse<OrderResponse>> create(@Valid @RequestBody CreateOrderRequest orderRequest,
                                                              BindingResult bindingResult,
                                                              @AuthenticationPrincipal CustomUserDetails userDetails) {
+
         orderValidator.validate(orderRequest, bindingResult);
         commonHelper.checkErrors(bindingResult);
 

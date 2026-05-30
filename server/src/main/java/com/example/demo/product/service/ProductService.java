@@ -48,7 +48,7 @@ public class ProductService {
     public Product findById(Long id, CustomUserDetails userDetails) {
         Product product = findByIdHelper(id);
         if (!isAdmin(userDetails)) {
-            throw new AccessDeniedException("Product discontinued, cannot access by regular user");
+            throw new AccessDeniedException("User with id: " + userDetails.getId()  + " attempted to access discontinued Product with id: " + id);
         }
 
         return product;

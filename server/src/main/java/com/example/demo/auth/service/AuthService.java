@@ -56,6 +56,8 @@ public class AuthService {
 
     public static final int OTP_TRY_AGAIN_WAITING_TIME = 30;
 
+    public static final String GOOGLE_OAUTH_API= "https://www.googleapis.com/oauth2/v1/userinfo?access_token={access_token}";
+
     @Value("${refresh.cookie.validity}")
     private long refreshCookieValidity;
 
@@ -128,7 +130,7 @@ public class AuthService {
         GoogleUserDto googleUser;
         try {
             ResponseEntity<GoogleUserDto> response = restTemplate.getForEntity(
-                    "https://www.googleapis.com/oauth2/v1/userinfo?access_token={access_token}",
+                    GOOGLE_OAUTH_API,
                     GoogleUserDto.class,
                     params
             );

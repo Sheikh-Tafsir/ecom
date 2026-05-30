@@ -8,8 +8,9 @@ import java.math.BigDecimal;
 public record UpdateStockItemRequest(
         Long id,
 
+        @NotNull
         @Min(1)
-        int quantity,
+        Integer quantity,
 
         @NotNull
         BigDecimal cost
