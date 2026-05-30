@@ -1,6 +1,8 @@
 package com.example.demo.common.utils;
 
 import com.example.demo.common.dto.ApiResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +10,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +19,7 @@ import java.util.Map;
 public final class ResponseUtils {
 
     private static final String GLOBAL_ERROR = "global";
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private ResponseUtils() {
     }
@@ -64,5 +68,15 @@ public final class ResponseUtils {
 
     public static ResponseEntity<ApiResponse<Void>> error(Map<String, List<String>> errors, HttpStatusCode statusCode) {
         return new ResponseEntity<>(new ApiResponse<>(errors), statusCode);
+    }
+
+    //filter error
+    public static void filterError(HttpServletResponse response, HttpStatus httpStatus, String message) throws IOException {
+        Map<String, List<String>> errors = new HashMap<>();
+        errors.put(GLOBAL_ERROR, List.of(message));
+
+        response.setStatus(httpStatus.value());
+        response.setContentType("application/json");
+        response.getWriter().write(OBJECT_MAPPER.writeValueAsString(new ApiResponse<>(errors)));
     }
 }

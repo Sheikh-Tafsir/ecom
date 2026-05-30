@@ -19,14 +19,14 @@ public class ProductValidator {
     private final CommonValidator commonValidator;
 
     public void validateCreate(CreateProductRequest request, Errors errors) {
-        extracted(request.images(), errors);
+        validate(request.images(), errors);
     }
 
     public void validateUpdate(UpdateProductRequest request, Errors errors) {
-        extracted(request.images(), errors);
+        validate(request.images(), errors);
     }
 
-    private void extracted(Set<MultipartFile> request, Errors errors) {
+    private void validate(Set<MultipartFile> request, Errors errors) {
         if (request.size() > MAX_IMAGE_COUNT) {
             errors.rejectValue("images", "error.file.quantity", new Object[]{MAX_IMAGE_COUNT},
                     "Cannot upload more than " + MAX_IMAGE_COUNT + " files");

@@ -1,7 +1,6 @@
 package com.example.demo.common.filter;
 
 import com.example.demo.common.dto.CustomUserDetails;
-import com.example.demo.common.exception.InvalidAccessTokenException;
 import com.example.demo.common.service.CustomUserDetailsService;
 import com.example.demo.common.service.JwtService;
 import jakarta.servlet.FilterChain;
@@ -10,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import static com.example.demo.common.config.SecurityConfig.AUTH_URL;
 import static com.example.demo.common.config.SecurityConfig.PUBLIC_URLS;
+import static com.example.demo.common.utils.ResponseUtils.filterError;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -63,7 +64,8 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
         try {
             if (!jwtService.isAccessTokenValid(token)) {
-                throw new InvalidAccessTokenException("Invalid or expired JWT token");
+                filterError(response, HttpStatus.UNAUTHORIZED, "Invalid or expired JWT token");
+                return;
             }
 
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -78,7 +80,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
             chain.doFilter(request, response);
         } catch (Exception ex) {
-            throw new InvalidAccessTokenException("Error validating JWT token");
+            filterError(response, HttpStatus.UNAUTHORIZED, "Error validating JWT token");
         }
     }
 }

@@ -3,6 +3,7 @@ package com.example.demo.common.utils;
 import com.example.demo.common.dto.CustomUserDetails;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import static com.example.demo.common.utils.SecurityConstants.*;
 import static com.example.demo.common.utils.Utils.isEmpty;
@@ -40,17 +41,19 @@ public final class SecurityUtil {
     }
 
     public static boolean hasRole(String role) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return hasRole(role, getUserDetails());
+    }
 
-        if (auth == null || !auth.isAuthenticated() || isEmpty(auth.getAuthorities())) {
-            return false;
+    public static CustomUserDetails getUserDetails() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null
+                && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof UserDetails) {
+            return (CustomUserDetails) authentication.getPrincipal();
         }
 
-        return auth.getAuthorities().stream()
-                .anyMatch(a ->
-                        a.getAuthority().equals(getRoleWithPrefix(role))
-                );
-
+        return null;
     }
 
     private static String getRoleWithPrefix(String role) {

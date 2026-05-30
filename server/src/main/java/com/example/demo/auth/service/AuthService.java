@@ -185,6 +185,7 @@ public class AuthService {
         addCookie(response, REFRESH_TOKEN_COOKIE_NAME, null, 0);
     }
 
+    @Transactional
     public void resetPassword(ResetPasswordRequest resetPasswordRequest) {
         User user = findByEmail(resetPasswordRequest.email());
 
@@ -254,6 +255,7 @@ public class AuthService {
 
         if (otp.getId() != null) {
             LocalDateTime now = LocalDateTime.now();
+
             if (!otp.getExpiresAt().isBefore(now)) {
                 throw new BadCredentialsException("Previous OTP has not been expired");
             }
