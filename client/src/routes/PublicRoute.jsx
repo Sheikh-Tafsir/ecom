@@ -1,8 +1,8 @@
 import React from 'react'
 import { Outlet} from 'react-router-dom'
 
-import Footer from '@/mycomponents/Footer'
-import NavigationBar from '@/mycomponents/NavigationBar'
+import Footer from '@/components/common/Footer'
+import NavigationBar from '@/components/common/NavigationBar'
 
 const PublicRoute = () => {
     return(

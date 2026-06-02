@@ -1,4 +1,4 @@
-import NavigationBar from '@/mycomponents/NavigationBar'
+import NavigationBar from '@/components/common/NavigationBar'
 import { useState, useEffect } from "react";
 
 import {
@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from '@/components/ui/button';
-import Footer from '@/mycomponents/Footer';
+import Footer from '@/components/common/Footer';
 import {
   Accordion,
   AccordionContent,
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/accordion"
 import CardData from '@/pages/homepage/HomepageCardData';
 import HomepageAccordionData from '@/pages/homepage/HomepageAccordionData';
-import { API_PATH } from '@/middleware/Axios.js';
+import { API_PATH } from '@/services/http/Axios.js';
 
 const backgroundImages = [
   "/img/pexels-pixabay-207891.jpg",

@@ -14,11 +14,11 @@ import {
 } from "@/components/ui/card.jsx"
 import {Input} from "@/components/ui/input.jsx"
 import {Label} from "@/components/ui/label.jsx"
-import {ButtonLoading} from '@/mycomponents/ButtonLoading';
-import {AxiosNoInterceptor} from '@/middleware/Axios';
+import {ButtonLoading} from '@/components/common/ButtonLoading';
+import {AxiosNoInterceptor} from '@/services/http/Axios';
 import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils.js';
 import {useUserStore} from '@/store/useUserStore.js';
-import FormError from "@/mycomponents/FormError.jsx";
+import FormError from "@/components/common/FormError.jsx";
 
 const SignupSchema = z.object({
     name: z

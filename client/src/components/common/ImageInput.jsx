@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input.jsx';
 import { Label } from '@/components/ui/label.jsx';
 import { Button } from '@/components/ui/button.jsx';
-import { MAX_FILE_SIZE } from '@/utils/Utils';
+import { MAX_FILE_SIZE } from '@/utils';
 
 const ImageInput = ({ existingImage, onImageChange, error }) => {
   const fileRef = useRef();

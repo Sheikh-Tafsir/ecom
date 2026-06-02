@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/card"
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
-import {Axios} from '@/middleware/Axios.js';
-import {ButtonLoading} from '@/mycomponents/ButtonLoading';
+import {Axios} from '@/services/http/Axios.js';
+import {ButtonLoading} from '@/components/common/ButtonLoading';
 
 const ForgotPassword = () => {
     const navigate = useNavigate();

@@ -1,30 +1,28 @@
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect } from "react"
 import { Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import ProductCard from "./ProductCard"
-import { Axios } from "@/middleware/Axios.js"
-import PaginationButton from "@/mycomponents/PaginationButton"
+import { Axios } from "@/services/http/Axios"
+import PaginationButton from "@/components/common/PaginationButton"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import { FIRST_PAGE, getQueryString } from '../utils/NavigationUtils';
+import { FIRST_PAGE, getQueryString, isInvalidPage } from "@/utils"
 import { PRODUCT_SORTBY } from "@/utils/enums"
 import { useQuery } from "@tanstack/react-query"
-import PageLoadingOverlay from "@/mycomponents/pageLoadingOverlay/PageLoadingOverlay"
-import { ToastAlert } from "@/mycomponents/ToastAlert"
+import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay"
+import { ToastAlert } from "@/components/common/ToastAlert"
 
 export default function ProductList() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const queryParams = Object.fromEntries(searchParams.entries());
 
-  //const queryParams = Object.fromEntries(searchParams.entries());
-  const queryParams = useMemo(() => Object.fromEntries(searchParams.entries()), [searchParams]);
-  const page = searchParams.get("page") || FIRST_PAGE;
-  const [search, setSearch] = useState(searchParams.get("search") || '')
-  const [category, setCategory] = useState(searchParams.get("category") || "All")
-  const [sortBy, setSortBy] = useState(searchParams.get("sortBy") || PRODUCT_SORTBY.DATE_DESC.value)
-
+  const page = parseInt(queryParams.page) || FIRST_PAGE;
+  const [search, setSearch] = useState(queryParams.search || '')
+  const [category, setCategory] = useState(queryParams.category || "All")
+  const [sortBy, setSortBy] = useState(queryParams.sortBy || PRODUCT_SORTBY.DATE_DESC.value)
   const [debouncedSearch, setDebouncedSearch] = useState(search);
-  const [toastData, setToastData] = useState(toastInitialState);
+  const [toastData, setToastData] = useState({ message: "", type: "", id: Date.now() });
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -35,51 +33,61 @@ export default function ProductList() {
   }, [search]);
 
   const fetchProducts = async ({ queryKey }) => {
-    const [_key, params] = queryKey;
-    const response = await Axios.get("/products", { queryParams });
+    const [_key, { page, search, category, sortBy }] = queryKey;
+
+    const response = await Axios.get("/products", {
+      params: {
+        page,
+        search,
+        category,
+        sortBy,
+      },
+    });
+
+    // console.log(response.data.data)
     return response.data.data;
   };
 
   const fetchCategories = async () => {
-    const response = await Axios.get("/categories");
-    return response.data.data;
+    const res = await Axios.get("/categories");
+    return res.data.data;
   };
 
   const {
     data: categories = [],
-    isLoading: isCategoriesLoading,
-    isError: isCategoriesError,
-  } = useQuery({
-    queryKey: ["categories"],
-    queryFn: fetchCategories,
-  });
+    isLoading: categoriesLoading,
+    isError: categoriesError,
+  } = useQuery({ queryKey: ["categories"], queryFn: fetchCategories, staleTime: 60 * 60 * 1000, });
 
   // Products Query
   const {
     data: productData,
-    isLoading: isProductsLoading,
-    isError: isProductsError,
+    isLoading: productsLoading,
+    isError: productsError,
   } = useQuery({
-    queryKey: ["products", queryParams],
+    queryKey: [
+      "products",
+      {
+        page,
+        search: debouncedSearch,
+        category: category || "All",
+        sortBy: sortBy || PRODUCT_SORTBY.DATE_DESC.value,
+      },
+    ],
     queryFn: fetchProducts,
     // keepPreviousData: true,
   });
 
-  const products = productData?.content || [];
-  const totalPages = productData?.totalPages || FIRST_PAGE;
-
-  if (isCategoriesError || isProductsError) {
-    console.error(isCategoriesError ? isCategoriesError : isProductsError);
-    showToast("Failed to load products", TOAST_TYPE.ERROR);
-  }
+  const products = productData?.rows || [];
+  const totalPages = productData?.totalPages;
 
   useEffect(() => {
-    const navQueryParams = { ...queryParams, search: debouncedSearch, category, sortBy };
-    const newQuery = getQueryString(navQueryParams);
-    if (newQuery !== window.location.search) {
-      navigate(newQuery, { replace: true });
-    }
-  }, [debouncedSearch, category, sortBy]);
+    if (isInvalidPage(page, totalPages)) {
+      navigate("/products", { replace: true });
+      // console.log("problem: ", page, totalPages);
+    };
+
+  }, [page, totalPages, navigate]);
 
   useEffect(() => {
     const navQueryParams = {
@@ -98,7 +106,7 @@ export default function ProductList() {
 
   return (
     <>
-      {(isCategoriesLoading || isProductsLoading) && <PageLoadingOverlay />}
+      {(categoriesLoading || productsLoading) && <PageLoadingOverlay />}
 
       <div className="container pb-8">
         <div className="mb-8">
@@ -169,6 +177,7 @@ export default function ProductList() {
               :
               <PaginationButton totalPages={totalPages} />
           )
+
         }
       </div>
 

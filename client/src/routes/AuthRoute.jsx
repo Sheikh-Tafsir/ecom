@@ -1,6 +1,6 @@
 import { Outlet, Navigate, Link } from 'react-router-dom'
-import { APP_NAME } from '../utils/Utils';
-import { useUserStore } from '../store/useUserStore';
+import { APP_NAME } from '@/utils';
+import { useUserStore } from '@/store/useUserStore';
 
 const AuthRoute = () => {
     const { isAuthenticated } = useUserStore();

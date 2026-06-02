@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { BookImage } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { validateFile } from '@/utils/Utils';
+import { validateFile } from '@/utils';
 
 export default function ImageInputInplace({ image, setImage }) {
   const fileInputRef = useRef(null);

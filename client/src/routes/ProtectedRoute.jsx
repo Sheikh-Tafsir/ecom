@@ -1,7 +1,7 @@
 import { Outlet, Navigate } from 'react-router-dom'
 
-import NavigationBar from '@/mycomponents/NavigationBar';
-import { useUserStore } from '../store/useUserStore';
+import NavigationBar from '@/components/common/NavigationBar';
+import { useUserStore } from '@/store/useUserStore';
 
 const ProtectedRoute = ({ allowedRoles }) => {
     const { isAuthenticated, user } = useUserStore();

@@ -2,27 +2,27 @@ import { Routes, Route, BrowserRouter } from "react-router-dom";
 import React, { useEffect } from 'react';
 import './App.css'
 
-import AuthRoute from "./middleware/AuthRoute";
-import ProtectedRoute from "./middleware/ProtectedRoute";
-import PublicRoute from "./middleware/PublicRoute";;
+import AuthRoute from "@/routes/AuthRoute";
+import ProtectedRoute from "@/routes/ProtectedRoute";
+import PublicRoute from "@/routes/PublicRoute";
 
-import { connectSocket, disconnectSocket } from '@/mycomponents/socket';
-import { USER_ROLE } from "./utils/enums";
-import NotificationListener from "./mycomponents/NotificationListener";
+import { connectSocket, disconnectSocket } from '@/services/realtime/socket';
+import { USER_ROLE } from "@/utils/enums";
+import NotificationListener from "@/components/common/NotificationListener";
 
-import Homepage from './pages/homepage/Homepage';
-import NotFound from './pages/NotFound';
+import Homepage from '@/pages/homepage/Homepage';
+import NotFound from '@/pages/NotFound';
 
-import Login from "./pages/auth/Login.jsx";
-import Signup from "./pages/auth/Signup.jsx";
-import ForgotPassword from "./pages/auth/ForgotPassword";
-import ResetPassword from "./pages/auth/ResetPassword";
+import Login from "@/pages/auth/Login.jsx";
+import Signup from "@/pages/auth/Signup.jsx";
+import ForgotPassword from "@/pages/auth/ForgotPassword";
+import ResetPassword from "@/pages/auth/ResetPassword";
 
-import Profile from './pages/profile/Profile.jsx'
+import Profile from '@/pages/profile/Profile.jsx'
 
-import UserList from "./pages/users/UserList.jsx";
-import UserEdit from "./pages/users/UserEdit.jsx";
-import { useUserStore } from "./store/useUserStore";
+import UserList from "@/pages/users/UserList.jsx";
+import UserEdit from "@/pages/users/UserEdit.jsx";
+import { useUserStore } from "@/store/useUserStore";
 
 const App = () => {
 

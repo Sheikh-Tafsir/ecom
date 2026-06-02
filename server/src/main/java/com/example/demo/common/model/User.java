@@ -14,7 +14,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "spring_users")
 @Getter
 @Setter
 @NoArgsConstructor

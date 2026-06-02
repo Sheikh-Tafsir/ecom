@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { API_PATH } from "@/middleware/Axios.js";
+import { API_PATH } from "@/services/http/Axios.js";
 import { Notification } from "./Notification";
 import { getAccessToken } from "@/utils/AuthUtils";
 

@@ -15,17 +15,17 @@ import {
 } from '@/components/ui/card.jsx';
 import { Input } from '@/components/ui/input.jsx';
 import { Label } from '@/components/ui/label.jsx';
-import { Axios } from '@/middleware/Axios';
-import { AlertAction } from '@/mycomponents/AlertAction';
-import { ButtonLoading } from "@/mycomponents/ButtonLoading";
-import ImageInput from '@/mycomponents/ImageInput';
-import InputViewMode from '@/mycomponents/InputViewMode';
-import PageLoadingOverlay from '@/mycomponents/pageLoadingOverlay/PageLoadingOverlay';
-import StaredLabel from '@/mycomponents/StaredLabel';
-import { ToastAlert } from '@/mycomponents/ToastAlert';
+import { Axios } from '@/services/http/Axios';
+import { AlertAction } from '@/components/common/AlertAction';
+import { ButtonLoading } from "@/components/common/ButtonLoading";
+import ImageInput from '@/components/common/ImageInput';
+import InputViewMode from '@/components/common/InputViewMode';
+import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay';
+import StaredLabel from '@/components/common/StaredLabel';
+import { ToastAlert } from '@/components/common/ToastAlert';
 import { TOAST_TYPE, ALERT_TYPE } from '@/utils/enums';
-import { handleErrors } from '../../utils/ErrorUtils';
-import { initialToastState, prepareMultipartForm } from '@/utils/Utils';
+import { handleErrors } from '@/utils/ErrorUtils';
+import { initialToastState, prepareMultipartForm } from '@/utils';
 
 // Zod schema
 const UserSchema = z.object({

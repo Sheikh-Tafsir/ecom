@@ -19,17 +19,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Axios } from "@/middleware/Axios";
-import { AlertAction } from "@/mycomponents/AlertAction";
-import PaginationButton from "@/mycomponents/PaginationButton";
-import PaginationSearch from "@/mycomponents/PaginationSearch";
-import PageLoadingOverlay from "@/mycomponents/pageLoadingOverlay/PageLoadingOverlay";
-import { ToastAlert } from "@/mycomponents/ToastAlert";
+import { Axios } from "@/services/http/Axios";
+import { AlertAction } from "@/components/common/AlertAction";
+import PaginationButton from "@/components/common/PaginationButton";
+import PaginationSearch from "@/components/common/PaginationSearch";
+import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
+import { ToastAlert } from "@/components/common/ToastAlert";
 import { formatDateString } from "@/utils/DateUtils";
 import { handleErrors } from "@/utils/ErrorUtils";
 import { ALERT_TYPE, TOAST_TYPE, USER_ROLE, USER_STATUS } from "@/utils/enums";
 import { FIRST_PAGE } from "@/utils/PaginationUtils.js";
-import { initialToastState } from "@/utils/Utils";
+import { initialToastState } from "@/utils";
 
 const UserList = () => {
   const navigate = useNavigate();

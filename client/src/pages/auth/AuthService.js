@@ -1,4 +1,4 @@
-import {AxiosNoInterceptor} from '@/middleware/Axios.js';
+import {AxiosNoInterceptor} from '@/services/http/Axios.js';
 
 export const logout = async () => {
     try {

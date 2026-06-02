@@ -9,9 +9,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { APP_NAME } from '@/utils/Utils'
+import { APP_NAME } from '@/utils'
 import { USER_ROLE } from '@/utils/enums'
-import { useUserStore } from '../store/useUserStore'
+import { useUserStore } from '@/store/useUserStore'
 
 const BASE_MENU = [{ name: 'Home', href: '/' }]
 const LOGIN_MENU = [{ name: 'Login', href: '/auth/login' }]

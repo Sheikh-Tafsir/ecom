@@ -12,8 +12,8 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { ButtonLoading } from '@/mycomponents/ButtonLoading';
-import { Axios } from '@/middleware/Axios.js';
+import { ButtonLoading } from '@/components/common/ButtonLoading';
+import { Axios } from '@/services/http/Axios.js';
 import { Label } from '@/components/ui/label';
 
 

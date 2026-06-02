@@ -4,7 +4,7 @@ import { Search } from "lucide-react"
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { FIRST_PAGE, getQueryString } from '../utils/PaginationUtils';
+import { FIRST_PAGE, getQueryString } from '@/utils/PaginationUtils';
 
 const PaginationSearch = ({ moduleName = "items" }) => {
     const navigate = useNavigate();

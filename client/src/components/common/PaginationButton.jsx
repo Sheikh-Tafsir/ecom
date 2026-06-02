@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { PaginationEllipsis } from '@/components/ui/pagination'
-import { FIRST_PAGE, getQueryString } from '../utils/PaginationUtils';
+import { FIRST_PAGE, getQueryString } from '@/utils/PaginationUtils';
 
 const PaginationButton = ({ totalPages = 1 }) => {
     const navigate = useNavigate();
