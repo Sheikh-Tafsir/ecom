@@ -18,7 +18,7 @@ import {ButtonLoading} from '@/components/common/ButtonLoading';
 import {AxiosNoInterceptor} from '@/services/http/Axios';
 import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils.js';
 import {useUserStore} from '@/store/useUserStore.js';
-import FormError from "@/components/common/FormError.jsx";
+import InputError from "@/components/common/InputError.jsx";
 
 const SignupSchema = z.object({
     name: z
@@ -79,7 +79,7 @@ const Signup = () => {
                         </CardHeader>
 
                         <CardContent className="space-y-4">
-                            <FormError errors={errors} field={GLOBAL_ERROR}/>
+                            <InputError errors={errors} field={GLOBAL_ERROR}/>
 
                             {/* Name */}
                             <div className="space-y-2">
@@ -87,7 +87,7 @@ const Signup = () => {
                                     Name<p className="text-red-600 ml-1">*</p>
                                 </Label>
                                 <Input type="text" id="name" {...register("name")} />
-                                <FormError errors={errors} field={"name"}/>
+                                <InputError errors={errors} field={"name"}/>
                             </div>
 
                             {/* Email */}
@@ -96,7 +96,7 @@ const Signup = () => {
                                     Email<p className="text-red-600 ml-1">*</p>
                                 </Label>
                                 <Input type="email" id="email" {...register("email")} />
-                                <FormError errors={errors} field={"email"}/>
+                                <InputError errors={errors} field={"email"}/>
                             </div>
 
                             {/* Password */}
@@ -105,7 +105,7 @@ const Signup = () => {
                                     Password<p className="text-red-600 ml-1">*</p>
                                 </Label>
                                 <Input type="password" id="password" {...register("password")} />
-                                <FormError errors={errors} field={"password"}/>
+                                <InputError errors={errors} field={"password"}/>
                             </div>
 
                             {/* Confirm Password */}
@@ -118,7 +118,7 @@ const Signup = () => {
                                     id="confirmPassword"
                                     {...register("confirmPassword")}
                                 />
-                                <FormError errors={errors} field={"confirmPassword"}/>
+                                <InputError errors={errors} field={"confirmPassword"}/>
                             </div>
                         </CardContent>
 

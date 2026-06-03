@@ -39,9 +39,11 @@ export default function Navbar() {
     if (isAuthenticated()) {
       items = [
         ...items,
-        ...LOGGED_IN_MENU.filter(
-          (item) => !item.role || item.role.includes(user.role)
-        ),
+        ...LOGGED_IN_MENU.filter((item) => {
+          if (!item.role) return true;
+          const userRoles = (user?.role) ? (Array.isArray(user.role) ? user.role : [user.role]) : [];
+          return item.role.some((role) => userRoles.includes(role));
+        }),
       ];
     } else {
       items = [...items, { name: 'Products', href: '/products' }];
@@ -114,7 +116,7 @@ export default function Navbar() {
                     <DropdownMenuTrigger asChild className="max-h-[50%]">
                       <Button variant="ghost" className="text-white hover:text-primary/80 text-sm font-medium h-full bg-white"
                         style={{ color: 'rgb(24,62,139)' }}>
-                        <p>{JSON.stringify(user)}</p>
+                        <p>{user.name}</p>
                         <ChevronDown className="ml-1 h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>

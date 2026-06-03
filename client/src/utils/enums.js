@@ -16,9 +16,9 @@ export const USER_STATUS = Object.freeze({
 });
 
 export const USER_ROLE = Object.freeze({
-  USER: 'User',
-  ADMIN: 'Admin',
-  SUPER_ADMIN: 'Super Admin',
+  USER: 'ROLE_USER',
+  ADMIN: 'ROLE_ADMIN',
+  SUPER_ADMIN: 'ROLE_SUPER_ADMIN',
 });
 
 export const CONTENT_TYPE = Object.freeze({

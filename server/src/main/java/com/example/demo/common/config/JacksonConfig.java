@@ -4,6 +4,7 @@ import com.example.demo.common.serializer.StringTrimmerDeserializer;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +21,7 @@ public class JacksonConfig {
         return builder -> {
             builder.modules(new SimpleModule("TrimStringsModule")
                     .addDeserializer(String.class, new StringTrimmerDeserializer()));
+            builder.modules(new JavaTimeModule());
             builder.simpleDateFormat("dd-MM-yyyy'T'HH:mm:ss.SSSZ");
             builder.featuresToDisable(DeserializationFeature.ACCEPT_FLOAT_AS_INT);
             builder.featuresToDisable(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE);

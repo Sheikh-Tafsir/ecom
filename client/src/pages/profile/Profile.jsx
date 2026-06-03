@@ -1,28 +1,29 @@
-import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { z } from "zod";
+import React, {useEffect, useState} from "react";
+import {useLocation, useNavigate} from "react-router-dom";
+import {useForm, Controller} from "react-hook-form";
+import {zodResolver} from "@hookform/resolvers/zod";
+import {useQuery, useMutation, useQueryClient} from "@tanstack/react-query";
+import {z} from "zod";
 
-import { Button } from "@/components/ui/button.jsx";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card.jsx";
-import { Input } from "@/components/ui/input.jsx";
-import { Label } from "@/components/ui/label.jsx";
+import {Button} from "@/components/ui/button.jsx";
+import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components/ui/card.jsx";
+import {Input} from "@/components/ui/input.jsx";
+import {Label} from "@/components/ui/label.jsx";
 
-import { Axios } from "@/services/http/Axios";
-import { AlertAction } from "@/components/common/AlertAction";
-import { ButtonLoading } from "@/components/common/ButtonLoading";
+import {Axios} from "@/services/http/Axios";
+import {AlertAction} from "@/components/common/AlertAction";
+import {ButtonLoading} from "@/components/common/ButtonLoading";
 import ImageInput from "@/components/common/ImageInput";
 import InputViewMode from "@/components/common/InputViewMode";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
 import StaredLabel from "@/components/common/StaredLabel";
-import { ToastAlert } from "@/components/common/ToastAlert";
+import {ToastAlert} from "@/components/common/ToastAlert";
 
-import { useUserStore } from "@/store/useUserStore";
-import { handleErrors } from "@/utils/ErrorUtils";
-import { TOAST_TYPE, ALERT_TYPE } from "@/utils/enums";
-import { initialToastState, prepareMultipartForm } from "@/utils";
+import {useUserStore} from "@/store/useUserStore";
+import {handleErrors} from "@/utils/ErrorUtils";
+import {TOAST_TYPE, ALERT_TYPE} from "@/utils/enums";
+import {initialToastState, prepareMultipartForm} from "@/utils";
+import InputError from "@/components/common/InputError.jsx";
 
 const ProfileSchema = z.object({
     name: z.string()
@@ -38,7 +39,7 @@ const Profile = () => {
 
     const isEditable = location.pathname.endsWith("/edit");
 
-    const { login, logout } = useUserStore();
+    const {login, logout} = useUserStore();
 
     const [toastData, setToastData] = useState(initialToastState);
 
@@ -49,12 +50,12 @@ const Profile = () => {
         watch,
         reset,
         setError,
-        formState: { errors, isSubmitting },
+        formState: {errors, isSubmitting},
     } = useForm({
         resolver: zodResolver(ProfileSchema),
     });
 
-    const { data: profile, isLoading: isPageLoading } = useQuery({
+    const {data: profile, isLoading: isPageLoading} = useQuery({
         queryKey: ["profile"],
         queryFn: async () => {
             const res = await Axios.get("/profile");
@@ -80,7 +81,7 @@ const Profile = () => {
         },
 
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ["profile"] });
+            await queryClient.invalidateQueries({queryKey: ["profile"]});
 
             showToast("Successfully updated", TOAST_TYPE.SUCCESS);
 
@@ -136,8 +137,8 @@ const Profile = () => {
 
     // ---------------- UI ----------------
     return (
-        <>
-            {isPageLoading && <PageLoadingOverlay />}
+        <React.Fragment>
+            {isPageLoading && <PageLoadingOverlay/>}
 
             <div className="min-h-[90vh] flex">
                 <Card className="mx-auto my-auto w-[450px]">
@@ -151,7 +152,7 @@ const Profile = () => {
                                 <Controller
                                     name="image"
                                     control={control}
-                                    render={({ field }) => (
+                                    render={({field}) => (
                                         <ImageInput
                                             existingImage={field.value}
                                             onImageChange={field.onChange}
@@ -162,29 +163,25 @@ const Profile = () => {
 
                                 <div className="space-y-1">
                                     <Label>Email</Label>
-                                    <InputViewMode value={watch("email")} isEditable={isEditable} />
+                                    <InputViewMode value={watch("email")} isEditable={isEditable}/>
                                 </div>
 
                                 <div className="space-y-1">
-                                    <StaredLabel label="Name" />
-                                    <Input {...register("name")} placeholder="Md Rafiquddin" />
-                                    {errors.name && (
-                                        <p className="validation-error">
-                                            {errors.name.message}
-                                        </p>
-                                    )}
+                                    <StaredLabel label="Name"/>
+                                    <Input {...register("name")} placeholder="Md Rafiquddin"/>
+                                    <InputError errors={errors} field="name"/>
                                 </div>
 
                                 <div className="space-y-1">
                                     <Label>Role</Label>
-                                    <InputViewMode value={watch("role")} isEditable={isEditable} />
+                                    <InputViewMode value={(watch("role") || []).join(", ")} isEditable={isEditable}/>
                                 </div>
                             </CardContent>
                         </fieldset>
 
                         <CardFooter className="flex-col gap-2">
                             {isSubmitting ? (
-                                <ButtonLoading css="w-full" />
+                                <ButtonLoading css="w-full"/>
                             ) : !isEditable ? (
                                 <div className="w-full flex gap-2">
                                     <Button
@@ -218,7 +215,7 @@ const Profile = () => {
                     type={toastData.type}
                 />
             )}
-        </>
+        </React.Fragment>
     );
 };
 

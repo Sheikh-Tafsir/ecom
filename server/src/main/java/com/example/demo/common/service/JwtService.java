@@ -15,16 +15,16 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    public final Long accessTokenValidity; // 30 minutes
+    public final Long accessTokenValidity;
 
-    public final Long refreshTokenValidity; // 7 days
+    public final Long refreshTokenValidity;
 
     private final Key accessTokenSecret;
 
     private final Key refreshTokenSecret;
 
-    public JwtService(@Value("${jwt.access.token.validity}") Long accessTokenValidity,
-                      @Value("${jwt.refresh.token.validity}") Long refreshTokenValidity,
+    public JwtService(@Value("${jwt.access.token.validity}") Long accessTokenValidity, // 30 minutes
+                      @Value("${jwt.refresh.token.validity}") Long refreshTokenValidity, // 7 days
                       @Value("${jwt.access.token.value}") String accessTokenSecret,
                       @Value("${jwt.refresh.token.value}") String refreshTokenSecret) {
 
@@ -61,6 +61,9 @@ public class JwtService {
     private String buildToken(User user, Key secretKey, long tokenValidity) {
         return Jwts.builder()
                 .setSubject(user.getEmail())
+                .claim("name", user.getName())
+                .claim("email", user.getEmail())
+                .claim("role", user.getRoles())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + tokenValidity))
                 .signWith(secretKey)

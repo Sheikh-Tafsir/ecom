@@ -23,7 +23,7 @@ import {ButtonLoading} from '@/components/common/ButtonLoading';
 import {AxiosNoInterceptor} from '@/services/http/Axios';
 import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils';
 import {useUserStore} from '@/store/useUserStore.js';
-import FormError from "@/components/common/FormError.jsx";
+import InputError from "@/components/common/InputError.jsx";
 
 // ✅ Validation schema
 const LoginSchema = z.object({
@@ -95,7 +95,7 @@ const Login = () => {
                         </CardHeader>
 
                         <CardContent className="space-y-4">
-                            <FormError errors={errors} field={GLOBAL_ERROR}/>
+                            <InputError errors={errors} field={GLOBAL_ERROR}/>
 
                             {/* Email */}
                             <div className="space-y-2">
@@ -103,7 +103,7 @@ const Login = () => {
                                     Email<p className='text-red-600'>*</p>
                                 </Label>
                                 <Input id="email" type="email" {...register('email')} />
-                                <FormError errors={errors} field={"email"}/>
+                                <InputError errors={errors} field={"email"}/>
                             </div>
 
                             {/* Password */}
@@ -133,7 +133,7 @@ const Login = () => {
                                         )}
                                     </Button>
                                 </div>
-                                <FormError errors={errors} field={"password"}/>
+                                <InputError errors={errors} field={"password"}/>
                             </div>
 
                             {/* Remember me + Forgot password */}

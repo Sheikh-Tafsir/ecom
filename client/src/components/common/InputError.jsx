@@ -1,6 +1,6 @@
 import {getError} from "@/utils/ErrorUtils.js";
 
-const FormError = ({errors, field}) => {
+const InputError = ({errors, field}) => {
     return (
         <>
             <p className="validation-error">
@@ -10,4 +10,4 @@ const FormError = ({errors, field}) => {
     )
 }
 
-export default FormError
+export default InputError

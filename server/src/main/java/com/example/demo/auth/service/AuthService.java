@@ -52,8 +52,6 @@ public class AuthService {
 
     public static final String GOOGLE_OAUTH_API= "https://www.googleapis.com/oauth2/v1/userinfo?access_token={access_token}";
 
-
-
     @Value("${refresh.cookie.validity}")
     private long refreshCookieValidity;
 
