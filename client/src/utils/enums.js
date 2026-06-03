@@ -115,6 +115,26 @@ export const DIFFICULTY_LEVEL = Object.freeze({
 
 export const QUESTION_OPTION_MAP = ["a", "b", "c", "d"];
 
+export const PRODUCT_SORTBY = Object.freeze({
+  DATE_DESC: { label: "Newest First", value: "createdAt,DESC" },
+  PRICE_ASC: { label: "Price: Low to High", value: "price,ASC" },
+  PRICE_DESC: { label: "Price: High to Low", value: "price,DESC" },
+  NAME_ASC: { label: "Name: A to Z", value: "name,ASC" },
+});
+
+export const PAYMENT_METHOD = Object.freeze({
+  CASH_ON_DELIVERY: "Cash on Delivery",
+  CARD: "Card",
+});
+
+export const ORDER_STATUS = Object.freeze({
+  PENDING: "Pending",
+  PROCESSING: "Processing",
+  SHIPPED: "Shipped",
+  DELIVERED: "Delivered",
+  CANCELLED: "Cancelled",
+});
+
 export const ALERT_TYPE = {
   ADD: "Add",
   CONFIRM: "Confirm",

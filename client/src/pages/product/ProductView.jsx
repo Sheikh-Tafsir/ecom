@@ -20,8 +20,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
-import { useUserContext } from '@/context/UserContext';
-import { useCartContext } from '@/providers/CartContext'
+import { useCartStore } from '@/store/useCartStore'
 import { Axios } from "@/services/http/Axios"
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay"
 import { Label } from "@/components/ui/label"
@@ -31,11 +30,12 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import ReviewCard from "./ReviewCard"
 import { ToastAlert } from "@/components/common/ToastAlert"
 import { TOAST_TYPE } from "@/utils/enums"
+import { useUserStore } from "@/store/useUserStore"
 
 export default function ProductView() {
   const { id } = useParams()
-  const { user } = useUserContext();
-  const { addToCart } = useCartContext()
+  const { user } = useUserStore();
+  const { addToCart } = useCartStore()
 
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [isButtonLoading, setIsButtonLoading] = useState(false);

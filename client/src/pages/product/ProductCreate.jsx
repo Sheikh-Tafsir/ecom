@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -33,6 +36,15 @@ import { URL_NOT_FOUND } from '@/utils';
 
 const MAX_IMAGES = 5;
 
+const productSchema = z.object({
+    name: z.string().min(1, 'Name is required'),
+    description: z.string().optional(),
+    price: z.coerce.number().min(0, 'Price must be positive'),
+    quantity: z.coerce.number().int().min(0, 'Quantity must be positive'),
+    cost: z.coerce.number().min(0, 'Cost must be positive'),
+    categoryId: z.string().min(1, 'Category is required'),
+});
+
 const ProductCreate = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -40,20 +52,32 @@ const ProductCreate = () => {
     const isCreatePage = location.pathname.includes("/create");
 
     const [categories, setCategories] = useState([]);
-    const [product, setProduct] = useState({
-        name: '',
-        description: '',
-        price: '',
-        quantity: '',
-        cost: '',
-        categoryId: '',
-    });
     const [images, setImages] = useState([]);
     const [existingImages, setExistingImages] = useState([]);
-    const [errors, setErrors] = useState({});
     const [isLoading, setIsLoading] = useState({ page: true, button: false });
     const [resetImagesKey, setResetImagesKey] = useState(Date.now());
     const [toastData, setToastData] = useState({ message: "", type: "", id: Date.now() });
+
+    const {
+        register,
+        handleSubmit,
+        setValue,
+        watch,
+        reset,
+        formState: { errors },
+    } = useForm({
+        resolver: zodResolver(productSchema),
+        defaultValues: {
+            name: '',
+            description: '',
+            price: '',
+            quantity: '',
+            cost: '',
+            categoryId: '',
+        },
+    });
+
+    const categoryId = watch('categoryId');
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -79,12 +103,12 @@ const ProductCreate = () => {
                 const response = await Axios.get(`/products/${id}`);
                 const temp = response.data.data;
 
-                setProduct({
+                reset({
                     name: temp.name,
                     description: temp.description,
                     price: temp.price,
                     quantity: temp.quantity,
-                    categoryId: temp.categoryId,
+                    categoryId: String(temp.categoryId),
                 });
                 setExistingImages(temp.images);
             } catch (error) {
@@ -95,86 +119,43 @@ const ProductCreate = () => {
         if (!isCreatePage && id) {
             fetchProduct(id);
         }
-    }, [isCreatePage, id])
+    }, [isCreatePage, id, reset])
 
     const handleError = (error) => {
         console.error(error);
         if ([403, 404].includes(error?.status)) navigate(URL_NOT_FOUND, { replace: true });
-        setErrors(error.response?.data || { global: error.message });
     };
 
-    const prepareFormData = () => {
-        const formData = new FormData();
-        Object.entries(product).forEach(([key, val]) => {
-            if (val !== undefined && val !== null) {
-                formData.append(key, val);
+    const onSubmit = async (data) => {
+        setIsLoading({ ...isLoading, button: true });
+
+        try {
+            if (isCreatePage) {
+                const formData = new FormData();
+                Object.entries(data).forEach(([key, val]) => {
+                    formData.append(key, val);
+                });
+                images.forEach((image) => {
+                    formData.append('images', image);
+                });
+
+                await Axios.post('/products', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
+
+                reset();
+                setImages([]);
+                setResetImagesKey(Date.now());
+                showToast("Successfully created", TOAST_TYPE.SUCCESS);
+            } else {
+                await Axios.put(`/products/${id}`, data);
+                navigate('/products');
             }
-        });
-
-        images.forEach((image) => {
-            formData.append('images', image);
-        });
-
-        return formData;
-    };
-
-    const handleSave = async (e) => {
-        e.preventDefault();
-        setIsLoading({ ...isLoading, button: true });
-        setErrors({});
-
-        try {
-            await Axios.post('/products', prepareFormData(), {
-                headers: { 'Content-Type': 'multipart/form-data' },
-                timeout: 20000
-            });
-
-            setProduct({
-                name: '',
-                description: '',
-                price: '',
-                quantity: '',
-                categoryId: '',
-            });
-            setImages([]);
-            setResetImagesKey(Date.now());
-            showToast("Successfully created", TOAST_TYPE.SUCCESS);
         } catch (error) {
             handleError(error);
         } finally {
             setIsLoading({ ...isLoading, button: false });
         }
-    };
-
-    const handleUpdate = async (e) => {
-        e.preventDefault();
-        setIsLoading({ ...isLoading, button: true });
-        setErrors({});
-
-        try {
-            await Axios.put(`/products/${id}`, {
-                ...product
-            });
-
-            setProduct({
-                name: '',
-                description: '',
-                price: '',
-                quantity: '',
-                categoryId: '',
-            });
-
-            navigate('/products');
-        } catch (error) {
-            handleError(error);
-        } finally {
-            setIsLoading({ ...isLoading, button: false });
-        }
-    };
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setProduct((prev) => ({ ...prev, [name]: value }));
     };
 
     const showToast = (message, type) => {
@@ -187,7 +168,7 @@ const ProductCreate = () => {
 
             <div className="container lg:flex min-h-[100vh] pb-8">
                 <Card className="mx-auto my-auto w-[450px] lg:w-[550px]">
-                    <form onSubmit={isCreatePage ? handleSave : handleUpdate}>
+                    <form onSubmit={handleSubmit(onSubmit)}>
                         <CardHeader>
                             <CardTitle>{isCreatePage ? 'Create' : 'Edit'} Product</CardTitle>
                             <CardDescription>{isCreatePage ? 'Add new' : 'Edit'} product by filling out the information below</CardDescription>
@@ -204,6 +185,7 @@ const ProductCreate = () => {
                                                 src={item.image}
                                                 alt={`preview-${item.image}`}
                                                 className="max-h-[150px] object-cover rounded-md border"
+                                                loading="lazy"
                                             />
                                         </div>
                                     ))}
@@ -214,39 +196,31 @@ const ProductCreate = () => {
                                 <StaredLabel label="Name" />
                                 <Input
                                     type="text"
-                                    name="name"
                                     placeholder="Book"
-                                    value={product.name}
-                                    onChange={handleChange}
-                                    required
+                                    {...register('name')}
                                 />
-                                {errors.name && <p className='validation-error'>{errors.name}</p>}
+                                {errors.name && <p className='validation-error text-red-500 text-xs'>{errors.name.message}</p>}
                             </div>
 
                             <div className='space-y-2'>
                                 <Label htmlFor="description">Description</Label>
                                 <Textarea
-                                    type="text"
-                                    name="description"
                                     placeholder="Short description"
-                                    value={product.description}
-                                    onChange={handleChange}
+                                    {...register('description')}
                                 />
-                                {errors.description && <p className='validation-error'>{errors.description}</p>}
+                                {errors.description && <p className='validation-error text-red-500 text-xs'>{errors.description.message}</p>}
                             </div>
 
                             <div className='space-y-2'>
                                 <StaredLabel label="Selling Price" />
                                 <Input
                                     type="number"
-                                    name="price"
                                     placeholder="100"
-                                    value={product.price || ''}
-                                    onChange={handleChange}
+                                    {...register('price')}
                                     min={0}
-                                    required
+                                    step="0.01"
                                 />
-                                {errors.price && <p className='validation-error'>{errors.price}</p>}
+                                {errors.price && <p className='validation-error text-red-500 text-xs'>{errors.price.message}</p>}
                             </div>
 
                             <div className='space-y-2'>
@@ -254,38 +228,33 @@ const ProductCreate = () => {
                                 {isCreatePage ?
                                     <Input
                                         type="number"
-                                        name="quantity"
                                         placeholder="10"
-                                        value={product.quantity || ''}
-                                        onChange={handleChange}
-                                        required
+                                        {...register('quantity')}
                                     />
                                     :
-                                    <InputReadOnly value={product.quantity} />
+                                    <InputReadOnly value={watch('quantity')} />
                                 }
-                                {errors.quantity && <p className='validation-error'>{errors.quantity}</p>}
+                                {errors.quantity && <p className='validation-error text-red-500 text-xs'>{errors.quantity.message}</p>}
                             </div>
 
                             {isCreatePage &&
                                 <div className='space-y-2'>
-                                    <StaredLabel label="cost" />
+                                    <StaredLabel label="Cost" />
                                     <Input
                                         type="number"
-                                        name="cost"
                                         placeholder="100"
-                                        value={product.cost || ''}
-                                        onChange={handleChange}
+                                        {...register('cost')}
                                         min={0}
-                                        required
+                                        step="0.01"
                                     />
-                                    {errors.description && <p className='validation-error'>{errors.description}</p>}
+                                    {errors.cost && <p className='validation-error text-red-500 text-xs'>{errors.cost.message}</p>}
                                 </div>
                             }
 
                             <div className="flex flex-col space-y-1.5">
                                 <StaredLabel label="Category" />
                                 {isCreatePage ?
-                                    <Select onValueChange={(value) => setProduct((prev) => ({ ...prev, "categoryId": value }))} value={product.categoryId || ""}>
+                                    <Select onValueChange={(value) => setValue('categoryId', value)} value={categoryId}>
                                         <SelectTrigger>
                                             <SelectValue placeholder="Select Category" />
                                         </SelectTrigger>
@@ -300,12 +269,10 @@ const ProductCreate = () => {
                                         </SelectContent>
                                     </Select>
                                     :
-                                    <InputReadOnly value={categories?.find(cat => cat.id === product.categoryId)?.name || ""} />
+                                    <InputReadOnly value={categories?.find(cat => String(cat.id) === categoryId)?.name || ""} />
                                 }
-                                <p className="validation-error">{errors.categoryId}</p>
+                                {errors.categoryId && <p className="validation-error text-red-500 text-xs">{errors.categoryId.message}</p>}
                             </div>
-
-                            {errors.global && <p className="validation-error">{errors.global}</p>}
                         </CardContent>
 
                         <CardFooter className="flex-col gap-2">

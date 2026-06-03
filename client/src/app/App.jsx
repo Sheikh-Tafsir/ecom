@@ -22,6 +22,19 @@ import Profile from '@/pages/profile/Profile.jsx'
 
 import UserList from "@/pages/users/UserList.jsx";
 import UserEdit from "@/pages/users/UserEdit.jsx";
+
+import ProductList from "@/pages/product/ProductList";
+import ProductView from "@/pages/product/ProductView";
+import ProductCreate from "@/pages/product/ProductCreate";
+import Inventory from "@/pages/product/Inventory";
+import InventoryCreate from "@/pages/product/InventoryCreate";
+import Sales from "@/pages/product/Sales";
+
+import Cart from "@/pages/order/Cart";
+import OrderList from "@/pages/order/OrderList";
+import OrderView from "@/pages/order/OrderView";
+import OrderCreate from "@/pages/order/OrderCreate";
+
 import { useUserStore } from "@/store/useUserStore";
 
 const App = () => {
@@ -60,6 +73,8 @@ const InnerApp = () => {
     <Routes>
       <Route element={<PublicRoute />}>
         <Route path="/" element={<Homepage />} />
+        <Route path="/products" element={<ProductList />} />
+        <Route path="/products/:id" element={<ProductView />} />
       </Route>
 
       <Route element={<AuthRoute />}>
@@ -73,16 +88,26 @@ const InnerApp = () => {
         <Route path='/profile' element={<Profile />} />
         <Route path='/profile/edit' element={<Profile />} />
 
-        <Route path='/users' element={<UserList />} />
-        <Route path='/users/:id' element={<UserEdit />} />
-        <Route path='/users/:id/edit' element={<UserEdit />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/orders" element={<OrderList />} />
+        <Route path="/orders/:id" element={<OrderView />} />
+        <Route path="/orders/create" element={<OrderCreate />} />
       </Route>
 
-      {/* <Route element={<ProtectedRoute allowedRoles={[USER_ROLE.ADMIN]} />}>
+      <Route element={<ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.SUPER_ADMIN]} />}>
         <Route path='/users' element={<UserList />} />
         <Route path='/users/:id' element={<UserEdit />} />
         <Route path='/users/:id/edit' element={<UserEdit />} />
-      </Route> */}
+
+        <Route path="/products/create" element={<ProductCreate />} />
+        <Route path="/products/:id/edit" element={<ProductCreate />} />
+
+        <Route path="/inventory" element={<Inventory />} />
+
+        <Route path="/inventory/create" element={<InventoryCreate />} />
+
+        <Route path="/sales" element={<Sales />} />
+      </Route>
 
       <Route path="*" element={<NotFound />} />
     </Routes>

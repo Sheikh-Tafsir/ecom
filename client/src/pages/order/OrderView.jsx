@@ -18,7 +18,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
 import { PAYMENT_METHOD } from "@/utils/enums"
 import StaredLabel from "@/components/common/StaredLabel"
-import { useUserContext } from "@/context/UserContext"
+import { useUserStore } from "@/store/useUserStore"
 import InputReadOnly from "@/components/common/InputReadOnly"
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay"
 import { Axios } from "@/services/http/Axios"
@@ -27,7 +27,7 @@ import { URL_NOT_FOUND } from "@/utils"
 export default function OrderView() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { user } = useUserContext();
+    const { user } = useUserStore();
 
     const [isLoading, setIsLoading] = useState({ page: true, button: false });
     const [order, setOrder] = useState({

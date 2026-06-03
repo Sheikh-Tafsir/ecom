@@ -5,14 +5,14 @@ import { Star, ShoppingCart } from "lucide-react"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { useCartContext } from "@/providers/CartContext"
-import { useUserContext } from "@/context/UserContext"
+import { useCartStore } from "@/store/useCartStore"
+import { useUserStore } from "@/store/useUserStore"
 import { isAdmin } from "@/utils"
 import { TOAST_TYPE } from "@/utils/enums"
 
 const ProductCard = ({ product, showToast }) => {
-  const { user } = useUserContext();
-  const { addToCart } = useCartContext();
+  const { user } = useUserStore();
+  const { addToCart } = useCartStore();
   const navigate = useNavigate();
 
   const handleAddToCart = (e) => {
@@ -41,6 +41,7 @@ const ProductCard = ({ product, showToast }) => {
               src={product.images[0].image || "/placeholder.svg"}
               alt={product.name}
               className="h-[258px] w-full object-cover rounded-md"
+              loading="lazy"
             />
             <Badge className="absolute top-2 right-2">{product.category.name}</Badge>
           </div>

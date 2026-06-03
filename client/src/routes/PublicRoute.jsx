@@ -1,15 +1,17 @@
 import React from 'react'
-import { Outlet} from 'react-router-dom'
+import {Outlet} from 'react-router-dom'
 
 import Footer from '@/components/common/Footer'
 import NavigationBar from '@/components/common/NavigationBar'
 
 const PublicRoute = () => {
-    return(
+    return (
         <>
-          <NavigationBar />
-          <Outlet/> 
-          <Footer />
+            <NavigationBar/>
+            <main>
+                <Outlet/>
+            </main>
+            <Footer/>
         </>
     )
 }

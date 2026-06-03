@@ -4,6 +4,7 @@ import {
     getAccessToken,
     isAccessTokenExpired, saveAccessToken
 } from '@/utils/AuthUtils';
+
 const API_PATH = import.meta.env.VITE_API_PATH;
 
 const AxiosNoInterceptor = axios.create({

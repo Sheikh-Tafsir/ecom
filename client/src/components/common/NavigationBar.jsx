@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Menu, X, ChevronDown } from "lucide-react"
+import { Menu, X, ChevronDown, ShoppingCart } from "lucide-react"
 
 import { Button } from '@/components/ui/button'
 import {
@@ -12,19 +12,23 @@ import {
 import { APP_NAME } from '@/utils'
 import { USER_ROLE } from '@/utils/enums'
 import { useUserStore } from '@/store/useUserStore'
+import { useCartStore } from '@/store/useCartStore'
 
 const BASE_MENU = [{ name: 'Home', href: '/' }]
 const LOGIN_MENU = [{ name: 'Login', href: '/auth/login' }]
 const LOGGED_IN_MENU = [
-  { name: 'Chat', href: '/chats', role: [USER_ROLE.USER, USER_ROLE.ADMIN] },
-  { name: 'Users', href: '/users', role: [USER_ROLE.USER, USER_ROLE.ADMIN] },
+  { name: 'Products', href: '/products' },
+  { name: 'Orders', href: '/orders' },
+  { name: 'Users', href: '/users', role: [USER_ROLE.ADMIN, USER_ROLE.SUPER_ADMIN] },
 ]
 const PROFILE_MENU = [
   { name: 'Profile', href: '/profile' },
+  { name: 'Cart', href: '/cart' },
 ]
 
 export default function Navbar() {
   const { user, logout, isAuthenticated } = useUserStore();
+  const cartCount = useCartStore((state) => state.getCartCount());
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState(null);
@@ -39,6 +43,8 @@ export default function Navbar() {
           (item) => !item.role || item.role.includes(user.role)
         ),
       ];
+    } else {
+      items = [...items, { name: 'Products', href: '/products' }];
     }
 
     return items;
@@ -93,13 +99,22 @@ export default function Navbar() {
                 </div>
               ))}
 
+              <Link to="/cart" className="relative text-white hover:text-gray-300 transition-colors mx-4">
+                <ShoppingCart className="h-6 w-6" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+
               <div className="flex items-center">
                 {isAuthenticated() ?
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild className="max-h-[50%]">
                       <Button variant="ghost" className="text-white hover:text-primary/80 text-sm font-medium h-full bg-white"
                         style={{ color: 'rgb(24,62,139)' }}>
-                        <p>{user.name}</p>
+                        <p>{JSON.stringify(user)}</p>
                         <ChevronDown className="ml-1 h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -178,8 +193,6 @@ export default function Navbar() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild className="max-h-[50%] mx-auto">
                   <Button variant="ghost" className="bg-white text-blue-900 hover:text-primary/80 text-sm font-medium h-full">
-                    {/* <img src={user.image ? user.image : "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"}
-                      className='h-10 aspect-square rounded-full' /> */}
                     {user.name}
                     <ChevronDown className="ml-1 h-4 w-4" />
                   </Button>
@@ -191,7 +204,7 @@ export default function Navbar() {
                     </DropdownMenuItem>
                   ))}
                   <DropdownMenuItem asChild className="py-3 cursor-pointer">
-                    <Link to={null} className="text-sm font-medium" onClick={() => removeTokens()}>Logout</Link>
+                    <Link to={null} className="text-sm font-medium" onClick={logout}>Logout</Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

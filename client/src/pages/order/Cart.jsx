@@ -4,12 +4,13 @@ import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { useUserContext } from '@/context/UserContext';
-import { useCartContext } from "@/providers/CartContext"
+import { useUserStore } from '@/store/useUserStore';
+import { useCartStore } from "@/store/useCartStore"
 
 export default function Cart() {
-  const { user } = useUserContext();
-  const { cart, removeFromCart, updateQuantity, clearCart, cartTotal } = useCartContext()
+  const { user } = useUserStore();
+  const { cart, removeFromCart, updateQuantity, clearCart, getCartTotal } = useCartStore();
+  const cartTotal = getCartTotal();
 
   if (cart.length === 0) {
     return (

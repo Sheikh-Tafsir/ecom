@@ -25,13 +25,13 @@ import {
 } from '@/components/ui/card.jsx';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useUserContext } from '@/context/UserContext';
+import { useUserStore } from "@/store/useUserStore"
 import { ToastAlert } from '@/components/common/ToastAlert';
 import { ORDER_STATUS, TOAST_TYPE } from '@/utils/enums';
 
 const OrderList = () => {
     const navigate = useNavigate();
-    const { user } = useUserContext();
+    const { user } = useUserStore();
     const [searchParams] = useSearchParams();
     const queryParams = Object.fromEntries(searchParams.entries());
 

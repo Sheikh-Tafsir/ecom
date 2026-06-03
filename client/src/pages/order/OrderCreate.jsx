@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
 import { CreditCard, Package } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -17,53 +20,75 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
 import { PAYMENT_METHOD } from "@/utils/enums"
-import { useCartContext } from "@/providers/CartContext"
+import { useCartStore } from "@/store/useCartStore"
 import StaredLabel from "@/components/common/StaredLabel"
-import { useUserContext } from "@/context/UserContext"
+import { useUserStore } from "@/store/useUserStore"
 import InputReadOnly from "@/components/common/InputReadOnly"
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay"
 import { Axios } from "@/services/http/Axios"
 import { URL_NOT_FOUND } from "@/utils"
 import { ButtonLoading } from "@/components/common/ButtonLoading"
 
+const checkoutSchema = z.object({
+    phone: z.string()
+        .min(11, 'Phone number must be 11 digits')
+        .max(11, 'Phone number must be 11 digits'),
+    address: z.string().min(5, 'Address must be at least 5 characters'),
+    paymentMethod: z.nativeEnum(PAYMENT_METHOD),
+    cardNumber: z.string().optional(),
+    expiry: z.string().optional(),
+    cvv: z.string().optional(),
+    cardName: z.string().optional(),
+}).refine((data) => {
+    if (data.paymentMethod === PAYMENT_METHOD.CARD) {
+        return !!data.cardNumber && !!data.expiry && !!data.cvv && !!data.cardName;
+    }
+    return true;
+}, {
+    message: "Card details are required for card payment",
+    path: ["cardNumber"],
+});
+
 export default function OrderCreate() {
     const navigate = useNavigate();
 
-    const { user } = useUserContext();
-    const { cart, cartTotal, clearCart } = useCartContext()
+    const { user } = useUserStore();
+    const { cart, getCartTotal, clearCart } = useCartStore();
+    const cartTotal = getCartTotal();
 
     const [isLoading, setIsLoading] = useState({ page: false, button: false });
-    const [order, setOrder] = useState({
-        phone: '',
-        paymentMethod: PAYMENT_METHOD.CASH_ON_DELIVERY,
-        address: '',
+
+    const {
+        register,
+        handleSubmit,
+        setValue,
+        watch,
+        formState: { errors },
+    } = useForm({
+        resolver: zodResolver(checkoutSchema),
+        defaultValues: {
+            phone: '',
+            address: '',
+            paymentMethod: PAYMENT_METHOD.CASH_ON_DELIVERY,
+        },
     });
-    const [errors, setErrors] = useState({});
+
+    const paymentMethod = watch('paymentMethod');
 
     const handleError = (error) => {
         console.error(error);
         if ([403, 404].includes(error?.status)) navigate(URL_NOT_FOUND, { replace: true });
-        setErrors(error.response?.data || { global: error.message });
     };
 
-    const handleSave = async (e) => {
-        e.preventDefault();
-
+    const onSubmit = async (data) => {
         setIsLoading({ ...isLoading, button: true });
-        setErrors({});
 
         try {
             await Axios.post('/orders', {
                 items: cart,
-                phone: order.phone,
-                address: order.address,
-                paymentMethod: order.paymentMethod,
-            });
-
-            setOrder({
-                phone: '',
-                address: '',
-                paymentMethod: PAYMENT_METHOD.CASH_ON_DELIVERY,
+                phone: data.phone,
+                address: data.address,
+                paymentMethod: data.paymentMethod,
             });
 
             clearCart();
@@ -73,11 +98,6 @@ export default function OrderCreate() {
         } finally {
             setIsLoading({ ...isLoading, button: false });
         }
-    };
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setOrder((prev) => ({ ...prev, [name]: value }));
     };
 
     return (
@@ -97,7 +117,7 @@ export default function OrderCreate() {
                                 <CardDescription>Complete your order by filling out the information below</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
-                                <form className="space-y-6" onSubmit={handleSave}>
+                                <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
                                     <div className="space-y-4">
                                         <div className="grid gap-2">
                                             <Label>Name</Label>
@@ -106,23 +126,21 @@ export default function OrderCreate() {
 
                                         <div className="grid gap-2">
                                             <StaredLabel label="Phone Number" />
-                                            <Input id="phone" type="tel" placeholder="+1 (555) 123-4567"
-                                                name="phone"
-                                                value={order?.phone}
-                                                onChange={handleChange}
-                                                required />
-
-                                            {errors.phone && <p className='validation-error'>{errors.phone}</p>}
+                                            <Input 
+                                                type="tel" 
+                                                placeholder="+1 (555) 123-4567"
+                                                {...register('phone')}
+                                            />
+                                            {errors.phone && <p className='validation-error text-red-500 text-xs'>{errors.phone.message}</p>}
                                         </div>
 
                                         <div className="grid gap-2">
                                             <StaredLabel label="Street Address" />
-                                            <Input id="address" placeholder="123 Main Street"
-                                                name="address"
-                                                value={order?.address}
-                                                onChange={handleChange}
-                                                required />
-                                            {errors.address && <p className='validation-error'>{errors.address}</p>}
+                                            <Input 
+                                                placeholder="123 Main Street"
+                                                {...register('address')}
+                                            />
+                                            {errors.address && <p className='validation-error text-red-500 text-xs'>{errors.address.message}</p>}
                                         </div>
                                     </div>
 
@@ -134,7 +152,10 @@ export default function OrderCreate() {
                                             <CreditCard className="h-4 w-4" />
                                             <h3 className="font-semibold">Payment Method</h3>
                                         </div>
-                                        <RadioGroup value={order.paymentMethod} onValueChange={(value) => setOrder((prev) => ({ ...prev, "paymentMethod": value }))}>
+                                        <RadioGroup 
+                                            value={paymentMethod} 
+                                            onValueChange={(value) => setValue('paymentMethod', value)}
+                                        >
                                             {Object.values(PAYMENT_METHOD).map((item) => (
                                                 <div key={item} className="flex items-center space-x-2">
                                                     <RadioGroupItem value={item} />
@@ -143,25 +164,26 @@ export default function OrderCreate() {
                                             ))}
                                         </RadioGroup>
 
-                                        {order?.paymentMethod === PAYMENT_METHOD.CARD && (
+                                        {paymentMethod === PAYMENT_METHOD.CARD && (
                                             <div className="space-y-4 pt-4">
                                                 <div className="grid gap-2">
                                                     <StaredLabel label="Card Number" />
-                                                    <Input id="cardNumber" placeholder="1234 5678 9012 3456" required />
+                                                    <Input placeholder="1234 5678 9012 3456" {...register('cardNumber')} />
+                                                    {errors.cardNumber && <p className='validation-error text-red-500 text-xs'>{errors.cardNumber.message}</p>}
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div className="grid gap-2">
                                                         <StaredLabel label="Expiry Date" />
-                                                        <Input id="expiry" placeholder="MM/YY" required />
+                                                        <Input placeholder="MM/YY" {...register('expiry')} />
                                                     </div>
                                                     <div className="grid gap-2">
                                                         <StaredLabel label="CVV" />
-                                                        <Input id="cvv" placeholder="123" required />
+                                                        <Input placeholder="123" {...register('cvv')} />
                                                     </div>
                                                 </div>
                                                 <div className="grid gap-2">
                                                     <StaredLabel label="Name on Card" />
-                                                    <Input id="cardName" placeholder="John Doe" required />
+                                                    <Input placeholder="John Doe" {...register('cardName')} />
                                                 </div>
                                             </div>
                                         )}
@@ -201,16 +223,17 @@ export default function OrderCreate() {
                                             {cart?.map((item) => (
                                                 <div key={item.id} className="flex items-center gap-4 p-4 border rounded-lg">
                                                     <img
-                                                        src={item?.product?.images[0]?.image || "/placeholder.svg"}
+                                                        src={item?.images[0]?.image || "/placeholder.svg"}
                                                         alt={item.name}
                                                         className="w-16 h-16 object-cover rounded-md"
+                                                        loading="lazy"
                                                     />
                                                     <div className="flex-1">
                                                         <h4 className="font-medium">{item.name}</h4>
                                                         <p className="text-sm text-muted-foreground">Quantity: {item.quantity}</p>
                                                     </div>
                                                     <div className="text-right">
-                                                        <p className="font-medium">{(item.price * item.quantity).toFixed(2)}</p>
+                                                        <p className="font-medium">${(item.price * item.quantity).toFixed(2)}</p>
                                                         <p className="text-sm text-muted-foreground">${item?.price} each</p>
                                                     </div>
                                                 </div>

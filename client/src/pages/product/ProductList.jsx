@@ -8,7 +8,7 @@ import PaginationButton from "@/components/common/PaginationButton"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { FIRST_PAGE, getQueryString, isInvalidPage } from "@/utils"
 import { PRODUCT_SORTBY } from "@/utils/enums"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, keepPreviousData } from "@tanstack/react-query"
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay"
 import { ToastAlert } from "@/components/common/ToastAlert"
 
@@ -75,7 +75,7 @@ export default function ProductList() {
       },
     ],
     queryFn: fetchProducts,
-    // keepPreviousData: true,
+    placeholderData: keepPreviousData,
   });
 
   const products = productData?.rows || [];
