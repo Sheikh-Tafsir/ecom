@@ -11,7 +11,10 @@ import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
+import static com.example.demo.common.enums.ProductStatus.DISCONTINUED;
+
 @Entity
+@Table(name = "products")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -36,8 +39,14 @@ public class Product extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private ProductStatus status = ProductStatus.COMING_SOON;
 
+    private Boolean deleted = false;
+
     public void addImage(ProductImage image) {
         images.add(image);
         image.setProduct(this);
+    }
+
+    public boolean isNotActive() {
+        return getDeleted() || getStatus() == DISCONTINUED;
     }
 }

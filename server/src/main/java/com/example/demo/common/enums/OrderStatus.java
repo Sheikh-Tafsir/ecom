@@ -63,7 +63,7 @@ public enum OrderStatus {
     }
 
     public boolean canBeSetByAdmin() {
-        return EnumSet.of(ACCEPTED, SHIPPED, DELIVERED, PAID).contains(this);
+        return EnumSet.of(ACCEPTED, SHIPPED, DELIVERED, PAID, REJECTED).contains(this);
     }
 
     public boolean canBeSetByUser() {

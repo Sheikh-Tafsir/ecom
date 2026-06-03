@@ -1,6 +1,7 @@
 package com.example.demo.product.service;
 
 import com.example.demo.common.dto.CustomUserDetails;
+import com.example.demo.common.enums.ProductStatus;
 import com.example.demo.common.model.Product;
 import com.example.demo.common.model.ProductImage;
 import com.example.demo.common.service.CloudinaryService;
@@ -8,6 +9,7 @@ import com.example.demo.common.service.MessageService;
 import com.example.demo.product.dto.CreateProductRequest;
 import com.example.demo.product.dto.UpdateProductRequest;
 import com.example.demo.product.repository.ProductRepository;
+import com.example.demo.stock.dto.CreateStockItemRequest;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -47,7 +49,7 @@ public class ProductService {
 
     public Product findById(Long id, CustomUserDetails userDetails) {
         Product product = findByIdHelper(id);
-        if (!isAdmin(userDetails)) {
+        if (product.getStatus() == DISCONTINUED && !isAdmin(userDetails)) {
             throw new AccessDeniedException("User with id: " + userDetails.getId()  + " attempted to access discontinued Product with id: " + id);
         }
 
@@ -87,6 +89,7 @@ public class ProductService {
     public void delete(Long id) {
         Product product = findByIdHelper(id);
         product.setStatus(DISCONTINUED);
+        product.setDeleted(true);
         productRepository.save(product);
     }
 
@@ -95,13 +98,28 @@ public class ProductService {
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Product", id)));
     }
 
-    public void consume(Product product, int quantity) {
+    public void consumeForOrder(Product product, int quantity) {
+        checkActive(product);
+
         if (product.getQuantity() < quantity) {
             throw new RuntimeException("Product quantity is not available for product id: " + product.getId());
         }
 
         product.setQuantity(product.getQuantity() - quantity);
         productRepository.save(product);
+    }
+
+    public Product updateForStock(CustomUserDetails userDetails, CreateStockItemRequest itemRequest) {
+        Product product = findById(itemRequest.productId(), userDetails);
+        checkActive(product);
+
+        product.setQuantity(product.getQuantity() + itemRequest.quantity());
+
+        if (product.getStatus() == ProductStatus.COMING_SOON) {
+            product.setStatus(ProductStatus.AVAILABLE);
+        }
+
+        return product;
     }
 
     private void addImages(Product product, Set<MultipartFile> images) throws IOException {
@@ -119,8 +137,9 @@ public class ProductService {
         }
     }
 
-//    public void increaseQuantity(Product product, int quantity) {
-//        product.setQuantity(product.getQuantity() + quantity);
-//    }
-//
+    private void checkActive(Product product) {
+        if (product.isNotActive()) {
+            throw new RuntimeException("Product is deleted");
+        }
+    }
 }

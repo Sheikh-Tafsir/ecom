@@ -10,7 +10,6 @@ import com.example.demo.common.model.User;
 import com.example.demo.auth.dto.Otp;
 import com.example.demo.common.service.JwtService;
 import com.example.demo.common.service.MailService;
-import org.springframework.data.redis.core.RedisTemplate;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
@@ -28,8 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.security.SecureRandom;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,18 +52,18 @@ public class AuthService {
 
     public static final String GOOGLE_OAUTH_API= "https://www.googleapis.com/oauth2/v1/userinfo?access_token={access_token}";
 
-    public static final int OTP_VALIDITY_INT_MINUTES = 5;
+
 
     @Value("${refresh.cookie.validity}")
     private long refreshCookieValidity;
 
     private final AuthRepository authRepository;
 
-    private final RedisTemplate<String, Object> redisTemplate;
-
     private final MailService mailService;
 
     private final JwtService jwtService;
+
+    private final OtpService otpService;
 
     private final AuthenticationManager authenticationManager;
 
@@ -82,6 +79,11 @@ public class AuthService {
         );
 
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+        if (userDetails.user().isNotActive()) {
+            throw new BadCredentialsException("Account is " + userDetails.user().getStatus().getValue());
+        }
+
         return getTokens(userDetails.user());
     }
 
@@ -90,40 +92,44 @@ public class AuthService {
         User user = findByEmail(signupRequest.email());
 
         if (user != null) {
-            if (user.getStatus() == UserStatus.ACTIVE) {
-                throw new BadCredentialsException("Account already exists!");
-            } else if (user.getStatus() == UserStatus.NOT_VERIFIED) {
-                Otp otp = getOtp(user, OtpType.SIGNUP);
-                mailService.sendEmail(user.getEmail(), SIGNUP_MAIL_SUBJECT, SIGNUP_MAIL_TEXT + otp.getValue());
-                return;
-            } else {
-                throw new BadCredentialsException("Account already exists but is " + user.getStatus().getValue());
-            }
+            throw new BadCredentialsException("Email already exists! Account is " + user.getStatus().getValue());
         }
 
         user = modelMapper.map(signupRequest, User.class);
         user = save(user, signupRequest.password());
         
-        Otp otp = generateOtp(user, OtpType.SIGNUP);
+        Otp otp = otpService.createOtp(user, OtpType.SIGNUP);
         mailService.sendEmail(user.getEmail(), SIGNUP_MAIL_SUBJECT, SIGNUP_MAIL_TEXT + otp.getValue());
     }
 
-    public void resendSignupOtp(OtpEmailRequest resetSignupOtpRequest) {
-        User user = findByEmail(resetSignupOtpRequest.email());
+    public void resendSignupOtp(OtpEmailRequest request) {
+        User user = findByEmail(request.email());
 
         if (isNull(user)) {
             throw new BadCredentialsException("Email is invalid");
         }
 
-        Otp otp = getOtp(user, OtpType.SIGNUP);
+        if (user.getStatus() != UserStatus.NOT_VERIFIED) {
+            throw new BadCredentialsException("Email already exists! Account is " + user.getStatus().getValue());
+        }
+
+        Otp otp = otpService.getOrCreateOtp(user, OtpType.SIGNUP);
         mailService.sendEmail(user.getEmail(), SIGNUP_MAIL_SUBJECT, SIGNUP_MAIL_TEXT + otp.getValue());
     }
 
     @Transactional
-    public TokenDto verifySignupOtp(VerifySignupOtpRequest verifySignupOtpRequest) {
-        Otp otp = verifyOtp(OtpType.SIGNUP, verifySignupOtpRequest.otp(), verifySignupOtpRequest.email());
+    public TokenDto verifySignupOtp(VerifySignupOtpRequest request) {
+        User user = findByEmail(request.email());
+        if (isNull(user)) {
+            throw new BadCredentialsException("User not found");
+        }
 
-        User user = authRepository.findByEmail(otp.getEmail()).orElseThrow(() -> new BadCredentialsException("User not found"));
+        if (user.getStatus() != UserStatus.NOT_VERIFIED) {
+            throw new BadCredentialsException("Email already exists! Account is " + user.getStatus().getValue());
+        }
+
+        otpService.verifyOtp(OtpType.SIGNUP, request.otp(), request.email());
+
         user.setStatus(UserStatus.ACTIVE);
         user = authRepository.save(user);
 
@@ -158,18 +164,18 @@ public class AuthService {
             throw new BadCredentialsException("Google account email not verified");
         }
 
-        User existingUser = findByEmail(googleUser.getEmail());
+        User user = findByEmail(googleUser.getEmail());
 
-        if (isNull(existingUser)) {
-            User user = new User();
+        if (isNull(user)) {
+            user = new User();
             user.setName(googleUser.getName());
             user.setEmail(googleUser.getEmail());
             user.setStatus(UserStatus.ACTIVE);
 
-            existingUser = save(user, generatePassword(googleUser.getName()));
+            user = save(user, generatePassword(googleUser.getName()));
         }
 
-        return getTokens(existingUser);
+        return getTokens(user);
     }
 
     public void addRefreshCookie(HttpServletResponse response, TokenDto authResponse) {
@@ -188,7 +194,7 @@ public class AuthService {
         String cookieEmail = jwtService.getEmailFromRefreshToken(refreshToken);
         User user = findByEmail(cookieEmail);
 
-        if (isNull(user) || !user.isActive()) {
+        if (isNull(user) || user.isNotActive()) {
             throw new InvalidRefreshTokenException("Refresh token user is invalid");
         }
 
@@ -206,21 +212,25 @@ public class AuthService {
             throw new BadCredentialsException("Email is invalid");
         }
 
-        Otp userOtp = getOtp(user, OtpType.RESET);
+        Otp userOtp = otpService.getOrCreateOtp(user, OtpType.RESET);
 
         mailService.sendEmail(user.getEmail(), RESET_PASSWORD_MAIL_SUBJECT, RESET_PASSWORD_MAIL_TEXT + userOtp.getValue());
     }
 
     @Transactional
-    public void verifyResetPasswordOtp(VerifyResetPasswordOtpRequest resetPasswordOtpRequest) {
-        Otp otp = verifyOtp(OtpType.RESET, resetPasswordOtpRequest.otp(), resetPasswordOtpRequest.email());
+    public void verifyResetPasswordOtp(VerifyResetPasswordOtpRequest request) {
+        User user = findByEmail(request.email());
 
-        User user = authRepository.findByEmail(otp.getEmail()).orElseThrow(() -> new BadCredentialsException("User not found"));
-        save(user, resetPasswordOtpRequest.password());
+        if (isNull(user)) {
+            throw new BadCredentialsException("User not found");
+        }
+
+        otpService.verifyOtp(OtpType.RESET, request.otp(), request.email());
+        save(user, request.password());
     }
 
     public TokenDto getTokens(User user) {
-        if (!user.isActive()) {
+        if (user.isNotActive()) {
             throw new ValidationException("User is " + user.getStatus().getValue());
         }
 
@@ -239,47 +249,9 @@ public class AuthService {
         return authRepository.save(user);
     }
 
-    private Otp getOtp(User user, OtpType type) {
-        Otp otp = (Otp) redisTemplate.opsForValue().get(getOtpKey(type, user.getEmail()));
-
-        if (otp != null) {
-            return otp;
+    private void checkActive(User user) {
+        if (user.getDeleted()) {
+            throw new RuntimeException("User is deleted");
         }
-
-        return generateOtp(user, type);
-    }
-
-    private Otp generateOtp(User user, OtpType type) {
-        Otp otpData = new Otp();
-
-        otpData.setEmail(user.getEmail());
-        otpData.setType(type);
-        otpData.setValue(generateOtpValue());
-
-        redisTemplate.opsForValue().set(getOtpKey(type, user.getEmail()), otpData, Duration.ofMinutes(OTP_VALIDITY_INT_MINUTES));
-
-        return otpData;
-    }
-
-    private Otp verifyOtp(OtpType type, int otp, String email) {
-        Otp userOtp = (Otp) redisTemplate.opsForValue().get(getOtpKey(type, email));
-        if (userOtp == null) {
-            throw new BadCredentialsException("Invalid Email or otp type");
-        }
-
-        if (userOtp.getValue() != otp) {
-            throw new BadCredentialsException("Invalid Email or otp type");
-        }
-
-        return userOtp;
-    }
-
-    private int generateOtpValue() {
-        SecureRandom secureRandom = new SecureRandom();
-        return 100000 + secureRandom.nextInt(900000);
-    }
-
-    private String getOtpKey(OtpType type, String email) {
-        return "otp:" + type.name() + ":" + email;
     }
 }

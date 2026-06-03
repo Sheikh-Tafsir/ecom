@@ -68,8 +68,8 @@ public class SecurityConfig {
                         .requestMatchers(PUBLIC_URLS.toArray(new String[0])).permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(rateLimiterFilter, AuthenticationFilter.class)
+                .addFilterBefore(rateLimiterFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(authenticationFilter, RateLimiterFilter.class)
                 .build();
     }
 

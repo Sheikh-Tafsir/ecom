@@ -25,7 +25,7 @@ public class StockItemResponse {
         productName = item.getProduct().getName();
         productPrice = item.getProduct().getPrice();
         quantity = item.getQuantity();
-        cost = item.getCost();
+        cost = item.getPurchasedPrice();
         remaining = item.getRemaining();
         subtotal = item.getSubtotal();
     }

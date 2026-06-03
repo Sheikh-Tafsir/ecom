@@ -1,5 +1,6 @@
 package com.example.demo.user.service;
 
+import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.user.dto.ChangePasswordRequest;
 import com.example.demo.user.dto.UpdateProfileRequest;
 import com.example.demo.user.repository.UserRepository;
@@ -24,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
+import static com.example.demo.common.enums.UserStatus.BANNED;
+import static com.example.demo.common.enums.UserStatus.DELETED;
 import static com.example.demo.common.utils.FileUtils.fileExists;
 import static com.example.demo.common.utils.SecurityConstants.HAS_ROLE_ADMIN;
 import static com.example.demo.common.utils.Utils.getValidPageable;
@@ -55,8 +58,8 @@ public class UserService {
     }
 
     @Transactional
-    public User update(UpdateProfileRequest updateProfileRequest, String email) throws IOException {
-        User user = findByEmail(email);
+    public User update(UpdateProfileRequest updateProfileRequest, CustomUserDetails userDetails) throws IOException {
+        User user = findByIdHelper(userDetails.getId());
         user.setName(updateProfileRequest.name());
 
         if (fileExists(updateProfileRequest.image())) {
@@ -72,16 +75,23 @@ public class UserService {
             @CacheEvict(value = "usersById", key = "#id")
     })
     @Transactional
-    public void delete(Long id, UserStatus status) {
-        User user = findByIdHelper(id);
-        user.setStatus(status);
-        userRepository.save(user);
+    public void delete(Long id) {
+        delete(findByIdHelper(id), DELETED);
+    }
+
+    @PreAuthorize(HAS_ROLE_ADMIN)
+    @Caching(evict = {
+            @CacheEvict(value = "usersById", key = "#id")
+    })
+    @Transactional
+    public void banned(Long id) {
+        delete(findByIdHelper(id), BANNED);
     }
 
     @Transactional
-    public void updatePassword(ChangePasswordRequest changePasswordRequest, String email) {
-        User user = findByEmail(email);
-        if (!passwordEncoder.matches(user.getPassword(), changePasswordRequest.currentPassword())) {
+    public void updatePassword(ChangePasswordRequest changePasswordRequest, CustomUserDetails userDetails) {
+        User user = findByIdHelper(userDetails.getId());
+        if (!passwordEncoder.matches(changePasswordRequest.currentPassword(), user.getPassword())) {
             throw new BadCredentialsException("Current password is incorrect");
         }
 
@@ -94,16 +104,16 @@ public class UserService {
                 orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "User", id)));
     }
 
-    private User findByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "User", email)));
+    private void delete(User user, UserStatus status) {
+        user.setStatus(status);
+        user.setDeleted(true);
+        userRepository.save(user);
     }
-
 
     @Transactional
     public void deleteNotVerifiedUsers() {
         LocalDateTime cutoff = LocalDateTime.now().minusHours(24);
-        int deletedCount = userRepository.deleteNotVerifiedBefore(cutoff);
+        int deletedCount = userRepository.deleteNotVerifiedBefore(UserStatus.NOT_VERIFIED, cutoff);
 
         log.info("Deleted {} not verified users", deletedCount);
     }

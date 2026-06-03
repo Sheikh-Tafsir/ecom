@@ -17,6 +17,7 @@ import com.example.demo.product.service.ProductService;
 import com.example.demo.stock.service.StockService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -28,6 +29,7 @@ import static com.example.demo.common.utils.SecurityConstants.HAS_ROLE_ADMIN;
 import static com.example.demo.common.utils.SecurityUtil.isAdmin;
 import static com.example.demo.common.utils.Utils.getValidPageable;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderService {
@@ -59,18 +61,23 @@ public class OrderService {
 
     @Transactional
     public OrderResponse create(CreateOrderRequest request, User user) {
+        log.info("Creating order for user: {}", user.getEmail());
         Order order = new Order();
         order.setUser(user);
 
         request.items().forEach(itemRequest -> addProduct(order, itemRequest));
 
-        return new OrderResponse(orderRepository.save(order));
+        Order savedOrder = orderRepository.save(order);
+        log.info("Order created successfully with id: {}", savedOrder.getId());
+
+        return new OrderResponse(savedOrder);
     }
 
     @Transactional
     public OrderResponse updateStatus(Long id, UpdateOrderStatusRequest request, CustomUserDetails userDetails) {
         Order order = findByIdHelper(id);
         OrderStatus status = request.status();
+        log.info("Updating order status for id: {} from {} to {} by user: {}", id, order.getStatus(), status, userDetails.getEmail());
 
         if (order.isCancelledOrRejected() && !status.isCancellationOrRejection()) {
             throw new RuntimeException("Cancelled/Rejected order cannot be reopened");
@@ -81,14 +88,15 @@ public class OrderService {
         }
 
         boolean isAdmin = isAdmin(userDetails);
+        Long userId = userDetails.getId();
 
         if (isAdmin) {
             if (!status.canBeSetByAdmin()) {
-                throw new AccessDeniedException("Admin with id: "+ id + " attempting to set status with user owner access");
+                throw new AccessDeniedException("Admin with id: "+ userId + " attempting to set status with user owner access");
             }
         } else {
             if (!status.canBeSetByUser()) {
-                throw new AccessDeniedException("User with id: "+ id + " attempting to set status with admin access");
+                throw new AccessDeniedException("User with id: "+ userId + " attempting to set status with admin access");
             }
         }
 
@@ -169,7 +177,7 @@ public class OrderService {
         Product product = orderItem.getProduct();
         int quantityToConsume = orderItem.getQuantity();
 
-        productService.consume(product, quantityToConsume);
+        productService.consumeForOrder(product, quantityToConsume);
         stockService.consume(product, quantityToConsume);
     }
 

@@ -43,14 +43,9 @@ public class ReviewController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<Void>> create(@Valid @RequestBody CreateReviewRequest request,
-                                                    BindingResult bindingResult,
                                                     @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        reviewValidator.validateCreate(request, bindingResult);
-        commonHelper.checkErrors(bindingResult);
-
         reviewService.create(request, userDetails);
-
         return ResponseUtils.created(messageService.get("entity.creating", "Review"));
     }
 

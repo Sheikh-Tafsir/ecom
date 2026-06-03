@@ -7,6 +7,7 @@ public record CreateReviewRequest(
         @NonNull
         Long productId,
 
+        @NonNull
         Integer rating,
 
         String comment

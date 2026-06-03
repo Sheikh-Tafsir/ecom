@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
+@Table(name = "stocks")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -27,8 +28,8 @@ public class Stock extends BaseEntity {
     @Column(nullable = false)
     private BigDecimal totalCost = BigDecimal.ZERO;
 
-    public void addItem(Product product, int quantity, BigDecimal cost) {
-        StockItem item = new StockItem(this, product, quantity, cost);
+    public void addItem(Product product, int quantity, BigDecimal purchasedPrice) {
+        StockItem item = new StockItem(this, product, quantity, purchasedPrice);
         items.add(item);
 
         calculateTotal();

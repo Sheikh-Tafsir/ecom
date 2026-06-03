@@ -34,8 +34,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Modifying
     @Query("""
                 DELETE FROM User u
-                WHERE u.status = com.example.demo.common.enums.UserStatus.NOT_VERIFIED
+                WHERE u.status = :status
                   AND u.createdAt <= :cutoff
             """)
-    int deleteNotVerifiedBefore(@Param("cutoff") LocalDateTime cutoff);
+    int deleteNotVerifiedBefore(@Param("status") UserStatus status, @Param("cutoff") LocalDateTime cutoff);
 }

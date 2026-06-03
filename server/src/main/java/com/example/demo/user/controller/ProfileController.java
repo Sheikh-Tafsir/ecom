@@ -58,7 +58,7 @@ public class ProfileController {
         profileUpdateRequestValidator.validate(updateProfileRequest, bindingResult);
         commonHelper.checkErrors(bindingResult);
 
-        User user = userService.update(updateProfileRequest, userDetails.getEmail());
+        User user = userService.update(updateProfileRequest, userDetails);
 
         TokenDto tokenDto = authService.getTokens(user);
         authService.addRefreshCookie(response, tokenDto);
@@ -68,7 +68,7 @@ public class ProfileController {
 
     @DeleteMapping
     public ResponseEntity<?> delete(@AuthenticationPrincipal CustomUserDetails userDetails, HttpServletResponse response) {
-        userService.delete(userDetails.user().getId(), DELETED);
+        userService.delete(userDetails.user().getId());
         authService.logout(response);
 
         return ResponseUtils.ok(messageService.get("successfully.deleted", "Profile"));
@@ -82,7 +82,7 @@ public class ProfileController {
         authValidator.validatePasswords(changePasswordRequest.newPassword(), changePasswordRequest.confirmNewPassword(), bindingResult);
         commonHelper.checkErrors(bindingResult);
 
-        userService.updatePassword(changePasswordRequest, userDetails.getEmail());
+        userService.updatePassword(changePasswordRequest, userDetails);
         return ResponseUtils.ok("Password change successful");
     }
 }

@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
+@Table(name = "users")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -49,7 +50,9 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private UserStatus status = UserStatus.NOT_VERIFIED;
 
-    public boolean isActive() {
-        return status == UserStatus.ACTIVE;
+    private Boolean deleted = false;
+
+    public boolean isNotActive() {
+        return status != UserStatus.ACTIVE;
     }
 }

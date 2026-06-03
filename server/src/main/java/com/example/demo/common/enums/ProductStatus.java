@@ -15,7 +15,7 @@ public enum ProductStatus {
 
     STOCK_OUT("Stock Out"),
 
-    DISCONTINUED("discontinued");
+    DISCONTINUED("Discontinued");
 
     @JsonValue
     private final String value;

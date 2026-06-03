@@ -9,6 +9,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 
 @Entity
+@Table(name = "order_items")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -25,6 +26,8 @@ public class OrderItem {
 
     private int quantity;
 
+    private BigDecimal unitPrice;
+
     @ManyToOne
     @JoinColumn(name = "order_id")
     private Order order;
@@ -33,11 +36,11 @@ public class OrderItem {
         this.product = product;
         this.quantity = quantity;
         this.order = order;
+        unitPrice = product.getPrice();
     }
 
     public BigDecimal getSubtotal() {
-        return product.getPrice()
-                .multiply(BigDecimal.valueOf(quantity));
+        return unitPrice.multiply(BigDecimal.valueOf(quantity));
     }
 
     public void increaseQuantity(int qty) {

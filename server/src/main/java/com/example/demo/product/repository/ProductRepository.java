@@ -15,7 +15,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("""
                 SELECT p FROM Product p
                 WHERE (:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%')))
-                AND p.status <> :status
+                AND (:status IS NULL OR p.status <> :status)
             """)
     Page<Product> findAllByNameAndExcludeStatus(
             @Param("name") String name,

@@ -40,7 +40,7 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
-        userService.delete(id, BANNED);
+        userService.banned(id);
         return ResponseUtils.ok(messageService.get("successfully.deleted", "User"));
     }
 }

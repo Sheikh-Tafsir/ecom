@@ -9,6 +9,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 
 @Entity
+@Table(name = "stock_items")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -31,19 +32,19 @@ public class StockItem {
     private int quantity;
 
     @Column(nullable = false)
-    private BigDecimal cost = BigDecimal.ZERO;
+    private BigDecimal purchasedPrice = BigDecimal.ZERO;
 
     private int remaining;
 
-    public StockItem(Stock stock, Product product, int quantity, BigDecimal cost) {
+    public StockItem(Stock stock, Product product, int quantity, BigDecimal purchasedPrice) {
         this.stock = stock;
         this.product = product;
         this.quantity = quantity;
-        this.cost = cost;
+        this.purchasedPrice = purchasedPrice;
         this.remaining = quantity;
     }
 
     public BigDecimal getSubtotal() {
-        return cost.multiply(BigDecimal.valueOf(quantity));
+        return purchasedPrice.multiply(BigDecimal.valueOf(quantity));
     }
 }

@@ -30,6 +30,7 @@ public class ReviewService {
     private final MessageService messageService;
 
     private final ReviewRepository reviewRepository;
+
     private final CommonHelper commonHelper;
 
     public Page<Review> findAllByProductAndUser(Long productId, Pageable pageable, CustomUserDetails userDetails) {
@@ -73,6 +74,6 @@ public class ReviewService {
 
     private Review findByIdHelper(Long id) {
         return reviewRepository.findById(id).
-                orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "User", id)));
+                orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Review", id)));
     }
 }

@@ -55,10 +55,9 @@ public class StockService {
         Stock stock = new Stock();
 
         request.items().forEach(itemRequest -> {
-            Product product = productService.findById(itemRequest.productId(), userDetails);
-            product.setQuantity(product.getQuantity() + itemRequest.quantity());
+            Product product = productService.updateForStock(userDetails, itemRequest);
 
-            stock.addItem(product, itemRequest.quantity(), itemRequest.cost());
+            stock.addItem(product, itemRequest.quantity(), itemRequest.purchasedPrice());
         });
 
         return new StockResponse(stockRepository.save(stock));
@@ -161,7 +160,7 @@ public class StockService {
     private void addItem(Stock stock, CreateStockItemRequest request) {
         Product product = productService.findByIdHelper(request.productId());
         product.setQuantity(product.getQuantity() + request.quantity());
-        stock.addItem(product, request.quantity(), request.cost());
+        stock.addItem(product, request.quantity(), request.purchasedPrice());
     }
 
     private void decreaseProductQuantity(Product product, int quantity) {
@@ -197,7 +196,7 @@ public class StockService {
         }
 
         item.setQuantity(request.quantity());
-        item.setCost(request.cost());
+        item.setPurchasedPrice(request.cost());
         item.setRemaining(updatedRemaining);
 
         applyProductQuantityChange(item.getProduct(), quantityChange);
