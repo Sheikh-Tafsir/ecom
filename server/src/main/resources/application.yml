@@ -51,18 +51,17 @@ logging:
   # Customize log pattern
   pattern.console: '%d{yyyy-MM-dd HH:mm:ss} - %level - %logger{36} - %msg%n'
 
-jwt:
-  access:
-    token:
-      value: ${ACCESS_TOKEN_SECRET}
-      validity: 1800000
 
-  refresh:
-    token:
-      value: ${REFRESH_TOKEN_SECRET}
-      validity: 604800000
+access:
+  token:
+    value: ${ACCESS_TOKEN_SECRET}
+    validity: 1800000
 
-refresh.cookie.validity: 604800
+refresh:
+  token:
+    name: ${REFRESH_TOKEN_NAME}
+    value: ${REFRESH_TOKEN_SECRET}
+    validity: 604800000
 
 cloudinary:
   cloud:

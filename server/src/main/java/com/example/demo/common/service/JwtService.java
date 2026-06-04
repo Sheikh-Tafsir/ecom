@@ -23,10 +23,10 @@ public class JwtService {
 
     private final Key refreshTokenSecret;
 
-    public JwtService(@Value("${jwt.access.token.validity}") Long accessTokenValidity, // 30 minutes
-                      @Value("${jwt.refresh.token.validity}") Long refreshTokenValidity, // 7 days
-                      @Value("${jwt.access.token.value}") String accessTokenSecret,
-                      @Value("${jwt.refresh.token.value}") String refreshTokenSecret) {
+    public JwtService(@Value("${access.token.validity}") Long accessTokenValidity, // 30 minutes
+                      @Value("${refresh.token.validity}") Long refreshTokenValidity, // 7 days
+                      @Value("${access.token.value}") String accessTokenSecret,
+                      @Value("${refresh.token.value}") String refreshTokenSecret) {
 
         this.accessTokenValidity = accessTokenValidity;
         this.refreshTokenValidity = refreshTokenValidity;
@@ -63,7 +63,7 @@ public class JwtService {
                 .setSubject(user.getEmail())
                 .claim("name", user.getName())
                 .claim("email", user.getEmail())
-                .claim("role", user.getRoles())
+                .claim("role", user.getRoleValues())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + tokenValidity))
                 .signWith(secretKey)

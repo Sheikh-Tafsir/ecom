@@ -16,11 +16,6 @@ import { useCartStore } from '@/store/useCartStore'
 
 const BASE_MENU = [{ name: 'Home', href: '/' }]
 const LOGIN_MENU = [{ name: 'Login', href: '/auth/login' }]
-const LOGGED_IN_MENU = [
-  { name: 'Products', href: '/products' },
-  { name: 'Orders', href: '/orders' },
-  { name: 'Users', href: '/users', role: [USER_ROLE.ADMIN, USER_ROLE.SUPER_ADMIN] },
-]
 const PROFILE_MENU = [
   { name: 'Profile', href: '/profile' },
   { name: 'Cart', href: '/cart' },
@@ -34,22 +29,31 @@ export default function Navbar() {
   const [activeMenu, setActiveMenu] = useState(null);
 
   const getMenuItems = () => {
-    let items = [...BASE_MENU];
+    const userRoles = user?.role
+        ? Array.isArray(user.role)
+            ? user.role
+            : [user.role]
+        : [];
 
-    if (isAuthenticated()) {
-      items = [
-        ...items,
-        ...LOGGED_IN_MENU.filter((item) => {
-          if (!item.role) return true;
-          const userRoles = (user?.role) ? (Array.isArray(user.role) ? user.role : [user.role]) : [];
-          return item.role.some((role) => userRoles.includes(role));
-        }),
-      ];
-    } else {
-      items = [...items, { name: 'Products', href: '/products' }];
-    }
+    const isAdmin = userRoles.includes(USER_ROLE.ADMIN) || userRoles.includes(USER_ROLE.SUPER_ADMIN);
 
-    return items;
+    return [
+      ...BASE_MENU,
+      {
+        name: 'Products',
+        href: '/products',
+        submenu: [
+          { name: 'Product List', href: '/products' },
+          ...(isAdmin
+              ? [{ name: 'Create Product', href: '/products/create' }]
+              : []),
+        ],
+      },
+      { name: 'Orders', href: '/orders' },
+      ...(isAdmin
+          ? [{ name: 'Users', href: '/users' }]
+          : []),
+    ];
   };
 
   const finalMenuItems = getMenuItems();

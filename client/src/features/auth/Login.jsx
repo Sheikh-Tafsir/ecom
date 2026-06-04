@@ -66,14 +66,16 @@ const Login = () => {
     const handleGoogleAuth = useGoogleLogin({
         onSuccess: async (tokenResponse) => {
             setIsGoogleSubmitting(true);
+
             try {
                 const response = await AxiosNoInterceptor.post('/auth/google-login', {
                     token: tokenResponse.access_token,
                 });
+
                 login(response.data.data);
-            } catch (error) {
-                console.error(error);
-                handleErrors(error, setError);
+            } catch (err) {
+                console.error(err);
+                handleErrors(err, setError);
             } finally {
                 setIsGoogleSubmitting(false);
             }
@@ -82,6 +84,8 @@ const Login = () => {
             handleErrors(error, setError);
         },
     });
+
+    const isAnyLoginSubmitting = () => isSubmitting || isGoogleSubmitting;
 
     return (
         <div className='lg:flex h-[100vh] overflow-hidden'>
@@ -143,13 +147,13 @@ const Login = () => {
                         </CardContent>
 
                         <CardFooter className="">
-                            {isSubmitting ? (
-                                <ButtonLoading css={"w-full"}/>
+                            {isAnyLoginSubmitting() ? (
+                                <ButtonLoading/>
                             ) : (
                                 <Button
                                     type="submit"
                                     className="w-full"
-                                    disabled={isSubmitting}
+                                    disabled={isAnyLoginSubmitting()}
                                 >
                                     Login
                                 </Button>
@@ -162,19 +166,21 @@ const Login = () => {
 
                     {/* Google Login */}
                     <div className='flex'>
-                        {isGoogleSubmitting ? (
-                            <ButtonLoading css="w-[90%] mx-auto"/>
-                        ) : (
-                            <Button
-                                onClick={handleGoogleAuth}
-                                className="mx-auto"
-                                variant="outline"
-                                disabled={isGoogleSubmitting}
-                            >
-                                <FcGoogle className='my-auto mr-2 text-xl'/>
-                                <p>Google</p>
-                            </Button>
-                        )}
+                        {isAnyLoginSubmitting()
+                            ? (
+                                <ButtonLoading css="w-[90%] mx-auto"/>
+                            )
+                            : (
+                                <Button
+                                    onClick={handleGoogleAuth}
+                                    className="mx-auto"
+                                    variant="outline"
+                                    disabled={isAnyLoginSubmitting()}
+                                >
+                                    <FcGoogle className='my-auto mr-2 text-xl'/>
+                                    <p>Google</p>
+                                </Button>
+                            )}
                     </div>
 
                     {/* Signup redirect */}

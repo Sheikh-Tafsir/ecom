@@ -279,7 +279,7 @@ export default function ProductView() {
 
               <CardFooter className="flex-col gap-2">
                 {isButtonLoading ? (
-                  <ButtonLoading css="w-full" />
+                  <ButtonLoading />
                 ) : (
                   <Button type="submit" className="w-full bg-blue-600">
                     Add

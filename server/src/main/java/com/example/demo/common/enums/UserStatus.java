@@ -10,15 +10,10 @@ import lombok.Getter;
 public enum UserStatus {
 
     NOT_VERIFIED("Not Verified"),
-
     ACTIVE("Active"),
-
     SUSPENDED("Suspended"),
-
     INACTIVE("Inactive"),
-
     DELETED("Deleted"),
-
     BANNED("Banned");
 
     @JsonValue

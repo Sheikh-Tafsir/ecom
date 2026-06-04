@@ -14,7 +14,10 @@ import java.util.Set;
 import static com.example.demo.common.enums.ProductStatus.DISCONTINUED;
 
 @Entity
-@Table(name = "products")
+@Table(
+        name = "products",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"name"})
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -25,19 +28,33 @@ public class Product extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
+
+    @Column
+    private String description;
 
     @Column(nullable = false)
     private BigDecimal price = BigDecimal.ZERO;
 
     private int quantity;
 
+    @Enumerated(EnumType.STRING)
+    private ProductStatus status = ProductStatus.COMING_SOON;
+
+    @Column(nullable = false)
+    private BigDecimal rating = BigDecimal.ZERO;
+
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ProductImage> images = new HashSet<>();
 
-    @Enumerated(EnumType.STRING)
-    private ProductStatus status = ProductStatus.COMING_SOON;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "product_categories",
+            joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+    private Set<Category> categorise = new HashSet<>();
 
     private Boolean deleted = false;
 

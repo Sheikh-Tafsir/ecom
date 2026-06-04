@@ -90,9 +90,9 @@ const Profile = () => {
             }, 500);
         },
 
-        onError: (error, variables) => {
+        onError: (error) => {
             console.error(error);
-            handleErrors(error, setError, variables);
+            handleErrors(error, setError);
 
             showToast("Failed to update profile", TOAST_TYPE.ERROR);
         },
@@ -116,7 +116,7 @@ const Profile = () => {
 
         onError: (error) => {
             console.error(error);
-            handleErrors(error, setError, null);
+            handleErrors(error, setError);
 
             showToast("Failed to delete account", TOAST_TYPE.ERROR);
         },
@@ -181,7 +181,7 @@ const Profile = () => {
 
                         <CardFooter className="flex-col gap-2">
                             {isSubmitting ? (
-                                <ButtonLoading css="w-full"/>
+                                <ButtonLoading/>
                             ) : !isEditable ? (
                                 <div className="w-full flex gap-2">
                                     <Button

@@ -8,8 +8,14 @@ import {
 } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { TOAST_TYPE } from "@/utils/enums"
+import {isNull} from "@/utils/index.js";
 
 export function ToastAlert({ message, type }) {
+  if (isNull(message) && isNull(type)) {
+    return
+  }
+
+  console.log(message, type)
   const [isOpen, setIsOpen] = useState(true)
 
   useEffect(() => {

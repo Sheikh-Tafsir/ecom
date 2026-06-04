@@ -114,7 +114,7 @@ const ResetPassword = () => {
 
                         <CardFooter className="flex-col gap-2 ">
                             {isButtonLoading ?
-                                <ButtonLoading css={"w-full"} />
+                                <ButtonLoading />
                                 :
                                 <Button type="submit" className="w-full">Save</Button>
                             }

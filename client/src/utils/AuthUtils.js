@@ -1,6 +1,6 @@
 import {jwtDecode} from 'jwt-decode';
 
-export const ACCESS_TOKEN = "visoredAccessToken";
+export const ACCESS_TOKEN = import.meta.env.VITE_API_PATH;
 
 export const saveAccessToken = (token) => {
     localStorage.setItem(ACCESS_TOKEN, token);

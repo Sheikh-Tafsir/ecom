@@ -8,7 +8,7 @@ const PublicRoute = () => {
     return (
         <>
             <NavigationBar/>
-            <main>
+            <main className="bg-gradient-to-br from-blue-50 to-indigo-100 pb-8" style={{paddingTop: '70px'}}>
                 <Outlet/>
             </main>
             <Footer/>

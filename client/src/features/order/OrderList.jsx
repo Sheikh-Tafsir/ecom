@@ -129,6 +129,54 @@ const OrderList = () => {
                 <h1 className='text-center text-2xl lg:text-2xl xl:text-3xl mb-6'>Orders</h1>
 
                 <div className='grid lg:grid-cols-3 gap-8'>
+                    <Card className="g:col-span-1">
+                        <form onSubmit={handleSearch}>
+                            <CardHeader>
+                                <CardTitle>Filter </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {isAdmin(user?.role) &&
+                                    <div className='space-y-1'>
+                                        <Label>User Id: </Label>
+                                        <Input
+                                            name="userId"
+                                            type="number"
+                                            value={searchFilter.userId}
+                                            onChange={handleInputChange}
+                                        />
+                                        {errors.userId && <p className='validation-error'>{errors.userId}</p>}
+                                    </div>
+                                }
+
+                                <div className='space-y-1'>
+                                    <Label>Date From: </Label>
+                                    <Input
+                                        name="fromDate"
+                                        type="date"
+                                        value={searchFilter.fromDate}
+                                        onChange={handleInputChange}
+                                    />
+                                    {errors.fromDate && <p className='validation-error'>{errors.fromDate}</p>}
+                                </div>
+                                <div className='space-y-1'>
+                                    <Label>Date To: </Label>
+                                    <Input
+                                        name="toDate"
+                                        type="date"
+                                        value={searchFilter.toDate}
+                                        onChange={handleInputChange}
+                                    />
+                                    {errors.toDate && <p className='validation-error'>{errors.toDate}</p>}
+                                </div>
+                            </CardContent>
+                            <CardFooter>
+                                <Button type="submit" className="w-full cursor-pointer bg-blue-600">
+                                    Search
+                                </Button>
+                            </CardFooter>
+                        </form>
+                    </Card>
+
                     <div className='lg:col-span-2 space-y-4'>
                         <Table className="cursor-pointer bg-white w-[100%]">
                             <TableHeader>
@@ -184,54 +232,6 @@ const OrderList = () => {
                             </div>
                         }
                     </div>
-
-                    <Card className="g:col-span-1">
-                        <form onSubmit={handleSearch}>
-                            <CardHeader>
-                                <CardTitle>Filter </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                {isAdmin(user?.role) &&
-                                    <div className='space-y-1'>
-                                        <Label>User Id: </Label>
-                                        <Input
-                                            name="userId"
-                                            type="number"
-                                            value={searchFilter.userId}
-                                            onChange={handleInputChange}
-                                        />
-                                        {errors.userId && <p className='validation-error'>{errors.userId}</p>}
-                                    </div>
-                                }
-
-                                <div className='space-y-1'>
-                                    <Label>Date From: </Label>
-                                    <Input
-                                        name="fromDate"
-                                        type="date"
-                                        value={searchFilter.fromDate}
-                                        onChange={handleInputChange}
-                                    />
-                                    {errors.fromDate && <p className='validation-error'>{errors.fromDate}</p>}
-                                </div>
-                                <div className='space-y-1'>
-                                    <Label>Date To: </Label>
-                                    <Input
-                                        name="toDate"
-                                        type="date"
-                                        value={searchFilter.toDate}
-                                        onChange={handleInputChange}
-                                    />
-                                    {errors.toDate && <p className='validation-error'>{errors.toDate}</p>}
-                                </div>
-                            </CardContent>
-                            <CardFooter>
-                                <Button type="submit" className="w-full cursor-pointer bg-blue-600">
-                                    Search
-                                </Button>
-                            </CardFooter>
-                        </form>
-                    </Card>
                 </div>
             </div>
 

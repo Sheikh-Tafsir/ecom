@@ -116,7 +116,7 @@ const InventoryCreate = () => {
 
             <CardFooter className="flex-col gap-2">
               {isLoading.button ? (
-                <ButtonLoading css="w-full" />
+                <ButtonLoading />
               ) : (
                 <Button type="submit" className="w-full cursor-pointer" style={{ backgroundColor: 'rgb(24,62,139)' }}>
                   Restock

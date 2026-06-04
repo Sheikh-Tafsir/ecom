@@ -190,7 +190,7 @@ export default function OrderCreate() {
                                     </div>
                                     
                                     {isLoading.button ?
-                                        <ButtonLoading css="w-full"/>
+                                        <ButtonLoading />
                                         :
                                         <Button type="submit" className="w-full bg-blue-600" size="lg">
                                             Complete Order

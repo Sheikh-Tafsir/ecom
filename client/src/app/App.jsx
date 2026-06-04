@@ -10,30 +10,30 @@ import { connectSocket, disconnectSocket } from '@/services/realtime/socket';
 import { USER_ROLE } from "@/utils/enums";
 import NotificationListener from "@/components/common/NotificationListener";
 
-import Homepage from '@/pages/homepage/Homepage';
-import NotFound from '@/pages/NotFound';
+import Homepage from '@/features/homepage/Homepage';
+import NotFound from '@/features/NotFound';
 
-import Login from "@/pages/auth/Login.jsx";
-import Signup from "@/pages/auth/Signup.jsx";
-import ForgotPassword from "@/pages/auth/ForgotPassword";
-import ResetPassword from "@/pages/auth/ResetPassword";
+import Login from "@/features/auth/Login.jsx";
+import Signup from "@/features/auth/Signup.jsx";
+import ForgotPassword from "@/features/auth/ForgotPassword";
+import ResetPassword from "@/features/auth/ResetPassword";
 
-import Profile from '@/pages/profile/Profile.jsx'
+import Profile from '@/features/profile/Profile.jsx'
 
-import UserList from "@/pages/users/UserList.jsx";
-import UserEdit from "@/pages/users/UserEdit.jsx";
+import UserList from "@/features/users/UserList.jsx";
+import UserEdit from "@/features/users/UserEdit.jsx";
 
-import ProductList from "@/pages/product/ProductList";
-import ProductView from "@/pages/product/ProductView";
-import ProductCreate from "@/pages/product/ProductCreate";
-import Inventory from "@/pages/product/Inventory";
-import InventoryCreate from "@/pages/product/InventoryCreate";
-import Sales from "@/pages/product/Sales";
+import ProductList from "@/features/product/ProductList";
+import ProductView from "@/features/product/ProductView";
+import ProductCreate from "@/features/product/ProductCreate";
+import Inventory from "@/features/product/Inventory";
+import InventoryCreate from "@/features/product/InventoryCreate";
+import Sales from "@/features/product/Sales";
 
-import Cart from "@/pages/order/Cart";
-import OrderList from "@/pages/order/OrderList";
-import OrderView from "@/pages/order/OrderView";
-import OrderCreate from "@/pages/order/OrderCreate";
+import Cart from "@/features/order/Cart";
+import OrderList from "@/features/order/OrderList";
+import OrderView from "@/features/order/OrderView";
+import OrderCreate from "@/features/order/OrderCreate";
 
 import { useUserStore } from "@/store/useUserStore";
 

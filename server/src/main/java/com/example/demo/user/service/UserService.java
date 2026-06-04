@@ -47,8 +47,8 @@ public class UserService {
     private final MessageService messageService;
 
     @PreAuthorize(HAS_ROLE_ADMIN)
-    public Page<User> findAll(Pageable pageable, String role, UserStatus status) {
-        return userRepository.findByRoleAndStatus(roleService.findByName(role), status, getValidPageable(pageable));
+    public Page<User> findAll(Pageable pageable, String role, String status) {
+        return userRepository.findByRoleAndStatus(roleService.findByName(role), UserStatus.fromValue(status), getValidPageable(pageable));
     }
 
     @PreAuthorize(HAS_ROLE_ADMIN)

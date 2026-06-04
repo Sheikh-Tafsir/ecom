@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { format } from "date-fns";
+import {useState, useEffect} from 'react';
+import {useNavigate, useSearchParams} from 'react-router-dom';
+import {format} from "date-fns";
 
 import {
     Table,
@@ -10,11 +10,11 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { Axios } from '@/services/http/Axios';
+import {Axios} from '@/services/http/Axios';
 import PaginationButton from '@/components/common/PaginationButton';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay';
-import { FIRST_PAGE, getQueryString, REGULAR_DATE_FORMAT } from '@/utils';
-import { Label } from '@/components/ui/label';
+import {FIRST_PAGE, getQueryString, REGULAR_DATE_FORMAT} from '@/utils';
+import {Label} from '@/components/ui/label';
 import {
     Card,
     CardContent,
@@ -22,10 +22,10 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card.jsx';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { ToastAlert } from '@/components/common/ToastAlert';
-import { TOAST_TYPE } from '@/utils/enums';
+import {Input} from '@/components/ui/input';
+import {Button} from '@/components/ui/button';
+import {ToastAlert} from '@/components/common/ToastAlert';
+import {TOAST_TYPE} from '@/utils/enums';
 
 const Inventory = () => {
     const navigate = useNavigate();
@@ -41,18 +41,18 @@ const Inventory = () => {
         toDate: ''
     });
     const [errors, setErrors] = useState({});
-    const [toastData, setToastData] = useState({ message: "", type: "", id: 0 });
+    const [toastData, setToastData] = useState({message: "", type: "", id: 0});
 
     const page = parseInt(queryParams.page) || FIRST_PAGE;
 
     const handleError = (error) => {
-        setErrors(error.response?.data || { global: error.message });
+        setErrors(error.response?.data || {global: error.message});
     };
 
     useEffect(() => {
         if (page <= 0 || totalPages < page) {
-            navigate("/inventories", { replace: true });
-        };
+            navigate("/inventories", {replace: true});
+        }
 
         const fetchInventories = async () => {
             setIsPageLoading(true);
@@ -86,21 +86,21 @@ const Inventory = () => {
             ...searchFilter,
         };
 
-        navigate(getQueryString(navQueryParams), { replace: true });
+        navigate(getQueryString(navQueryParams), {replace: true});
     }
 
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setSearchFilter((prev) => ({ ...prev, [name]: value }));
+        const {name, value} = e.target;
+        setSearchFilter((prev) => ({...prev, [name]: value}));
     };
 
     const showToast = (message, type) => {
-        setToastData({ message, type, id: Date.now() }) // ensure uniqueness
+        setToastData({message, type, id: Date.now()}) // ensure uniqueness
     }
 
     return (
         <>
-            {isPageLoading && <PageLoadingOverlay />}
+            {isPageLoading && <PageLoadingOverlay/>}
 
             <div className='container pb-8'>
                 <h1 className='text-center text-2xl lg:text-2xl xl:text-3xl mb-6'>Inventory</h1>
@@ -109,7 +109,8 @@ const Inventory = () => {
                     <div className='lg:col-span-2 space-y-4'>
                         <Table className="cursor-pointer bg-white w-[100%]">
                             <TableHeader>
-                                <TableRow className="bg-blue-100 hover:bg-blue-200 transform transition-colors duration-200">
+                                <TableRow
+                                    className="bg-blue-100 hover:bg-blue-200 transform transition-colors duration-200">
                                     <TableHead className="text-black text-base">Name</TableHead>
                                     <TableHead className="text-black text-base">Item Purchased</TableHead>
                                     <TableHead className="text-black text-base">Item Left</TableHead>
@@ -131,7 +132,7 @@ const Inventory = () => {
                         </Table>
 
                         {inventory?.length > 0 ?
-                            <PaginationButton totalPages={totalPages} />
+                            <PaginationButton totalPages={totalPages}/>
                             :
                             <div className='w-full flex bg-white p-4'>
                                 <p className='mx-auto'>Nothing to show</p>

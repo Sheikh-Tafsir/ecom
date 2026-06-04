@@ -28,8 +28,7 @@ import static com.example.demo.common.enums.ProductStatus.DISCONTINUED;
 import static com.example.demo.common.utils.FileUtils.fileExists;
 import static com.example.demo.common.utils.SecurityConstants.HAS_ROLE_ADMIN;
 import static com.example.demo.common.utils.SecurityUtil.isAdmin;
-import static com.example.demo.common.utils.Utils.isEmpty;
-import static com.example.demo.common.utils.Utils.getValidPageable;
+import static com.example.demo.common.utils.Utils.*;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +43,8 @@ public class ProductService {
     private final MessageService messageService;
 
     public Page<Product> findAll(Pageable pageable, String name, CustomUserDetails userDetails) {
-        return productRepository.findAllByNameAndExcludeStatus(name, isAdmin(userDetails) ? null : DISCONTINUED, getValidPageable(pageable));
+        String nameFilter = (isNull(name)) ? null : "%" + name + "%";
+        return productRepository.findAllByNameAndExcludeStatus(nameFilter, isAdmin(userDetails) ? null : DISCONTINUED, getValidPageable(pageable));
     }
 
     public Product findById(Long id, CustomUserDetails userDetails) {

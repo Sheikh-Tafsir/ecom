@@ -6,6 +6,7 @@ import com.example.demo.auth.validator.AuthValidator;
 import com.example.demo.common.dto.ApiResponse;
 import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.common.utils.ResponseUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -74,8 +75,8 @@ public class AuthController {
     }
 
     @PostMapping("/access-token/refresh")
-    public ResponseEntity<ApiResponse<String>> refreshAccessToken(@CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken) {
-        String accessToken = authService.refreshAccessToken(refreshToken);
+    public ResponseEntity<ApiResponse<String>> refreshAccessToken(HttpServletRequest request) {
+        String accessToken = authService.refreshAccessToken(request);
         return ResponseUtils.ok(accessToken, "Access Token refreshed successfully");
     }
 

@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { z } from 'zod';
+import React, {useState, useEffect} from 'react';
+import {useLocation, useNavigate, useParams} from 'react-router-dom';
+import {useForm, Controller} from 'react-hook-form';
+import {zodResolver} from '@hookform/resolvers/zod';
+import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
+import {z} from 'zod';
 
-import { Button } from '@/components/ui/button.jsx';
+import {Button} from '@/components/ui/button.jsx';
 import {
     Card,
     CardContent,
@@ -13,19 +13,19 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card.jsx';
-import { Input } from '@/components/ui/input.jsx';
-import { Label } from '@/components/ui/label.jsx';
-import { Axios } from '@/services/http/Axios';
-import { AlertAction } from '@/components/common/AlertAction';
-import { ButtonLoading } from "@/components/common/ButtonLoading";
+import {Input} from '@/components/ui/input.jsx';
+import {Label} from '@/components/ui/label.jsx';
+import {Axios} from '@/services/http/Axios';
+import {AlertAction} from '@/components/common/AlertAction';
+import {ButtonLoading} from "@/components/common/ButtonLoading";
 import ImageInput from '@/components/common/ImageInput';
 import InputViewMode from '@/components/common/InputViewMode';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay';
 import StaredLabel from '@/components/common/StaredLabel';
-import { ToastAlert } from '@/components/common/ToastAlert';
-import { TOAST_TYPE, ALERT_TYPE } from '@/utils/enums';
-import { handleErrors } from '@/utils/ErrorUtils';
-import { initialToastState, prepareMultipartForm } from '@/utils';
+import {ToastAlert} from '@/components/common/ToastAlert';
+import {TOAST_TYPE, ALERT_TYPE} from '@/utils/enums';
+import {handleErrors} from '@/utils/ErrorUtils';
+import {initialToastState, prepareMultipartForm} from '@/utils';
 
 // Zod schema
 const UserSchema = z.object({
@@ -36,20 +36,20 @@ const UserSchema = z.object({
 });
 
 const UserEdit = () => {
-    const { id } = useParams();
+    const {id} = useParams();
     const navigate = useNavigate();
     const location = useLocation();
     const isEditable = location.pathname.endsWith("/edit");
 
     const queryClient = useQueryClient();
-    const { register, handleSubmit, control, watch, reset, setError: setErrors, formState: { errors, isSubmitting } } = useForm({
+    const {register, handleSubmit, control, watch, reset, setError, formState: {errors, isSubmitting}} = useForm({
         resolver: zodResolver(UserSchema),
         defaultValues: {},
     });
 
     const [toastData, setToastData] = useState(initialToastState);
 
-    const { data: user, isLoading: isPageLoading, isError } = useQuery({
+    const {data: user, isLoading: isPageLoading, isError} = useQuery({
         queryKey: ["user", id],
         queryFn: async () => {
             const res = await Axios.get(`/users/${id}`);
@@ -69,12 +69,12 @@ const UserEdit = () => {
         },
         onSuccess: async () => {
             showToast("User successfully updated", TOAST_TYPE.SUCCESS);
-            await queryClient.invalidateQueries({ queryKey: ["user", id] });
+            await queryClient.invalidateQueries({queryKey: ["user", id]});
             navigate(`/user/${id}`);
         },
-        onError: (error, variables) => {
+        onError: (error) => {
             console.error(error);
-            handleErrors(error, setErrors, variables);
+            handleErrors(error, setError);
             showToast("Failed to update user", TOAST_TYPE.ERROR);
         },
     });
@@ -84,8 +84,8 @@ const UserEdit = () => {
         mutationFn: async () => await Axios.delete(`/users/${id}`),
         onSuccess: async () => {
             showToast("User deleted", TOAST_TYPE.SUCCESS);
-            await queryClient.invalidateQueries({ queryKey: ["users"] });
-            navigate("/users", { replace: true });
+            await queryClient.invalidateQueries({queryKey: ["users"]});
+            navigate("/users", {replace: true});
         },
         onError: (error) => {
             console.error(error);
@@ -98,12 +98,12 @@ const UserEdit = () => {
     }
 
     const showToast = (message, type) => {
-        setToastData({ message, type, id: Date.now() });
+        setToastData({message, type, id: Date.now()});
     };
 
     return (
         <>
-            {isPageLoading && <PageLoadingOverlay />}
+            {isPageLoading && <PageLoadingOverlay/>}
 
             <div className="min-h-[90vh] flex">
                 <Card className="mx-auto my-auto w-[450px]">
@@ -117,7 +117,7 @@ const UserEdit = () => {
                                 <Controller
                                     name="image"
                                     control={control}
-                                    render={({ field }) => (
+                                    render={({field}) => (
                                         <ImageInput
                                             existingImage={field.value}
                                             onImageChange={field.onChange}
@@ -128,31 +128,33 @@ const UserEdit = () => {
 
                                 <div className="space-y-1">
                                     <Label>Email</Label>
-                                    <InputViewMode value={watch("email")} isEditable={isEditable} />
+                                    <InputViewMode value={watch("email")} isEditable={isEditable}/>
                                 </div>
 
                                 <div className="space-y-1">
-                                    <StaredLabel label="Name" />
-                                    <Input {...register("name")} placeholder="Md Rafiquddin" />
+                                    <StaredLabel label="Name"/>
+                                    <Input {...register("name")} placeholder="Md Rafiquddin"/>
                                     {errors.name && <p className="validation-error">{errors.name.message}</p>}
                                 </div>
 
                                 <div className="space-y-1">
                                     <Label>Role</Label>
-                                    <InputViewMode value={watch("role") || user?.role} isEditable={isEditable} />
+                                    <InputViewMode value={watch("role") || user?.role} isEditable={isEditable}/>
                                 </div>
                             </CardContent>
                         </fieldset>
 
                         <CardFooter className="flex-col gap-2">
                             {isSubmitting ? (
-                                <ButtonLoading css="w-full" />
+                                <ButtonLoading/>
                             ) : !isEditable ? (
                                 <div className="w-full flex gap-2">
-                                    <Button type="button" className="w-[50%] bg-gray-600 hover:bg-gray-800" onClick={handleNavigateToEdit}>
+                                    <Button type="button" className="w-[50%] bg-gray-600 hover:bg-gray-800"
+                                            onClick={handleNavigateToEdit}>
                                         Edit
                                     </Button>
-                                    <AlertAction onConfirm={() => deleteUser.mutate()} type={ALERT_TYPE.DELETE} css="w-[50%]" />
+                                    <AlertAction onConfirm={() => deleteUser.mutate()} type={ALERT_TYPE.DELETE}
+                                                 css="w-[50%]"/>
                                 </div>
                             ) : (
                                 <Button type="submit" className="w-full bg-blue-600">
@@ -164,7 +166,7 @@ const UserEdit = () => {
                 </Card>
             </div>
 
-            {toastData.message && <ToastAlert key={toastData.id} message={toastData.message} type={toastData.type} />}
+            {toastData.message && <ToastAlert key={toastData.id} message={toastData.message} type={toastData.type}/>}
         </>
     );
 };

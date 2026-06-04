@@ -44,26 +44,20 @@ Axios.interceptors.response.use(
         const originalRequest = error?.config;
         const response = error?.response;
 
-        if (!response) return Promise.reject(error);
+        if (!response) {
+            return Promise.reject(error);
+        }
 
-        const isRefreshRequest =
-            originalRequest?.url?.includes("/auth/refresh");
+        const isRefreshRequest = originalRequest?.url?.includes("/auth/access-token/refresh");
 
-        if (
-            response.status === 401 &&
-            !originalRequest?._retry &&
-            !isRefreshRequest
-        ) {
+        if (response.status === 401 && !originalRequest?._retry && !isRefreshRequest) {
             originalRequest._retry = true;
 
             try {
                 const token = await getValidAccessToken();
 
-                originalRequest.headers =
-                    originalRequest.headers || {};
-
-                originalRequest.headers.Authorization =
-                    `Bearer ${token}`;
+                originalRequest.headers = originalRequest.headers || {};
+                originalRequest.headers.Authorization = `Bearer ${token}`;
 
                 return Axios.request(originalRequest);
             } catch (err) {
@@ -143,7 +137,7 @@ const onRefreshFailure = (error) => {
 
 const refreshAccessToken = async () => {
     try {
-        const response = await AxiosNoInterceptor.post('/auth/refresh');
+        const response = await AxiosNoInterceptor.post('/auth/access-token/refresh');
         //console.log(data.message);
         const token = response.data.data;
         saveAccessToken(token)

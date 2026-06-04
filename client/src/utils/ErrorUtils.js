@@ -1,4 +1,4 @@
-const NETWORK_ERROR = "Network error. Please check your internet connection.";
+const NETWORK_ERROR = "Network Error";
 
 export const GLOBAL_ERROR = "global";
 
@@ -19,10 +19,13 @@ export const handleErrors = (error, setError) => {
         if (data?.message) {
             handleGlobalError(data.message, setError);
         }
+
+        return;
     }
 
-    if (error?.request || error?.message === "Network Error") {
+    if (error?.message == NETWORK_ERROR || error?.request) {
         handleGlobalError(NETWORK_ERROR, setError);
+        return;
     }
 
     handleGlobalError(error?.message || "Unexpected error occurred.", setError);
@@ -39,9 +42,10 @@ const handleFieldErrors = (errors, setError) => {
     });
 };
 
-const handleGlobalError = (error, setError) => {
-    setError?.("global", {
-        error,
+const handleGlobalError = (message, setError) => {
+    setError?.(GLOBAL_ERROR, {
+        type: "client",
+        message,
     });
 };
 

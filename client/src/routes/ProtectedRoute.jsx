@@ -2,6 +2,7 @@ import {Outlet, Navigate} from 'react-router-dom'
 
 import NavigationBar from '@/components/common/NavigationBar';
 import {useUserStore} from '@/store/useUserStore';
+import Footer from "@/components/common/Footer.jsx";
 
 const ProtectedRoute = ({allowedRoles}) => {
     const {isAuthenticated, user} = useUserStore();
@@ -16,9 +17,10 @@ const ProtectedRoute = ({allowedRoles}) => {
     return (
         <>
             <NavigationBar/>
-            <main className="bg-gradient-to-br from-blue-50 to-indigo-100 pt-24 pb-8">
+            <main className="bg-gradient-to-br from-blue-50 to-indigo-100 pb-8" style={{paddingTop: '70px'}}>
                 <Outlet/>
             </main>
+            <Footer/>
         </>
     )
 }

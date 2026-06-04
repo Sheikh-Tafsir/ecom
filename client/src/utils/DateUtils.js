@@ -9,12 +9,21 @@ export const REGULAR_TIME_FORMAT_12 = "hh:mm a";
 export const REGULAR_TIME_FORMAT_24 = "HH:mm";
 
 export const formatDateString = (dateStr) => {
-    const year = dateStr[0];
-    const month = dateStr[1];
-    const day = dateStr[2];
-    
-    return day + "-" + month + "-" + year;
-}
+    if (!dateStr) return "-";
+
+    // convert "2026-06-04 22:21:46.170915" → "2026-06-04T22:21:46"
+    const normalized = dateStr.replace(" ", "T").split(".")[0];
+
+    const date = new Date(normalized);
+
+    if (isNaN(date.getTime())) return "-";
+
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+
+    return `${day}-${month}-${year}`;
+};
 
 export const isSameDay = (date1, date2) => {
     return date1.getFullYear() == date2.getFullYear() &&

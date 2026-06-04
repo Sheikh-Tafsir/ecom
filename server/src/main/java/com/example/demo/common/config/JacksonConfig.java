@@ -25,7 +25,6 @@ public class JacksonConfig {
             builder.simpleDateFormat("dd-MM-yyyy'T'HH:mm:ss.SSSZ");
             builder.featuresToDisable(DeserializationFeature.ACCEPT_FLOAT_AS_INT);
             builder.featuresToDisable(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE);
-            builder.propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
             builder.indentOutput(true);
         };
     }

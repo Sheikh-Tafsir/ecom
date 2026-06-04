@@ -10,6 +10,7 @@ import com.example.demo.common.model.User;
 import com.example.demo.auth.dto.Otp;
 import com.example.demo.common.service.JwtService;
 import com.example.demo.common.service.MailService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.example.demo.common.utils.CookieUtils.addCookie;
+import static com.example.demo.common.utils.CookieUtils.getCookieValue;
 import static com.example.demo.common.utils.Utils.*;
 import static java.util.Objects.isNull;
 import static org.springframework.util.StringUtils.hasText;
@@ -52,8 +54,11 @@ public class AuthService {
 
     public static final String GOOGLE_OAUTH_API= "https://www.googleapis.com/oauth2/v1/userinfo?access_token={access_token}";
 
-    @Value("${refresh.cookie.validity}")
-    private long refreshCookieValidity;
+    @Value("${refresh.token.name}")
+    private String refreshTokenName;
+
+    @Value("${refresh.token.validity}")
+    private long refreshTokenValidity;
 
     private final AuthRepository authRepository;
 
@@ -177,10 +182,12 @@ public class AuthService {
     }
 
     public void addRefreshCookie(HttpServletResponse response, TokenDto authResponse) {
-        addCookie(response, REFRESH_TOKEN_COOKIE_NAME, authResponse.getRefreshToken(), refreshCookieValidity);
+        addCookie(response, refreshTokenName, authResponse.getRefreshToken(), refreshTokenValidity/1000);
     }
 
-    public String refreshAccessToken(String refreshToken) {
+    public String refreshAccessToken(HttpServletRequest request) {
+        String refreshToken = getCookieValue(request, refreshTokenName);
+
         if (!hasText(refreshToken)) {
             throw new InvalidRefreshTokenException("Refresh token cookie not found");
         }
@@ -200,7 +207,7 @@ public class AuthService {
     }
 
     public void logout(HttpServletResponse response) {
-        addCookie(response, REFRESH_TOKEN_COOKIE_NAME, null, 0);
+        addCookie(response, refreshTokenName, null, 0);
     }
 
     public void resetPassword(OtpEmailRequest resetPasswordRequest) {

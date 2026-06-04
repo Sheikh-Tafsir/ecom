@@ -1,38 +1,89 @@
-export const FIRST_PAGE = 1;
-export const DEFAULT_PAGE_SIZE = 10;
-export const DEFAULT_SORT_BY = "createdAt";
-export const DEFAULT_SORT_ORDER = "desc";
+export const FIRST_PAGE = 1
+export const DEFAULT_PAGE_SIZE = 24
+export const DEFAULT_SORT_BY = "createdAt"
+export const DEFAULT_SORT_ORDER = "DESC"
+export const DEFAULT_SORT = DEFAULT_SORT_BY + "," + DEFAULT_SORT_ORDER
 
-export const getDefaultPaginationParams = () => ({
-  page: FIRST_PAGE - 1,
-  size: DEFAULT_PAGE_SIZE,
-  sortBy: DEFAULT_SORT_BY,
-  sortOrder: DEFAULT_SORT_ORDER,
-  search: "",
-});
+export const MAX_PAGE_SIZE = DEFAULT_PAGE_SIZE;
+export const ALL_SELECTED = "__all__";
 
+/**
+ * Clean query string builder (UI only)
+ * - no pagination conversion
+ * - no business logic
+ */
 export const getQueryString = (params = {}) => {
-  // Merge provided params with pagination defaults
-  const mergedParams = {
-    ...getDefaultPaginationParams(),
-    ...params,
-  };
+    const cleaned = Object.fromEntries(
+        Object.entries(params).filter(
+            ([_, v]) => v !== undefined && v !== null && v !== ""
+        )
+    )
 
-  // Convert 1-based page (frontend) to 0-based page (Spring)
-  if (mergedParams.page && mergedParams.page > 0) {
-    mergedParams.page = mergedParams.page - 1;
-  }
+    const qs = new URLSearchParams(cleaned).toString()
+    return qs ? `?${qs}` : ""
+}
 
-  // Remove nullish and empty-string values
-  const filteredEntries = Object.entries(mergedParams).filter(
-    ([, value]) => value !== undefined && value !== null && value !== ""
-  );
+export const parsePage = (page) => {
+    return Math.max(1, Number(page) || 1)
+}
 
-  // If no valid params exist, return empty string
-  if (filteredEntries.length === 0) return "";
+export const parseSize = (size) => {
+    if (size <= 0) {
+        return FIRST_PAGE;
+    }
 
-  // Build query string safely
-  const query = new URLSearchParams(Object.fromEntries(filteredEntries)).toString();
+    return Math.min(MAX_PAGE_SIZE, size)
+}
 
-  return `?${query}`;
+export const parseSort = (sort = DEFAULT_SORT, allowedSortFields) => {
+    if (allowedSortFields == null) {
+        return DEFAULT_SORT;
+    }
+
+    const [field, order] = sort.split(",")
+
+    return allowedSortFields.has(field)
+        ? `${field},${order === "ASC" ? "ASC" : DEFAULT_SORT_ORDER}`
+        : DEFAULT_SORT;
+}
+
+export const isInvalidPageNo = (page, totalPages) => {
+    return page < FIRST_PAGE || page > totalPages;
+}
+
+export const redirectWhenInvalidPage = ({page, totalPages, navigate, queryParams}) => {
+    if (!totalPages) return;
+
+    if (isInvalidPageNo(page, totalPages)) {
+        navigate(
+            getQueryString({
+                ...queryParams,
+                page: FIRST_PAGE,
+            }),
+            {replace: true}
+        );
+    }
 };
+
+export const checkAllSelected = (value) => {
+    return value && value !== ALL_SELECTED ? value : undefined;
+}
+
+export const updateQueryWhenParamChange = ({queryParams, newParams, navigate}) => {
+    const cleanedParams = Object.fromEntries(
+        Object.entries({
+            ...queryParams,
+            ...newParams,
+            page: FIRST_PAGE,
+        }).map(([key, value]) => {
+            if (value === ALL_SELECTED || value === "" || value == null) {
+                return [key, undefined];
+            }
+            return [key, value];
+        })
+    );
+
+    navigate(getQueryString(cleanedParams), {replace: true});
+};
+
+export const getSelectValue = (value) => value ?? ALL_SELECTED;

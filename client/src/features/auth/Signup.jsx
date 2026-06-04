@@ -125,7 +125,7 @@ const Signup = () => {
                         <CardFooter className="flex-col">
                             {isSubmitting
                                 ? (
-                                    <ButtonLoading css="w-full"/>
+                                    <ButtonLoading />
                                 )
                                 : (
                                     <Button

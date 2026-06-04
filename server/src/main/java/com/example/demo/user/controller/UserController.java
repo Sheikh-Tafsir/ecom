@@ -26,7 +26,7 @@ public class UserController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<User>>> findAll(Pageable pageable,
                                                            @RequestParam(required = false) String role,
-                                                           @RequestParam(required = false) UserStatus status) {
+                                                           @RequestParam(required = false) String status) {
 
         Page<User> users = userService.findAll(pageable, role, status);
         return ResponseUtils.ok(users, messageService.get("successfully.found", "User List"));
