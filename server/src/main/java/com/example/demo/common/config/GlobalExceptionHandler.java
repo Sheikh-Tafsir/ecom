@@ -40,72 +40,72 @@ public class GlobalExceptionHandler {
     // 401
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<?> handleInvalidCredentialsExceptions(BadCredentialsException ex) {
-        log.error("Authentication credentials invalid:", ex);
+        log.error("Authentication credentials invalid: {}", ex.getMessage());
         return error(ex.getMessage(), HttpStatusCode.valueOf(401));
     }
 
     @ExceptionHandler(InvalidAccessTokenException.class)
     public ResponseEntity<?> handleAccessTokenInvalidExceptions(InvalidAccessTokenException ex) {
-        log.error("Access token invalid:", ex);
+        log.error("Access token invalid: {}", ex.getMessage());
         return error(ACCESS_TOKEN_INVALID, HttpStatusCode.valueOf(401));
     }
 
     @ExceptionHandler(InvalidRefreshTokenException.class)
     public ResponseEntity<?> handleRefreshTokenInvalidException(InvalidRefreshTokenException ex) {
-        log.error("Refresh token invalid:", ex);
+        log.error("Refresh token invalid: {}", ex.getMessage());
         return error(REFRESH_TOKEN_INVALID, HttpStatusCode.valueOf(401));
     }
 
     // 403
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<?> handleAccessDeniedException(AccessDeniedException ex) {
-        log.error("Access Denied:", ex);
+        log.error("Access Denied: {}", ex.getMessage());
         return error(PERMISSION_DENIED,HttpStatusCode.valueOf(403));
     }
 
     // 404
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<?> handleEntityNotFoundException(EntityNotFoundException ex) {
-        log.error("Entity not found:", ex);
+        log.error("Entity not found: {}", ex.getMessage());
         return error(ex.getMessage(), HttpStatusCode.valueOf(404));
     }
 
     @ExceptionHandler(NoResultException.class)
     public ResponseEntity<?> handleNoResultException(NoResultException ex) {
-        log.error("No Result found:", ex);
+        log.error("No Result found: {}", ex.getMessage());
         return error(NOT_FOUND, HttpStatusCode.valueOf(404));
     }
 
     // 422
     @ExceptionHandler(MultipleValidationException.class)
     public ResponseEntity<?> handleMultipleValidationExceptions(MultipleValidationException ex) {
-        log.error("Multiple Validation:", ex);
+        log.error("Multiple Validation: {}", ex.getBindingResult().toString());
         return error(ex.getBindingResult());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
-        log.error("Multiple Validation:", ex);
+        log.error("Multiple Validation: {}", ex.getBindingResult().toString());
         return error(ex.getBindingResult());
     }
 
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<?> handleValidationException(ValidationException ex) {
-        log.error("Validation:", ex);
+        log.error("Validation: {}", ex.getMessage());
         return error(ex.getMessage(), HttpStatusCode.valueOf(422));
     }
 
     // 500
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<?> handleRuntimeException(RuntimeException ex) {
-        log.error("Runtime exception caught:", ex);
+        log.error("Runtime exception caught: {}", ex.getMessage());
         return error(SOMETHING_WENT_WRONG, HttpStatusCode.valueOf(500));
     }
 
     // Handle all other exceptions
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleAllExceptions(Exception ex) {
-        log.error("Unhandled exception caught:", ex);
+        log.error("Unhandled exception caught {}", ex.getMessage());
         return error(SOMETHING_WENT_WRONG, HttpStatusCode.valueOf(500));
     }
 }

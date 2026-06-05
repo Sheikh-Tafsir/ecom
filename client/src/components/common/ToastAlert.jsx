@@ -15,11 +15,11 @@ export function ToastAlert({ message, type }) {
     return
   }
 
-  console.log(message, type)
+  //console.log(message, type)
   const [isOpen, setIsOpen] = useState(true)
 
   useEffect(() => {
-    if (type == TOAST_TYPE.FIXED) return;
+    if (type === TOAST_TYPE.FIXED) return;
 
     const timer = setTimeout(() => setIsOpen(false), 1500)
     return () => clearTimeout(timer)
@@ -28,7 +28,7 @@ export function ToastAlert({ message, type }) {
   if (!isOpen) return null
 
   const positionStyle =
-    type == TOAST_TYPE.FIXED
+    type === TOAST_TYPE.FIXED
       ? "min-w-[300px] w-[400px] top-12 right-[2%]"
       : "w-[350px] bottom-3 right-4"
 

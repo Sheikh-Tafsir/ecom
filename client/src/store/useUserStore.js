@@ -3,7 +3,7 @@ import {ACCESS_TOKEN, getAccessToken, getAccessUser, isAccessTokenExpired, saveA
 import {AxiosNoInterceptor} from "@/services/http/Axios.js";
 
 export const useUserStore = create((set, get) => ({
-    user: null,
+    user: getAccessUser(),
 
     init: () => set({ user: getAccessUser() }),
 
@@ -28,8 +28,4 @@ export const useUserStore = create((set, get) => ({
     },
 
     getAccessToken: () => getAccessToken(),
-
-    isAccessTokenExpired: () => {
-        return isAccessTokenExpired();
-    },
 }));

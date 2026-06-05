@@ -8,7 +8,7 @@ export const REGULAR_TIME_FORMAT_12 = "hh:mm a";
 
 export const REGULAR_TIME_FORMAT_24 = "HH:mm";
 
-export const formatDateString = (dateStr) => {
+export const formatDate = (dateStr) => {
     if (!dateStr) return "-";
 
     // convert "2026-06-04 22:21:46.170915" → "2026-06-04T22:21:46"

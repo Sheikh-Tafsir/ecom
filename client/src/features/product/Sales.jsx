@@ -64,7 +64,7 @@ const Sales = () => {
                     }
                 });
 
-                setSales(response.data.data.rows);
+                setSales(response.data.data.content);
                 setTotalPages(response.data.data.totalPages);
             } catch (error) {
                 console.error('Error getting user list', error);

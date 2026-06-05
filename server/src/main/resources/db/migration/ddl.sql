@@ -85,7 +85,10 @@ CREATE TABLE stock_items
     product_id     BIGINT         NOT NULL REFERENCES products (id) ON DELETE RESTRICT,
     quantity       INT            NOT NULL CHECK (quantity > 0),
     purchase_price DECIMAL(19, 2) NOT NULL CHECK (purchase_price >= 0),
-    remaining      INT            NOT NULL CHECK (remaining >= 0 AND remaining <= quantity)
+    remaining      INT            NOT NULL CHECK (remaining >= 0 AND remaining <= quantity),
+    version        INT            NOT NULL DEFAULT 0,
+    created_at     TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at     TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE orders

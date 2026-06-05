@@ -25,7 +25,7 @@ import StaredLabel from '@/components/common/StaredLabel';
 import {ToastAlert} from '@/components/common/ToastAlert';
 import {TOAST_TYPE, ALERT_TYPE} from '@/utils/enums';
 import {handleErrors} from '@/utils/ErrorUtils';
-import {initialToastState, prepareMultipartForm} from '@/utils';
+import {toastInitialState, prepareMultipartForm} from '@/utils';
 
 // Zod schema
 const UserSchema = z.object({
@@ -47,7 +47,7 @@ const UserEdit = () => {
         defaultValues: {},
     });
 
-    const [toastData, setToastData] = useState(initialToastState);
+    const [toastData, setToastData] = useState(toastInitialState);
 
     const {data: user, isLoading: isPageLoading, isError} = useQuery({
         queryKey: ["user", id],

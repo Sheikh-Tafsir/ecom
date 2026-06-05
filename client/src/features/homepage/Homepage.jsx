@@ -60,46 +60,6 @@ const Homepage = () => {
           </div>
         </div>
       </div>
-
-      <div className='flex flex-wrap justify-between bg-white px-[10%] lg:px-[20%] pt-10' id="works">
-        <div className='w-[100%] lg:w-[44%] my-auto'>
-          <h2 className='text-2xl lg:text-4xl mb-4 font-semibold'>How are system works</h2>
-          <p className='text-xs lg:text-md'>Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam rerum neque inventore libero pariatur est nobis accusantium nostrum saepe commodi sapiente sequi architecto expedita consequuntur blanditiis deleniti enim, totam illo!</p>
-        </div>
-        <img src="/img/feature_set.png" className='w-[100% lg:w-[54%] rounded-lg' />
-      </div>
-
-      <div className='px-[10%] lg:px-[15%] py-14 bg-gray-100'>
-        <h2 className='text-center text-2xl lg:text-4xl pb-8 font-semibold'>Gaze heatmap difference</h2>
-        <div className='flex flex-wrap justify-between gap-3.5'>
-          {CardData.map((card, index) => (
-            <Card key={index} className="w-[300px]">
-              <CardHeader>
-                <img src={card.imgSrc} alt={card.title} />
-              </CardHeader>
-              <CardContent className="text-center">
-                <CardTitle className="text-black pb-4 text-lg lg:text-xl">{card.title}</CardTitle>
-                <p className='text-sm lg:text-base'>{card.description}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-
-      <div className='w-full bg-white py-12'>
-        <h2 className='text-center text-2xl lg:text-4xl mb-6 font-semibold'>Questionnaire</h2>
-        <Accordion type="single" collapsible className="w-[320px] lg:w-[650px] 2xl:w-[800px] mx-auto px-10 rounded-lg">
-          {HomepageAccordionData.map((item) => (
-            <AccordionItem key={item.value} value={item.value} className="mb-4 text-xs lg:text-base xl:text-xl">
-              <AccordionTrigger className="text-black">{item.question}</AccordionTrigger>
-              <AccordionContent className="border-b-2">{item.answer}</AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </div>
-
-      {/* <CalendlyEmbed /> */}
-      <Footer />
     </div>
   );
 }

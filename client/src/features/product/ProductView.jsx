@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom"
 
 import { Star, ShoppingCart, Minus, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -149,7 +150,15 @@ export default function ProductView() {
 
         <div className="space-y-6 bg-white h-fit p-10 rounded-lg">
           <div>
-            <h1 className="text-3xl font-bold mb-6">{product.name}</h1>
+            <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
+            
+            <div className="flex flex-wrap gap-2 mb-6">
+              {product.categorise?.map((category) => (
+                <Badge key={category.id} variant="secondary">
+                  {category.name}
+                </Badge>
+              ))}
+            </div>
 
             <div className="flex justify-between mb-4">
               <div className="flex items-center">

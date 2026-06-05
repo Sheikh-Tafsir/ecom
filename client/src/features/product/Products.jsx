@@ -13,33 +13,32 @@ import {ToastAlert} from "@/components/common/ToastAlert"
 import {Axios} from "@/services/http/Axios"
 import {useNavigate, useSearchParams} from "react-router-dom"
 import {
-    getQueryString, getSelectValue, initialToastState, redirectWhenInvalidPage, updateQueryWhenParamChange
+    getQueryString, getSelectValue, toastInitialState, redirectWhenInvalidPage, updateQueryWhenParamChange
 } from "@/utils"
 import {PRODUCT_SORTBY} from "@/utils/enums"
 
 import {useQuery, keepPreviousData} from "@tanstack/react-query"
 import {normalizeQuery} from "@/features/product/ProductPaginationUtils.js"
 
-export default function ProductList() {
+export default function Products() {
     const navigate = useNavigate()
-    const [searchParams] = useSearchParams()
 
-    // Normalize ONCE (source of truth)
+    const [searchParams] = useSearchParams()
     const queryParams = useMemo(() => Object.fromEntries(searchParams.entries()), [searchParams])
     const filters = useMemo(() => normalizeQuery(queryParams), [queryParams])
     const {page, sort, search, category} = filters
 
-    // Local UI state
     const [searchInput, setSearchInput] = useState(search)
-    const [toastData, setToastData] = useState(initialToastState);
+    const [toastData, setToastData] = useState(toastInitialState);
 
-    // sync input when URL changes
     useEffect(() => {
         setSearchInput(search)
     }, [search])
 
-    // Debounced search → URL update (SAFE)
     useEffect(() => {
+        // Skip initial mount sync if there's no search input and no search in URL
+        if (!searchInput && !search) return;
+
         const timer = setTimeout(() => {
             navigate(getQueryString({
                 ...queryParams, search: searchInput || undefined, page: 1,
@@ -47,16 +46,18 @@ export default function ProductList() {
         }, 400)
 
         return () => clearTimeout(timer)
-    }, [searchInput, navigate, queryParams])
+    }, [searchInput, navigate])
 
     // Fetch products
     const fetchProducts = async ({queryKey}) => {
         const [, params] = queryKey
-
         const response = await Axios.get("/products", {
             params: {
                 page: params.page - 1, // already normalized (safe)
-                sort: params.sort, search: params.search || undefined, category: params.category || undefined,
+                sort: params.sort,
+                size: params.size,
+                name: params.search || undefined,
+                category: params.category || undefined,
             },
         })
 
@@ -81,20 +82,17 @@ export default function ProductList() {
         queryFn: fetchProducts, placeholderData: keepPreviousData,
     })
 
-    const products = productData?.rows || []
+    const products = productData?.content || []
     const totalPages = productData?.totalPages || 0
 
-    // Page validation (safe)
     useEffect(() => {
         redirectWhenInvalidPage({page, totalPages, navigate, queryParams})
     }, [page, totalPages, navigate, queryParams])
 
-    // Update query helper (ALSO SAFE)
     const updateQuery = (newParams) => {
         updateQueryWhenParamChange({queryParams, newParams, navigate})
     }
 
-    // Toast
     const showToast = (message, type) => {
         setToastData({message, type, id: Date.now()})
     }

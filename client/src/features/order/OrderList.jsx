@@ -67,7 +67,7 @@ const OrderList = () => {
                     }
                 });
 
-                setOrders(response.data.data.rows);
+                setOrders(response.data.data.content);
                 setTotalPages(response.data.data.totalPages);
             } catch (error) {
                 console.error('Error getting user list', error);

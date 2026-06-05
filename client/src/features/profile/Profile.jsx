@@ -22,7 +22,7 @@ import {ToastAlert} from "@/components/common/ToastAlert";
 import {useUserStore} from "@/store/useUserStore";
 import {handleErrors} from "@/utils/ErrorUtils";
 import {TOAST_TYPE, ALERT_TYPE} from "@/utils/enums";
-import {initialToastState, prepareMultipartForm} from "@/utils";
+import {toastInitialState, prepareMultipartForm} from "@/utils";
 import InputError from "@/components/common/InputError.jsx";
 
 const ProfileSchema = z.object({
@@ -41,7 +41,7 @@ const Profile = () => {
 
     const {login, logout} = useUserStore();
 
-    const [toastData, setToastData] = useState(initialToastState);
+    const [toastData, setToastData] = useState(toastInitialState);
 
     const {
         register,

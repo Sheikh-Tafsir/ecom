@@ -39,11 +39,8 @@ const MAX_IMAGES = 5;
 
 const productSchema = z.object({
     name: z.string().min(1, 'Name is required'),
-    description: z.string().optional(),
-    price: z.coerce.number().min(0, 'Price must be positive'),
-    quantity: z.coerce.number().int().min(0, 'Quantity must be positive'),
-    cost: z.coerce.number().min(0, 'Cost must be positive'),
-    categoryId: z.string().min(1, 'Category is required'),
+    price: z.coerce.number().min(1, 'Price is required and must be positive'),
+    categoryIds: z.array(z.string()).min(1, 'At least one category is required'),
 });
 
 const ProductCreate = () => {
@@ -73,11 +70,11 @@ const ProductCreate = () => {
             name: '',
             description: '',
             price: '',
-            categoryId: '',
+            categoryIds: [],
         },
     });
 
-    const categoryId = watch('categoryId');
+    const categoryIds = watch('categoryIds');
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -107,8 +104,7 @@ const ProductCreate = () => {
                     name: temp.name,
                     description: temp.description,
                     price: temp.price,
-                    quantity: temp.quantity,
-                    categoryId: String(temp.categoryId),
+                    categoryIds: temp.categorise.map(c => String(c.id)),
                 });
                 setExistingImages(temp.images);
             } catch (error) {
@@ -121,15 +117,21 @@ const ProductCreate = () => {
         }
     }, [isCreatePage, id, reset])
 
-    const onSubmit = async (data) => {
+    const saveProduct = async (data) => {
         setIsLoading({...isLoading, button: true});
 
         try {
             if (isCreatePage) {
                 const formData = new FormData();
+
                 Object.entries(data).forEach(([key, val]) => {
-                    formData.append(key, val);
+                    if (key === 'categoryIds') {
+                        val.forEach(id => formData.append('categoryIds', id));
+                    } else {
+                        formData.append(key, val);
+                    }
                 });
+
                 images.forEach((image) => {
                     formData.append('images', image);
                 });
@@ -143,7 +145,11 @@ const ProductCreate = () => {
                 setResetImagesKey(Date.now());
                 showToast("Successfully created", TOAST_TYPE.SUCCESS);
             } else {
-                await Axios.put(`/products/${id}`, data);
+                const payload = {
+                    ...data,
+                    categoryIds: data.categoryIds.map(Number)
+                };
+                await Axios.put(`/products/${id}`, payload);
                 navigate('/products');
             }
         } catch (error) {
@@ -163,7 +169,7 @@ const ProductCreate = () => {
 
             <div className="container lg:flex min-h-[100vh] pb-8 pt-8">
                 <Card className="mx-auto my-auto w-[450px] lg:w-[550px]">
-                    <form onSubmit={handleSubmit(onSubmit)}>
+                    <form onSubmit={handleSubmit(saveProduct)}>
                         <CardHeader>
                             <CardTitle>{isCreatePage ? 'Create' : 'Edit'} Product</CardTitle>
                             <CardDescription>{isCreatePage ? 'Add new' : 'Edit'} product by filling out the information
@@ -220,28 +226,33 @@ const ProductCreate = () => {
                                 <InputError errors={errors} field="price"/>
                             </div>
 
-                            <div className="flex flex-col space-y-1.5">
-                                <StaredLabel label="Category"/>
+                            <div className="flex flex-col space-y-2">
+                                <StaredLabel label="Categories"/>
                                 {isCreatePage ?
-                                    <Select onValueChange={(value) => setValue('categoryId', value)} value={categoryId}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Category"/>
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectGroup>
-                                                {categories?.map((item) => (
-                                                    <SelectItem key={item.id} value={String(item.id)}>
-                                                        {item.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectGroup>
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="grid grid-cols-2 gap-2 border p-2 rounded-md max-h-40 overflow-y-auto">
+                                        {categories?.map((item) => (
+                                            <div key={item.id} className="flex items-center space-x-2">
+                                                <input
+                                                    type="checkbox"
+                                                    id={`cat-${item.id}`}
+                                                    value={String(item.id)}
+                                                    checked={categoryIds?.includes(String(item.id))}
+                                                    onChange={(e) => {
+                                                        const newCategories = e.target.checked
+                                                            ? [...categoryIds, String(item.id)]
+                                                            : categoryIds.filter(id => id !== String(item.id));
+                                                        setValue('categoryIds', newCategories);
+                                                    }}
+                                                />
+                                                <Label htmlFor={`cat-${item.id}`}>{item.name}</Label>
+                                            </div>
+                                        ))}
+                                    </div>
                                     :
                                     <InputReadOnly
-                                        value={categories?.find(cat => String(cat.id) === categoryId)?.name || ""}/>
+                                        value={categories?.filter(cat => categoryIds?.includes(String(cat.id))).map(c => c.name).join(", ") || ""}/>
                                 }
-                                <InputError errors={errors} field="category"/>
+                                <InputError errors={errors} field="categoryIds"/>
                             </div>
                         </CardContent>
 

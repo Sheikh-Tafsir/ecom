@@ -16,5 +16,6 @@ export const normalizeQuery = (q = {}) => {
         sort,
         role: q.role,
         status: q.status,
+        search: q.search || "",
     }
 }

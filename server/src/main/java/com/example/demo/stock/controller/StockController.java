@@ -5,11 +5,7 @@ import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.common.utils.ResponseUtils;
-import com.example.demo.stock.dto.CreateStockItemRequest;
-import com.example.demo.stock.dto.CreateStockRequest;
-import com.example.demo.stock.dto.StockResponse;
-import com.example.demo.stock.dto.UpdateStockItemRequest;
-import com.example.demo.stock.dto.UpdateStockRequest;
+import com.example.demo.stock.dto.*;
 import com.example.demo.stock.service.StockService;
 import com.example.demo.stock.validator.StockValidator;
 import jakarta.validation.Valid;
@@ -42,9 +38,15 @@ public class StockController {
     private final MessageService messageService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<StockResponse>>> findAll(Pageable pageable) {
-        Page<StockResponse> stocks = stockService.findAll(pageable);
+    public ResponseEntity<ApiResponse<Page<StockListResponse>>> findAll(Pageable pageable) {
+        Page<StockListResponse> stocks = stockService.findAll(pageable);
         return ResponseUtils.ok(stocks, messageService.get("successfully.found", "Stock List"));
+    }
+
+    @GetMapping("/items")
+    public ResponseEntity<ApiResponse<Page<StockItemResponse>>> findAllItems(Pageable pageable) {
+        Page<StockItemResponse> stocks = stockService.findAllItems(pageable);
+        return ResponseUtils.ok(stocks, messageService.get("successfully.found", "Stock Item List"));
     }
 
     @GetMapping("/{id}")

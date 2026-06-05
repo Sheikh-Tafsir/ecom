@@ -67,7 +67,7 @@ public class StockValidator {
     }
 
     public void validateUpdateItem(UpdateStockItemRequest request, Errors errors) {
-        validateCost(request.cost(), "purchasedPrice", errors);
+        validateCost(request.purchasePrice(), "purchasedPrice", errors);
     }
 
     private void validateCost(BigDecimal cost, String field, Errors errors) {

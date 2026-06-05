@@ -13,6 +13,6 @@ public record UpdateStockItemRequest(
         Integer quantity,
 
         @NotNull
-        BigDecimal cost
+        BigDecimal purchasePrice
 ) {
 }

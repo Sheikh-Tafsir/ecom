@@ -1,3 +1,5 @@
+import {isEmptyArray} from "@/utils/Utils.js";
+
 export const FIRST_PAGE = 1
 export const DEFAULT_PAGE_SIZE = 24
 export const DEFAULT_SORT_BY = "createdAt"
@@ -36,7 +38,7 @@ export const parseSize = (size) => {
 }
 
 export const parseSort = (sort = DEFAULT_SORT, allowedSortFields) => {
-    if (allowedSortFields == null) {
+    if (isEmptyArray(allowedSortFields)) {
         return DEFAULT_SORT;
     }
 
@@ -47,12 +49,24 @@ export const parseSort = (sort = DEFAULT_SORT, allowedSortFields) => {
         : DEFAULT_SORT;
 }
 
+export const normalizeQuery = (q = {}) => {
+    const page = parsePage(q.page)
+    const size = parseSize(q.size)
+    const sort = parseSort(q.sort, [])
+
+    return {
+        page,
+        size,
+        sort,
+    }
+}
+
 export const isInvalidPageNo = (page, totalPages) => {
     return page < FIRST_PAGE || page > totalPages;
 }
 
 export const redirectWhenInvalidPage = ({page, totalPages, navigate, queryParams}) => {
-    if (!totalPages) return;
+    if (!totalPages || !queryParams.page) return;
 
     if (isInvalidPageNo(page, totalPages)) {
         navigate(

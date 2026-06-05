@@ -34,3 +34,7 @@ export const isAccessTokenExpired = () => {
     const storedUser = getAccessUser();
     return !storedUser || Date.now() >= storedUser.exp * 1000;
 }
+
+export const removeAccessToken = () => {
+    localStorage.removeItem(ACCESS_TOKEN);
+}

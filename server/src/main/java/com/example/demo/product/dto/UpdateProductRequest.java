@@ -18,6 +18,9 @@ public record UpdateProductRequest(
 
         Set<MultipartFile> images,
 
-        Set<Long> keptImageIds
+        Set<Long> keptImageIds,
+
+        @NotEmpty
+        Set<Long> categoryIds
 ) {
 }

@@ -7,6 +7,7 @@ import com.example.demo.common.model.Product;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.common.utils.ResponseUtils;
 import com.example.demo.product.dto.CreateProductRequest;
+import com.example.demo.product.dto.ProductResponse;
 import com.example.demo.product.dto.UpdateProductRequest;
 import com.example.demo.product.service.ProductService;
 import com.example.demo.product.validator.ProductValidator;
@@ -14,18 +15,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
@@ -43,11 +37,12 @@ public class ProductController {
     private final MessageService messageService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<Product>>> findAll(Pageable pageable,
-                                                              @RequestParam(required = false) String name,
-                                                              @AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<ApiResponse<Page<ProductResponse>>> findAll(Pageable pageable,
+                                                                      @RequestParam(required = false) String name,
+                                                                      @RequestParam(required = false) String category,
+                                                                      @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        Page<Product> products = productService.findAll(pageable, name, userDetails);
+        Page<ProductResponse> products = productService.findAll(pageable, name, category, userDetails);
         return ResponseUtils.ok(products, messageService.get("successfully.found", "Product List"));
     }
 
@@ -57,7 +52,7 @@ public class ProductController {
         return ResponseUtils.ok(product, messageService.get("successfully.found", "Product"));
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<Product>> create(@Valid @ModelAttribute CreateProductRequest productRequest,
                                                        BindingResult bindingResult) throws IOException {
 

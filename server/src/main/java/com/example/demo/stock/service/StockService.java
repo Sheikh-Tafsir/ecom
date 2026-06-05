@@ -6,11 +6,7 @@ import com.example.demo.common.model.Stock;
 import com.example.demo.common.model.StockItem;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.product.service.ProductService;
-import com.example.demo.stock.dto.CreateStockItemRequest;
-import com.example.demo.stock.dto.CreateStockRequest;
-import com.example.demo.stock.dto.StockResponse;
-import com.example.demo.stock.dto.UpdateStockItemRequest;
-import com.example.demo.stock.dto.UpdateStockRequest;
+import com.example.demo.stock.dto.*;
 import com.example.demo.stock.repository.StockItemRepository;
 import com.example.demo.stock.repository.StockRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -40,13 +36,15 @@ public class StockService {
     private final MessageService messageService;
 
     @PreAuthorize(HAS_ROLE_ADMIN)
-    public Page<StockResponse> findAll(Pageable pageable) {
-        return stockRepository.findAll(getValidPageable(pageable)).map(StockResponse::new);
+    public Page<StockListResponse> findAll(Pageable pageable) {
+        return stockRepository.findAll(getValidPageable(pageable)).map(StockListResponse::new);
     }
 
     @PreAuthorize(HAS_ROLE_ADMIN)
     public StockResponse findById(Long id) {
-        return new StockResponse(findByIdHelper(id));
+        Stock stock = stockRepository.findDetailsById(id)
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Stock", id)));
+        return new StockResponse(stock);
     }
 
     @PreAuthorize(HAS_ROLE_ADMIN)
@@ -88,6 +86,11 @@ public class StockService {
         stock.calculateTotal();
 
         return new StockResponse(stockRepository.save(stock));
+    }
+
+    @PreAuthorize(HAS_ROLE_ADMIN)
+    public Page<StockItemResponse> findAllItems(Pageable pageable) {
+        return stockItemRepository.findAll(getValidPageable(pageable)).map(StockItemResponse::new);
     }
 
     @PreAuthorize(HAS_ROLE_ADMIN)
@@ -196,7 +199,7 @@ public class StockService {
         }
 
         item.setQuantity(request.quantity());
-        item.setPurchasedPrice(request.cost());
+        item.setPurchasePrice(request.purchasePrice());
         item.setRemaining(updatedRemaining);
 
         applyProductQuantityChange(item.getProduct(), quantityChange);

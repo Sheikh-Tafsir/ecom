@@ -25,27 +25,26 @@ import PaginationButton from "@/components/common/PaginationButton";
 import PaginationSearch from "@/components/common/PaginationSearch";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
 import {ToastAlert} from "@/components/common/ToastAlert";
-import {formatDateString} from "@/utils/DateUtils";
+import {formatDate} from "@/utils/DateUtils";
 import {handleErrors} from "@/utils/ErrorUtils";
 import {ALERT_TYPE, TOAST_TYPE, USER_ROLE, USER_STATUS} from "@/utils/enums";
 import {
     FIRST_PAGE, checkAllSelected,
     redirectWhenInvalidPage, updateQueryWhenParamChange, getSelectValue
 } from "@/utils/PaginationUtils.js";
-import {initialToastState} from "@/utils";
+import {toastInitialState} from "@/utils";
 import {normalizeQuery} from "@/features/users/UserPaginationUtils.js";
 
 
-const UserList = () => {
+const Users = () => {
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
 
-    // Normalize ONCE (source of truth)
+    const [searchParams] = useSearchParams();
     const queryParams = useMemo(() => Object.fromEntries(searchParams.entries()), [searchParams])
     const filters = useMemo(() => normalizeQuery(queryParams), [queryParams])
     const {page, role, status} = filters
 
-    const [toastData, setToastData] = useState(initialToastState);
+    const [toastData, setToastData] = useState(toastInitialState);
     const [selectedUser, setSelectedUser] = useState(null);
 
     const fetchUsers = async ({queryKey}) => {
@@ -55,6 +54,8 @@ const UserList = () => {
             params: {
                 page: params.page - 1, // already normalized (safe)
                 sort: params.sort,
+                size: params.size,
+                name: params.search || undefined,
                 role: checkAllSelected(params.role),
                 status: checkAllSelected(params.status),
             },
@@ -66,7 +67,7 @@ const UserList = () => {
     const {
         data, isFetching: isPageLoading, isError, error, refetch,
     } = useQuery({
-        queryKey: ["users", queryParams],
+        queryKey: ["users", filters],
         queryFn: fetchUsers,
         keepPreviousData: true,
     });
@@ -78,10 +79,12 @@ const UserList = () => {
         setToastData({message, type, id: Date.now()});
     };
 
-    if (isError) {
-        console.error(error);
-        showToast("Failed to load users", TOAST_TYPE.ERROR);
-    }
+    useEffect(() => {
+        if (isError) {
+            console.error(error);
+            showToast("Failed to load users", TOAST_TYPE.ERROR);
+        }
+    }, [isError]);
 
     const handleEditUser = (user) => {
         navigate(`/users/${user.id}`, {state: {user}});
@@ -185,7 +188,7 @@ const UserList = () => {
                                     >
                                         {user.roleValues.join(", ")}
                                     </TableCell>
-                                    <TableCell>{formatDateString(user.createdAt)}</TableCell>
+                                    <TableCell>{formatDate(user.createdAt)}</TableCell>
                                     <TableCell
                                         className={
                                             user.status === USER_STATUS.ACTIVE ? "text-green-600" : "text-red-600"
@@ -224,4 +227,4 @@ const UserList = () => {
     );
 };
 
-export default UserList;
+export default Users;

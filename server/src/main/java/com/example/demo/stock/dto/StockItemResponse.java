@@ -4,6 +4,7 @@ import com.example.demo.common.model.StockItem;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 public class StockItemResponse {
@@ -12,21 +13,21 @@ public class StockItemResponse {
     Long stockId;
     Long productId;
     String productName;
-    BigDecimal productPrice;
     int quantity;
-    BigDecimal cost;
+    BigDecimal purchasePrice;
     int remaining;
     BigDecimal subtotal;
+    LocalDateTime createdAt;
 
     public StockItemResponse(StockItem item) {
         id = item.getId();
         stockId = item.getStock().getId();
         productId = item.getProduct().getId();
         productName = item.getProduct().getName();
-        productPrice = item.getProduct().getPrice();
         quantity = item.getQuantity();
-        cost = item.getPurchasedPrice();
+        purchasePrice = item.getPurchasePrice();
         remaining = item.getRemaining();
         subtotal = item.getSubtotal();
+        createdAt = item.getCreatedAt();
     }
 }

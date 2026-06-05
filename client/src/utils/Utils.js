@@ -12,6 +12,8 @@ export const isNotNull = (value) => {
     return !isNull(value);
 }
 
+export const isEmptyArray = (arr) => !arr || arr.length === 0;
+
 export const isInRange = (value, min, max) => {
     return value >= min && value <= max;
 }
@@ -21,7 +23,7 @@ export const isAdmin = (role) => {
     return roles.includes(USER_ROLE.ADMIN) || roles.includes(USER_ROLE.SUPER_ADMIN);
 }
 
-export const initialToastState = {
+export const toastInitialState = {
     message: "",
     type: "",
     id: Date.now(),

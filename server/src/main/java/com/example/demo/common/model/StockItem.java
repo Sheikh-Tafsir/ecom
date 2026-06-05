@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class StockItem {
+public class StockItem extends BaseEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,7 +32,7 @@ public class StockItem {
     private int quantity;
 
     @Column(nullable = false)
-    private BigDecimal purchasedPrice = BigDecimal.ZERO;
+    private BigDecimal purchasePrice = BigDecimal.ZERO;
 
     private int remaining;
 
@@ -40,11 +40,11 @@ public class StockItem {
         this.stock = stock;
         this.product = product;
         this.quantity = quantity;
-        this.purchasedPrice = purchasedPrice;
+        this.purchasePrice = purchasedPrice;
         this.remaining = quantity;
     }
 
     public BigDecimal getSubtotal() {
-        return purchasedPrice.multiply(BigDecimal.valueOf(quantity));
+        return purchasePrice.multiply(BigDecimal.valueOf(quantity));
     }
 }

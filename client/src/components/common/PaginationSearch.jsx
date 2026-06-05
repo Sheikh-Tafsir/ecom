@@ -41,7 +41,8 @@ const PaginationSearch = ({ moduleName = "items" }) => {
 
     /** Trigger search automatically after debounce */
     useEffect(() => {
-        if (debouncedSearch !== queryParams.search) {
+        // Only trigger search if there is an actual change and it's not the initial mount with empty search
+        if (debouncedSearch !== (queryParams.search || '')) {
             handleSearch();
         }
     }, [debouncedSearch, queryParams.search, handleSearch]);

@@ -7,7 +7,9 @@ import com.example.demo.common.model.ProductImage;
 import com.example.demo.common.service.CloudinaryService;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.product.dto.CreateProductRequest;
+import com.example.demo.product.dto.ProductResponse;
 import com.example.demo.product.dto.UpdateProductRequest;
+import com.example.demo.product.repository.CategoryRepository;
 import com.example.demo.product.repository.ProductRepository;
 import com.example.demo.stock.dto.CreateStockItemRequest;
 import jakarta.persistence.EntityNotFoundException;
@@ -22,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Set;
 
 import static com.example.demo.common.enums.ProductStatus.DISCONTINUED;
@@ -38,13 +41,17 @@ public class ProductService {
 
     private final ProductRepository productRepository;
 
+    private final CategoryRepository categoryRepository;
+
     private final CloudinaryService cloudinaryService;
 
     private final MessageService messageService;
 
-    public Page<Product> findAll(Pageable pageable, String name, CustomUserDetails userDetails) {
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> findAll(Pageable pageable, String name, String category, CustomUserDetails userDetails) {
         String nameFilter = (isNull(name)) ? null : "%" + name + "%";
-        return productRepository.findAllByNameAndExcludeStatus(nameFilter, isAdmin(userDetails) ? null : DISCONTINUED, getValidPageable(pageable));
+        return productRepository.findAllByNameAndExcludeStatus(nameFilter, category, isAdmin(userDetails) ? null : DISCONTINUED, getValidPageable(pageable))
+                .map(ProductResponse::new);
     }
 
     public Product findById(Long id, CustomUserDetails userDetails) {
@@ -59,8 +66,12 @@ public class ProductService {
     @PreAuthorize(HAS_ROLE_ADMIN)
     @Transactional
     public Product create(CreateProductRequest request) throws IOException {
-        Product product = modelMapper.map(request, Product.class);
-        addImages(product, request.images());
+        Product product = new Product();
+        product.setName(request.getName());
+        product.setPrice(request.getPrice());
+        product.setCategorise(new HashSet<>(categoryRepository.findAllById(request.getCategoryIds())));
+
+        addImages(product, request.getImages());
 
         return productRepository.save(product);
     }
@@ -69,13 +80,16 @@ public class ProductService {
     @Transactional
     public Product update(Long id, UpdateProductRequest request) throws IOException {
         Product product = findByIdHelper(id);
-        modelMapper.map(request, product);
+        
+        product.setName(request.name());
+        product.setPrice(request.price());
+        product.setCategorise(new HashSet<>(categoryRepository.findAllById(request.categoryIds())));
 
         product.getImages().removeIf(
                 image -> !request.keptImageIds().contains(image.getId())
         );
 
-        if (product.getImages().size() + request.images().size() > 5) {
+        if (product.getImages().size() + (request.images() != null ? request.images().size() : 0) > 5) {
             throw new RuntimeException("Cannot upload more than 5 files");
         }
 
@@ -130,8 +144,10 @@ public class ProductService {
         for (MultipartFile imageFile : images) {
             if (fileExists(imageFile)) {
                 String imageUrl = cloudinaryService.uploadFile(imageFile);
+
                 ProductImage image = new ProductImage();
                 image.setImage(imageUrl);
+
                 product.addImage(image);
             }
         }

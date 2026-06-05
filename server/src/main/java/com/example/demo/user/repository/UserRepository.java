@@ -22,10 +22,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("""
                 SELECT DISTINCT u FROM User u
                 JOIN u.roles r
-                WHERE (:role IS NULL OR r = :role)
+                WHERE (:name IS NULL OR u.name ILIKE CONCAT('%', CAST(:name AS string), '%'))
+                  AND (:role IS NULL OR r = :role)
                   AND (:status IS NULL OR u.status = :status)
             """)
     Page<User> findByRoleAndStatus(
+            @Param("name") String name,
             @Param("role") Role role,
             @Param("status") UserStatus status,
             Pageable pageable

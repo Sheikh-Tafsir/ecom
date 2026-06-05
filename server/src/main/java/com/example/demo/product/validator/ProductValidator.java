@@ -19,7 +19,7 @@ public class ProductValidator {
     private final CommonValidator commonValidator;
 
     public void validateCreate(CreateProductRequest request, Errors errors) {
-        validate(request.images(), errors);
+        validate(request.getImages(), errors);
     }
 
     public void validateUpdate(UpdateProductRequest request, Errors errors) {

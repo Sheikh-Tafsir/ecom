@@ -2,7 +2,7 @@ import axios from 'axios';
 
 import {
     getAccessToken,
-    isAccessTokenExpired, saveAccessToken
+    isAccessTokenExpired, removeAccessToken, saveAccessToken
 } from '@/utils/AuthUtils';
 
 const API_PATH = import.meta.env.VITE_API_PATH;
@@ -55,7 +55,6 @@ Axios.interceptors.response.use(
 
             try {
                 const token = await getValidAccessToken();
-
                 originalRequest.headers = originalRequest.headers || {};
                 originalRequest.headers.Authorization = `Bearer ${token}`;
 
@@ -154,7 +153,7 @@ const logout = async () => {
     } catch (error) {
         console.error("Logout failed:", error);
     } finally {
-        localStorage.removeItem("visoredAccessToken");
+        removeAccessToken();
 
         isRefreshing = false;
         queue = [];

@@ -12,9 +12,8 @@ import java.util.Optional;
 @Repository
 public interface StockRepository extends JpaRepository<Stock, Long> {
 
-    @EntityGraph(attributePaths = {"items", "items.product"})
     Page<Stock> findAll(Pageable pageable);
 
     @EntityGraph(attributePaths = {"items", "items.product"})
-    Optional<Stock> findById(Long id);
+    Optional<Stock> findDetailsById(Long id);
 }
