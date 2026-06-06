@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Plus, Trash2, Search, Minus } from 'lucide-react';
 
@@ -43,7 +43,7 @@ const StockCreate = () => {
                     productId: product.id, 
                     name: product.name, 
                     quantity: 1, 
-                    purchasedPrice: product.price || '' 
+                    purchasePrice: product.price || ''
                 }]);
             } catch (error) {
                 console.error("Error fetching initial product", error);
@@ -92,7 +92,7 @@ const StockCreate = () => {
         productId: product.id, 
         name: product.name, 
         quantity: 1, 
-        purchasedPrice: product.price || 0 
+        purchasePrice: product.price || 0 
     }]);
     setSearchTerm('');
     setSearchResults([]);
@@ -119,7 +119,7 @@ const StockCreate = () => {
         items: items.map(item => ({
             productId: parseInt(item.productId),
             quantity: parseInt(item.quantity),
-            purchasedPrice: parseFloat(item.purchasedPrice)
+            purchasePrice: parseFloat(item.purchasePrice)
         }))
       });
 
@@ -265,8 +265,8 @@ const StockCreate = () => {
                               type="number"
                               step="0.01"
                               className="h-9 w-24 bg-white"
-                              value={item.purchasedPrice}
-                              onChange={(e) => updateItem(index, 'purchasedPrice', e.target.value)}
+                              value={item.purchasePrice}
+                              onChange={(e) => updateItem(index, 'purchasePrice', e.target.value)}
                               min={0}
                               required
                             />
@@ -275,7 +275,7 @@ const StockCreate = () => {
                           <div className="space-y-1 text-right min-w-[80px]">
                             <label className="text-xs font-medium uppercase text-gray-500">Subtotal</label>
                             <p className="font-bold text-blue-600">
-                              ${(parseFloat(item.quantity || 0) * parseFloat(item.purchasedPrice || 0)).toFixed(2)}
+                              ${(parseFloat(item.quantity || 0) * parseFloat(item.purchasePrice || 0)).toFixed(2)}
                             </p>
                           </div>
 
@@ -295,7 +295,7 @@ const StockCreate = () => {
                     <div className="mt-6 p-4 border-t flex justify-end items-center gap-4">
                         <p className="text-gray-600 font-medium">Total Items: {items.reduce((acc, item) => acc + parseInt(item.quantity || 0), 0)}</p>
                         <div className="text-2xl font-bold text-blue-900">
-                            Total Cost: ${items.reduce((acc, item) => acc + (parseFloat(item.quantity || 0) * parseFloat(item.purchasedPrice || 0)), 0).toFixed(2)}
+                            Total Cost: ${items.reduce((acc, item) => acc + (parseFloat(item.quantity || 0) * parseFloat(item.purchasePrice || 0)), 0).toFixed(2)}
                         </div>
                     </div>
                   </div>

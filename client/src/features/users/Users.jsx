@@ -32,7 +32,7 @@ import {
     FIRST_PAGE, checkAllSelected,
     redirectWhenInvalidPage, updateQueryWhenParamChange, getSelectValue
 } from "@/utils/PaginationUtils.js";
-import {toastInitialState} from "@/utils";
+import {isAdmin, toastInitialState} from "@/utils";
 import {normalizeQuery} from "@/features/users/UserPaginationUtils.js";
 
 
@@ -84,7 +84,7 @@ const Users = () => {
             console.error(error);
             showToast("Failed to load users", TOAST_TYPE.ERROR);
         }
-    }, [isError]);
+    }, [error, isError]);
 
     const handleEditUser = (user) => {
         navigate(`/users/${user.id}`, {state: {user}});
@@ -179,7 +179,7 @@ const Users = () => {
                                     <TableCell>{user.email}</TableCell>
                                     <TableCell
                                         className={
-                                            user.role === USER_ROLE.ADMIN || user.role === USER_ROLE.SUPER_ADMIN
+                                            isAdmin(user)
                                                 ? "text-blue-600"
                                                 : user.role === USER_ROLE.USER
                                                     ? "text-green-600"

@@ -1,14 +1,18 @@
-import { create } from "zustand";
-import {ACCESS_TOKEN, getAccessToken, getAccessUser, isAccessTokenExpired, saveAccessToken} from "@/utils/AuthUtils";
+import {create} from "zustand";
+import {
+    ACCESS_TOKEN,
+    getAccessUser,
+    saveAccessToken
+} from "@/utils/AuthUtils";
 import {AxiosNoInterceptor} from "@/services/http/Axios.js";
 
 export const useUserStore = create((set, get) => ({
     user: getAccessUser(),
 
-    init: () => set({ user: getAccessUser() }),
+    init: () => set({user: getAccessUser()}),
 
     login: (token) => {
-        set({ user: saveAccessToken(token) });
+        set({user: saveAccessToken(token)});
     },
 
     logout: async () => {
@@ -17,7 +21,7 @@ export const useUserStore = create((set, get) => ({
         } catch (error) {
             console.error("Logout failed:", error);
         } finally {
-            set({ user: null });
+            set({user: null});
             localStorage.removeItem(ACCESS_TOKEN);
             window.location.replace("/");
         }
@@ -26,6 +30,4 @@ export const useUserStore = create((set, get) => ({
     isAuthenticated: () => {
         return !!get().user;
     },
-
-    getAccessToken: () => getAccessToken(),
 }));

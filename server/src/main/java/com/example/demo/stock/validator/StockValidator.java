@@ -63,20 +63,20 @@ public class StockValidator {
     }
 
     public void validateCreateItem(CreateStockItemRequest request, Errors errors) {
-        validateCost(request.purchasedPrice(), "purchasedPrice", errors);
+        validatePurchasePrice(request.purchasePrice(), errors);
     }
 
     public void validateUpdateItem(UpdateStockItemRequest request, Errors errors) {
-        validateCost(request.purchasePrice(), "purchasedPrice", errors);
+        validatePurchasePrice(request.purchasePrice(), errors);
     }
 
-    private void validateCost(BigDecimal cost, String field, Errors errors) {
+    private void validatePurchasePrice(BigDecimal cost, Errors errors) {
         if (cost == null) {
             return;
         }
 
         if (cost.compareTo(BigDecimal.ZERO) < 0) {
-            errors.rejectValue(field, "error.field.min", "Cost cannot be negative");
+            errors.rejectValue("purchasePrice", "error.field.min", "Cost cannot be negative");
         }
     }
 }

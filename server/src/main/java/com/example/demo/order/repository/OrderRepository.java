@@ -16,15 +16,16 @@ import java.util.Optional;
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @EntityGraph(attributePaths = {"user", "items", "items.product"})
+    @Query("select o from Order o where o.id = :id")
+    Optional<Order> findDetailsById(Long id);
+
+    @EntityGraph(attributePaths = {"user"})
     @Query("""
                 SELECT DISTINCT o FROM Order o
                 WHERE (:status IS NULL OR o.status = :status)
             """)
     Page<Order> findAllByStatus(@Param("status") OrderStatus status, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"user", "items", "items.product"})
+    @EntityGraph(attributePaths = {"user"})
     Page<Order> findByUser_Id(Long userId, Pageable pageable);
-
-    @EntityGraph(attributePaths = {"user", "items", "items.product"})
-    Optional<Order> findById(Long id);
 }

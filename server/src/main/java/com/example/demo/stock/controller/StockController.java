@@ -1,7 +1,6 @@
 package com.example.demo.stock.controller;
 
 import com.example.demo.common.dto.ApiResponse;
-import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.common.utils.ResponseUtils;
@@ -13,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -57,13 +55,12 @@ public class StockController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<StockResponse>> create(@Valid @RequestBody CreateStockRequest stockRequest,
-                                                             BindingResult bindingResult,
-                                                             @AuthenticationPrincipal  CustomUserDetails userDetails) {
+                                                             BindingResult bindingResult) {
 
         stockValidator.validateCreate(stockRequest, bindingResult);
         commonHelper.checkErrors(bindingResult);
 
-        StockResponse stock = stockService.create(stockRequest,userDetails);
+        StockResponse stock = stockService.create(stockRequest);
         return ResponseUtils.created(stock, messageService.get("entity.creating", "Stock"));
     }
 
@@ -71,6 +68,7 @@ public class StockController {
     public ResponseEntity<ApiResponse<StockResponse>> update(@PathVariable Long id,
                                                              @Valid @RequestBody UpdateStockRequest stockRequest,
                                                              BindingResult bindingResult) {
+
         stockValidator.validateUpdate(stockRequest, bindingResult);
         commonHelper.checkErrors(bindingResult);
 
@@ -95,6 +93,7 @@ public class StockController {
                                                                  @PathVariable Long itemId,
                                                                  @Valid @RequestBody UpdateStockItemRequest itemRequest,
                                                                  BindingResult bindingResult) {
+
         stockValidator.validateUpdateItem(itemRequest, bindingResult);
         commonHelper.checkErrors(bindingResult);
 
@@ -103,8 +102,7 @@ public class StockController {
     }
 
     @DeleteMapping("/{stockId}/items/{itemId}")
-    public ResponseEntity<ApiResponse<StockResponse>> removeItem(@PathVariable Long stockId,
-                                                                 @PathVariable Long itemId) {
+    public ResponseEntity<ApiResponse<StockResponse>> removeItem(@PathVariable Long stockId, @PathVariable Long itemId) {
         StockResponse stock = stockService.removeItem(stockId, itemId);
         return ResponseUtils.ok(stock, messageService.get("successfully.updated", "Stock"));
     }

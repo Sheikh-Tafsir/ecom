@@ -1,4 +1,4 @@
-import React, {useState} from 'react'
+import  {useState} from 'react'
 import {Link} from 'react-router-dom'
 import {Menu, X, ChevronDown, ShoppingCart} from "lucide-react"
 
@@ -9,8 +9,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {APP_NAME} from '@/utils'
-import {USER_ROLE} from '@/utils/enums'
+import {APP_NAME, userIsAdmin} from '@/utils'
 import {useUserStore} from '@/store/useUserStore'
 import {useCartStore} from '@/store/useCartStore'
 
@@ -28,15 +27,9 @@ export default function Navbar() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [activeMenu, setActiveMenu] = useState(null);
 
+    const isAdmin = userIsAdmin();
+
     const getMenuItems = () => {
-        const userRoles = user?.role
-            ? Array.isArray(user.role)
-                ? user.role
-                : [user.role]
-            : [];
-
-        const isAdmin = userRoles.includes(USER_ROLE.ADMIN) || userRoles.includes(USER_ROLE.SUPER_ADMIN);
-
         return [
             ...BASE_MENU,
 
@@ -45,7 +38,7 @@ export default function Navbar() {
                 href: "/products",
                 submenu: [
                     {name: "Product List", href: "/products"},
-                    ...(isAdmin
+                    ...(userIsAdmin
                         ? [{name: "Add Product", href: "/products/create"}]
                         : []),
                 ],

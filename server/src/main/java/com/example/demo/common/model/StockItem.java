@@ -36,11 +36,11 @@ public class StockItem extends BaseEntity{
 
     private int remaining;
 
-    public StockItem(Stock stock, Product product, int quantity, BigDecimal purchasedPrice) {
+    public StockItem(Stock stock, Product product, int quantity, BigDecimal purchasePrice) {
         this.stock = stock;
         this.product = product;
         this.quantity = quantity;
-        this.purchasePrice = purchasedPrice;
+        this.purchasePrice = purchasePrice;
         this.remaining = quantity;
     }
 

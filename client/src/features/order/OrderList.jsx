@@ -14,7 +14,7 @@ import {
 import { Axios } from '@/services/http/Axios';
 import PaginationButton from '@/components/common/PaginationButton';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay';
-import { FIRST_PAGE, getQueryString, isAdmin, REGULAR_DATE_FORMAT } from '@/utils';
+import { FIRST_PAGE, getQueryString, userIsAdmin, REGULAR_DATE_FORMAT } from '@/utils';
 import { Label } from '@/components/ui/label';
 import {
     Card,
@@ -135,7 +135,7 @@ const OrderList = () => {
                                 <CardTitle>Filter </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                {isAdmin(user?.role) &&
+                                {userIsAdmin(user?.role) &&
                                     <div className='space-y-1'>
                                         <Label>User Id: </Label>
                                         <Input
@@ -202,7 +202,7 @@ const OrderList = () => {
                                             >
                                                 <View />
                                             </Button>
-                                            {ORDER_STATUS.PENDING == item.status && isAdmin(user.role) &&
+                                            {ORDER_STATUS.PENDING == item.status && userIsAdmin(user.role) &&
                                                 <>
                                                     <Button className="text-green-600 hover:text-white hover:bg-green-600"
                                                         onClick={() => changeOrderStatus(item.id, ORDER_STATUS.PROCESSING)}

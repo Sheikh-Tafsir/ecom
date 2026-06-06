@@ -48,13 +48,16 @@ public class Product extends BaseEntity {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ProductImage> images = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany
     @JoinTable(
             name = "product_categories",
             joinColumns = @JoinColumn(name = "product_id"),
             inverseJoinColumns = @JoinColumn(name = "category_id")
     )
-    private Set<Category> categorise = new HashSet<>();
+    private Set<Category> categories = new HashSet<>();
+
+    @OneToMany(mappedBy = "product")
+    private Set<Review> reviews = new HashSet<>();
 
     private Boolean deleted = false;
 

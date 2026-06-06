@@ -7,6 +7,7 @@ import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.common.utils.ResponseUtils;
 import com.example.demo.order.dto.CreateOrderRequest;
+import com.example.demo.order.dto.OrderListResponse;
 import com.example.demo.order.dto.OrderResponse;
 import com.example.demo.order.dto.UpdateOrderStatusRequest;
 import com.example.demo.order.service.OrderService;
@@ -42,18 +43,18 @@ public class OrderController {
     private final MessageService messageService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<OrderResponse>>> findAll(Pageable pageable,
+    public ResponseEntity<ApiResponse<Page<OrderListResponse>>> findAll(Pageable pageable,
                                                                     @RequestParam(required = false) OrderStatus status) {
 
-        Page<OrderResponse> orders = orderService.findAll(pageable, status);
+        Page<OrderListResponse> orders = orderService.findAll(pageable, status);
         return ResponseUtils.ok(orders, messageService.get("successfully.found", "Order List"));
     }
 
     @GetMapping("/my")
-    public ResponseEntity<ApiResponse<Page<OrderResponse>>> findMyOrders(Pageable pageable,
+    public ResponseEntity<ApiResponse<Page<OrderListResponse>>> findMyOrders(Pageable pageable,
                                                                          @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        Page<OrderResponse> orders = orderService.findByUser(userDetails.user().getId(), pageable);
+        Page<OrderListResponse> orders = orderService.findByUser(userDetails.user().getId(), pageable);
         return ResponseUtils.ok(orders, messageService.get("successfully.found", "Order List"));
     }
 
@@ -85,37 +86,6 @@ public class OrderController {
         OrderResponse order = orderService.updateStatus(id, request, userDetails);
         return ResponseUtils.ok(order, messageService.get("successfully.updated", "Order"));
     }
-
-//    @PostMapping("/{id}/items")
-//    public ResponseEntity<ApiResponse<OrderResponse>> addItem(@PathVariable Long id,
-//                                                              @Valid @RequestBody CreateOrderItemRequest itemRequest) {
-//
-//        OrderResponse order = orderService.addItem(id, itemRequest);
-//        return ResponseUtils.ok(order, messageService.get("successfully.updated", "Order"));
-//    }
-//
-//    @PutMapping("/{orderId}/items/{productId}/increase")
-//    public ResponseEntity<ApiResponse<OrderResponse>> increaseItem(@PathVariable Long orderId,
-//                                                                   @PathVariable Long productId,
-//                                                                   @Valid @RequestBody UpdateOrderItemRequest request) {
-//        OrderResponse order = orderService.increaseItem(orderId, productId, request.quantity());
-//        return ResponseUtils.ok(order, messageService.get("successfully.updated", "Order"));
-//    }
-//
-//    @PutMapping("/{orderId}/items/{productId}/decrease")
-//    public ResponseEntity<ApiResponse<OrderResponse>> decreaseItem(@PathVariable Long orderId,
-//                                                                   @PathVariable Long productId,
-//                                                                   @Valid @RequestBody UpdateOrderItemRequest request) {
-//        OrderResponse order = orderService.decreaseItem(orderId, productId, request.quantity());
-//        return ResponseUtils.ok(order, messageService.get("successfully.updated", "Order"));
-//    }
-//
-//    @DeleteMapping("/{orderId}/items/{productId}")
-//    public ResponseEntity<ApiResponse<OrderResponse>> removeItem(@PathVariable Long orderId,
-//                                                                 @PathVariable Long productId) {
-//        OrderResponse order = orderService.removeItem(orderId, productId);
-//        return ResponseUtils.ok(order, messageService.get("successfully.updated", "Order"));
-//    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {

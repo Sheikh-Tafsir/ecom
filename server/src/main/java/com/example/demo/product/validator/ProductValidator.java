@@ -23,7 +23,7 @@ public class ProductValidator {
     }
 
     public void validateUpdate(UpdateProductRequest request, Errors errors) {
-        validate(request.images(), errors);
+        validate(request.getImages(), errors);
     }
 
     private void validate(Set<MultipartFile> request, Errors errors) {

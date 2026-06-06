@@ -7,6 +7,7 @@ import com.example.demo.common.model.ProductImage;
 import com.example.demo.common.service.CloudinaryService;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.product.dto.CreateProductRequest;
+import com.example.demo.product.dto.ProductListResponse;
 import com.example.demo.product.dto.ProductResponse;
 import com.example.demo.product.dto.UpdateProductRequest;
 import com.example.demo.product.repository.CategoryRepository;
@@ -14,7 +15,6 @@ import com.example.demo.product.repository.ProductRepository;
 import com.example.demo.stock.dto.CreateStockItemRequest;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -37,8 +37,6 @@ import static com.example.demo.common.utils.Utils.*;
 @RequiredArgsConstructor
 public class ProductService {
 
-    private final ModelMapper modelMapper;
-
     private final ProductRepository productRepository;
 
     private final CategoryRepository categoryRepository;
@@ -47,20 +45,21 @@ public class ProductService {
 
     private final MessageService messageService;
 
-    @Transactional(readOnly = true)
-    public Page<ProductResponse> findAll(Pageable pageable, String name, String category, CustomUserDetails userDetails) {
+    public Page<ProductListResponse> findAll(Pageable pageable, String name, String category, CustomUserDetails userDetails) {
         String nameFilter = (isNull(name)) ? null : "%" + name + "%";
         return productRepository.findAllByNameAndExcludeStatus(nameFilter, category, isAdmin(userDetails) ? null : DISCONTINUED, getValidPageable(pageable))
-                .map(ProductResponse::new);
+                .map(ProductListResponse::new);
     }
 
-    public Product findById(Long id, CustomUserDetails userDetails) {
-        Product product = findByIdHelper(id);
+    public ProductResponse findById(Long id, CustomUserDetails userDetails) {
+        Product product = productRepository.findDetailsById(id)
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Product", id)));
+
         if (product.getStatus() == DISCONTINUED && !isAdmin(userDetails)) {
-            throw new AccessDeniedException("User with id: " + userDetails.getId()  + " attempted to access discontinued Product with id: " + id);
+            throw new AccessDeniedException("User with id: " + userDetails.getId() + " attempted to access discontinued Product with id: " + id);
         }
 
-        return product;
+        return new ProductResponse(product);
     }
 
     @PreAuthorize(HAS_ROLE_ADMIN)
@@ -69,7 +68,7 @@ public class ProductService {
         Product product = new Product();
         product.setName(request.getName());
         product.setPrice(request.getPrice());
-        product.setCategorise(new HashSet<>(categoryRepository.findAllById(request.getCategoryIds())));
+        product.setCategories(new HashSet<>(categoryRepository.findAllById(request.getCategoryIds())));
 
         addImages(product, request.getImages());
 
@@ -80,20 +79,20 @@ public class ProductService {
     @Transactional
     public Product update(Long id, UpdateProductRequest request) throws IOException {
         Product product = findByIdHelper(id);
-        
-        product.setName(request.name());
-        product.setPrice(request.price());
-        product.setCategorise(new HashSet<>(categoryRepository.findAllById(request.categoryIds())));
+
+        product.setName(request.getName());
+        product.setPrice(request.getPrice());
+        product.setCategories(new HashSet<>(categoryRepository.findAllById(request.getCategoryIds())));
 
         product.getImages().removeIf(
-                image -> !request.keptImageIds().contains(image.getId())
+                image -> !request.getKeptImageIds().contains(image.getId())
         );
 
-        if (product.getImages().size() + (request.images() != null ? request.images().size() : 0) > 5) {
+        if (product.getImages().size() + (request.getImages() != null ? request.getImages().size() : 0) > 5) {
             throw new RuntimeException("Cannot upload more than 5 files");
         }
 
-        addImages(product, request.images());
+        addImages(product, request.getImages());
 
         return productRepository.save(product);
     }
@@ -112,7 +111,7 @@ public class ProductService {
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Product", id)));
     }
 
-    public void consumeForOrder(Product product, int quantity) {
+    public void decreaseForOrder(Product product, int quantity) {
         checkActive(product);
 
         if (product.getQuantity() < quantity) {
@@ -123,8 +122,8 @@ public class ProductService {
         productRepository.save(product);
     }
 
-    public Product updateForStock(CustomUserDetails userDetails, CreateStockItemRequest itemRequest) {
-        Product product = findById(itemRequest.productId(), userDetails);
+    public Product updateForStock(CreateStockItemRequest itemRequest) {
+        Product product = findByIdHelper(itemRequest.productId());
         checkActive(product);
 
         product.setQuantity(product.getQuantity() + itemRequest.quantity());

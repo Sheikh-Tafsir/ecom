@@ -24,7 +24,7 @@ import Users from "@/features/users/Users.jsx";
 import UserEdit from "@/features/users/UserEdit.jsx";
 
 import Products from "@/features/product/Products.jsx";
-import ProductView from "@/features/product/ProductView";
+import ProductDetails from "@/features/product/ProductDetails.jsx";
 import ProductCreate from "@/features/product/ProductCreate";
 import Stocks from "@/features/stock/Stocks.jsx";
 import StockCreate from "@/features/stock/StockCreate.jsx";
@@ -38,6 +38,7 @@ import OrderCreate from "@/features/order/OrderCreate";
 import {useUserStore} from "@/store/useUserStore";
 import StockItems from "@/features/stock/StockItems.jsx";
 import StockDetails from "@/features/stock/StockDetails.jsx";
+import {getAccessToken} from "@/utils/index.js";
 
 const App = () => {
 
@@ -60,8 +61,8 @@ const InnerApp = () => {
     }, [initUser]);
 
     useEffect(() => {
-        if (user?.id) {
-            connectSocket(user.getAccessToken);
+        if (user?.email) {
+            connectSocket(getAccessToken());
         } else {
             disconnectSocket();
         }
@@ -69,14 +70,14 @@ const InnerApp = () => {
         return () => {
             disconnectSocket();
         };
-    }, [user?.id])
+    }, [user])
 
     return (
         <Routes>
             <Route element={<PublicRoute/>}>
                 <Route path="/" element={<Homepage/>}/>
                 <Route path="/products" element={<Products/>}/>
-                <Route path="/products/:id" element={<ProductView/>}/>
+                <Route path="/products/:id" element={<ProductDetails/>}/>
             </Route>
 
             <Route element={<AuthRoute/>}>

@@ -28,8 +28,8 @@ public class Stock extends BaseEntity {
     @Column(nullable = false)
     private BigDecimal totalCost = BigDecimal.ZERO;
 
-    public void addItem(Product product, int quantity, BigDecimal purchasedPrice) {
-        StockItem item = new StockItem(this, product, quantity, purchasedPrice);
+    public void addItem(Product product, int quantity, BigDecimal purchasePrice) {
+        StockItem item = new StockItem(this, product, quantity, purchasePrice);
         items.add(item);
 
         calculateTotal();

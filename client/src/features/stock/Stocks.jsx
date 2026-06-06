@@ -69,7 +69,7 @@ const Stocks = () => {
             console.error(error);
             showToast("Failed to load stocks", TOAST_TYPE.ERROR);
         }
-    }, [isError]);
+    }, [error, isError]);
 
     // Page validation (safe)
     useEffect(() => {

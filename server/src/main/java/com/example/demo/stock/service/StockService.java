@@ -1,6 +1,5 @@
 package com.example.demo.stock.service;
 
-import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.common.model.Product;
 import com.example.demo.common.model.Stock;
 import com.example.demo.common.model.StockItem;
@@ -49,13 +48,13 @@ public class StockService {
 
     @PreAuthorize(HAS_ROLE_ADMIN)
     @Transactional
-    public StockResponse create(CreateStockRequest request, CustomUserDetails userDetails) {
+    public StockResponse create(CreateStockRequest request) {
         Stock stock = new Stock();
 
         request.items().forEach(itemRequest -> {
-            Product product = productService.updateForStock(userDetails, itemRequest);
+            Product product = productService.updateForStock(itemRequest);
 
-            stock.addItem(product, itemRequest.quantity(), itemRequest.purchasedPrice());
+            stock.addItem(product, itemRequest.quantity(), itemRequest.purchasePrice());
         });
 
         return new StockResponse(stockRepository.save(stock));
@@ -163,7 +162,7 @@ public class StockService {
     private void addItem(Stock stock, CreateStockItemRequest request) {
         Product product = productService.findByIdHelper(request.productId());
         product.setQuantity(product.getQuantity() + request.quantity());
-        stock.addItem(product, request.quantity(), request.purchasedPrice());
+        stock.addItem(product, request.quantity(), request.purchasePrice());
     }
 
     private void decreaseProductQuantity(Product product, int quantity) {

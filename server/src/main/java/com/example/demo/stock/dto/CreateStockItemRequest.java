@@ -15,6 +15,6 @@ public record CreateStockItemRequest(
         Integer quantity,
 
         @NotNull
-        BigDecimal purchasedPrice
+        BigDecimal purchasePrice
 ) {
 }

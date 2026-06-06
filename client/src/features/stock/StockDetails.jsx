@@ -49,7 +49,7 @@ const StockDetails = () => {
             console.error(error);
             showToast("Failed to load stock items", TOAST_TYPE.ERROR);
         }
-    }, [isError]);
+    }, [error, isError]);
 
     return (
         <>

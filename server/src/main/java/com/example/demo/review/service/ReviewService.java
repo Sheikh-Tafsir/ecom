@@ -38,8 +38,8 @@ public class ReviewService {
     }
 
     @Transactional
-    public void create(CreateReviewRequest request, CustomUserDetails userDetails) {
-        Product product = productService.findById(request.productId(), userDetails);
+    public void create(Long id, CreateReviewRequest request, CustomUserDetails userDetails) {
+        Product product = productService.findByIdHelper(id);
 
         Review review = modelMapper.map(request, Review.class);
         review.setUser(userDetails.user());

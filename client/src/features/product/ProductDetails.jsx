@@ -33,7 +33,7 @@ import { ToastAlert } from "@/components/common/ToastAlert"
 import { TOAST_TYPE } from "@/utils/enums"
 import { useUserStore } from "@/store/useUserStore"
 
-export default function ProductView() {
+export default function ProductDetails() {
   const { id } = useParams()
   const { user } = useUserStore();
   const { addToCart } = useCartStore()
@@ -114,7 +114,7 @@ export default function ProductView() {
       <div className="container mx-auto px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100 ">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
-          <p className="text-gray-600">The product you're looking for doesn't exist.</p>
+          <p className="text-gray-600">The product you`&apos`re looking for doesn`&apos`t exist.</p>
         </div>
       </div>
     )
@@ -124,17 +124,17 @@ export default function ProductView() {
     <>
     {isPageLoading && <PageLoadingOverlay />}
 
-    <div className="container pb-8">  
+    <div className="container pb-8 pt-6">
       <div className="grid md:grid-cols-2 gap-8 mb-10">
         <div className="w-full">
           <Carousel className="w-[82%] mx-auto">
             <CarouselContent>
-              {product?.images?.map((item) => (
-                <CarouselItem key={item.id}>
+              {product?.images?.map((imageUrl) => (
+                <CarouselItem key={imageUrl}>
                   <Card>
                     <CardContent className="flex aspect-square items-center justify-center">
                       <img
-                        src={item?.image || "https://media.istockphoto.com/id/1147544807/vector/thumbnail-image-vector-graphic.jpg?s=1024x1024&w=is&k=20&c=5aen6wD1rsiMZSaVeJ9BWM4GGh5LE_9h97haNpUQN5I="}
+                        src={imageUrl || "https://media.istockphoto.com/id/1147544807/vector/thumbnail-image-vector-graphic.jpg?s=1024x1024&w=is&k=20&c=5aen6wD1rsiMZSaVeJ9BWM4GGh5LE_9h97haNpUQN5I="}
                         alt={product.name}
                         className="object-cover rounded-lg w-full h-full"
                       />
@@ -151,11 +151,11 @@ export default function ProductView() {
         <div className="space-y-6 bg-white h-fit p-10 rounded-lg">
           <div>
             <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
-            
+
             <div className="flex flex-wrap gap-2 mb-6">
-              {product.categorise?.map((category) => (
-                <Badge key={category.id} variant="secondary">
-                  {category.name}
+              {product.categories?.map((category) => (
+                <Badge key={category} variant="secondary">
+                  {category}
                 </Badge>
               ))}
             </div>
@@ -172,7 +172,7 @@ export default function ProductView() {
                   ))}
                 </div>
                 <span className="text-gray-600 ml-2">
-                  {product.rating != 0.0 ? `${product.rating} out of 5` : 'Not Rated Yet'}
+                  {product.rating !== 0.0 ? `${product.rating} out of 5` : 'Not Rated Yet'}
                 </span>
               </div>
 

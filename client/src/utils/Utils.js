@@ -18,11 +18,6 @@ export const isInRange = (value, min, max) => {
     return value >= min && value <= max;
 }
 
-export const isAdmin = (role) => {
-    const roles = Array.isArray(role) ? role : [role];
-    return roles.includes(USER_ROLE.ADMIN) || roles.includes(USER_ROLE.SUPER_ADMIN);
-}
-
 export const toastInitialState = {
     message: "",
     type: "",

@@ -8,10 +8,7 @@ import com.example.demo.common.model.OrderItem;
 import com.example.demo.common.model.Product;
 import com.example.demo.common.model.User;
 import com.example.demo.common.service.MessageService;
-import com.example.demo.order.dto.CreateOrderRequest;
-import com.example.demo.order.dto.CreateOrderItemRequest;
-import com.example.demo.order.dto.OrderResponse;
-import com.example.demo.order.dto.UpdateOrderStatusRequest;
+import com.example.demo.order.dto.*;
 import com.example.demo.order.repository.OrderRepository;
 import com.example.demo.product.service.ProductService;
 import com.example.demo.stock.service.StockService;
@@ -41,19 +38,22 @@ public class OrderService {
     private final OrderRepository orderRepository;
 
     private final StockService stockService;
+
     private final CommonHelper commonHelper;
 
     @PreAuthorize(HAS_ROLE_ADMIN)
-    public Page<OrderResponse> findAll(Pageable pageable, OrderStatus status) {
-        return orderRepository.findAllByStatus(status, getValidPageable(pageable)).map(OrderResponse::new);
+    public Page<OrderListResponse> findAll(Pageable pageable, OrderStatus status) {
+        return orderRepository.findAllByStatus(status, getValidPageable(pageable)).map(OrderListResponse::new);
     }
 
-    public Page<OrderResponse> findByUser(Long userId, Pageable pageable) {
-        return orderRepository.findByUser_Id(userId, getValidPageable(pageable)).map(OrderResponse::new);
+    public Page<OrderListResponse> findByUser(Long userId, Pageable pageable) {
+        return orderRepository.findByUser_Id(userId, getValidPageable(pageable)).map(OrderListResponse::new);
     }
 
     public OrderResponse findById(Long id, CustomUserDetails userDetails) {
-        Order order = findByIdHelper(id);
+        Order order = orderRepository.findDetailsById(id)
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Order", id)));
+
         commonHelper.checkOwnerOrAdmin(order.getUser().getId(), userDetails);
 
         return new OrderResponse(order);
@@ -101,57 +101,13 @@ public class OrderService {
         }
 
         if (status == OrderStatus.ACCEPTED) {
-            consumeStock(order);
+            acceptOrder(order);
         }
 
         order.setStatus(status);
 
         return new OrderResponse(orderRepository.save(order));
     }
-
-//    @Transactional
-//    public OrderResponse addItem(Long orderId, CreateOrderItemRequest orderItemRequest) {
-//        Order order = findByIdHelper(orderId);
-//        ensureOrderIsModifiable(order);
-//        addProduct(order, orderItemRequest);
-//
-//        return new OrderResponse(orderRepository.save(order));
-//    }
-
-//    @Transactional
-//    public OrderResponse increaseItem(Long orderId, Long productId, int quantity) {
-//        Order order = findByIdHelper(orderId);
-//        ensureOrderIsModifiable(order);
-//
-//        getItem(order, productId);
-//        order.increaseItem(productId, quantity);
-//
-//        return new OrderResponse(orderRepository.save(order));
-//    }
-//
-//    @Transactional
-//    public OrderResponse decreaseItem(Long orderId, Long productId, int quantity) {
-//        Order order = findByIdHelper(orderId);
-//        ensureOrderIsModifiable(order);
-//        OrderItem item = getItem(order, productId);
-//
-//        if (quantity > item.getQuantity()) {
-//            throw new ValidationException("Quantity is greater than order item quantity");
-//        }
-//
-//        order.decreaseItem(productId, quantity);
-//
-//        return new OrderResponse(orderRepository.save(order));
-//    }
-//
-//    @Transactional
-//    public OrderResponse removeItem(Long orderId, Long productId) {
-//        Order order = findByIdHelper(orderId);
-//        ensureOrderIsModifiable(order);
-//        order.removeItem(productId);
-//
-//        return new OrderResponse(orderRepository.save(order));
-//    }
 
     @Transactional
     public void delete(Long id) {
@@ -169,28 +125,15 @@ public class OrderService {
         order.addItem(product, request.quantity());
     }
 
-    private void consumeStock(Order order) {
-        order.getItems().forEach(this::consumeStock);
+    private void acceptOrder(Order order) {
+        order.getItems().forEach(this::consumeProductAndStock);
     }
 
-    private void consumeStock(OrderItem orderItem) {
+    private void consumeProductAndStock(OrderItem orderItem) {
         Product product = orderItem.getProduct();
         int quantityToConsume = orderItem.getQuantity();
 
-        productService.consumeForOrder(product, quantityToConsume);
+        productService.decreaseForOrder(product, quantityToConsume);
         stockService.consume(product, quantityToConsume);
     }
-
-//    private void ensureOrderIsModifiable(Order order) {
-//        if (order.getStatus() != OrderStatus.CREATED) {
-//            throw new RuntimeException("Only created orders can be modified");
-//        }
-//    }
-
-//    public OrderItem getItem(Order order, Long productId) {
-//        return order.getItems().stream()
-//                .filter(item -> item.getProduct().getId().equals(productId))
-//                .findFirst()
-//                .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "OrderItem", productId)));
-//    }
 }

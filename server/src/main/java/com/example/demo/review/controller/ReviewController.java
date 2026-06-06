@@ -6,7 +6,6 @@ import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.common.model.Review;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.common.utils.ResponseUtils;
-import com.example.demo.review.dto.CreateReviewRequest;
 import com.example.demo.review.dto.UpdateReviewRequest;
 import com.example.demo.review.service.ReviewService;
 import com.example.demo.review.validator.ReviewValidator;
@@ -39,14 +38,6 @@ public class ReviewController {
 
         return ResponseUtils.ok(reviewService.findAllByProductAndUser(productId, pageable, userDetails),
                 messageService.get("successfully.found", "Review List"));
-    }
-
-    @PostMapping
-    public ResponseEntity<ApiResponse<Void>> create(@Valid @RequestBody CreateReviewRequest request,
-                                                    @AuthenticationPrincipal CustomUserDetails userDetails) {
-
-        reviewService.create(request, userDetails);
-        return ResponseUtils.created(messageService.get("entity.creating", "Review"));
     }
 
     @PutMapping("/{id}")

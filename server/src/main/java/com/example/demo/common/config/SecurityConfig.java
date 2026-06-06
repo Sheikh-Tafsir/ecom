@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -37,14 +38,13 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    public static final String AUTH_URL = "/auth/**";
-
     public static final Set<String> PUBLIC_URLS = Set.of(
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/swagger-resources/**",
-            "/webjars/**");
+            "/webjars/**"
+    );
 
     @Value("${cors.allowed.origins}")
     private String allowedOrigins;
@@ -52,6 +52,7 @@ public class SecurityConfig {
     private final UserRepository userRepository;
 
     private final AuthenticationFilter authenticationFilter;
+
     private final RateLimiterFilter rateLimiterFilter;
 
     @Bean
@@ -64,7 +65,12 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider(userDetailsService()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(AUTH_URL).permitAll()
+                        .requestMatchers("/auth/**").permitAll()
+
+                        // PUBLIC READ APIs
+                        .requestMatchers(HttpMethod.GET, "/products", "/products/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/categories", "/categories/*").permitAll()
+
                         .requestMatchers(PUBLIC_URLS.toArray(new String[0])).permitAll()
                         .anyRequest().authenticated()
                 )

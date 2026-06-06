@@ -28,10 +28,10 @@ export default function Cart() {
   }
 
   return (
-    <div className="container pb-8">
+    <div className="container pb-8 pt-4">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold">Shopping Cart</h1>
-        <Button variant="outline" onClick={clearCart}>
+        <Button className="bg-red-600 text-white" variant="outline" onClick={clearCart}>
           Clear Cart
         </Button>
       </div>
@@ -43,9 +43,9 @@ export default function Cart() {
             <Card key={item.id}>
               <CardContent className="p-6">
                 <div className="flex items-center space-x-4  overflow-hidden">
-                  <div className="relative w-20 h-20">
+                  <div className="h-24">
                     <img
-                      src={item.images[0].image || "/placeholder.svg"}
+                      src={item.images[0] || "/placeholder.svg"}
                       alt={item.name}
                       className="object-cover rounded-md"
                     />
