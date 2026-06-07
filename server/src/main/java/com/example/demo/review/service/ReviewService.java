@@ -17,6 +17,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 import static com.example.demo.common.utils.Utils.getValidPageable;
 
 @Service
@@ -41,7 +44,24 @@ public class ReviewService {
     public void create(Long id, CreateReviewRequest request, CustomUserDetails userDetails) {
         Product product = productService.findByIdHelper(id);
 
-        Review review = modelMapper.map(request, Review.class);
+        long oldReviewCount = product.getReviewCount();
+        BigDecimal oldAvgRating = product.getRating();
+
+        BigDecimal newRating = BigDecimal.valueOf(request.rating());
+
+        long newReviewCount = oldReviewCount + 1;
+
+        BigDecimal newAvgRating = oldAvgRating
+                .multiply(BigDecimal.valueOf(oldReviewCount))
+                .add(newRating)
+                .divide(BigDecimal.valueOf(newReviewCount), 2, RoundingMode.HALF_UP);
+
+        product.setReviewCount(newReviewCount);
+        product.setRating(newAvgRating);
+
+        Review review =new Review();
+        review.setRating(request.rating());
+        review.setComment(request.comment());
         review.setUser(userDetails.user());
         review.setProduct(product);
 
@@ -65,7 +85,7 @@ public class ReviewService {
     }
 
     @Transactional
-    public void delete(Long id,  CustomUserDetails userDetails) {
+    public void delete(Long id, CustomUserDetails userDetails) {
         Review review = findByIdHelper(id);
         commonHelper.checkOwner(review.getUser().getId(), userDetails);
 

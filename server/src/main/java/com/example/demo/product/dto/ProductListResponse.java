@@ -2,7 +2,6 @@ package com.example.demo.product.dto;
 
 import com.example.demo.common.model.Category;
 import com.example.demo.common.model.Product;
-import com.example.demo.common.model.ProductImage;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,14 +29,9 @@ public class ProductListResponse {
         price = product.getPrice();
         rating = product.getRating();
         quantity = product.getQuantity();
-        image = getImage(product);
+        image = product.getFirstImage();
         categories = product.getCategories().stream()
                 .map(Category::getName)
                 .collect(Collectors.toSet());
-    }
-
-    private String getImage(Product product) {
-        ProductImage image = product.getImages().stream().findFirst().orElse(null);
-        return image != null ? image.getImage() : null;
     }
 }

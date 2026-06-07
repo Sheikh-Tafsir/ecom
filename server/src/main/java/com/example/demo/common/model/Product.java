@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Formula;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
@@ -45,8 +46,13 @@ public class Product extends BaseEntity {
     @Column(nullable = false)
     private BigDecimal rating = BigDecimal.ZERO;
 
+    private long reviewCount;
+
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ProductImage> images = new HashSet<>();
+
+    @Formula("(SELECT pi.image FROM product_images pi WHERE pi.product_id = id ORDER BY pi.id ASC LIMIT 1)")
+    private String firstImage;
 
     @ManyToMany
     @JoinTable(

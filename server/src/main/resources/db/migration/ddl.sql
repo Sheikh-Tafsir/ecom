@@ -32,17 +32,18 @@ CREATE TABLE user_roles
 
 CREATE TABLE products
 (
-    id          BIGSERIAL PRIMARY KEY,
-    name        VARCHAR(255)   NOT NULL,
-    description TEXT,
-    price       DECIMAL(19, 2) NOT NULL CHECK (price >= 0),
-    quantity    INT            NOT NULL DEFAULT 0 CHECK (quantity >= 0),
-    status      VARCHAR(31)    NOT NULL DEFAULT 'COMING_SOON',
-    rating      DECIMAL(3, 2)  NOT NULL DEFAULT 0.00 CHECK (rating BETWEEN 0 AND 5),
-    deleted     BOOLEAN        NOT NULL DEFAULT FALSE,
-    version     INT            NOT NULL DEFAULT 0,
-    created_at  TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id           BIGSERIAL PRIMARY KEY,
+    name         VARCHAR(255)   NOT NULL,
+    description  TEXT,
+    price        DECIMAL(19, 2) NOT NULL CHECK (price >= 0),
+    quantity     INT            NOT NULL DEFAULT 0 CHECK (quantity >= 0),
+    status       VARCHAR(31)    NOT NULL DEFAULT 'COMING_SOON',
+    rating       DECIMAL(3, 2)  NOT NULL DEFAULT 0.00 CHECK (rating BETWEEN 0 AND 5),
+    review_count BIGINT         NOT NULL DEFAULT 0,
+    deleted      BOOLEAN        NOT NULL DEFAULT FALSE,
+    version      INT            NOT NULL DEFAULT 0,
+    created_at   TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uq_products_name UNIQUE (name)
 );
 
