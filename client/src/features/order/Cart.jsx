@@ -43,11 +43,11 @@ export default function Cart() {
             <Card key={item.id}>
               <CardContent className="p-6">
                 <div className="flex items-center space-x-4  overflow-hidden">
-                  <div className="h-24">
+                  <div className="bg-red-600 w-[15%]">
                     <img
-                      src={item.images[0] || "/placeholder.svg"}
+                      src={item.image || item.images[0] || "/placeholder.svg"}
                       alt={item.name}
-                      className="object-cover rounded-md"
+                      className="aspect-square object-cover rounded-md"
                     />
                   </div>
 

@@ -15,14 +15,6 @@ import {
 } from '@/components/ui/card.jsx';
 import {Input} from '@/components/ui/input.jsx';
 import {Label} from '@/components/ui/label.jsx';
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select.jsx"
 import StaredLabel from '@/components/common/StaredLabel';
 import {Axios} from '@/services/http/Axios';
 import {ButtonLoading} from "@/components/common/ButtonLoading";
@@ -178,8 +170,8 @@ const ProductCreate = () => {
 
                         <CardContent className="space-y-4">
                             {isCreatePage ?
-                                <MultiImageInput key={resetImagesKey} onChangeImages={setImages} errors={errors}
-                                                 maxImages={MAX_IMAGES}/>
+                                <MultiImageInput key={resetImagesKey} onChangeImages={setImages} maxImages={MAX_IMAGES}
+                                                 errors={errors} setError={setError}/>
                                 :
                                 <div className="flex space-x-4 overflow-x-auto py-2">
                                     {existingImages.map((item) => (
