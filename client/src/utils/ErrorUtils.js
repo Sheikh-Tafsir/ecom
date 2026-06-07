@@ -17,18 +17,18 @@ export const handleErrors = (error, setError) => {
         }
 
         if (data?.message) {
-            handleGlobalError(data.message, setError);
+            handleClientSideGlobalError(data.message, setError);
         }
 
         return;
     }
 
-    if (error?.message == NETWORK_ERROR || error?.request) {
-        handleGlobalError(NETWORK_ERROR, setError);
+    if (error?.message === NETWORK_ERROR || error?.request) {
+        handleClientSideGlobalError(NETWORK_ERROR, setError);
         return;
     }
 
-    handleGlobalError(error?.message || "Unexpected error occurred.", setError);
+    handleClientSideGlobalError(error?.message || "Unexpected error occurred.", setError);
 };
 
 const handleFieldErrors = (errors, setError) => {
@@ -42,8 +42,12 @@ const handleFieldErrors = (errors, setError) => {
     });
 };
 
-const handleGlobalError = (message, setError) => {
-    setError?.(GLOBAL_ERROR, {
+export const handleClientSideGlobalError = (message, setError) => {
+    handleClientSideError(GLOBAL_ERROR, message, setError)
+};
+
+export const handleClientSideError = (field, message, setError) => {
+    setError?.(field, {
         type: "client",
         message,
     });

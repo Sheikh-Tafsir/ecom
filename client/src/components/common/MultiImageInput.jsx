@@ -1,16 +1,18 @@
-import React, { useEffect, useState, useRef } from 'react'
-import { X } from 'lucide-react';
+import React, {useEffect, useState, useRef} from 'react'
+import {X} from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
 import StaredLabel from './StaredLabel';
-import {MAX_FILE_SIZE} from "@/utils/index.js";
+import {handleClientSideError, MAX_FILE_SIZE} from "@/utils/index.js";
+import InputError from "@/components/common/InputError.jsx";
 
-const MultiImageInput = ({ onChangeImages, maxImages, errors }) => {
-    const imageInputRef = useRef(null);
+const MultiImageInput = ({onChangeImages, maxImages = 5, errors = {}, setError}) => {
+    const inputRef = useRef(null);
 
     const [images, setImages] = useState([]);
-    const [error, setError] = useState(errors?.images || {});
+
+    const createKey = (file) => `${file.name}-${file.size}-${file.lastModified}`;
 
     useEffect(() => {
         return () => {
@@ -18,102 +20,134 @@ const MultiImageInput = ({ onChangeImages, maxImages, errors }) => {
         };
     }, [images]);
 
-    const handleImageUploadClick = () => {
-        imageInputRef.current?.click();
-    };
-
     const handleImageChange = (e) => {
-        const selectedFiles = Array.from(e.target.files);
+        const selectedFiles = Array.from(e.target.files || []);
+        setError([]);
+
         const availableSlots = maxImages - images.length;
+        if (availableSlots <= 0) {
+            handleClientSideError("images", `You can only upload up to ${maxImages} images.`, setError);
+            return;
+        }
+
+        const existingKeys = new Set(images.map((img) => createKey(img.file)));
 
         const validFiles = [];
-        let skippedDueToSize = false;
+        let skippedDuplicate = 0;
+        let skippedSize = 0;
 
         for (const file of selectedFiles) {
             if (validFiles.length >= availableSlots) {
-                setError({
-                    ...prevErrors,
-                    images: `You can only upload up to ${maxImages} images.`,
-                });
-
-                return;
+                break
             }
 
-            if (file.size <= MAX_FILE_SIZE) {
-                validFiles.push(file);
-            } else {
-                skippedDueToSize = true;
+            const key = createKey(file);
+
+            if (existingKeys.has(key)) {
+                skippedDuplicate++;
+                continue;
             }
-        }
 
-        const newImageList = [...images, ...validFiles];
-        setImages(newImageList);
+            if (file.size > MAX_FILE_SIZE) {
+                skippedSize++;
+                continue;
+            }
 
-        onChangeImages(newImageList);
-
-        if (skippedDueToSize) {
-            setError({
-                ...prev,
-                images: `Some images were too large and were skipped. Max size: ${MAX_FILE_SIZE / (1024 * 1024)}MB.`,
+            validFiles.push({
+                file,
+                previewUrl: URL.createObjectURL(file),
             });
-        } else {
-            setError({});
+
+            existingKeys.add(key);
         }
 
-        if (imageInputRef.current) {
-            imageInputRef.current.value = '';
+        const updatedImages = [...images, ...validFiles];
+
+        setImages(updatedImages);
+        onChangeImages(updatedImages.map((img) => img.file));
+
+        if (skippedDuplicate || skippedSize) {
+            handleClientSideError("images",
+                [
+                    skippedDuplicate
+                        ? `${skippedDuplicate} duplicate file(s) skipped.`
+                        : "",
+                    skippedSize
+                        ? `${skippedSize} file(s) too large (max ${MAX_FILE_SIZE / (1024 * 1024)}MB).`
+                        : "",
+                ]
+                    .filter(Boolean)
+                    .join(" "),
+                setError
+            );
         }
+
+        e.target.value = "";
     };
 
     const removeImage = (indexToRemove) => {
-        setImages((prevImages) => prevImages.filter((_, index) => index !== indexToRemove));
+        setImages((prev) => {
+            const removed = prev[indexToRemove];
+            URL.revokeObjectURL(removed.previewUrl);
+
+            const updated = prev.filter((_, i) => i !== indexToRemove);
+
+            onChangeImages(updated.map((img) => img.file));
+
+            return updated;
+        });
+    };
+
+    const handleUploadClick = () => {
+        inputRef.current?.click();
     };
 
     return (
-        <div className='space-y-1'>
-            <StaredLabel label="Images" />
+        <div className='space-y-2'>
+            <StaredLabel label="Images"/>
+
             <Input
                 type="file"
                 accept="image/*"
                 multiple
                 onChange={handleImageChange}
-                ref={imageInputRef}
+                ref={inputRef}
                 className="hidden"
             />
 
-            {images?.length < 5 &&
-                <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleImageUploadClick}
-                    className="align-left"
-                >
-                    {images?.length > 0 ? 'Upload more images' : 'Upload images'}
-                </Button>
-            }
+            <Button
+                type="button"
+                variant="outline"
+                onClick={handleUploadClick}
+                className="align-left w-full"
+            >
+                {images?.length > 0 ? 'Upload more images' : 'Upload images'}
+            </Button>
 
             {images.length > 0 && (
-                <div className="flex space-x-4 overflow-x-auto py-2">
-                    {images.map((file, index) => (
-                        <div key={index} className="relative min-w-[100px] max-w-[160px]">
+                <div className="flex gap-4 overflow-x-auto py-2">
+                    {images.map((img, index) => (
+                        <div key={createKey(img.file)} className="relative min-w-[100px] max-w-[160px]">
                             <img
-                                src={URL.createObjectURL(file)}
+                                src={img.previewUrl}
                                 alt={`preview-${index}`}
-                                className="max-h-[150px] object-cover rounded-md border"
+                                className="h-[120px] w-[120px] object-cover rounded-md border aspect-square"
                             />
+
                             <Button
                                 type="button"
                                 size="icon"
                                 onClick={() => removeImage(index)}
                                 className="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center"
                             >
-                                <X />
+                                <X/>
                             </Button>
                         </div>
                     ))}
                 </div>
             )}
-            {error.images && <p className='validation-error'>{error.images}</p>}
+
+            <InputError errors={errors} field={"images"}/>
         </div>
     )
 }
