@@ -1,6 +1,9 @@
 spring:
   application.name: demo
-  servlet.multipart.enabled: true
+  servlet.multipart:
+    enabled: true
+    max-file-size: 5MB
+    max-request-size: 30MB
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -17,11 +20,9 @@ spring:
 
   data:
     redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
-      username: ${REDIS_USERNAME}
-      password: ${REDIS_PASSWORD}
-      url: ${REDIS_URL}
+      host: 127.0.0.1
+      port: 6379
+      password: foobared
 
   rabbitmq:
     host: ${MQ_HOST}

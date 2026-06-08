@@ -99,6 +99,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<?> handleRuntimeException(RuntimeException ex) {
         log.error("Runtime exception caught: {}", ex.getMessage());
+        ex.printStackTrace();
         return error(SOMETHING_WENT_WRONG, HttpStatusCode.valueOf(500));
     }
 

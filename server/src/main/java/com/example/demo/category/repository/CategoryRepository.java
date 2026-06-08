@@ -1,4 +1,4 @@
-package com.example.demo.product.repository;
+package com.example.demo.category.repository;
 
 import com.example.demo.common.model.Category;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -13,6 +13,8 @@ import static com.example.demo.common.utils.FileUtils.*;
 @Component
 public class CommonValidator {
 
+    private static final String IMAGE_TYPE = "image/";
+
     public void validateString(String value, boolean required, int min, int max, String fieldName, Errors errors) {
         if (required && !StringUtils.hasText(value)) {
             errors.rejectValue(fieldName, "error.field.is.required");
@@ -26,16 +28,15 @@ public class CommonValidator {
     }
 
     public void validateImage(MultipartFile image, boolean required, String fieldName, Errors errors) {
-        validateFile(image, required, fieldName, "image/", errors);
+        validateFile(image, required, fieldName, IMAGE_TYPE, errors);
     }
 
     private void validateFile(MultipartFile file, boolean required, String fieldName, String requiredType, Errors errors) {
-        if (required && !fileExists(file)) {
-            errors.rejectValue(fieldName, "error.field.is.required");
-            return;
-        }
-
         if (!fileExists(file)) {
+            if (required) {
+                errors.rejectValue(fieldName, "error.field.is.required");
+            }
+
             return;
         }
 
@@ -58,7 +59,8 @@ public class CommonValidator {
         }
 
         if (StringUtils.hasText(requiredType) && !contentType.startsWith(requiredType)) {
-            errors.rejectValue(fieldName, "error.img.only.allowed");
+            errors.rejectValue(fieldName, "error.only.type.file.allowed", new Object[]{requiredType},
+                    "Only " + requiredType + " file is allowed");
         }
     }
 }

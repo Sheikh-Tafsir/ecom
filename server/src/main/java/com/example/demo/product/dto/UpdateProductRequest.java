@@ -13,8 +13,12 @@ import java.util.Set;
 public class UpdateProductRequest {
 
     @NotBlank
-    @Size(min = 2, max = 100)
+    @Size(min = 2, max = 31)
     String name;
+
+    @NotBlank
+    @Size(min = 5, max = 1023)
+    private String description;
 
     @NotNull
     @DecimalMin(value = "1.0")

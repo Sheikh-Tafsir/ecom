@@ -19,6 +19,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("select p from Product p where p.id = :id")
     Optional<Product> findDetailsById(Long id);
 
+    @EntityGraph(attributePaths = {"images", "categories"})
+    @Query("select p from Product p where p.id = :id")
+    Optional<Product> findEditById(Long id);
+
     @EntityGraph(attributePaths = {"categories"})
     @Query("""
                 SELECT DISTINCT p FROM Product p

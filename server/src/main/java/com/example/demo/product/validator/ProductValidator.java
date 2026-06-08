@@ -10,6 +10,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Set;
 
+import static com.example.demo.common.utils.Utils.isEmpty;
+
 @Component
 @RequiredArgsConstructor
 public class ProductValidator {
@@ -19,21 +21,28 @@ public class ProductValidator {
     private final CommonValidator commonValidator;
 
     public void validateCreate(CreateProductRequest request, Errors errors) {
-        validate(request.getImages(), errors);
+        validateImages(request.getImages().size(), request.getImages(), errors);
     }
 
     public void validateUpdate(UpdateProductRequest request, Errors errors) {
-        validate(request.getImages(), errors);
+        int oldImageCount = request.getKeptImageIds() == null || request.getKeptImageIds().isEmpty() ? 0 : request.getKeptImageIds().size();
+        int newImageCount = request.getImages() == null || request.getImages().isEmpty() ? 0 : request.getImages().size();
+        validateImages(oldImageCount + newImageCount, request.getImages(), errors);
+
     }
 
-    private void validate(Set<MultipartFile> request, Errors errors) {
-        if (request.size() > MAX_IMAGE_COUNT) {
+    private void validateImages(int imageCount, Set<MultipartFile> imageFiles, Errors errors) {
+        if (imageCount > MAX_IMAGE_COUNT) {
             errors.rejectValue("images", "error.file.quantity", new Object[]{MAX_IMAGE_COUNT},
                     "Cannot upload more than " + MAX_IMAGE_COUNT + " files");
             return;
         }
 
-        for (MultipartFile image : request) {
+        if (isEmpty(imageFiles)) {
+            return;
+        }
+
+        for (MultipartFile image : imageFiles) {
             commonValidator.validateImage(image, false, "images", errors);
         }
     }

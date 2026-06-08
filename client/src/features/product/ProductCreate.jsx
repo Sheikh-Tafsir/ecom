@@ -1,10 +1,10 @@
-import {useEffect, useState} from 'react'
-import {Link, useLocation, useNavigate, useParams} from 'react-router-dom';
-import {useForm} from 'react-hook-form';
-import {zodResolver} from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import {useEffect, useState} from "react";
+import {Link, useLocation, useNavigate, useParams} from "react-router-dom";
+import {useForm} from "react-hook-form";
+import {zodResolver} from "@hookform/resolvers/zod";
+import * as z from "zod";
 
-import {Button} from '@/components/ui/button';
+import {Button} from "@/components/ui/button";
 import {
     Card,
     CardContent,
@@ -12,253 +12,301 @@ import {
     CardFooter,
     CardHeader,
     CardTitle,
-} from '@/components/ui/card.jsx';
-import {Input} from '@/components/ui/input.jsx';
-import {Label} from '@/components/ui/label.jsx';
-import StaredLabel from '@/components/common/StaredLabel';
-import {Axios} from '@/services/http/Axios';
+} from "@/components/ui/card.jsx";
+import {Input} from "@/components/ui/input.jsx";
+import {Label} from "@/components/ui/label.jsx";
+import {Textarea} from "@/components/ui/textarea";
+
+import StaredLabel from "@/components/common/StaredLabel";
+import MultiImageInput from "@/components/common/MultiImageInput";
+import InputError from "@/components/common/InputError";
+import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
+import {ToastAlert} from "@/components/common/ToastAlert";
 import {ButtonLoading} from "@/components/common/ButtonLoading";
-import {TOAST_TYPE} from '@/utils/enums';
-import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay';
-import {ToastAlert} from '@/components/common/ToastAlert';
-import MultiImageInput from '@/components/common/MultiImageInput';
-import {Textarea} from '@/components/ui/textarea';
-import InputReadOnly from "@/components/common/InputReadOnly"
-import {handleErrors} from '@/utils';
-import InputError from "@/components/common/InputError.jsx";
+
+import {Axios} from "@/services/http/Axios";
+import {handleErrors, toastInitialState} from "@/utils";
+import {TOAST_TYPE} from "@/utils/enums";
 
 const MAX_IMAGES = 5;
 
-const productSchema = z.object({
-    name: z.string().min(1, 'Name is required'),
-    price: z.coerce.number().min(1, 'Price is required and must be positive'),
-    categoryIds: z.array(z.string()).min(1, 'At least one category is required'),
+const ProductSchema = z.object({
+    name: z.string().min(1, "Name is required")
+        .max(31, "Name cannot exceed 31 characters"),
+    description: z.string().min(5, "Description is required")
+        .max(1023, "Description cannot exceed 1023 characters"),
+    price: z.coerce.number().positive().min(1, "Price must be greater than 0"),
+    categoryIds: z.array(z.string()).min(1, "Select at least one category"),
+    keptImageIds: z.array(z.number()).optional(),
 });
 
 const ProductCreate = () => {
     const {id} = useParams();
+
     const navigate = useNavigate();
     const location = useLocation();
+
     const isCreatePage = location.pathname.includes("/create");
 
     const [categories, setCategories] = useState([]);
-    const [images, setImages] = useState([]);
+    const [newImages, setNewImages] = useState([]);
     const [existingImages, setExistingImages] = useState([]);
-    const [isLoading, setIsLoading] = useState({page: true, button: false});
     const [resetImagesKey, setResetImagesKey] = useState(Date.now());
-    const [toastData, setToastData] = useState({message: "", type: "", id: Date.now()});
+
+    const [isCategoriesLoading, setIsCategoriesLoading] = useState(true);
+    const [isProductLoading, setIsProductLoading] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const [toastData, setToastData] = useState(toastInitialState);
 
     const {
         register,
         handleSubmit,
+        reset,
         setValue,
         watch,
-        reset,
         setError,
         formState: {errors},
     } = useForm({
-        resolver: zodResolver(productSchema),
+        resolver: zodResolver(ProductSchema),
         defaultValues: {
-            name: '',
-            description: '',
-            price: '',
+            name: "",
+            description: "",
+            price: "",
             categoryIds: [],
+            keptImageIds: [],
         },
     });
 
-    const categoryIds = watch('categoryIds');
+    const categoryIds = watch("categoryIds");
 
     useEffect(() => {
         const fetchCategories = async () => {
             try {
                 const response = await Axios.get("/categories");
-                const filteredCategories = response.data.data.filter(
-                    (category) => category.name !== 'All'
-                );
-                setCategories(filteredCategories);
+                setCategories(response.data.data);
             } catch (error) {
+                console.error(error);
                 handleErrors(error, setError);
             } finally {
-                setIsLoading({...isLoading, page: false});
+                setIsCategoriesLoading(false);
             }
-        }
+        };
 
         fetchCategories();
     }, []);
 
     useEffect(() => {
-        const fetchProduct = async (id) => {
+        if (isCreatePage || !id) return;
+
+        setIsProductLoading(true);
+
+        const fetchProduct = async () => {
             try {
                 const response = await Axios.get(`/products/${id}`);
-                const temp = response.data.data;
+                const product = response.data.data;
+
+                setExistingImages(product.images);
 
                 reset({
-                    name: temp.name,
-                    description: temp.description,
-                    price: temp.price,
-                    categoryIds: temp.categorise.map(c => String(c.id)),
+                    name: product.name || "",
+                    description: product.description || "",
+                    price: product.price || 0,
+                    categoryIds: product.categories.map((c) => String(c.id)),
+                    keptImageIds: product.images.map((img) => img.id) || [],
                 });
-                setExistingImages(temp.images);
             } catch (error) {
+                console.error(error);
                 handleErrors(error, setError);
+            } finally {
+                setIsProductLoading(false);
             }
-        }
+        };
 
-        if (!isCreatePage && id) {
-            fetchProduct(id);
-        }
-    }, [isCreatePage, id, reset])
+        fetchProduct();
+    }, [id, isCreatePage, reset, setError]);
 
     const saveProduct = async (data) => {
-        setIsLoading({...isLoading, button: true});
+        setIsSubmitting(true);
 
         try {
+            const formData = new FormData();
+
+            Object.entries(data).forEach(([key, value]) => {
+                if (Array.isArray(value)) {
+                    value.forEach((item) => formData.append(key, item));
+                } else {
+                    formData.append(key, value ?? "");
+                }
+            });
+
+            newImages.forEach((file) => {
+                formData.append("images", file);
+            });
+
+            let response;
             if (isCreatePage) {
-                const formData = new FormData();
-
-                Object.entries(data).forEach(([key, val]) => {
-                    if (key === 'categoryIds') {
-                        val.forEach(id => formData.append('categoryIds', id));
-                    } else {
-                        formData.append(key, val);
-                    }
-                });
-
-                images.forEach((image) => {
-                    formData.append('images', image);
-                });
-
-                await Axios.post('/products', formData, {
+                response = await Axios.post("/products", formData, {
                     headers: {'Content-Type': 'multipart/form-data'},
+                    timeout: 15000,
                 });
 
                 reset();
-                setImages([]);
+
+                setExistingImages([]);
+                setNewImages([]);
                 setResetImagesKey(Date.now());
-                showToast("Successfully created", TOAST_TYPE.SUCCESS);
+
+
             } else {
-                const payload = {
-                    ...data,
-                    categoryIds: data.categoryIds.map(Number)
-                };
-                await Axios.put(`/products/${id}`, payload);
-                navigate('/products');
+                response = await Axios.put(`/products/${id}`, formData, {
+                    headers: {'Content-Type': 'multipart/form-data'},
+                    timeout: 15000,
+                });
             }
+
+            showToast("Successfully created", TOAST_TYPE.SUCCESS);
+
+            setTimeout(() => {
+                navigate(`/products/${response.data.data.id}`);
+            }, 500);
         } catch (error) {
+            console.error(error);
             handleErrors(error, setError);
         } finally {
-            setIsLoading({...isLoading, button: false});
+            setIsSubmitting(false)
         }
     };
 
     const showToast = (message, type) => {
-        setToastData({message, type, id: Date.now()});
+        setToastData({
+            message,
+            type,
+            id: Date.now(),
+        });
     };
 
     return (
         <>
-            {isLoading.page && <PageLoadingOverlay/>}
+            {(isCategoriesLoading || isProductLoading) && <PageLoadingOverlay/>}
 
-            <div className="container lg:flex min-h-[100vh] pb-8 pt-8">
+            <div className="container lg:flex min-h-screen py-8">
                 <Card className="mx-auto my-auto w-[450px] lg:w-[550px]">
                     <form onSubmit={handleSubmit(saveProduct)}>
                         <CardHeader>
-                            <CardTitle>{isCreatePage ? 'Create' : 'Edit'} Product</CardTitle>
-                            <CardDescription>{isCreatePage ? 'Add new' : 'Edit'} product by filling out the information
-                                below</CardDescription>
+                            <CardTitle>
+                                {isCreatePage ? "Create" : "Edit"} Product
+                            </CardTitle>
+
+                            <CardDescription>
+                                {isCreatePage ? "Add new" : "Edit"} product by filling out the information below
+                            </CardDescription>
                         </CardHeader>
 
                         <CardContent className="space-y-4">
-                            {isCreatePage ?
-                                <MultiImageInput key={resetImagesKey} onChangeImages={setImages} maxImages={MAX_IMAGES}
-                                                 errors={errors} setError={setError}/>
-                                :
-                                <div className="flex space-x-4 overflow-x-auto py-2">
-                                    {existingImages.map((item) => (
-                                        <div key={item.id} className="relative min-w-[100px] max-w-[160px]">
-                                            <img
-                                                src={item.image}
-                                                alt={`preview-${item.image}`}
-                                                className="max-h-[150px] object-cover rounded-md border"
-                                                loading="lazy"
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-                            }
+                            <MultiImageInput
+                                key={resetImagesKey}
+                                existingImages={existingImages}
+                                onExistingImagesChange={(images) => {
+                                    setExistingImages(images);
 
-                            <div className='space-y-2'>
+                                    setValue(
+                                        "keptImageIds",
+                                        images.map((img) => img.id)
+                                    );
+                                }}
+                                onChangeImages={setNewImages}
+                                maxImages={MAX_IMAGES}
+                                errors={errors}
+                                setError={setError}
+                            />
+                            <InputError errors={errors} field="keptImageIds"/>
+
+                            <div className="space-y-2">
                                 <StaredLabel label="Name"/>
-                                <Input
-                                    type="text"
-                                    placeholder="Book"
-                                    {...register('name')}
-                                />
+                                <Input {...register("name")} />
                                 <InputError errors={errors} field="name"/>
                             </div>
 
-                            <div className='space-y-2'>
-                                <Label htmlFor="description">Description</Label>
-                                <Textarea
-                                    placeholder="Short description"
-                                    {...register('description')}
-                                />
+                            <div className="space-y-2">
+                                <StaredLabel label="Description"/>
+                                <Textarea {...register("description")} />
                                 <InputError errors={errors} field="description"/>
                             </div>
 
-                            <div className='space-y-2'>
+                            <div className="space-y-2">
                                 <StaredLabel label="Price"/>
                                 <Input
                                     type="number"
-                                    placeholder="100"
-                                    {...register('price')}
-                                    min={0}
-                                    step="0.01"
+                                    step="0.5"
+                                    min="0"
+                                    {...register("price")}
                                 />
                                 <InputError errors={errors} field="price"/>
                             </div>
 
-                            <div className="flex flex-col space-y-2">
+                            <div className="space-y-2">
                                 <StaredLabel label="Categories"/>
-                                {isCreatePage ?
-                                    <div className="grid grid-cols-2 gap-2 border p-2 rounded-md max-h-40 overflow-y-auto">
-                                        {categories?.map((item) => (
-                                            <div key={item.id} className="flex items-center space-x-2">
-                                                <input
-                                                    type="checkbox"
-                                                    id={`cat-${item.id}`}
-                                                    value={String(item.id)}
-                                                    checked={categoryIds?.includes(String(item.id))}
-                                                    onChange={(e) => {
-                                                        const newCategories = e.target.checked
-                                                            ? [...categoryIds, String(item.id)]
-                                                            : categoryIds.filter(id => id !== String(item.id));
-                                                        setValue('categoryIds', newCategories);
-                                                    }}
-                                                />
-                                                <Label htmlFor={`cat-${item.id}`}>{item.name}</Label>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    :
-                                    <InputReadOnly
-                                        value={categories?.filter(cat => categoryIds?.includes(String(cat.id))).map(c => c.name).join(", ") || ""}/>
-                                }
+
+                                <div className="grid grid-cols-2 gap-2 border rounded-md p-2">
+                                    {categories.map((category) => (
+                                        <div
+                                            key={category.id}
+                                            className="flex items-center gap-2"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={categoryIds.includes(
+                                                    String(category.id)
+                                                )}
+                                                onChange={(e) => {
+                                                    const updatedCategoryIds = e.target.checked
+                                                        ? [
+                                                            ...categoryIds,
+                                                            String(category.id),
+                                                        ]
+                                                        : categoryIds.filter(
+                                                            (id) =>
+                                                                id !== String(category.id)
+                                                        );
+
+                                                    setValue(
+                                                        "categoryIds",
+                                                        updatedCategoryIds,
+                                                        {shouldValidate: true}
+                                                    );
+                                                }}
+                                                className="h-3"
+                                            />
+
+                                            <Label>{category.name}</Label>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <InputError errors={errors} field="categories"/>
                                 <InputError errors={errors} field="categoryIds"/>
                             </div>
                         </CardContent>
 
-                        <CardFooter className="flex-col gap-2">
-                            {isLoading.button ? (
+                        <CardFooter className="flex flex-col gap-2">
+                            {isSubmitting ? (
                                 <ButtonLoading/>
                             ) : (
-                                <Button type="submit" className="w-full cursor-pointer"
-                                        style={{backgroundColor: 'rgb(24,62,139)'}}>
+                                <Button
+                                    type="submit"
+                                    className="w-full"
+                                >
                                     Save
                                 </Button>
                             )}
 
-                            <Link to="/products" className='text-xs text-blue-600 mt-2'>Back to list</Link>
+                            <Link
+                                to="/products"
+                                className="text-xs text-blue-600"
+                            >
+                                Back to list
+                            </Link>
                         </CardFooter>
                     </form>
                 </Card>

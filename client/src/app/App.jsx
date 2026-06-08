@@ -60,17 +60,17 @@ const InnerApp = () => {
         initUser();
     }, [initUser]);
 
-    useEffect(() => {
-        if (user?.email) {
-            connectSocket(getAccessToken());
-        } else {
-            disconnectSocket();
-        }
-
-        return () => {
-            disconnectSocket();
-        };
-    }, [user])
+    // useEffect(() => {
+    //     if (user?.email) {
+    //         connectSocket(getAccessToken());
+    //     } else {
+    //         disconnectSocket();
+    //     }
+    //
+    //     return () => {
+    //         disconnectSocket();
+    //     };
+    // }, [user])
 
     return (
         <Routes>

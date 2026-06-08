@@ -10,13 +10,13 @@ const API_PATH = import.meta.env.VITE_API_PATH;
 const AxiosNoInterceptor = axios.create({
     baseURL: API_PATH,
     withCredentials: true,
-    timeout: 20000,
+    timeout: 5000,
 });
 
 const Axios = axios.create({
     baseURL: API_PATH,
     withCredentials: true,
-    timeout: 20000,
+    timeout: 5000,
     headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-cache',

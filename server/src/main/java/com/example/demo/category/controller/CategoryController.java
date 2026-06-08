@@ -1,10 +1,10 @@
-package com.example.demo.product.controller;
+package com.example.demo.category.controller;
 
 import com.example.demo.common.dto.ApiResponse;
 import com.example.demo.common.model.Category;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.common.utils.ResponseUtils;
-import com.example.demo.product.service.CategoryService;
+import com.example.demo.category.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

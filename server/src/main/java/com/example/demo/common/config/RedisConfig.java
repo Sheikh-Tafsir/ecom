@@ -19,20 +19,20 @@ import static org.springframework.data.redis.serializer.RedisSerializationContex
 @EnableCaching
 public class RedisConfig {
 
-    @Bean
-    public RedisConnectionFactory redisConnectionFactory(RedisProperties redisProperties) {
-        LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
-                .useSsl()
-                .build();
-
-        var config = new org.springframework.data.redis.connection.RedisStandaloneConfiguration();
-        config.setHostName(redisProperties.getHost());
-        config.setPort(redisProperties.getPort());
-        config.setUsername(redisProperties.getUsername());
-        config.setPassword(redisProperties.getPassword());
-
-        return new LettuceConnectionFactory(config, clientConfig);
-    }
+//    @Bean
+//    public RedisConnectionFactory redisConnectionFactory(RedisProperties redisProperties) {
+//        LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
+//                .useSsl()
+//                .build();
+//
+//        var config = new org.springframework.data.redis.connection.RedisStandaloneConfiguration();
+//        config.setHostName(redisProperties.getHost());
+//        config.setPort(redisProperties.getPort());
+//        config.setUsername(redisProperties.getUsername());
+//        config.setPassword(redisProperties.getPassword());
+//
+//        return new LettuceConnectionFactory(config, clientConfig);
+//    }
 
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {

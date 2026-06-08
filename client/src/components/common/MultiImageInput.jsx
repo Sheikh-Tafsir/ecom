@@ -1,13 +1,25 @@
-import React, {useEffect, useState, useRef} from 'react'
-import {X} from 'lucide-react';
+import React, {useEffect, useRef, useState} from "react";
+import {X} from "lucide-react";
 
-import {Button} from '@/components/ui/button';
-import {Input} from '@/components/ui/input';
-import StaredLabel from './StaredLabel';
-import {handleClientSideError, MAX_FILE_SIZE} from "@/utils/index.js";
-import InputError from "@/components/common/InputError.jsx";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import StaredLabel from "./StaredLabel";
+import InputError from "@/components/common/InputError";
 
-const MultiImageInput = ({onChangeImages, maxImages = 5, errors = {}, setError}) => {
+import {
+    handleClientSideError,
+    MAX_FILE_SIZE, ONE_MB,
+} from "@/utils";
+
+const MultiImageInput = ({
+                             onChangeImages,
+                             existingImages = [],
+                             onExistingImagesChange,
+                             maxImages = 5,
+                             errors,
+                             setError
+                         }) => {
+
     const inputRef = useRef(null);
 
     const [images, setImages] = useState([]);
@@ -16,140 +28,157 @@ const MultiImageInput = ({onChangeImages, maxImages = 5, errors = {}, setError})
 
     useEffect(() => {
         return () => {
-            images.forEach(file => URL.revokeObjectURL(file));
+            images.forEach((img) =>
+                URL.revokeObjectURL(img.previewUrl)
+            );
         };
     }, [images]);
 
     const handleImageChange = (e) => {
         const selectedFiles = Array.from(e.target.files || []);
-        setError([]);
 
-        const availableSlots = maxImages - images.length;
-        if (availableSlots <= 0) {
-            handleClientSideError("images", `You can only upload up to ${maxImages} images.`, setError);
+        const totalImages = existingImages.length + selectedFiles.length;
+
+        if (totalImages > maxImages) {
+            handleClientSideError(
+                "images",
+                `Maximum ${maxImages} images allowed`,
+                setError
+            );
             return;
         }
 
-        const existingKeys = new Set(images.map((img) => createKey(img.file)));
+        const validImages = [];
 
-        const validFiles = [];
-        let skippedDuplicate = 0;
-        let skippedSize = 0;
-
-        for (const file of selectedFiles) {
-            if (validFiles.length >= availableSlots) {
-                break
-            }
-
-            const key = createKey(file);
-
-            if (existingKeys.has(key)) {
-                skippedDuplicate++;
-                continue;
-            }
-
+        selectedFiles.forEach((file, index) => {
             if (file.size > MAX_FILE_SIZE) {
-                skippedSize++;
-                continue;
+                handleClientSideError(
+                    "images",
+                    `Image no: ${index + 1} is too large. Maximum ${MAX_FILE_SIZE / ONE_MB}MB file is allowed`,
+                    setError
+                );
+            } else if (isDuplicate(file)) {
+                handleClientSideError(
+                    "images",
+                    `Image no: ${index + 1} already uploaded`,
+                    setError
+                );
+            } else {
+                validImages.push({
+                    file,
+                    previewUrl: URL.createObjectURL(file),
+                });
             }
+        });
 
-            validFiles.push({
-                file,
-                previewUrl: URL.createObjectURL(file),
-            });
-
-            existingKeys.add(key);
-        }
-
-        const updatedImages = [...images, ...validFiles];
+        const updatedImages = [...images, ...validImages];
 
         setImages(updatedImages);
         onChangeImages(updatedImages.map((img) => img.file));
 
-        if (skippedDuplicate || skippedSize) {
-            handleClientSideError("images",
-                [
-                    skippedDuplicate
-                        ? `${skippedDuplicate} duplicate file(s) skipped.`
-                        : "",
-                    skippedSize
-                        ? `${skippedSize} file(s) too large (max ${MAX_FILE_SIZE / (1024 * 1024)}MB).`
-                        : "",
-                ]
-                    .filter(Boolean)
-                    .join(" "),
-                setError
-            );
-        }
-
         e.target.value = "";
     };
 
-    const removeImage = (indexToRemove) => {
-        setImages((prev) => {
-            const removed = prev[indexToRemove];
-            URL.revokeObjectURL(removed.previewUrl);
+    const removeUploadedImage = (index) => {
+        const updated = images.filter((_, i) => i !== index);
 
-            const updated = prev.filter((_, i) => i !== indexToRemove);
+        setImages(updated);
 
-            onChangeImages(updated.map((img) => img.file));
-
-            return updated;
-        });
+        onChangeImages(updated.map((img) => img.file));
     };
 
-    const handleUploadClick = () => {
-        inputRef.current?.click();
+    const removeExistingImage = (id) => {
+        const updated = existingImages.filter(
+            (img) => img.id !== id
+        );
+
+        onExistingImagesChange(updated);
     };
+
+    const isDuplicate = (file) =>
+        images.some(img =>
+            img.file.name === file.name &&
+            img.file.size === file.size &&
+            img.file.lastModified === file.lastModified
+        );
 
     return (
-        <div className='space-y-2'>
+        <div className="space-y-2">
             <StaredLabel label="Images"/>
 
             <Input
                 type="file"
-                accept="image/*"
                 multiple
-                onChange={handleImageChange}
-                ref={inputRef}
+                accept="image/*"
                 className="hidden"
+                ref={inputRef}
+                onChange={handleImageChange}
             />
 
             <Button
                 type="button"
                 variant="outline"
-                onClick={handleUploadClick}
-                className="align-left w-full"
+                className="w-full"
+                onClick={() => inputRef.current?.click()}
             >
-                {images?.length > 0 ? 'Upload more images' : 'Upload images'}
+                Upload Images
             </Button>
 
-            {images.length > 0 && (
-                <div className="flex gap-4 overflow-x-auto py-2">
-                    {images.map((img, index) => (
-                        <div key={createKey(img.file)} className="relative min-w-[100px] max-w-[160px]">
+            {(existingImages.length > 0 || images.length > 0) && (
+                <div className="flex gap-3 overflow-x-auto">
+                    {existingImages.map((img) => (
+                        <div
+                            key={img.id}
+                            className="relative"
+                        >
                             <img
-                                src={img.previewUrl}
-                                alt={`preview-${index}`}
-                                className="h-[120px] w-[120px] object-cover rounded-md border aspect-square"
+                                src={img.image}
+                                alt=""
+                                className="w-[120px] h-[120px] object-cover rounded-md border"
                             />
 
                             <Button
                                 type="button"
                                 size="icon"
-                                onClick={() => removeImage(index)}
-                                className="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center"
+                                className="absolute -top-2 -right-2 w-5 h-5 rounded-full"
+                                onClick={() =>
+                                    removeExistingImage(img.id)
+                                }
                             >
-                                <X/>
+                                <X size={14}/>
+                            </Button>
+                        </div>
+                    ))}
+
+                    {images.map((img, index) => (
+                        <div
+                            key={createKey(img.file)}
+                            className="relative"
+                        >
+                            <img
+                                src={img.previewUrl}
+                                alt=""
+                                className="w-[120px] h-[120px] object-cover rounded-md border"
+                            />
+
+                            <Button
+                                type="button"
+                                size="icon"
+                                className="absolute -top-2 -right-2 w-5 h-5 rounded-full"
+                                onClick={() =>
+                                    removeUploadedImage(index)
+                                }
+                            >
+                                <X size={14}/>
                             </Button>
                         </div>
                     ))}
                 </div>
             )}
 
-            <InputError errors={errors} field={"images"}/>
+            <InputError errors={errors} field="images"/>
         </div>
-    )
-}
+    );
+};
 
-export default React.memo(MultiImageInput)
+export default React.memo(MultiImageInput);

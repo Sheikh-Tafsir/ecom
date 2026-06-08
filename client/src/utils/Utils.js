@@ -2,7 +2,8 @@ import { USER_ROLE } from "./enums";
 
 export const APP_NAME = "Visored";
 
-export const MAX_FILE_SIZE = 2 * 1024 * 1024;
+export const ONE_MB = 1024 * 1024;
+export const MAX_FILE_SIZE = 2 * ONE_MB;
 
 export const isNull = (value) => {
     return !value || value == null || value == undefined || value == "";

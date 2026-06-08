@@ -6,15 +6,13 @@ import com.example.demo.common.model.Product;
 import com.example.demo.common.model.ProductImage;
 import com.example.demo.common.service.CloudinaryService;
 import com.example.demo.common.service.MessageService;
-import com.example.demo.product.dto.CreateProductRequest;
-import com.example.demo.product.dto.ProductListResponse;
-import com.example.demo.product.dto.ProductResponse;
-import com.example.demo.product.dto.UpdateProductRequest;
-import com.example.demo.product.repository.CategoryRepository;
+import com.example.demo.product.dto.*;
+import com.example.demo.category.repository.CategoryRepository;
 import com.example.demo.product.repository.ProductRepository;
 import com.example.demo.stock.dto.CreateStockItemRequest;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -26,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.example.demo.common.enums.ProductStatus.DISCONTINUED;
 import static com.example.demo.common.utils.FileUtils.fileExists;
@@ -64,37 +63,59 @@ public class ProductService {
 
     @PreAuthorize(HAS_ROLE_ADMIN)
     @Transactional
-    public Product create(CreateProductRequest request) throws IOException {
+    public ProductEditResponse create(CreateProductRequest request) throws IOException {
         Product product = new Product();
         product.setName(request.getName());
+        product.setDescription(request.getDescription());
         product.setPrice(request.getPrice());
         product.setCategories(new HashSet<>(categoryRepository.findAllById(request.getCategoryIds())));
 
         addImages(product, request.getImages());
 
-        return productRepository.save(product);
+        return new ProductEditResponse(productRepository.save(product));
+    }
+
+    @PreAuthorize(HAS_ROLE_ADMIN)
+    public ProductEditResponse findEditById(Long id) {
+        Product product = findEditByIdHelper(id);
+
+        return new ProductEditResponse(product);
     }
 
     @PreAuthorize(HAS_ROLE_ADMIN)
     @Transactional
-    public Product update(Long id, UpdateProductRequest request) throws IOException {
-        Product product = findByIdHelper(id);
+    public ProductEditResponse update(Long id, UpdateProductRequest request) throws IOException {
+        Product product = findEditByIdHelper(id);
+
+        if (request.getImages() == null) {
+            request.setImages(new HashSet<>());
+        }
+
+        if (request.getKeptImageIds() == null) {
+            request.setKeptImageIds(new HashSet<>());
+        }
 
         product.setName(request.getName());
+        product.setDescription(request.getDescription());
         product.setPrice(request.getPrice());
         product.setCategories(new HashSet<>(categoryRepository.findAllById(request.getCategoryIds())));
+
+        Set<Long> existingImageIds = product.getImages()
+                .stream()
+                .map(ProductImage::getId)
+                .collect(Collectors.toSet());
+
+        if (!existingImageIds.containsAll(request.getKeptImageIds())) {
+            throw new BadRequestException("Some image IDs do not belong to this product");
+        }
 
         product.getImages().removeIf(
                 image -> !request.getKeptImageIds().contains(image.getId())
         );
 
-        if (product.getImages().size() + (request.getImages() != null ? request.getImages().size() : 0) > 5) {
-            throw new RuntimeException("Cannot upload more than 5 files");
-        }
-
         addImages(product, request.getImages());
 
-        return productRepository.save(product);
+        return new ProductEditResponse(productRepository.save(product));
     }
 
     @PreAuthorize(HAS_ROLE_ADMIN)
@@ -108,6 +129,11 @@ public class ProductService {
 
     public Product findByIdHelper(Long id) {
         return productRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Product", id)));
+    }
+
+    private Product findEditByIdHelper(Long id) {
+        return productRepository.findEditById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Product", id)));
     }
 

@@ -1,9 +1,8 @@
 import { Label } from '@/components/ui/label'
-import React from 'react'
 
-const StaredLabel = ({label}) => {
+const StaredLabel = ({label, field= null}) => {
   return (
-    <Label className="flex mb-2">{label}<p className="text-red-600">*</p></Label>
+    <Label htmlFor={field ?? label.toLowerCase()} className="flex mb-2">{label}<p className="text-red-600">*</p></Label>
   )
 }
 

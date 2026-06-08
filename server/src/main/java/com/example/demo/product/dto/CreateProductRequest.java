@@ -14,10 +14,15 @@ public class CreateProductRequest {
     @Size(min = 2, max = 100)
     private String name;
 
+    @NotBlank
+    @Size(min = 5, max = 1023)
+    private String description;
+
     @NotNull
     @DecimalMin(value = "1.0")
     private BigDecimal price;
 
+    @Size(max = 5)
     @NotEmpty
     private Set<MultipartFile> images;
 
