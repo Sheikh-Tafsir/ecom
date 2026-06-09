@@ -72,13 +72,13 @@ export default function Products() {
 
     // Queries
     const {
-        data: categories = [], isLoading: categoriesLoading
+        data: categories = [], isFetching: categoriesLoading
     } = useQuery({
         queryKey: ["categories"], queryFn: fetchCategories, staleTime: 60 * 60 * 1000, keepPreviousData: true,
     })
 
-    const {data: productData, isLoading: productsLoading} = useQuery({
-        queryKey: ["products", filters], // fully normalized key
+    const {data: productData, isFetching: productsLoading} = useQuery({
+        queryKey: ["products", filters],
         queryFn: fetchProducts, placeholderData: keepPreviousData,
     })
 

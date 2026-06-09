@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {useLocation, useNavigate} from "react-router-dom";
-import {useForm, Controller} from "react-hook-form";
+import {useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {useQuery, useMutation, useQueryClient} from "@tanstack/react-query";
 import {z} from "zod";
@@ -20,9 +20,9 @@ import StaredLabel from "@/components/common/StaredLabel";
 import {ToastAlert} from "@/components/common/ToastAlert";
 
 import {useUserStore} from "@/store/useUserStore";
-import {handleErrors} from "@/utils/ErrorUtils";
+import {GLOBAL_ERROR, handleErrors} from "@/utils/ErrorUtils";
 import {TOAST_TYPE, ALERT_TYPE} from "@/utils/enums";
-import {toastInitialState, prepareMultipartForm} from "@/utils";
+import {toastInitialState} from "@/utils";
 import InputError from "@/components/common/InputError.jsx";
 
 const ProfileSchema = z.object({
@@ -41,12 +41,14 @@ const Profile = () => {
 
     const {login, logout} = useUserStore();
 
+    const [existingImage, setExistingImage] = useState();
+    const [newImage, setNewImage] = useState();
+
     const [toastData, setToastData] = useState(toastInitialState);
 
     const {
         register,
         handleSubmit,
-        control,
         watch,
         reset,
         setError,
@@ -55,11 +57,12 @@ const Profile = () => {
         resolver: zodResolver(ProfileSchema),
     });
 
-    const {data: profile, isLoading: isPageLoading} = useQuery({
+    const {data: profile, isFetching: isPageLoading} = useQuery({
         queryKey: ["profile"],
         queryFn: async () => {
-            const res = await Axios.get("/profile");
-            return res.data.data;
+            const response = await Axios.get("/profile");
+            setExistingImage(response.data.data.image)
+            return response.data.data;
         },
     });
 
@@ -69,14 +72,30 @@ const Profile = () => {
         }
     }, [profile, reset]);
 
-    const saveProfile = useMutation({
+    const saveProfileMutation = useMutation({
         mutationFn: async (data) => {
-            const formData = prepareMultipartForm(data);
+            const formData = new FormData();
 
-            const response = await Axios.put("/profile", formData);
+            Object.entries(data).forEach(([key, value]) => {
+                if (key === "image") return;
+
+                if (Array.isArray(value)) {
+                    value.forEach((item) => formData.append(key, item));
+                } else {
+                    formData.append(key, value ?? "");
+                }
+            });
+
+            if (newImage instanceof File) {
+                formData.append("image", newImage);
+            }
+
+            const response = await Axios.put("/profile", formData, {
+                headers: {'Content-Type': 'multipart/form-data'},
+                timeout: 15000,
+            });
 
             login(response.data.data);
-
             return response.data.data;
         },
 
@@ -91,14 +110,16 @@ const Profile = () => {
         },
 
         onError: (error) => {
+            showToast("Failed to update profile", TOAST_TYPE.ERROR);
             console.error(error);
             handleErrors(error, setError);
-
-            showToast("Failed to update profile", TOAST_TYPE.ERROR);
         },
     });
 
-    // ---------------- DELETE PROFILE ----------------
+    const saveProfile = async (data) => {
+        await saveProfileMutation.mutateAsync(data);
+    };
+
     const deleteProfile = useMutation({
         mutationFn: async () => {
             await Axios.delete("/profile");
@@ -107,22 +128,22 @@ const Profile = () => {
         onSuccess: async () => {
             showToast("Account deleted successfully", TOAST_TYPE.SUCCESS);
 
-            await logout(); // IMPORTANT: await it
+            await logout();
 
-            queryClient.clear(); // optional but good
+            queryClient.clear();
 
-            navigate("/login");
+            setTimeout(() => {
+                navigate("/login");
+            }, 500);
         },
 
         onError: (error) => {
+            showToast("Failed to delete account", TOAST_TYPE.ERROR);
             console.error(error);
             handleErrors(error, setError);
-
-            showToast("Failed to delete account", TOAST_TYPE.ERROR);
         },
     });
 
-    // ---------------- HELPERS ----------------
     const handleNavigateToEdit = () => {
         navigate("edit");
     };
@@ -135,30 +156,27 @@ const Profile = () => {
         });
     };
 
-    // ---------------- UI ----------------
     return (
         <React.Fragment>
             {isPageLoading && <PageLoadingOverlay/>}
 
-            <div className="min-h-[90vh] flex">
+            <div className="min-h-[90vh] flex pt-8">
                 <Card className="mx-auto my-auto w-[450px]">
-                    <form onSubmit={handleSubmit((data) => saveProfile.mutate(data))}>
+                    <form onSubmit={handleSubmit(saveProfile)}>
                         <fieldset disabled={!isEditable}>
                             <CardHeader>
                                 <CardTitle>Profile</CardTitle>
                             </CardHeader>
 
                             <CardContent className="space-y-4">
-                                <Controller
-                                    name="image"
-                                    control={control}
-                                    render={({field}) => (
-                                        <ImageInput
-                                            existingImage={field.value}
-                                            onImageChange={field.onChange}
-                                            error={errors.image}
-                                        />
-                                    )}
+                                <InputError errors={errors} field={GLOBAL_ERROR}/>
+
+                                <ImageInput
+                                    existingImage={existingImage}
+                                    onExistingImageChange={setExistingImage}
+                                    onImageChange={setNewImage}
+                                    errors={errors}
+                                    setError={setError}
                                 />
 
                                 <div className="space-y-1">
@@ -174,7 +192,7 @@ const Profile = () => {
 
                                 <div className="space-y-1">
                                     <Label>Role</Label>
-                                    <InputViewMode value={(watch("role") || []).join(", ")} isEditable={isEditable}/>
+                                    <InputViewMode value={(watch("roles"))} isEditable={isEditable}/>
                                 </div>
                             </CardContent>
                         </fieldset>

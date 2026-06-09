@@ -1,5 +1,3 @@
-import { USER_ROLE } from "./enums";
-
 export const APP_NAME = "Visored";
 
 export const ONE_MB = 1024 * 1024;
@@ -47,12 +45,14 @@ export const prepareMultipartForm = (data) => {
     const formData = new FormData();
 
     Object.entries(data).forEach(([key, value]) => {
-        if (value != null && key !== "image") formData.append(key, value);
-    });
+        if (key === "image") return;
 
-    if (data.image instanceof File) {
-        formData.append('image', data.image);
-    }
+        if (Array.isArray(value)) {
+            value.forEach((item) => formData.append(key, item));
+        } else {
+            formData.append(key, value ?? "");
+        }
+    });
 
     return formData;
 };

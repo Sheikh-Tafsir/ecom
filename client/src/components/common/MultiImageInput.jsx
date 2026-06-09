@@ -10,14 +10,17 @@ import {
     handleClientSideError,
     MAX_FILE_SIZE, ONE_MB,
 } from "@/utils";
+import {Label} from "@/components/ui/label.jsx";
 
 const MultiImageInput = ({
-                             onChangeImages,
                              existingImages = [],
                              onExistingImagesChange,
+                             onImagesChange,
                              maxImages = 5,
                              errors,
-                             setError
+                             setError,
+                             label = "Image",
+                             isRequired = false
                          }) => {
 
     const inputRef = useRef(null);
@@ -34,7 +37,7 @@ const MultiImageInput = ({
         };
     }, [images]);
 
-    const handleImageChange = (e) => {
+    const handleChange = (e) => {
         const selectedFiles = Array.from(e.target.files || []);
 
         const totalImages = existingImages.length + selectedFiles.length;
@@ -74,7 +77,7 @@ const MultiImageInput = ({
         const updatedImages = [...images, ...validImages];
 
         setImages(updatedImages);
-        onChangeImages(updatedImages.map((img) => img.file));
+        onImagesChange(updatedImages.map((img) => img.file));
 
         e.target.value = "";
     };
@@ -84,7 +87,7 @@ const MultiImageInput = ({
 
         setImages(updated);
 
-        onChangeImages(updated.map((img) => img.file));
+        onImagesChange(updated.map((img) => img.file));
     };
 
     const removeExistingImage = (id) => {
@@ -104,7 +107,10 @@ const MultiImageInput = ({
 
     return (
         <div className="space-y-2">
-            <StaredLabel label="Images"/>
+            {isRequired ?
+                <StaredLabel label="Images"/>
+                : <Label htmlFor="images">Images</Label>
+            }
 
             <Input
                 type="file"
@@ -112,7 +118,7 @@ const MultiImageInput = ({
                 accept="image/*"
                 className="hidden"
                 ref={inputRef}
-                onChange={handleImageChange}
+                onChange={handleChange}
             />
 
             <Button

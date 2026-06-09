@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
-import { useNavigate, useParams } from "react-router-dom"
-import { CreditCard, Package } from "lucide-react"
+import { useParams } from "react-router-dom"
+import { Package } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,63 +12,43 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
-import { PAYMENT_METHOD } from "@/utils/enums"
 import StaredLabel from "@/components/common/StaredLabel"
 import { useUserStore } from "@/store/useUserStore"
 import InputReadOnly from "@/components/common/InputReadOnly"
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay"
 import { Axios } from "@/services/http/Axios"
-import { URL_NOT_FOUND } from "@/utils"
+import {GLOBAL_ERROR, handleErrors} from "@/utils"
+import InputError from "@/components/common/InputError.jsx";
 
 export default function OrderView() {
     const { id } = useParams();
-    const navigate = useNavigate();
     const { user } = useUserStore();
 
-    const [isLoading, setIsLoading] = useState({ page: true, button: false });
-    const [order, setOrder] = useState({
-        phone: '',
-        paymentMethod: PAYMENT_METHOD.CASH_ON_DELIVERY,
-        address: '',
-        city: '',
-        zip: '',
-    });
+    const [isPageLoading, setIsPageLoading] = useState(true);
+    const [order, setOrder] = useState();
     const [errors, setErrors] = useState({});
 
     useEffect(() => {
         const fetchOrder = async (id) => {
             try {
                 const response = await Axios.get(`/orders/${id}`);
-                //console.log(response.data.data)
                 setOrder(response.data.data);
             } catch (error) {
-                handleError(error);
+                console.error(error)
+                handleErrors(error, setErrors);
             } finally {
-                setIsLoading({ ...isLoading, page: false });
+                setIsPageLoading(false);
             }
         }
 
         fetchOrder(id);
     }, [id])
 
-    const handleError = (error) => {
-        console.error(error);
-        if ([403, 404].includes(error?.status)) navigate(URL_NOT_FOUND, { replace: true });
-        setErrors(error.response?.data || { global: error.message });
-    };
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setOrder((prev) => ({ ...prev, [name]: value }));
-    };
-
     return (
         <>
-            {isLoading.page && <PageLoadingOverlay />}
+            {isPageLoading && <PageLoadingOverlay />}
 
             <div className="container pb-8">
                 <div className="max-w-4xl mx-auto">
@@ -85,6 +65,8 @@ export default function OrderView() {
                             <CardContent className="space-y-6">
                                 <div className="space-y-6">
                                     <div className="space-y-4">
+                                        <InputError errors={errors} field={GLOBAL_ERROR} />
+
                                         <div className="grid gap-2">
                                             <Label>Name</Label>
                                             <InputReadOnly value={user?.name} />
@@ -93,55 +75,12 @@ export default function OrderView() {
                                         <div className="grid gap-2">
                                             <StaredLabel label="Phone Number" />
                                             <InputReadOnly value={order?.phone} />
-                                            {errors.phone && <p className='validation-error'>{errors.phone}</p>}
                                         </div>
 
                                         <div className="grid gap-2">
                                             <StaredLabel label="Street Address" />
                                             <InputReadOnly value={order?.address} />
-                                            {errors.address && <p className='validation-error'>{errors.address}</p>}
                                         </div>
-                                    </div>
-
-                                    <Separator />
-
-                                    {/* Payment Method */}
-                                    <div className="space-y-4">
-                                        <div className="flex items-center gap-2">
-                                            <CreditCard className="h-4 w-4" />
-                                            <h3 className="font-semibold">Payment Method</h3>
-                                        </div>
-                                        <RadioGroup value={order.paymentMethod} onValueChange={(value) => setOrder((prev) => ({ ...prev, "paymentMethod": value }))}>
-                                            {Object.values(PAYMENT_METHOD).map((item) => (
-                                                <div key={item} className="flex items-center space-x-2">
-                                                    <RadioGroupItem value={item} />
-                                                    <Label htmlFor={item}>{item}</Label>
-                                                </div>
-                                            ))}
-                                        </RadioGroup>
-
-                                        {order?.paymentMethod === PAYMENT_METHOD.CARD && (
-                                            <div className="space-y-4 pt-4">
-                                                <div className="grid gap-2">
-                                                    <StaredLabel label="Card Number" />
-                                                    <Input id="cardNumber" placeholder="1234 5678 9012 3456" required />
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div className="grid gap-2">
-                                                        <StaredLabel label="Expiry Date" />
-                                                        <Input id="expiry" placeholder="MM/YY" required />
-                                                    </div>
-                                                    <div className="grid gap-2">
-                                                        <StaredLabel label="CVV" />
-                                                        <Input id="cvv" placeholder="123" required />
-                                                    </div>
-                                                </div>
-                                                <div className="grid gap-2">
-                                                    <StaredLabel label="Name on Card" />
-                                                    <Input id="cardName" placeholder="John Doe" required />
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
                             </CardContent>

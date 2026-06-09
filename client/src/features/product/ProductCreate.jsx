@@ -212,10 +212,11 @@ const ProductCreate = () => {
                                         images.map((img) => img.id)
                                     );
                                 }}
-                                onChangeImages={setNewImages}
+                                onImagesChange={setNewImages}
                                 maxImages={MAX_IMAGES}
                                 errors={errors}
                                 setError={setError}
+                                isRequired={true}
                             />
                             <InputError errors={errors} field="keptImageIds"/>
 

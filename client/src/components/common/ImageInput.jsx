@@ -1,72 +1,134 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { Input } from '@/components/ui/input.jsx';
-import { Label } from '@/components/ui/label.jsx';
-import { Button } from '@/components/ui/button.jsx';
-import { MAX_FILE_SIZE } from '@/utils';
+import React, {useEffect, useRef, useState} from "react";
+import {X} from "lucide-react";
 
-const ImageInput = ({ existingImage, onImageChange, error }) => {
-  const fileRef = useRef();
-  const [previewUrl, setPreviewUrl] = useState(null);
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import StaredLabel from "./StaredLabel";
+import InputError from "@/components/common/InputError";
 
-  const handleFileSelect = (e) => {
-    const file = e.target.files?.[0];
-    if (file && file.size <= MAX_FILE_SIZE) {
-      onImageChange(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    } else {
-      onImageChange(null); // clear if invalid
-    }
-  };
+import {
+    handleClientSideError,
+    MAX_FILE_SIZE,
+    ONE_MB,
+} from "@/utils";
+import {Label} from "@/components/ui/label.jsx";
 
-  // Cleanup preview URL when component unmounts or image changes
-  useEffect(() => {
-    return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
+const ImageInput = ({
+                        existingImage,
+                        onExistingImageChange,
+                        onImageChange,
+                        error,
+                        setError,
+                        label = "Image",
+                        isRequired = false
+                    }) => {
+    const inputRef = useRef(null);
+
+    const [image, setImage] = useState(null);
+
+    useEffect(() => {
+        return () => {
+            if (image?.previewUrl) {
+                URL.revokeObjectURL(image.previewUrl);
+            }
+        };
+    }, [image]);
+
+    const handleChange = (e) => {
+        const file = e.target.files?.[0];
+
+        if (!file) return;
+
+        if (file.size > MAX_FILE_SIZE) {
+            handleClientSideError(
+                "image",
+                `Maximum ${MAX_FILE_SIZE / ONE_MB}MB file is allowed`,
+                setError
+            );
+            return;
+        }
+
+        setImage({
+            file,
+            previewUrl: URL.createObjectURL(file) || null,
+        });
+        onImageChange(file);
+        onExistingImageChange(null)
+
+        e.target.value = "";
     };
-  }, [previewUrl]);
 
-  const handleClick = () => {
-    fileRef.current?.click();
-  };
+    const removeUploadedImage = () => {
+        setImage(null);
+        onImageChange(null);
+    };
 
-  const displayImage = previewUrl || existingImage;
+    return (
+        <div className="space-y-2">
+            {isRequired ?
+                <StaredLabel label="Image"/>
+                : <Label htmlFor="image">Image</Label>
+            }
 
-  return (
-    <div className="flex flex-col space-y-1.5">
-      <Label htmlFor="image">Image</Label>
+            <Input
+                ref={inputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleChange}
+            />
 
-      <Input
-        type="file"
-        accept="image/*"
-        ref={fileRef}
-        onChange={handleFileSelect}
-        className="hidden"
-      />
+            <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => inputRef.current?.click()}
+            >
+                Upload Image
+            </Button>
 
-      <div className="w-[60%]">
-        {displayImage && (
-          <img
-            src={displayImage}
-            alt="Profile Preview"
-            className="rounded-sm"
-          />
-        )}
-      </div>
+            {existingImage && !image &&
+                <div className="relative">
+                    <img
+                        src={existingImage}
+                        alt=""
+                        className="w-[60%] object-cover rounded-md border"
+                    />
 
-      <Button
-        type="button"
-        variant="outline"
-        onClick={handleClick}
-        className="align-left"
-      >
-        {displayImage ? 'Change image' : 'Upload image'}
-      </Button>
+                    <Button
+                        type="button"
+                        size="icon"
+                        className="absolute -top-2 -right-2 w-5 h-5 rounded-full"
+                        onClick={() =>
+                            onExistingImageChange(null)
+                        }
+                    >
+                        <X size={14}/>
+                    </Button>
+                </div>
+            }
 
-      {error && <p className="validation-error">{error}</p>}
-    </div>
-  );
+            {image &&
+                <div className="relative">
+                    <img
+                        src={image.previewUrl}
+                        alt=""
+                        className="w-[60%] object-cover rounded-md border"
+                    />
+
+                    <Button
+                        type="button"
+                        size="icon"
+                        className="absolute -top-2 -right-2 w-5 h-5 rounded-full"
+                        onClick={() => removeUploadedImage()}
+                    >
+                        <X size={14}/>
+                    </Button>
+                </div>}
+
+            <InputError errors={error} field="image"/>
+        </div>
+    );
 };
 
-export default ImageInput;
+export default React.memo(ImageInput);

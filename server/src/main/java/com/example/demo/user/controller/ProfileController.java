@@ -6,6 +6,7 @@ import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.user.dto.ChangePasswordRequest;
 import com.example.demo.user.dto.UpdateProfileRequest;
 import com.example.demo.auth.service.AuthService;
+import com.example.demo.user.dto.UserResponse;
 import com.example.demo.user.service.UserService;
 import com.example.demo.user.validator.ProfileUpdateRequestValidator;
 import com.example.demo.common.dto.ApiResponse;
@@ -45,8 +46,8 @@ public class ProfileController {
     private final MessageService messageService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<User>> getProfile(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        return ResponseUtils.ok(userDetails.user(), messageService.get("successfully.found", "Profile"));
+    public ResponseEntity<ApiResponse<UserResponse>> getProfile(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseUtils.ok(new UserResponse(userDetails.user()), messageService.get("successfully.found", "Profile"));
     }
 
     @PutMapping
