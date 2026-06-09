@@ -3,7 +3,6 @@ package com.example.demo.product.controller;
 import com.example.demo.common.dto.ApiResponse;
 import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.common.helper.CommonHelper;
-import com.example.demo.common.model.Product;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.common.utils.ResponseUtils;
 import com.example.demo.product.dto.*;
@@ -50,6 +49,12 @@ public class ProductController {
         return ResponseUtils.ok(products, messageService.get("successfully.found", "Product List"));
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<Page<ProductListResponse>>> search(@RequestParam String name) {
+        Page<ProductListResponse> products = productService.search(name);
+        return ResponseUtils.ok(products, messageService.get("successfully.found", "Product Search"));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ProductResponse>> findById(@PathVariable Long id,
                                                                  @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -59,14 +64,14 @@ public class ProductController {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<ProductEditResponse>> create(@Valid @ModelAttribute CreateProductRequest productRequest,
+    public ResponseEntity<ApiResponse<Long>> create(@Valid @ModelAttribute CreateProductRequest productRequest,
                                                                    BindingResult bindingResult) throws IOException {
 
         productValidator.validateCreate(productRequest, bindingResult);
         commonHelper.checkErrors(bindingResult);
 
-        ProductEditResponse product = productService.create(productRequest);
-        return ResponseUtils.created(product, messageService.get("entity.creating", "Product"));
+        long id = productService.create(productRequest);
+        return ResponseUtils.created(id, messageService.get("entity.creating", "Product"));
     }
 
     @GetMapping("/{id}/edit")
@@ -76,7 +81,7 @@ public class ProductController {
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<ProductEditResponse>> update(@PathVariable Long id,
+    public ResponseEntity<ApiResponse<Void>> update(@PathVariable Long id,
                                                                    @Valid @ModelAttribute UpdateProductRequest productRequest,
                                                                    BindingResult bindingResult) throws IOException {
 
@@ -85,8 +90,8 @@ public class ProductController {
         productValidator.validateUpdate(productRequest, bindingResult);
         commonHelper.checkErrors(bindingResult);
 
-        ProductEditResponse product = productService.update(id, productRequest);
-        return ResponseUtils.ok(product, messageService.get("successfully.updated", "Product"));
+        productService.update(id, productRequest);
+        return ResponseUtils.ok(messageService.get("successfully.updated", "Product"));
     }
 
     @DeleteMapping("/{id}")

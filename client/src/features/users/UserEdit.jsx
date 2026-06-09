@@ -24,8 +24,9 @@ import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadi
 import StaredLabel from '@/components/common/StaredLabel';
 import {ToastAlert} from '@/components/common/ToastAlert';
 import {TOAST_TYPE, ALERT_TYPE} from '@/utils/enums';
-import {handleErrors} from '@/utils/ErrorUtils';
+import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils';
 import {toastInitialState, prepareMultipartForm} from '@/utils';
+import InputError from "@/components/common/InputError.jsx";
 
 // Zod schema
 const UserSchema = z.object({
@@ -114,6 +115,8 @@ const UserEdit = () => {
                             </CardHeader>
 
                             <CardContent className="space-y-4">
+                                <InputError errors={errors} field={GLOBAL_ERROR}/>
+
                                 <Controller
                                     name="image"
                                     control={control}

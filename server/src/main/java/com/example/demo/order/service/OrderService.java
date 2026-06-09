@@ -3,10 +3,7 @@ package com.example.demo.order.service;
 import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.common.enums.OrderStatus;
 import com.example.demo.common.helper.CommonHelper;
-import com.example.demo.common.model.Order;
-import com.example.demo.common.model.OrderItem;
-import com.example.demo.common.model.Product;
-import com.example.demo.common.model.User;
+import com.example.demo.common.model.*;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.order.dto.*;
 import com.example.demo.order.repository.OrderRepository;
@@ -15,6 +12,7 @@ import com.example.demo.stock.service.StockService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -25,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import static com.example.demo.common.utils.SecurityConstants.HAS_ROLE_ADMIN;
 import static com.example.demo.common.utils.SecurityUtil.isAdmin;
 import static com.example.demo.common.utils.Utils.getValidPageable;
+import static com.example.demo.common.utils.Utils.isNull;
 
 @Slf4j
 @Service
@@ -38,6 +37,8 @@ public class OrderService {
     private final OrderRepository orderRepository;
 
     private final StockService stockService;
+
+    private final ModelMapper modelMapper;
 
     private final CommonHelper commonHelper;
 
@@ -60,17 +61,18 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderResponse create(CreateOrderRequest request, User user) {
-        log.info("Creating order for user: {}", user.getEmail());
-        Order order = new Order();
-        order.setUser(user);
+    public long create(CreateOrderRequest request, CustomUserDetails userDetails) {
+        Order order = modelMapper.map(request, Order.class);
+        if (isNull(order.getName())) {
+            order.setName(userDetails.user().getName());
+        }
 
+        order.setUser(userDetails.user());
         request.items().forEach(itemRequest -> addProduct(order, itemRequest));
 
-        Order savedOrder = orderRepository.save(order);
-        log.info("Order created successfully with id: {}", savedOrder.getId());
+        orderRepository.save(order);
 
-        return new OrderResponse(savedOrder);
+        return order.getId();
     }
 
     @Transactional

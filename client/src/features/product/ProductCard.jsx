@@ -73,10 +73,10 @@ const ProductCard = ({product, showToast}) => {
                 <CardFooter className="p-4 pt-0">
                     {userIsAdmin()?
                         <div className="flex justify-between w-full mt-4 gap-4">
-                            <Button className='w-[50%] bg-blue-600' onClick={navigateToEdit}>
+                            <Button className='w-[50%]' onClick={navigateToEdit}>
                                 Edit
                             </Button>
-                            <Button className='w-[50%] bg-red-600' onClick={deleteProduct}>
+                            <Button variant="outline" className='w-[50%]' onClick={deleteProduct}>
                                 Delete
                             </Button>
                         </div>

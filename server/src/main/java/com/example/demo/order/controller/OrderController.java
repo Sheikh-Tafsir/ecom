@@ -44,7 +44,7 @@ public class OrderController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<OrderListResponse>>> findAll(Pageable pageable,
-                                                                    @RequestParam(required = false) OrderStatus status) {
+                                                                        @RequestParam(required = false) OrderStatus status) {
 
         Page<OrderListResponse> orders = orderService.findAll(pageable, status);
         return ResponseUtils.ok(orders, messageService.get("successfully.found", "Order List"));
@@ -52,7 +52,7 @@ public class OrderController {
 
     @GetMapping("/my")
     public ResponseEntity<ApiResponse<Page<OrderListResponse>>> findMyOrders(Pageable pageable,
-                                                                         @AuthenticationPrincipal CustomUserDetails userDetails) {
+                                                                             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         Page<OrderListResponse> orders = orderService.findByUser(userDetails.user().getId(), pageable);
         return ResponseUtils.ok(orders, messageService.get("successfully.found", "Order List"));
@@ -67,15 +67,15 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<OrderResponse>> create(@Valid @RequestBody CreateOrderRequest orderRequest,
-                                                             BindingResult bindingResult,
-                                                             @AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<ApiResponse<Long>> create(@Valid @RequestBody CreateOrderRequest orderRequest,
+                                                    BindingResult bindingResult,
+                                                    @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         orderValidator.validate(orderRequest, bindingResult);
         commonHelper.checkErrors(bindingResult);
 
-        OrderResponse order = orderService.create(orderRequest, userDetails.user());
-        return ResponseUtils.created(order, messageService.get("entity.creating", "Order"));
+        long id = orderService.create(orderRequest, userDetails);
+        return ResponseUtils.created(id, messageService.get("entity.creating", "Order"));
     }
 
     @PutMapping("/{id}/status")

@@ -48,7 +48,7 @@ public class StockService {
 
     @PreAuthorize(HAS_ROLE_ADMIN)
     @Transactional
-    public StockResponse create(CreateStockRequest request) {
+    public long create(CreateStockRequest request) {
         Stock stock = new Stock();
 
         request.items().forEach(itemRequest -> {
@@ -57,7 +57,8 @@ public class StockService {
             stock.addItem(product, itemRequest.quantity(), itemRequest.purchasePrice());
         });
 
-        return new StockResponse(stockRepository.save(stock));
+        stockRepository.save(stock);
+        return stock.getId();
     }
 
     @PreAuthorize(HAS_ROLE_ADMIN)

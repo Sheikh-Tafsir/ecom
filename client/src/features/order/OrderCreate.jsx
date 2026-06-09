@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react"
-import { useLocation, useNavigate, useParams } from "react-router-dom"
-import { CreditCard, Package } from "lucide-react"
+import { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import {  Package } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -17,37 +17,24 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
-import { PAYMENT_METHOD } from "@/utils/enums"
 import { useCartStore } from "@/store/useCartStore"
 import StaredLabel from "@/components/common/StaredLabel"
 import { useUserStore } from "@/store/useUserStore"
 import InputReadOnly from "@/components/common/InputReadOnly"
-import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay"
 import { Axios } from "@/services/http/Axios"
-import { URL_NOT_FOUND } from "@/utils"
+import {GLOBAL_ERROR, handleErrors, toastInitialState} from "@/utils"
 import { ButtonLoading } from "@/components/common/ButtonLoading"
+import InputError from "@/components/common/InputError.jsx";
+import {TOAST_TYPE} from "@/utils/enums.js";
+import {ToastAlert} from "@/components/common/ToastAlert.jsx";
 
 const checkoutSchema = z.object({
     phone: z.string()
         .min(11, 'Phone number must be 11 digits')
         .max(11, 'Phone number must be 11 digits'),
     address: z.string().min(5, 'Address must be at least 5 characters'),
-    paymentMethod: z.nativeEnum(PAYMENT_METHOD),
-    cardNumber: z.string().optional(),
-    expiry: z.string().optional(),
-    cvv: z.string().optional(),
-    cardName: z.string().optional(),
-}).refine((data) => {
-    if (data.paymentMethod === PAYMENT_METHOD.CARD) {
-        return !!data.cardNumber && !!data.expiry && !!data.cvv && !!data.cardName;
-    }
-    return true;
-}, {
-    message: "Card details are required for card payment",
-    path: ["cardNumber"],
-});
+})
 
 export default function OrderCreate() {
     const navigate = useNavigate();
@@ -56,54 +43,47 @@ export default function OrderCreate() {
     const { cart, getCartTotal, clearCart } = useCartStore();
     const cartTotal = getCartTotal();
 
-    const [isLoading, setIsLoading] = useState({ page: false, button: false });
+    const [toastData, setToastData] = useState(toastInitialState);
 
     const {
         register,
         handleSubmit,
-        setValue,
-        watch,
-        formState: { errors },
+        setError,
+        formState: { errors, isSubmitting },
     } = useForm({
         resolver: zodResolver(checkoutSchema),
         defaultValues: {
             phone: '',
             address: '',
-            paymentMethod: PAYMENT_METHOD.CASH_ON_DELIVERY,
         },
     });
 
-    const paymentMethod = watch('paymentMethod');
-
-    const handleError = (error) => {
-        console.error(error);
-        if ([403, 404].includes(error?.status)) navigate(URL_NOT_FOUND, { replace: true });
-    };
-
-    const onSubmit = async (data) => {
-        setIsLoading({ ...isLoading, button: true });
-
+    const saveOrder = async (data) => {
         try {
-            await Axios.post('/orders', {
+            const response = await Axios.post('/orders', {
                 items: cart,
-                phone: data.phone,
-                address: data.address,
-                paymentMethod: data.paymentMethod,
+                ...data,
             });
 
             clearCart();
-            navigate("/orders");
+
+            showToast("Successfully updated", TOAST_TYPE.SUCCESS);
+
+            setTimeout(() => {
+                navigate(`/orders/${response.data.data}`);
+            }, 500);
         } catch (error) {
-            handleError(error);
-        } finally {
-            setIsLoading({ ...isLoading, button: false });
+            console.error(error)
+            handleErrors(error, setError);
         }
+    };
+
+    const showToast = (message, type) => {
+        setToastData({message, type, id: Date.now(),});
     };
 
     return (
         <>
-            {isLoading.page && <PageLoadingOverlay />}
-
             <div className="container pb-8">
                 <div className="max-w-4xl mx-auto">
                     <div className="grid gap-8 lg:grid-cols-2">
@@ -117,8 +97,10 @@ export default function OrderCreate() {
                                 <CardDescription>Complete your order by filling out the information below</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
-                                <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+                                <form className="space-y-6" onSubmit={handleSubmit(saveOrder)}>
                                     <div className="space-y-4">
+                                        <InputError errors={errors} field={GLOBAL_ERROR}/>
+
                                         <div className="grid gap-2">
                                             <Label>Name</Label>
                                             <InputReadOnly value={user?.name} />
@@ -131,7 +113,7 @@ export default function OrderCreate() {
                                                 placeholder="+1 (555) 123-4567"
                                                 {...register('phone')}
                                             />
-                                            {errors.phone && <p className='validation-error text-red-500 text-xs'>{errors.phone.message}</p>}
+                                            <InputError errors={errors} field={"phone"}/>
                                         </div>
 
                                         <div className="grid gap-2">
@@ -140,56 +122,11 @@ export default function OrderCreate() {
                                                 placeholder="123 Main Street"
                                                 {...register('address')}
                                             />
-                                            {errors.address && <p className='validation-error text-red-500 text-xs'>{errors.address.message}</p>}
+                                            <InputError errors={errors} field={"address"}/>
                                         </div>
                                     </div>
 
-                                    <Separator />
-
-                                    {/* Payment Method */}
-                                    <div className="space-y-4">
-                                        <div className="flex items-center gap-2">
-                                            <CreditCard className="h-4 w-4" />
-                                            <h3 className="font-semibold">Payment Method</h3>
-                                        </div>
-                                        <RadioGroup 
-                                            value={paymentMethod} 
-                                            onValueChange={(value) => setValue('paymentMethod', value)}
-                                        >
-                                            {Object.values(PAYMENT_METHOD).map((item) => (
-                                                <div key={item} className="flex items-center space-x-2">
-                                                    <RadioGroupItem value={item} />
-                                                    <Label htmlFor={item}>{item}</Label>
-                                                </div>
-                                            ))}
-                                        </RadioGroup>
-
-                                        {paymentMethod === PAYMENT_METHOD.CARD && (
-                                            <div className="space-y-4 pt-4">
-                                                <div className="grid gap-2">
-                                                    <StaredLabel label="Card Number" />
-                                                    <Input placeholder="1234 5678 9012 3456" {...register('cardNumber')} />
-                                                    {errors.cardNumber && <p className='validation-error text-red-500 text-xs'>{errors.cardNumber.message}</p>}
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div className="grid gap-2">
-                                                        <StaredLabel label="Expiry Date" />
-                                                        <Input placeholder="MM/YY" {...register('expiry')} />
-                                                    </div>
-                                                    <div className="grid gap-2">
-                                                        <StaredLabel label="CVV" />
-                                                        <Input placeholder="123" {...register('cvv')} />
-                                                    </div>
-                                                </div>
-                                                <div className="grid gap-2">
-                                                    <StaredLabel label="Name on Card" />
-                                                    <Input placeholder="John Doe" {...register('cardName')} />
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                    
-                                    {isLoading.button ?
+                                    {isSubmitting ?
                                         <ButtonLoading />
                                         :
                                         <Button type="submit" className="w-full bg-blue-600" size="lg">
@@ -279,6 +216,12 @@ export default function OrderCreate() {
                     </div>
                 </div>
             </div>
+
+            <ToastAlert
+                key={toastData.id}
+                message={toastData.message}
+                type={toastData.type}
+            />
         </>
     )
 }

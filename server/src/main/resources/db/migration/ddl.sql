@@ -94,13 +94,17 @@ CREATE TABLE stock_items
 
 CREATE TABLE orders
 (
-    id          BIGSERIAL PRIMARY KEY,
-    user_id     BIGINT REFERENCES users (id) ON DELETE RESTRICT,
-    total_price DECIMAL(19, 2) NOT NULL DEFAULT 0.00 CHECK (total_price >= 0),
-    status      VARCHAR(31)    NOT NULL DEFAULT 'CREATED',
-    version     INT            NOT NULL DEFAULT 0,
-    created_at  TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id              BIGSERIAL PRIMARY KEY,
+    user_id         BIGINT REFERENCES users (id) ON DELETE RESTRICT,
+    total_price     DECIMAL(19, 2) NOT NULL DEFAULT 0.00 CHECK (total_price >= 0),
+    status          VARCHAR(31)    NOT NULL DEFAULT 'CREATED',
+    name            VARCHAR(63)    NOT NULL,
+    phone           VARCHAR(11)    NOT NULL,
+    address         VARCHAR(255)   NOT NULL,
+    tracking_number VARCHAR(255)   NOT NULL,
+    version         INT            NOT NULL DEFAULT 0,
+    created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE order_items
@@ -111,20 +115,6 @@ CREATE TABLE order_items
     quantity   INT            NOT NULL CHECK (quantity > 0),
     unit_price DECIMAL(19, 2) NOT NULL CHECK (unit_price >= 0),
     CONSTRAINT uq_order_items_order_product UNIQUE (order_id, product_id)
-);
-
-CREATE TABLE shipments
-(
-    id         BIGSERIAL PRIMARY KEY,
-    order_id   BIGINT       NOT NULL REFERENCES orders (id) ON DELETE CASCADE,
-    name       VARCHAR(63)  NOT NULL,
-    phone      VARCHAR(11)  NOT NULL,
-    address    VARCHAR(255) NOT NULL,
-    status     VARCHAR(31)  NOT NULL DEFAULT 'CONFIRMED',
-    version    INT          NOT NULL DEFAULT 0,
-    created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT uq_shipment_order UNIQUE (order_id)
 );
 
 CREATE TABLE reviews
@@ -139,5 +129,4 @@ CREATE TABLE reviews
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uq_reviews_user_product UNIQUE (user_id, product_id)
 );
-
 

@@ -13,7 +13,7 @@ import java.util.Set;
 public class UpdateProductRequest {
 
     @NotBlank
-    @Size(min = 2, max = 31)
+    @Size(min = 2, max = 255)
     String name;
 
     @NotBlank

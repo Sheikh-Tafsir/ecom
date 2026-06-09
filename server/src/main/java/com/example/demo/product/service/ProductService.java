@@ -14,6 +14,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -45,8 +46,12 @@ public class ProductService {
     private final MessageService messageService;
 
     public Page<ProductListResponse> findAll(Pageable pageable, String name, String category, CustomUserDetails userDetails) {
-        String nameFilter = (isNull(name)) ? null : "%" + name + "%";
-        return productRepository.findAllByNameAndExcludeStatus(nameFilter, category, isAdmin(userDetails) ? null : DISCONTINUED, getValidPageable(pageable))
+        return productRepository.findAllByNameAndExcludeStatus(getNameFilter(name), category, isAdmin(userDetails) ? null : DISCONTINUED, getValidPageable(pageable))
+                .map(ProductListResponse::new);
+    }
+
+    public Page<ProductListResponse> search(String name) {
+        return productRepository.findAllByNameAndExcludeStatus(getNameFilter(name), null, DISCONTINUED, getValidPageable(PageRequest.of(0, 5)))
                 .map(ProductListResponse::new);
     }
 
@@ -63,7 +68,7 @@ public class ProductService {
 
     @PreAuthorize(HAS_ROLE_ADMIN)
     @Transactional
-    public ProductEditResponse create(CreateProductRequest request) throws IOException {
+    public long create(CreateProductRequest request) throws IOException {
         Product product = new Product();
         product.setName(request.getName());
         product.setDescription(request.getDescription());
@@ -72,7 +77,8 @@ public class ProductService {
 
         addImages(product, request.getImages());
 
-        return new ProductEditResponse(productRepository.save(product));
+        productRepository.save(product);
+        return product.getId();
     }
 
     @PreAuthorize(HAS_ROLE_ADMIN)
@@ -84,7 +90,7 @@ public class ProductService {
 
     @PreAuthorize(HAS_ROLE_ADMIN)
     @Transactional
-    public ProductEditResponse update(Long id, UpdateProductRequest request) throws IOException {
+    public void update(Long id, UpdateProductRequest request) throws IOException {
         Product product = findEditByIdHelper(id);
 
         if (request.getImages() == null) {
@@ -115,7 +121,7 @@ public class ProductService {
 
         addImages(product, request.getImages());
 
-        return new ProductEditResponse(productRepository.save(product));
+        productRepository.save(product);
     }
 
     @PreAuthorize(HAS_ROLE_ADMIN)
@@ -159,6 +165,10 @@ public class ProductService {
         }
 
         return product;
+    }
+
+    private static String getNameFilter(String name) {
+        return (isNull(name)) ? null : "%" + name + "%";
     }
 
     private void addImages(Product product, Set<MultipartFile> images) throws IOException {

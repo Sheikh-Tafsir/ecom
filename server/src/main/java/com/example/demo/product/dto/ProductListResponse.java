@@ -3,15 +3,13 @@ package com.example.demo.product.dto;
 import com.example.demo.common.model.Category;
 import com.example.demo.common.model.Product;
 import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Data
-@NoArgsConstructor
+@Getter
 @AllArgsConstructor
 public class ProductListResponse {
 

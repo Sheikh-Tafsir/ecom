@@ -11,7 +11,7 @@ import java.util.Set;
 public class CreateProductRequest {
 
     @NotBlank
-    @Size(min = 2, max = 100)
+    @Size(min = 2, max = 255)
     private String name;
 
     @NotBlank
@@ -22,7 +22,6 @@ public class CreateProductRequest {
     @DecimalMin(value = "1.0")
     private BigDecimal price;
 
-    @Size(max = 5)
     @NotEmpty
     private Set<MultipartFile> images;
 

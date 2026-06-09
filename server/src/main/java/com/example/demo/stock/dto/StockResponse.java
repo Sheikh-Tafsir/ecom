@@ -1,14 +1,16 @@
 package com.example.demo.stock.dto;
 
 import com.example.demo.common.model.Stock;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Data
+@Getter
+@AllArgsConstructor
 public class StockResponse {
 
     Long id;

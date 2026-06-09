@@ -14,7 +14,7 @@ import {
 import { Axios } from '@/services/http/Axios';
 import PaginationButton from '@/components/common/PaginationButton';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay';
-import { FIRST_PAGE, getQueryString, userIsAdmin, REGULAR_DATE_FORMAT } from '@/utils';
+import {FIRST_PAGE, getQueryString, userIsAdmin, REGULAR_DATE_FORMAT, toastInitialState} from '@/utils';
 import { Label } from '@/components/ui/label';
 import {
     Card,
@@ -44,7 +44,7 @@ const OrderList = () => {
         toDate: ''
     });
     const [errors, setErrors] = useState({});
-    const [toastData, setToastData] = useState({ message: "", type: "", id: 0 });
+    const [toastData, setToastData] = useState(toastInitialState);
 
     const page = parseInt(queryParams.page) || FIRST_PAGE;
 
@@ -118,7 +118,7 @@ const OrderList = () => {
     }
 
     const showToast = (message, type) => {
-        setToastData({ message, type, id: Date.now() }) // ensure uniqueness
+        setToastData({ message, type, id: Date.now() })
     }
 
     return (

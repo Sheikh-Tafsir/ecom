@@ -2,14 +2,16 @@ package com.example.demo.order.dto;
 
 import com.example.demo.common.enums.OrderStatus;
 import com.example.demo.common.model.Order;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Data
+@Getter
+@AllArgsConstructor
 public class OrderResponse {
     Long id;
     Long userId;

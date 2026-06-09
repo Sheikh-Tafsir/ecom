@@ -4,14 +4,12 @@ import com.example.demo.common.model.Category;
 import com.example.demo.common.model.Product;
 import com.example.demo.common.model.ProductImage;
 import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.util.Set;
 
-@Data
-@NoArgsConstructor
+@Getter
 @AllArgsConstructor
 public class ProductEditResponse {
 

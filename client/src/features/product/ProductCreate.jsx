@@ -25,7 +25,7 @@ import {ToastAlert} from "@/components/common/ToastAlert";
 import {ButtonLoading} from "@/components/common/ButtonLoading";
 
 import {Axios} from "@/services/http/Axios";
-import {handleErrors, toastInitialState} from "@/utils";
+import {GLOBAL_ERROR, handleErrors, toastInitialState} from "@/utils";
 import {TOAST_TYPE} from "@/utils/enums";
 
 const MAX_IMAGES = 5;
@@ -55,7 +55,6 @@ const ProductCreate = () => {
 
     const [isCategoriesLoading, setIsCategoriesLoading] = useState(true);
     const [isProductLoading, setIsProductLoading] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [toastData, setToastData] = useState(toastInitialState);
 
@@ -66,7 +65,7 @@ const ProductCreate = () => {
         setValue,
         watch,
         setError,
-        formState: {errors},
+        formState: {errors, isSubmitting},
     } = useForm({
         resolver: zodResolver(ProductSchema),
         defaultValues: {
@@ -127,8 +126,6 @@ const ProductCreate = () => {
     }, [id, isCreatePage, reset, setError]);
 
     const saveProduct = async (data) => {
-        setIsSubmitting(true);
-
         try {
             const formData = new FormData();
 
@@ -157,33 +154,31 @@ const ProductCreate = () => {
                 setNewImages([]);
                 setResetImagesKey(Date.now());
 
+                showToast("Successfully created", TOAST_TYPE.SUCCESS);
 
+                setTimeout(() => {
+                    navigate(`/products/${response.data.data}`);
+                }, 500);
             } else {
                 response = await Axios.put(`/products/${id}`, formData, {
                     headers: {'Content-Type': 'multipart/form-data'},
                     timeout: 15000,
                 });
+
+                showToast("Successfully updated", TOAST_TYPE.SUCCESS);
+
+                setTimeout(() => {
+                    navigate(`/products/${id}`);
+                }, 500);
             }
-
-            showToast("Successfully created", TOAST_TYPE.SUCCESS);
-
-            setTimeout(() => {
-                navigate(`/products/${response.data.data.id}`);
-            }, 500);
         } catch (error) {
             console.error(error);
             handleErrors(error, setError);
-        } finally {
-            setIsSubmitting(false)
         }
     };
 
     const showToast = (message, type) => {
-        setToastData({
-            message,
-            type,
-            id: Date.now(),
-        });
+        setToastData({message, type, id: Date.now()});
     };
 
     return (
@@ -204,6 +199,8 @@ const ProductCreate = () => {
                         </CardHeader>
 
                         <CardContent className="space-y-4">
+                            <InputError errors={errors} field={GLOBAL_ERROR}/>
+
                             <MultiImageInput
                                 key={resetImagesKey}
                                 existingImages={existingImages}

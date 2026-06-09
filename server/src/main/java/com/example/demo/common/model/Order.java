@@ -36,6 +36,18 @@ public class Order extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private OrderStatus status = OrderStatus.CREATED;
 
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false)
+    private String phone;
+
+    @Column(nullable = false)
+    private String address;
+
+    @Column(nullable = false)
+    private String trackingNumber;
+
     public boolean isCancelledOrRejected() {
         return status == OrderStatus.CANCELLED || status == OrderStatus.REJECTED;
     }

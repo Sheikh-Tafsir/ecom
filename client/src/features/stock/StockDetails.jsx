@@ -55,13 +55,13 @@ const StockDetails = () => {
         <>
             {isPageLoading && <PageLoadingOverlay/>}
 
-            <div className='container pb-8 pt-6'>
+            <div className='container pb-8 pt-8'>
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className='text-2xl lg:text-2xl xl:text-3xl font-bold'>Stock Detail</h1>
+                    <h1 className='text-2xl lg:text-2xl xl:text-3xl font-bold mx-auto'>Stock Detail</h1>
                 </div>
 
-                <p><b>Total cost:</b> ${stock.totalCost}</p>
-                <p><b>Date::</b> {formatDate(stock.createdAt)}</p>
+                <p><b>Total cost:</b> ${stock?.totalCost || '0.00'}</p>
+                <p><b>Date::</b> {formatDate(stock?.createdAt)}</p>
                 <br/>
 
                 <div className='space-y-4'>

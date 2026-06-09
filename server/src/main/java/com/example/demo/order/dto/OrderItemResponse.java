@@ -1,11 +1,13 @@
 package com.example.demo.order.dto;
 
 import com.example.demo.common.model.OrderItem;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 import java.math.BigDecimal;
 
-@Data
+@Getter
+@AllArgsConstructor
 public class OrderItemResponse {
     Long id;
     Long orderId;

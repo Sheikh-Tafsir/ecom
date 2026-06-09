@@ -32,6 +32,7 @@ import ReviewCard from "./ReviewCard"
 import {ToastAlert} from "@/components/common/ToastAlert"
 import {TOAST_TYPE} from "@/utils/enums"
 import {useUserStore} from "@/store/useUserStore"
+import {toastInitialState} from "@/utils/index.js";
 
 export default function ProductDetails() {
     const {id} = useParams()
@@ -44,7 +45,7 @@ export default function ProductDetails() {
     const [quantity, setQuantity] = useState(1);
     const [review, setReview] = useState({});
     const [errors, setErrors] = useState({});
-    const [toastData, setToastData] = useState({message: "", type: "", id: Date.now()});
+    const [toastData, setToastData] = useState(toastInitialState);
 
     useEffect(() => {
         fetchProduct(id);

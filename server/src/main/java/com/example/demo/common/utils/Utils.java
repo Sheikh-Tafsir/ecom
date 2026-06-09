@@ -9,7 +9,7 @@ import java.util.Random;
 
 public final class Utils {
 
-    private static int MAX_PAGE_SIZE = 24;
+    public static final int MAX_PAGE_SIZE = 24;
 
     private Utils() {
     }
@@ -65,13 +65,10 @@ public final class Utils {
     }
 
     public static Pageable getValidPageable(Pageable pageable, int maxSize) {
-        maxSize = Math.min(maxSize, MAX_PAGE_SIZE);
         if (pageable == null || pageable.isUnpaged()) {
             return PageRequest.of(0, maxSize);
         }
 
-        int size = Math.min(pageable.getPageSize(), maxSize);
-
-        return PageRequest.of(pageable.getPageNumber(), size, pageable.getSort());
+        return PageRequest.of(pageable.getPageNumber(), Math.min(pageable.getPageSize(), maxSize), pageable.getSort());
     }
 }

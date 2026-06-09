@@ -54,14 +54,14 @@ public class StockController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<StockResponse>> create(@Valid @RequestBody CreateStockRequest stockRequest,
+    public ResponseEntity<ApiResponse<Long>> create(@Valid @RequestBody CreateStockRequest stockRequest,
                                                              BindingResult bindingResult) {
 
         stockValidator.validateCreate(stockRequest, bindingResult);
         commonHelper.checkErrors(bindingResult);
 
-        StockResponse stock = stockService.create(stockRequest);
-        return ResponseUtils.created(stock, messageService.get("entity.creating", "Stock"));
+        long id = stockService.create(stockRequest);
+        return ResponseUtils.created(id, messageService.get("entity.creating", "Stock"));
     }
 
     @PutMapping("/{id}")

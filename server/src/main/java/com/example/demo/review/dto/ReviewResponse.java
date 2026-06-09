@@ -1,9 +1,11 @@
 package com.example.demo.review.dto;
 
 import com.example.demo.common.model.Review;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
-@Data
+@Getter
+@AllArgsConstructor
 public class ReviewResponse {
 
     private Long id;

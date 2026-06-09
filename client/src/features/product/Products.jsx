@@ -100,9 +100,11 @@ export default function Products() {
     return (<>
         {(categoriesLoading || productsLoading) && (<PageLoadingOverlay/>)}
 
-        <div className="container pb-8 pt-6">
+        <div className="container pb-8 pt-8">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold mb-6">Products</h1>
+                <div className="flex">
+                    <h1 className="text-3xl font-bold m-auto mb-6">Products</h1>
+                </div>
 
                 {/* Filters */}
                 <div className="flex flex-col md:flex-row gap-4 mb-6">

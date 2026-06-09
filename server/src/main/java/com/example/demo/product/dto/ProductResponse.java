@@ -6,15 +6,13 @@ import com.example.demo.common.model.Product;
 import com.example.demo.common.model.ProductImage;
 import com.example.demo.review.dto.ReviewResponse;
 import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Data
-@NoArgsConstructor
+@Getter
 @AllArgsConstructor
 public class ProductResponse {
 

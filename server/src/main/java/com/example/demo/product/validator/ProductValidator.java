@@ -27,8 +27,8 @@ public class ProductValidator {
     public void validateUpdate(UpdateProductRequest request, Errors errors) {
         int oldImageCount = request.getKeptImageIds() == null || request.getKeptImageIds().isEmpty() ? 0 : request.getKeptImageIds().size();
         int newImageCount = request.getImages() == null || request.getImages().isEmpty() ? 0 : request.getImages().size();
-        validateImages(oldImageCount + newImageCount, request.getImages(), errors);
 
+        validateImages(oldImageCount + newImageCount, request.getImages(), errors);
     }
 
     private void validateImages(int imageCount, Set<MultipartFile> imageFiles, Errors errors) {
@@ -38,12 +38,10 @@ public class ProductValidator {
             return;
         }
 
-        if (isEmpty(imageFiles)) {
-            return;
-        }
-
-        for (MultipartFile image : imageFiles) {
-            commonValidator.validateImage(image, false, "images", errors);
+        if (!isEmpty(imageFiles)) {
+            for (MultipartFile image : imageFiles) {
+                commonValidator.validateImage(image, false, "images", errors);
+            }
         }
     }
 }
