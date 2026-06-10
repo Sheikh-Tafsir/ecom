@@ -1,12 +1,12 @@
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
-import {  Package } from "lucide-react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
+import {useState} from "react"
+import {useNavigate} from "react-router-dom"
+import {Package} from "lucide-react"
+import {useForm} from "react-hook-form"
+import {zodResolver} from "@hookform/resolvers/zod"
 import * as z from "zod"
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {Button} from "@/components/ui/button"
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card"
 import {
     Dialog,
     DialogContent,
@@ -15,19 +15,23 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import { useCartStore } from "@/store/useCartStore"
+import {Input} from "@/components/ui/input"
+import {Label} from "@/components/ui/label"
+import {Separator} from "@/components/ui/separator"
+import {useCartStore} from "@/store/useCartStore"
 import StaredLabel from "@/components/common/StaredLabel"
-import { useUserStore } from "@/store/useUserStore"
+import {useUserStore} from "@/store/useUserStore"
 import InputReadOnly from "@/components/common/InputReadOnly"
-import { Axios } from "@/services/http/Axios"
+import {Axios} from "@/services/http/Axios"
 import {GLOBAL_ERROR, handleErrors, toastInitialState} from "@/utils"
-import { ButtonLoading } from "@/components/common/ButtonLoading"
+import {ButtonLoading} from "@/components/common/ButtonLoading"
 import InputError from "@/components/common/InputError.jsx";
 import {TOAST_TYPE} from "@/utils/enums.js";
 import {ToastAlert} from "@/components/common/ToastAlert.jsx";
+import {
+    getIdempotencyKey, IDEMPOTENCY_HEADER,
+    removeIdempotencyKey
+} from "@/utils/idempotencyUtil.js";
 
 const checkoutSchema = z.object({
     phone: z.string()
@@ -39,8 +43,8 @@ const checkoutSchema = z.object({
 export default function OrderCreate() {
     const navigate = useNavigate();
 
-    const { user } = useUserStore();
-    const { cart, getCartTotal, clearCart } = useCartStore();
+    const {user} = useUserStore();
+    const {cart, getCartTotal, clearCart} = useCartStore();
     const cartTotal = getCartTotal();
 
     const [toastData, setToastData] = useState(toastInitialState);
@@ -49,7 +53,7 @@ export default function OrderCreate() {
         register,
         handleSubmit,
         setError,
-        formState: { errors, isSubmitting },
+        formState: {errors, isSubmitting},
     } = useForm({
         resolver: zodResolver(checkoutSchema),
         defaultValues: {
@@ -59,13 +63,20 @@ export default function OrderCreate() {
     });
 
     const saveOrder = async (data) => {
+        const idempotencyKey = getIdempotencyKey();
+
         try {
             const response = await Axios.post('/orders', {
                 items: cart,
                 ...data,
+            }, {
+                headers: {
+                    [IDEMPOTENCY_HEADER]: idempotencyKey,
+                },
             });
 
             clearCart();
+            removeIdempotencyKey()
 
             showToast("Successfully updated", TOAST_TYPE.SUCCESS);
 
@@ -91,10 +102,11 @@ export default function OrderCreate() {
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                    <Package className="h-5 w-5" />
+                                    <Package className="h-5 w-5"/>
                                     Checkout
                                 </CardTitle>
-                                <CardDescription>Complete your order by filling out the information below</CardDescription>
+                                <CardDescription>Complete your order by filling out the information
+                                    below</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
                                 <form className="space-y-6" onSubmit={handleSubmit(saveOrder)}>
@@ -103,13 +115,13 @@ export default function OrderCreate() {
 
                                         <div className="grid gap-2">
                                             <Label>Name</Label>
-                                            <InputReadOnly value={user?.name} />
+                                            <InputReadOnly value={user?.name}/>
                                         </div>
 
                                         <div className="grid gap-2">
-                                            <StaredLabel label="Phone Number" />
-                                            <Input 
-                                                type="tel" 
+                                            <StaredLabel label="Phone Number"/>
+                                            <Input
+                                                type="tel"
                                                 placeholder="+1 (555) 123-4567"
                                                 {...register('phone')}
                                             />
@@ -117,8 +129,8 @@ export default function OrderCreate() {
                                         </div>
 
                                         <div className="grid gap-2">
-                                            <StaredLabel label="Street Address" />
-                                            <Input 
+                                            <StaredLabel label="Street Address"/>
+                                            <Input
                                                 placeholder="123 Main Street"
                                                 {...register('address')}
                                             />
@@ -127,7 +139,7 @@ export default function OrderCreate() {
                                     </div>
 
                                     {isSubmitting ?
-                                        <ButtonLoading />
+                                        <ButtonLoading/>
                                         :
                                         <Button type="submit" className="w-full bg-blue-600" size="lg">
                                             Complete Order
@@ -158,7 +170,8 @@ export default function OrderCreate() {
                                         </DialogHeader>
                                         <div className="space-y-4">
                                             {cart?.map((item) => (
-                                                <div key={item.id} className="flex items-center gap-4 p-4 border rounded-lg">
+                                                <div key={item.id}
+                                                     className="flex items-center gap-4 p-4 border rounded-lg">
                                                     <img
                                                         src={item?.images[0]?.image || "/placeholder.svg"}
                                                         alt={item.name}
@@ -179,7 +192,7 @@ export default function OrderCreate() {
                                     </DialogContent>
                                 </Dialog>
 
-                                <Separator />
+                                <Separator/>
 
                                 {/* Order Totals */}
                                 <div className="space-y-2">
@@ -198,7 +211,7 @@ export default function OrderCreate() {
                                         <span>0</span>
                                     </div>
 
-                                    <Separator />
+                                    <Separator/>
 
                                     <div className="flex justify-between font-bold text-lg">
                                         <span>Total</span>

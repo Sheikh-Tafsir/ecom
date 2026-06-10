@@ -2,6 +2,7 @@ package com.example.demo.stock.controller;
 
 import com.example.demo.common.dto.ApiResponse;
 import com.example.demo.common.helper.CommonHelper;
+import com.example.demo.common.service.IdempotencyService;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.common.utils.ResponseUtils;
 import com.example.demo.stock.dto.*;
@@ -13,14 +14,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import static com.example.demo.common.service.IdempotencyService.IDEMPOTENCY_HEADER;
 
 @RestController
 @RequestMapping("/stocks")
@@ -32,6 +28,8 @@ public class StockController {
     private final CommonHelper commonHelper;
 
     private final StockService stockService;
+
+    private final IdempotencyService idempotencyService;
 
     private final MessageService messageService;
 
@@ -55,12 +53,19 @@ public class StockController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<Long>> create(@Valid @RequestBody CreateStockRequest stockRequest,
-                                                             BindingResult bindingResult) {
+                                                    BindingResult bindingResult,
+                                                    @RequestHeader(IDEMPOTENCY_HEADER) String key) {
+
+        Object response = idempotencyService.getCachedResponse(key, stockRequest);
+        if (response != null) {
+            return ResponseUtils.ok((Long) response, messageService.get("entity.creating", "Stock"));
+        }
 
         stockValidator.validateCreate(stockRequest, bindingResult);
         commonHelper.checkErrors(bindingResult);
 
         long id = stockService.create(stockRequest);
+        idempotencyService.save(key, stockRequest, id);
         return ResponseUtils.created(id, messageService.get("entity.creating", "Stock"));
     }
 

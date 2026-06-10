@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { LOCAL_STORAGE_CART } from '@/utils';
+ const LOCAL_STORAGE_CART = 'visoredCart'
 
 export const useCartStore = create(
     persist(

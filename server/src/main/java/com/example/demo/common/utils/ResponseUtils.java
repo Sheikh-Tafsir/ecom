@@ -1,7 +1,6 @@
 package com.example.demo.common.utils;
 
 import com.example.demo.common.dto.ApiResponse;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -16,10 +15,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.example.demo.common.utils.Utils.OBJECT_MAPPER;
+
 public final class ResponseUtils {
 
     private static final String GLOBAL_ERROR = "global";
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private ResponseUtils() {
     }

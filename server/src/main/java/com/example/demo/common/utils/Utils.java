@@ -1,5 +1,12 @@
 package com.example.demo.common.utils;
 
+import com.example.demo.common.serializer.StringTrimmerDeserializer;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.StringUtils;
@@ -12,7 +19,29 @@ public final class Utils {
 
     public static final int MAX_PAGE_SIZE = 24;
 
+    public static final ObjectMapper OBJECT_MAPPER;
+
+    static {
+        OBJECT_MAPPER = JsonMapper.builder()
+                .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+                .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+                .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
+                .addModule(new SimpleModule("TrimStringsModule")
+                        .addDeserializer(String.class, new StringTrimmerDeserializer()))
+                .enable(SerializationFeature.INDENT_OUTPUT)
+                .build();
+    }
+
     private Utils() {
+    }
+
+    public static String objectHash(Object request) {
+        try {
+            String json = OBJECT_MAPPER.writeValueAsString(request);
+            return DigestUtils.sha256Hex(json);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static boolean isNull(String s) {

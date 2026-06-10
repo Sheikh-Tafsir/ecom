@@ -56,7 +56,7 @@ public class OtpService {
     }
 
     private Otp getOtp(OtpType type, String email) {
-        String otpKey = getOtpKey(type, email);
+        String otpKey = getKey(type, email);
         return (Otp) redisTemplate.opsForValue().get(otpKey);
     }
 
@@ -66,11 +66,11 @@ public class OtpService {
     }
 
     private void deleteOtp(OtpType type, String email) {
-        String otpKey = getOtpKey(type, email);
+        String otpKey = getKey(type, email);
         redisTemplate.delete(otpKey);
     }
 
-    private String getOtpKey(OtpType type, String email) {
-        return "otp:" + type.name() + ":" + email;
+    private String getKey(OtpType type, String email) {
+        return "OTP:" + type.name() + ":" + email;
     }
 }

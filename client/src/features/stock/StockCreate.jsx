@@ -15,10 +15,14 @@ import {Input} from '@/components/ui/input.jsx';
 import {Axios} from '@/services/http/Axios.js';
 import {ButtonLoading} from "@/components/common/ButtonLoading.jsx";
 import {TOAST_TYPE} from '@/utils/enums.js';
-import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay.jsx';
 import {ToastAlert} from '@/components/common/ToastAlert.jsx';
-import {GLOBAL_ERROR, handleErrors, toastInitialState, URL_NOT_FOUND} from '@/utils/index.js';
+import {GLOBAL_ERROR, handleErrors, toastInitialState} from '@/utils/index.js';
 import InputError from "@/components/common/InputError.jsx";
+import {
+    getIdempotencyKey,
+    IDEMPOTENCY_HEADER,
+    removeIdempotencyKey
+} from "@/utils/idempotencyUtil.js";
 
 const StockCreate = () => {
     const navigate = useNavigate();
@@ -88,13 +92,22 @@ const StockCreate = () => {
         setErrors({});
 
         try {
+            const idempotencyKey = getIdempotencyKey();
+
             const response = await Axios.post(`/stocks`, {
                 items: items.map(item => ({
                     productId: parseInt(item.productId),
                     quantity: parseInt(item.quantity),
                     purchasePrice: parseFloat(item.purchasePrice)
                 }))
+            }, {
+                headers: {
+                    [IDEMPOTENCY_HEADER]: idempotencyKey,
+                },
             });
+
+            setItems([]);
+            removeIdempotencyKey()
 
             showToast("Successfully created stock", TOAST_TYPE.SUCCESS);
             setTimeout(() => navigate(`/stocks/${response.data.data}`), 500);
@@ -254,7 +267,7 @@ const StockCreate = () => {
                                                             type="number"
                                                             step="0.01"
                                                             className="h-9 w-24 bg-white"
-                                                            value={item.purchasePrice*(80/100)}
+                                                            value={item.purchasePrice * (80 / 100)}
                                                             onChange={(e) => updateItem(index, 'purchasePrice', e.target.value)}
                                                             min={0}
                                                             required
@@ -284,10 +297,12 @@ const StockCreate = () => {
 
                                         <div className="mt-6 p-4 border-t flex justify-between">
                                             <p className="text-xl text-gray-600 font-medium">
-                                                Total Items: {items.reduce((acc, item) => acc + parseInt(item.quantity || 0), 0)}
+                                                Total
+                                                Items: {items.reduce((acc, item) => acc + parseInt(item.quantity || 0), 0)}
                                             </p>
                                             <p className="text-xl font-bold text-blue-900">
-                                                Total Cost: ${items.reduce((acc, item) => acc + (parseFloat(item.quantity || 0)
+                                                Total Cost:
+                                                ${items.reduce((acc, item) => acc + (parseFloat(item.quantity || 0)
                                                 * parseFloat(item.purchasePrice || 0)), 0).toFixed(2)}
                                             </p>
                                         </div>
