@@ -112,7 +112,7 @@ public class ProductService {
                 .collect(Collectors.toSet());
 
         if (!existingImageIds.containsAll(request.getKeptImageIds())) {
-            throw new BadRequestException("Some image IDs do not belong to this product");
+            throw new BadRequestException("Some images do not belong to this product");
         }
 
         product.getImages().removeIf(

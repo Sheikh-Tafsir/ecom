@@ -18,14 +18,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-
-import static com.example.demo.common.enums.UserStatus.DELETED;
 
 @Slf4j
 @RestController
@@ -47,14 +46,14 @@ public class ProfileController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<UserResponse>> getProfile(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        return ResponseUtils.ok(new UserResponse(userDetails.user()), messageService.get("successfully.found", "Profile"));
+        return ResponseUtils.ok(new UserResponse(userDetails.user(), null), messageService.get("successfully.found", "Profile"));
     }
 
-    @PutMapping
-    public ResponseEntity<ApiResponse<String>> updateProfile(@Valid @ModelAttribute UpdateProfileRequest updateProfileRequest,
-                                                             BindingResult bindingResult,
-                                                             @AuthenticationPrincipal CustomUserDetails userDetails,
-                                                             HttpServletResponse response) throws IOException {;
+    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<UserResponse>> updateProfile(@Valid @ModelAttribute UpdateProfileRequest updateProfileRequest,
+                                                                   BindingResult bindingResult,
+                                                                   @AuthenticationPrincipal CustomUserDetails userDetails,
+                                                                   HttpServletResponse response) throws IOException {
 
         profileUpdateRequestValidator.validate(updateProfileRequest, bindingResult);
         commonHelper.checkErrors(bindingResult);
@@ -64,7 +63,7 @@ public class ProfileController {
         TokenDto tokenDto = authService.getTokens(user);
         authService.addRefreshCookie(response, tokenDto);
 
-        return ResponseUtils.ok(tokenDto.getAccessToken(), messageService.get("successfully.updated", "Profile"));
+        return ResponseUtils.ok(new UserResponse(user, tokenDto.getAccessToken()), messageService.get("successfully.updated", "Profile"));
     }
 
     @DeleteMapping

@@ -61,7 +61,6 @@ const Profile = () => {
         queryKey: ["profile"],
         queryFn: async () => {
             const response = await Axios.get("/profile");
-            setExistingImage(response.data.data.image)
             return response.data.data;
         },
     });
@@ -69,6 +68,7 @@ const Profile = () => {
     useEffect(() => {
         if (profile) {
             reset(profile);
+            setExistingImage(profile.image)
         }
     }, [profile, reset]);
 
@@ -95,8 +95,9 @@ const Profile = () => {
                 timeout: 15000,
             });
 
-            login(response.data.data);
-            return response.data.data;
+            const user = response.data.data;
+            login(user.accessToken);
+            reset(user);
         },
 
         onSuccess: async () => {

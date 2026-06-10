@@ -82,11 +82,11 @@ public class OrderService {
         log.info("Updating order status for id: {} from {} to {} by user: {}", id, order.getStatus(), status, userDetails.getEmail());
 
         if (order.isCancelledOrRejected() && !status.isCancellationOrRejection()) {
-            throw new RuntimeException("Cancelled/Rejected order cannot be reopened");
+            throw new IllegalArgumentException("Cancelled/Rejected order cannot be reopened");
         }
 
         if (!order.getStatus().canTransitionTo(status)) {
-            throw new RuntimeException("Invalid order status transition");
+            throw new IllegalArgumentException("Invalid order status transition");
         }
 
         boolean isAdmin = isAdmin(userDetails);

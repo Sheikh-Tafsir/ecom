@@ -11,8 +11,8 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "users")
@@ -57,7 +57,9 @@ public class User extends BaseEntity {
         return status != UserStatus.ACTIVE;
     }
 
-    public List<String> getRoleValues() {
-        return roles.stream().map(Role::getName).toList();
+    public Set<String> getRoleValues() {
+        return roles.stream()
+                .map(Role::getName)
+                .collect(Collectors.toSet());
     }
 }

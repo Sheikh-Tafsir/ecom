@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.util.StringUtils;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Random;
 
 public final class Utils {
@@ -58,6 +59,10 @@ public final class Utils {
 
     public static boolean isEmpty(Collection<?> c) {
         return c == null || c.isEmpty();
+    }
+
+    public static <T> Collection<T> nullSafeCollection(Collection<T> c) {
+        return c == null ? Collections.emptyList() : c;
     }
 
     public static Pageable getValidPageable(Pageable pageable) {

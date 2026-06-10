@@ -85,8 +85,6 @@ public class ProductController {
                                                                    @Valid @ModelAttribute UpdateProductRequest productRequest,
                                                                    BindingResult bindingResult) throws IOException {
 
-        System.out.printf("product update : %s", productRequest);
-        log.debug("product update : {}", productRequest);
         productValidator.validateUpdate(productRequest, bindingResult);
         commonHelper.checkErrors(bindingResult);
 

@@ -25,8 +25,8 @@ public class ProductValidator {
     }
 
     public void validateUpdate(UpdateProductRequest request, Errors errors) {
-        int oldImageCount = request.getKeptImageIds() == null || request.getKeptImageIds().isEmpty() ? 0 : request.getKeptImageIds().size();
-        int newImageCount = request.getImages() == null || request.getImages().isEmpty() ? 0 : request.getImages().size();
+        int oldImageCount = isEmpty(request.getKeptImageIds()) ? 0 : request.getKeptImageIds().size();
+        int newImageCount = isEmpty(request.getImages()) ? 0 : request.getImages().size();
 
         validateImages(oldImageCount + newImageCount, request.getImages(), errors);
     }

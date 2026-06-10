@@ -48,6 +48,10 @@ const ImageInput = ({
             return;
         }
 
+        if (image?.previewUrl) {
+            URL.revokeObjectURL(image.previewUrl);
+        }
+
         setImage({
             file,
             previewUrl: URL.createObjectURL(file) || null,
@@ -86,8 +90,7 @@ const ImageInput = ({
             >
                 Upload Image
             </Button>
-
-            {existingImage && !image &&
+            {!image && existingImage &&
                 <div className="relative">
                     <img
                         src={existingImage}
