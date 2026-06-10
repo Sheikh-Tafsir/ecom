@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -38,8 +39,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain chain) throws ServletException, IOException {
 
-        String path = request.getServletPath();
-        log.debug("Processing authentication for path: {}", path);
+        MDC.put("requestId", request.getRequestId());
 
         String header = request.getHeader(AUTHORIZATION_HEADER);
 
@@ -65,11 +65,15 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                MDC.put("userId", userDetails.user().getId().toString());
             }
 
             chain.doFilter(request, response);
         } catch (Exception ex) {
             error(response, HttpStatus.UNAUTHORIZED, "Error validating JWT token");
+        } finally {
+            MDC.clear();
         }
     }
 }

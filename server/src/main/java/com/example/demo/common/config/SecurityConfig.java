@@ -43,7 +43,9 @@ public class SecurityConfig {
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/swagger-resources/**",
-            "/webjars/**"
+            "/webjars/**",
+            "/actuator",
+            "/actuator/**"
     );
 
     @Value("${cors.allowed.origins}")
@@ -65,13 +67,13 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider(userDetailsService()))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.GET, PUBLIC_URLS.toArray(new String[0])).permitAll()
+
                         .requestMatchers("/auth/**").permitAll()
 
-                        // PUBLIC READ APIs
                         .requestMatchers(HttpMethod.GET, "/products", "/products/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/categories", "/categories/*").permitAll()
 
-                        .requestMatchers(PUBLIC_URLS.toArray(new String[0])).permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(rateLimiterFilter, UsernamePasswordAuthenticationFilter.class)

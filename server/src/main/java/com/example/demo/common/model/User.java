@@ -2,7 +2,6 @@ package com.example.demo.common.model;
 
 import com.example.demo.common.enums.Gender;
 import com.example.demo.common.enums.UserStatus;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -33,7 +32,6 @@ public class User extends BaseEntity {
     private String email;
 
     @Column(nullable = false)
-    @JsonIgnore
     private String password;
 
     private Gender gender;

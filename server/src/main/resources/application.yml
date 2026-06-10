@@ -46,11 +46,14 @@ server.port: 8080
 logging:
   level:
     root: INFO
-    com.seroter.azure_basic_app: DEBUG
+    com.example.demo: DEBUG
     org.springframework.web.multipart: DEBUG
 
-  # Customize log pattern
   pattern.console: '%d{yyyy-MM-dd HH:mm:ss} - %level - %logger{36} - %msg%n'
+
+  structured:
+    format:
+      console: logstash
 
 
 access:
@@ -87,9 +90,16 @@ management:
     web:
       exposure:
         include: health,info,metrics,prometheus
+
   endpoint:
     health:
       show-details: always
+
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
 
 springdoc:
   api-docs.path: /v3/api-docs
