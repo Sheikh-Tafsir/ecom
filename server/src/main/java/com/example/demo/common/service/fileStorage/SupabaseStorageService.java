@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -31,8 +30,6 @@ public class SupabaseStorageService implements FileStorageService {
     @Value("${supabase.bucket}")
     private String bucket;
 
-//    private final RestTemplate restTemplate;
-
     private final WebClient webClient;
 
     @Override
@@ -46,31 +43,7 @@ public class SupabaseStorageService implements FileStorageService {
         }
 
         String filePath = UUID.randomUUID() + extension;
-
-//        String uploadUrl = supabaseUrl + "/storage/v1/object/" + bucket + "/" + filePath;
         String uploadUrl = getUploadUrl(filePath);
-
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setBearerAuth(apiKey);
-//        headers.set("apikey", apiKey);
-//
-//        headers.setContentType(
-//                MediaType.parseMediaType(
-//                        Objects.requireNonNullElse(
-//                                file.getContentType(),
-//                                "application/octet-stream"
-//                        )
-//                )
-//        );
-//
-//        HttpEntity<byte[]> entity = new HttpEntity<>(file.getBytes(), headers);
-//
-//        restTemplate.exchange(
-//                uploadUrl,
-//                HttpMethod.PUT,
-//                entity,
-//                String.class
-//        );
 
         webClient.put()
                 .uri(uploadUrl)
@@ -86,12 +59,6 @@ public class SupabaseStorageService implements FileStorageService {
                 .retrieve()
                 .toBodilessEntity()
                 .block();
-
-//        return supabaseUrl +
-//                "/storage/v1/object/public/" +
-//                bucket +
-//                "/" +
-//                filePath;
 
         return getViewUrl(filePath);
     }

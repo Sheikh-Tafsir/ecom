@@ -181,14 +181,14 @@ const Profile = () => {
                                 />
 
                                 <div className="space-y-1">
-                                    <Label>Email</Label>
-                                    <InputViewMode value={watch("email")} isEditable={isEditable}/>
-                                </div>
-
-                                <div className="space-y-1">
                                     <StaredLabel label="Name"/>
                                     <Input {...register("name")} placeholder="Md Rafiquddin"/>
                                     <InputError errors={errors} field="name"/>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <Label>Email</Label>
+                                    <InputViewMode value={watch("email")} isEditable={isEditable}/>
                                 </div>
 
                                 <div className="space-y-1">

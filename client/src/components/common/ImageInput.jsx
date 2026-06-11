@@ -70,8 +70,8 @@ const ImageInput = ({
     return (
         <div className="space-y-2">
             {isRequired ?
-                <StaredLabel label="Image"/>
-                : <Label htmlFor="image">Image</Label>
+                <StaredLabel label={label}/>
+                : <Label htmlFor="image">{label}</Label>
             }
 
             <Input

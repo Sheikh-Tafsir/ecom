@@ -19,7 +19,7 @@ const MultiImageInput = ({
                              maxImages = 5,
                              errors,
                              setError,
-                             label = "Image",
+                             label = "Images",
                              isRequired = false
                          }) => {
 
@@ -108,8 +108,8 @@ const MultiImageInput = ({
     return (
         <div className="space-y-2">
             {isRequired ?
-                <StaredLabel label="Images"/>
-                : <Label htmlFor="images">Images</Label>
+                <StaredLabel label={label}/>
+                : <Label htmlFor="images">{label}</Label>
             }
 
             <Input

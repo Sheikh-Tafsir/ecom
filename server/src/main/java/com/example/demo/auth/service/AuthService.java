@@ -17,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,8 +24,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -70,7 +69,7 @@ public class AuthService {
 
     private final AuthenticationManager authenticationManager;
 
-    private final RestTemplate restTemplate;
+    private final WebClient webClient;
 
     private final ModelMapper modelMapper;
 
@@ -150,20 +149,20 @@ public class AuthService {
         Map<String, String> params = new HashMap<>();
         params.put("access_token", token);
 
-        GoogleUserDto googleUser;
-        try {
-            ResponseEntity<GoogleUserDto> response = restTemplate.getForEntity(
-                    GOOGLE_OAUTH_API,
-                    GoogleUserDto.class,
-                    params
-            );
+        GoogleUserDto googleUser = webClient.get()
+                .uri(GOOGLE_OAUTH_API, params)
+                .retrieve()
+                .onStatus(
+                        status -> status.is4xxClientError() || status.is5xxServerError(),
+                        response -> response.bodyToMono(String.class)
+                                .flatMap(body -> Mono.error(
+                                        new BadCredentialsException("Failed to fetch Google user info")
+                                ))
+                )
+                .bodyToMono(GoogleUserDto.class)
+                .block();
 
-            googleUser = response.getBody();
-        } catch (HttpClientErrorException e) {
-            throw new BadCredentialsException("Failed to fetch Google user info");
-        }
-
-        if (isNull(googleUser) || !googleUser.isVerified_email()) {
+        if (googleUser == null || !googleUser.isVerified_email()) {
             throw new BadCredentialsException("Google account email not verified");
         }
 
