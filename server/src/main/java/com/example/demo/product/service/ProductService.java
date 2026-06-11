@@ -4,7 +4,7 @@ import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.common.enums.ProductStatus;
 import com.example.demo.common.model.Product;
 import com.example.demo.common.model.ProductImage;
-import com.example.demo.common.service.CloudinaryService;
+import com.example.demo.common.service.fileStorage.FileStorageService;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.product.dto.*;
 import com.example.demo.category.repository.CategoryRepository;
@@ -41,7 +41,7 @@ public class ProductService {
 
     private final CategoryRepository categoryRepository;
 
-    private final CloudinaryService cloudinaryService;
+    private final FileStorageService fileStorageService;
 
     private final MessageService messageService;
 
@@ -178,7 +178,7 @@ public class ProductService {
 
         for (MultipartFile imageFile : images) {
             if (fileExists(imageFile)) {
-                String imageUrl = cloudinaryService.uploadFile(imageFile);
+                String imageUrl = fileStorageService.uploadFile(imageFile);
 
                 ProductImage image = new ProductImage();
                 image.setImage(imageUrl);

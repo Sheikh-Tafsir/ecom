@@ -51,10 +51,9 @@ logging:
 
   pattern.console: '%d{yyyy-MM-dd HH:mm:ss} - %level - %logger{36} - %msg%n'
 
-  structured:
-    format:
-      console: logstash
-
+#  structured:
+#    format:
+#      console: logstash
 
 access:
   token:
@@ -73,6 +72,12 @@ cloudinary:
   api:
     key: ${CLOUDINARY_API_KEY}
     secret: ${CLOUDINARY_API_SECRET}
+  folder: ${CLOUDINARY_FOLDER}
+
+supabase:
+  url: ${SUPABASE_URL}
+  api-key: ${SUPABASE_API_KEY}
+  bucket: ${SUPABASE_BUCKET}
 
 # RabbitMQ configuration
 mail:
@@ -104,4 +109,3 @@ management:
 springdoc:
   api-docs.path: /v3/api-docs
   swagger-ui.url: /v3/api-docs
-

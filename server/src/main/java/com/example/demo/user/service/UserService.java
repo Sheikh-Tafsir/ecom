@@ -1,12 +1,12 @@
 package com.example.demo.user.service;
 
 import com.example.demo.common.dto.CustomUserDetails;
+import com.example.demo.common.service.fileStorage.FileStorageService;
 import com.example.demo.user.dto.ChangePasswordRequest;
 import com.example.demo.user.dto.UpdateProfileRequest;
 import com.example.demo.user.repository.UserRepository;
 import com.example.demo.common.enums.UserStatus;
 import com.example.demo.common.model.User;
-import com.example.demo.common.service.CloudinaryService;
 import com.example.demo.common.service.MessageService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +42,7 @@ public class UserService {
 
     private final PasswordEncoder passwordEncoder;
 
-    private final CloudinaryService cloudinaryService;
+    private final FileStorageService fileStorageService;
 
     private final MessageService messageService;
 
@@ -63,7 +63,7 @@ public class UserService {
         user.setName(updateProfileRequest.name());
 
         if (fileExists(updateProfileRequest.image())) {
-            String imageUrl = cloudinaryService.uploadFile(updateProfileRequest.image());
+            String imageUrl = fileStorageService.uploadFile(updateProfileRequest.image());
             user.setImage(imageUrl);
         }
 
