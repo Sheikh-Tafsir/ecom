@@ -22,7 +22,7 @@ public final class SecurityUtil {
     }
 
     public static boolean isAdmin(CustomUserDetails userDetails) {
-        return hasRole(ROLE_ADMIN, userDetails);
+        return hasRole(ROLE_ADMIN, userDetails) || hasRole(ROLE_SUPER_ADMIN, userDetails);
     }
 
     public static boolean hasRole(String role, CustomUserDetails userDetails) {
@@ -36,13 +36,13 @@ public final class SecurityUtil {
                 );
     }
 
-    public static boolean isAdmin() {
-        return hasRole(ROLE_ADMIN);
-    }
-
-    public static boolean hasRole(String role) {
-        return hasRole(role, getUserDetails());
-    }
+//    public static boolean isAdmin() {
+//        return hasRole(ROLE_ADMIN) || hasRole(ROLE_SUPER_ADMIN);
+//    }
+//
+//    public static boolean hasRole(String role) {
+//        return hasRole(role, getUserDetails());
+//    }
 
     public static CustomUserDetails getUserDetails() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

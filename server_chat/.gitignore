@@ -1,0 +1,19 @@
+# Node.js modules
+node_modules/
+
+#env files
+
+# Optional: Exclude logs and other generated files
+logs/
+dist/
+*.log
+Save the .gitignore file.
+The above .gitignore file will instruct Git to exclude the node_modules/ directory, along with any other files or directories you specify (e.g., logs, distribution files, log files, etc.), from being uploaded to your GitHub repository.
+
+Once you have added the .gitignore file to your project's root directory, you can commit and push your changes to GitHub. The Node.js modules and other specified files will be excluded from version control and will not be uploaded to GitHub, which helps keep your repository clean and avoids unnecessary duplication of large files.
+
+
+
+
+
+
