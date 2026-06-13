@@ -38,7 +38,9 @@ const getAllChatsByUserId = async (filters = {}, userId) => {
         ];
     }
 
-    return await Chat.findAll({
+    const limit = CHAT_LIST_DEFAULT_SIZE;
+
+    const chats = await Chat.findAll({
         where,
         include: [
             {
@@ -49,9 +51,32 @@ const getAllChatsByUserId = async (filters = {}, userId) => {
                 attributes: []
             }
         ],
-        order: [["lastSent", "DESC"]],
-        limit: CHAT_LIST_DEFAULT_SIZE,
+        order: [
+            ["lastSent", "DESC"],
+            ["id", "DESC"],
+        ],
+        limit: limit + 1,
     });
+
+    const hasMore = chats.length > limit;
+
+    const pageChats = hasMore
+        ? chats.slice(0, limit)
+        : chats;
+
+    const nextCursor =
+        hasMore && pageChats.length
+            ? pageChats[pageChats.length - 1].id
+            : null;
+
+    return {
+        chats: pageChats,
+        pagination: {
+            hasMore,
+            nextCursor,
+            limit,
+        },
+    };
 };
 
 
