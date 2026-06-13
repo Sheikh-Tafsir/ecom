@@ -12,7 +12,7 @@ import ParticipantDrawer from './ParticipantDrawer';
 import ChatInfo from './ChatInfo';
 import { useUserStore } from '@/store/useUserStore';
 
-const ChatMessages = ({ onMessageSend, chat, handleUserSelectorDialogOpen }) => {
+const ChatMessages = ({ onSendMessage, chat, handleUserSelectorDialogOpen }) => {
   const { user } = useUserStore();
   const messagesEndRef = useRef(null);
   const [newMessage, setNewMessage] = useState('');
@@ -36,7 +36,7 @@ const ChatMessages = ({ onMessageSend, chat, handleUserSelectorDialogOpen }) => 
     if (!newMessage.trim() && !newImage) return;
 
     // Emit a 'private message' event to the server
-    onMessageSend(newMessage, newImage);
+    onSendMessage(newMessage, newImage);
     setNewMessage('');
     setNewImage(null);
   };

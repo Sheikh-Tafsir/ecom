@@ -1,4 +1,4 @@
-import  {useState} from 'react'
+import {useState} from 'react'
 import {Link} from 'react-router-dom'
 import {Menu, X, ChevronDown, ShoppingCart} from "lucide-react"
 
@@ -43,6 +43,10 @@ export default function Navbar() {
                         : []),
                 ],
             },
+
+            ...(isAuthenticated() && [
+                {name: "Chats", href: "/chats",},
+            ]),
 
             ...(isAdmin
                 ? [
