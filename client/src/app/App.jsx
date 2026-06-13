@@ -39,6 +39,7 @@ import {useUserStore} from "@/store/useUserStore";
 import StockItems from "@/features/stock/StockItems.jsx";
 import StockDetails from "@/features/stock/StockDetails.jsx";
 import {getAccessToken} from "@/utils/index.js";
+import Chat from "@/features/chats/Chats.jsx";
 
 const App = () => {
 
@@ -60,17 +61,17 @@ const InnerApp = () => {
         initUser();
     }, [initUser]);
 
-    // useEffect(() => {
-    //     if (user?.email) {
-    //         connectSocket(getAccessToken());
-    //     } else {
-    //         disconnectSocket();
-    //     }
-    //
-    //     return () => {
-    //         disconnectSocket();
-    //     };
-    // }, [user])
+    useEffect(() => {
+        if (user?.email) {
+            connectSocket(getAccessToken());
+        } else {
+            disconnectSocket();
+        }
+
+        return () => {
+            disconnectSocket();
+        };
+    }, [user])
 
     return (
         <Routes>
@@ -109,6 +110,9 @@ const InnerApp = () => {
                 <Route path="/stocks/items" element={<StockItems/>}/>
                 <Route path="/stocks/:id" element={<StockDetails/>}/>
                 <Route path="/stocks/create" element={<StockCreate/>}/>
+
+                <Route path="/chats" element={<Chat/>}/>
+                <Route path="/chats/:id" element={<Chat/>}/>
 
                 <Route path="/sales" element={<Sales/>}/>
             </Route>
