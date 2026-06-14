@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 require('dotenv').config()
 
-const { UNAUTHORIZED, ACCESS_TOKEN_REQUIRED, ACCESS_TOKEN_INVALID} = require('../utils/Messages');
+const {UNAUTHORIZED, ACCESS_TOKEN_REQUIRED, ACCESS_TOKEN_INVALID} = require('../utils/Messages');
 const RuntimeError = require("../common/RuntimeError");
 
 const AuthenticationMiddleware = (req, res, next) => {
@@ -13,7 +13,7 @@ const AuthenticationMiddleware = (req, res, next) => {
     }
 
     try {
-        req.user =  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET_KEY);
+        req.user = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
         next();
     } catch (err) {
         return next(new RuntimeError(401, ACCESS_TOKEN_INVALID));

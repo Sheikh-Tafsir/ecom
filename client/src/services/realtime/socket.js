@@ -1,8 +1,9 @@
 import {io} from 'socket.io-client';
 
 const API_PATH = import.meta.env.VITE_API_PATH;
-const socket = io(API_PATH, {
+const socket = io(`${API_PATH}`, {
     autoConnect: false,
+    transports: ['websocket'],
 });
 
 socket.on('connect', () => {

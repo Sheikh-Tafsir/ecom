@@ -1,24 +1,20 @@
 package com.example.gateway.config;
 
+import com.example.gateway.filter.ReactiveAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
-import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -36,14 +32,14 @@ public class SecurityConfig {
             "/swagger-resources/**",
             "/webjars/**",
             "/actuator",
-            "/actuator/**"
+            "/actuator/**",
+            "/socket.io/**"
     );
 
     @Value("${cors.allowed.origins}")
     private String allowedOrigins;
 
-    @Value("${access.token.value}")
-    private String accessTokenSecret;
+    private final ReactiveAuthenticationFilter authenticationFilter;
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
@@ -52,15 +48,19 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .authenticationEntryPoint((exchange, e) -> {
+                            exchange.getResponse().setStatusCode(org.springframework.http.HttpStatus.UNAUTHORIZED);
+                            return exchange.getResponse().setComplete();
+                        })
+                )
+                .addFilterAt(authenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers(PUBLIC_URLS.toArray(new String[0])).permitAll()
                         .pathMatchers("/auth/**").permitAll()
                         .pathMatchers(HttpMethod.GET, "/products", "/products/*").permitAll()
                         .pathMatchers(HttpMethod.GET, "/categories", "/categories/*").permitAll()
                         .anyExchange().authenticated()
-                )
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.jwtDecoder(jwtDecoder()))
                 )
                 .build();
     }
@@ -81,15 +81,5 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
-    }
-
-    @Bean
-    public ReactiveJwtDecoder jwtDecoder() {
-        SecretKey key = new SecretKeySpec(
-                accessTokenSecret.getBytes(StandardCharsets.UTF_8),
-                "HmacSHA256"
-        );
-
-        return NimbusReactiveJwtDecoder.withSecretKey(key).build();
     }
 }

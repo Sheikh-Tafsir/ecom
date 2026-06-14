@@ -1,10 +1,8 @@
 const socketIO = require('socket.io');
-const jwt = require('jsonwebtoken');
 
 const ChatService = require('../service/ChatService');
 const ApiResponse = require('../common/ApiResponse');
-const { corsOptions } = require('../middleware/CorsMiddleware');
-const {ChatParticipant} = require('../model');
+// const {corsOptions} = require('../middleware/CorsMiddleware');
 
 const {
     MESSAGE_SEND_EVENT,
@@ -18,23 +16,31 @@ const {
 const {SENT, RECEIVED, ACCESS_TOKEN_REQUIRED, ACCESS_TOKEN_INVALID} = require("../utils/Messages");
 const {buildErrorResponse} = require("../utils/ResponseUtils");
 const RuntimeError = require("../common/RuntimeError");
+const {isAccessTokenValid} = require("../service/JwtService");
+const {findAllChatsByUserIdToJoinRoom} = require("../service/ChatService");
 
 const getRoom = (chatId) => `chat_${chatId}`;
 
 module.exports = (server) => {
-    const io = socketIO(server, { cors: corsOptions });
+
+    const io = socketIO(server)
 
     /* ---------------- auth middleware ---------------- */
 
     io.use((socket, next) => {
         try {
             const token = socket.handshake.auth?.token;
-            if (!token) return next(new RuntimeError(401, ACCESS_TOKEN_REQUIRED));
+            if (!token) {
+                console.error("Access token is required for socket connection.");
+                return next(new RuntimeError(401, ACCESS_TOKEN_REQUIRED));
+            }
 
-            socket.user = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET_KEY);
+            socket.user = isAccessTokenValid(token);
+
             next();
         } catch {
-            next(new RuntimeError(401, ACCESS_TOKEN_INVALID));
+            console.error("Invalid access token.");
+            return next(new RuntimeError(401, ACCESS_TOKEN_INVALID));
         }
     });
 
@@ -48,12 +54,7 @@ module.exports = (server) => {
         console.log(`Connected: ${user.name}`);
 
         /* join user rooms */
-        const chatParticipants = await ChatParticipant.findAll({
-            where: { userId: user.id },
-            attributes: ['chatId'],
-            raw: true,
-        });
-
+        const chatParticipants = await findAllChatsByUserIdToJoinRoom(user.id);
         chatParticipants.forEach(participants => socket.join(getRoom(participants.chatId)));
 
         /* ---------------- messaging ---------------- */
@@ -62,7 +63,7 @@ module.exports = (server) => {
             try {
                 const response = await ChatService.sendMessage(user.id, reqBody);
 
-                ack(ApiResponse({ message: SENT }));
+                ack(ApiResponse({message: SENT}));
 
                 io.to(getRoom(response?.chatId)).emit(MESSAGE_RECEIVE_EVENT,
                     ApiResponse({

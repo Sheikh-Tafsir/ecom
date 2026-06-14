@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,7 +28,6 @@ import static com.example.demo.common.utils.ResponseUtils.error;
 @Component
 public class AuthenticationFilter extends OncePerRequestFilter {
 
-    public static final String AUTHORIZATION_HEADER = "Authorization";
     public static final String BEARER_PREFIX = "Bearer ";
 
     private final JwtService jwtService;
@@ -41,18 +41,22 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
         MDC.put("requestId", request.getRequestId());
 
-        String header = request.getHeader(AUTHORIZATION_HEADER);
+        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        if (!StringUtils.hasText(header) || !header.startsWith(BEARER_PREFIX)) {
+        if (!StringUtils.hasText(authHeader) || !authHeader.startsWith(BEARER_PREFIX)) {
             log.debug("No Bearer token found in request headers");
+            MDC.clear();
+
             chain.doFilter(request, response);
             return;
         }
 
-        String token = header.substring(BEARER_PREFIX.length());
+        String token = authHeader.substring(BEARER_PREFIX.length());
 
         try {
             if (!jwtService.isAccessTokenValid(token)) {
+                log.error("Invalid or expired JWT token");
+
                 error(response, HttpStatus.UNAUTHORIZED, "Invalid or expired JWT token");
                 return;
             }
@@ -71,6 +75,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
             chain.doFilter(request, response);
         } catch (Exception ex) {
+            log.error("Error validating JWT token");
             error(response, HttpStatus.UNAUTHORIZED, "Error validating JWT token");
         } finally {
             MDC.clear();

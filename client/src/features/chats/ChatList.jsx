@@ -21,7 +21,7 @@ const ChatList = ({ chats, handleUserSelectorDialogOpen }) => {
   const { id } = useParams();
   const [selectedOption, setSelectedOption] = useState(BUTTON_OPTIONS[0]);
 
-  const filteredChats = chats.filter(chat => {
+  const filteredChats = (Array.isArray(chats) ? chats : []).filter(chat => {
     if (selectedOption == BUTTON_OPTIONS[2]) {
       return chat.type == CHAT_TYPE.GROUP;
     } else if (selectedOption == BUTTON_OPTIONS[1]) {

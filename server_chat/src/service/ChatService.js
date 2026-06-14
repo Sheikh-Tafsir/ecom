@@ -46,7 +46,7 @@ const getAllChatsByUserId = async (filters = {}, userId) => {
             {
                 model: ChatParticipant,
                 as: "Participants",
-                where: { userId },
+                where: {userId},
                 required: true,
                 attributes: []
             }
@@ -198,6 +198,14 @@ const formatChatDetails = (chat, userId) => {
         messages: c.Messages,
     };
 };
+
+const findAllChatsByUserIdToJoinRoom = async (userId) => {
+    return await ChatParticipant.findAll({
+        where: {userId},
+        attributes: ['chatId'],
+        raw: true,
+    });
+}
 
 const sendMessage = async (senderId, body) => {
     const {chatId, receiverId, content, contentType} = body;
@@ -412,6 +420,7 @@ const checkChatParticipant = (chat, userId) => {
 module.exports = {
     getAllChatsByUserId,
     getChatById,
+    findAllChatsByUserIdToJoinRoom,
     sendMessage,
     seenChatMessage,
     createGroup,

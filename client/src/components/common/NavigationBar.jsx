@@ -44,9 +44,11 @@ export default function Navbar() {
                 ],
             },
 
-            ...(isAuthenticated() && [
-                {name: "Chats", href: "/chats",},
-            ]),
+            ...(isAuthenticated
+                ? [
+                    {name: "Chats", href: "/chats",},
+                ]
+                : []),
 
             ...(isAdmin
                 ? [

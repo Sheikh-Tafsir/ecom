@@ -7,15 +7,15 @@ spring:
       server:
         webflux:
           routes:
+            - id: chat-service-ws
+              uri: http://localhost:3001
+              predicates:
+                - Path=/socket.io/**
+
             - id: chat-service
               uri: http://localhost:3001
               predicates:
                 - Path=/chats/**
-
-            - id: chat-websocket
-              uri: ws://localhost:3001
-              predicates:
-                - Path=/chat/**
 
             - id: main-service
               uri: http://localhost:8081
@@ -27,3 +27,10 @@ server.port: 8080
 cors.allowed.origins: ${CORS_ALLOWED_ORIGINS}
 
 access.token.value: ${ACCESS_TOKEN_SECRET}
+
+logging:
+  level:
+    root: INFO
+    org.springframework.security: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.security.oauth2: DEBUG

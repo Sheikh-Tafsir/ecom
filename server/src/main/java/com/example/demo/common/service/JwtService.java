@@ -61,6 +61,7 @@ public class JwtService {
     private String buildToken(User user, Key secretKey, long tokenValidity) {
         return Jwts.builder()
                 .setSubject(user.getEmail())
+                .claim("id", user.getId())
                 .claim("name", user.getName())
                 .claim("email", user.getEmail())
                 .claim("role", user.getRoleValues())

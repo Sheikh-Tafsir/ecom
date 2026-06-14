@@ -72,6 +72,7 @@ const Login = () => {
                     token: tokenResponse.access_token,
                 });
 
+                //console.log(response.data.data);
                 login(response.data.data);
             } catch (err) {
                 console.error(err);
