@@ -1,7 +1,7 @@
-const { IS_REQUIRED } = require('../utils/Messages');
+const { IS_REQUIRED, ALREADY_EXISTS} = require('../utils/Messages');
 
 module.exports = (sequelize, DataTypes) => {
-    const MessageView = sequelize.define('MessageView',
+    const MessageReceipt = sequelize.define('MessageReceipt',
         {
             messageId: {
                 type: DataTypes.INTEGER,
@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
                 },
             },
 
-            viewerId: {
+            userId: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
                 field: 'viewer_id',
@@ -23,10 +23,16 @@ module.exports = (sequelize, DataTypes) => {
                 },
             },
 
-            seenTime: {
+            deliveredAt: {
                 type: DataTypes.DATE,
-                allowNull: false,
-                field: 'seen_time'
+                allowNull: true,
+                field: 'delivered_at'
+            },
+
+            readAt: {
+                type: DataTypes.DATE,
+                allowNull: true,
+                field: 'read_at'
             },
 
             createdAt: {
@@ -51,17 +57,24 @@ module.exports = (sequelize, DataTypes) => {
             }
         },
         {
-            tableName: 'message_views',
+            tableName: 'message_receipts',
             timestamps: true,
             createdAt: 'created_at',
             updatedAt: 'updated_at',
+            indexes: [
+                {
+                    unique: true,
+                    fields: ['message_id', 'user_id'],
+                    msg: ALREADY_EXISTS
+                }
+            ]
         }
     );
 
-    MessageView.associate = models => {
-        MessageView.belongsTo(models.Message, { foreignKey: 'messageId', as: 'Message' });
-        MessageView.belongsTo(models.User, { foreignKey: 'viewerId', as: 'Viewer' });
+    MessageReceipt.associate = models => {
+        MessageReceipt.belongsTo(models.Message, { foreignKey: 'messageId', as: 'Message' });
+        // MessageReceipt.belongsTo(models.User, { foreignKey: 'viewerId', as: 'Viewer' });
     };
 
-    return MessageView;
+    return MessageReceipt;
 };

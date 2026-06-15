@@ -11,7 +11,7 @@ const {
 
 const {
     addSocket,
-    removeSocket,
+    removeSocket, addUserToRoom, removeUserFromAllRooms, getUsersInRoom,
 } = require('./socketManager');
 const {SENT, RECEIVED, ACCESS_TOKEN_REQUIRED, ACCESS_TOKEN_INVALID} = require("../utils/Messages");
 const {buildErrorResponse} = require("../utils/ResponseUtils");
@@ -55,13 +55,20 @@ module.exports = (server) => {
 
         /* join user rooms */
         const chatParticipants = await findAllChatsByUserIdToJoinRoom(user.id);
-        chatParticipants.forEach(participants => socket.join(getRoom(participants.chatId)));
+        chatParticipants.forEach(participants => {
+            const roomId = getRoom(participants.chatId);
+            socket.join(roomId);
+            addUserToRoom(roomId, user.id);
+        });
 
         /* ---------------- messaging ---------------- */
 
         socket.on(MESSAGE_SEND_EVENT, async (reqBody, ack) => {
             try {
                 const response = await ChatService.sendMessage(user.id, reqBody);
+
+                await ChatService.saveMessageReceipts(
+                    getUsersInRoom(getRoom(response.chatId)), response.message.id, user.id);
 
                 ack(ApiResponse({message: SENT}));
 
@@ -79,6 +86,7 @@ module.exports = (server) => {
         /* ---------------- disconnect ---------------- */
 
         socket.on('disconnect', () => {
+            removeUserFromAllRooms(user.id);
             removeSocket(user.id, socket.id);
             console.log(`Disconnected: ${user.name}`);
         });

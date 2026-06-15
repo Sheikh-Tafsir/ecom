@@ -13,12 +13,12 @@ const router = express.Router();
 // /chats
 
 router.get("", AuthenticationMiddleware, AsyncHandler(async (req, res) => {
-    const data = await ChatService.getAllChatsByUserId(req?.query, req.user?.id);
+    const data = await ChatService.findAllChatsByUserId(req?.query, req.user?.id);
     ok(res, {message: FOUND, data})
 }));
 
 router.get("/:id", ValidateNumericParams('id'), AuthenticationMiddleware, AsyncHandler(async (req, res) => {
-    const data = await ChatService.getChatById(req.params?.id, req?.query, req.user?.id);
+    const data = await ChatService.findDetailsChatById(req.params?.id, req?.query, req.user?.id);
     ok(res, {message: FOUND, data})
 }));
 

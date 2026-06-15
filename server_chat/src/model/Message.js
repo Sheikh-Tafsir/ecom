@@ -1,4 +1,4 @@
-const { IS_REQUIRED, lengthValidationMessage } = require('../utils/Messages');
+const { IS_REQUIRED} = require('../utils/Messages');
 const { CONTENT_TYPE } = require('../utils/Enum');
 
 module.exports = (sequelize, DataTypes) => {
@@ -75,7 +75,7 @@ module.exports = (sequelize, DataTypes) => {
     Message.associate = models => {
         Message.belongsTo(models.Chat, { foreignKey: 'chatId', as: 'Chat' });
         Message.belongsTo(models.User, { foreignKey: 'senderId', as: 'Sender' });
-        Message.hasMany(models.MessageView, { foreignKey: 'messageId', as: 'MessageViews' });
+        Message.hasMany(models.MessageReceipt, { foreignKey: 'messageId', as: 'MessageReceipts' });
     };
 
     return Message;
