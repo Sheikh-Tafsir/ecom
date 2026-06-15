@@ -6,10 +6,12 @@ import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.auth.enums.OtpType;
 import com.example.demo.common.enums.UserStatus;
 import com.example.demo.common.exception.InvalidRefreshTokenException;
+import com.example.demo.common.model.Role;
 import com.example.demo.common.model.User;
 import com.example.demo.auth.dto.Otp;
 import com.example.demo.common.service.JwtService;
 import com.example.demo.common.service.MailService;
+import com.example.demo.role.service.RoleService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ValidationException;
@@ -32,6 +34,7 @@ import java.util.Map;
 
 import static com.example.demo.common.utils.CookieUtils.addCookie;
 import static com.example.demo.common.utils.CookieUtils.getCookieValue;
+import static com.example.demo.common.utils.SecurityConstants.*;
 import static com.example.demo.common.utils.Utils.*;
 import static java.util.Objects.isNull;
 import static org.springframework.util.StringUtils.hasText;
@@ -66,6 +69,8 @@ public class AuthService {
     private final JwtService jwtService;
 
     private final OtpService otpService;
+
+    private final RoleService roleService;
 
     private final AuthenticationManager authenticationManager;
 
@@ -230,7 +235,9 @@ public class AuthService {
         }
 
         otpService.verifyOtp(OtpType.RESET, request.otp(), request.email());
-        save(user, request.password());
+
+        user.setPassword(passwordEncoder.encode(request.password()));
+        authRepository.save(user);
     }
 
     public TokenDto getTokens(User user) {
@@ -250,6 +257,10 @@ public class AuthService {
     
     private User save(User user, String password) {
         user.setPassword(passwordEncoder.encode(password));
+
+        Role role = roleService.findByName(ROLE_USER);
+        user.getRoles().add(role);
+
         return authRepository.save(user);
     }
 

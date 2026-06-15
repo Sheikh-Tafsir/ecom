@@ -96,6 +96,9 @@ const InnerApp = () => {
                 <Route path="/orders" element={<OrderList/>}/>
                 <Route path="/orders/:id" element={<OrderView/>}/>
                 <Route path="/orders/create" element={<OrderCreate/>}/>
+
+                <Route path="/chats" element={<Chat/>}/>
+                <Route path="/chats/:id" element={<Chat/>}/>
             </Route>
 
             <Route element={<ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.SUPER_ADMIN]}/>}>
@@ -110,9 +113,6 @@ const InnerApp = () => {
                 <Route path="/stocks/items" element={<StockItems/>}/>
                 <Route path="/stocks/:id" element={<StockDetails/>}/>
                 <Route path="/stocks/create" element={<StockCreate/>}/>
-
-                <Route path="/chats" element={<Chat/>}/>
-                <Route path="/chats/:id" element={<Chat/>}/>
 
                 <Route path="/sales" element={<Sales/>}/>
             </Route>

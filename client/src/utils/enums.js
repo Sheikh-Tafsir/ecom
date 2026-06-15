@@ -12,6 +12,8 @@ export const USER_STATUS = Object.freeze({
     BANNED: "Banned"
 });
 
+export const ROLE_PREFIX = "ROLE_";
+
 export const USER_ROLE = Object.freeze({
     USER: 'ROLE_USER',
     ADMIN: 'ROLE_ADMIN',

@@ -1,19 +1,18 @@
 package com.example.demo.user.controller;
 
-import com.example.demo.common.enums.UserStatus;
 import com.example.demo.user.service.UserService;
 import com.example.demo.common.dto.ApiResponse;
 import com.example.demo.common.model.User;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.common.utils.ResponseUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import static com.example.demo.common.enums.UserStatus.BANNED;
-
+@Slf4j
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
@@ -29,6 +28,7 @@ public class UserController {
                                                            @RequestParam(required = false) String role,
                                                            @RequestParam(required = false) String status) {
 
+        log.debug("role: {}, status: {}", role, status);
         Page<User> users = userService.findAll(pageable, name, role, status);
         return ResponseUtils.ok(users, messageService.get("successfully.found", "User List"));
     }

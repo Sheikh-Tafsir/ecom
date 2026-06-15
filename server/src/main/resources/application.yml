@@ -1,9 +1,11 @@
 spring:
   application.name: demo
+
   servlet.multipart:
     enabled: true
     max-file-size: 5MB
     max-request-size: 30MB
+
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -35,6 +37,7 @@ spring:
           enabled: true
           initial-interval: 2000
           max-retries: 3
+
   http:
     converters:
       preferred-json-mapper: jackson

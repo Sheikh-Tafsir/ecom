@@ -38,7 +38,7 @@ export default function Navbar() {
                 href: "/products",
                 submenu: [
                     {name: "Product List", href: "/products"},
-                    ...(userIsAdmin
+                    ...(isAdmin
                         ? [{name: "Add Product", href: "/products/create"}]
                         : []),
                 ],

@@ -104,7 +104,7 @@ const ChatMessages = ({ onSendMessage, chat, handleUserSelectorDialogOpen }) => 
           <span className='h-[100%]'></span>
         }
 
-        <form onSubmit={handleSendMessage} className="flex gap-2">
+        <form onSubmit={handleSendMessage} className="flex gap-2 w-[98%] mx-auto p-2 rounded-lg">
           <ImageInputInplace image={newImage} setImage={setNewImage} />
           <Input
             placeholder="Type a message..."

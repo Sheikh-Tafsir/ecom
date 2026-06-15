@@ -21,10 +21,6 @@ app.use(
 );
 
 app.get("/", (req, res) => {
-    res.send("Hello, world!");
-});
-
-app.get("/health", (req, res) => {
     res.status(200).json({status: "UP", timestamp: new Date()});
 });
 

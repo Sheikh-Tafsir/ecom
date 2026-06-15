@@ -27,7 +27,7 @@ import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadi
 import {ToastAlert} from "@/components/common/ToastAlert";
 import {formatDate} from "@/utils/DateUtils";
 import {handleErrors} from "@/utils/ErrorUtils";
-import {ALERT_TYPE, TOAST_TYPE, USER_ROLE, USER_STATUS} from "@/utils/enums";
+import {ALERT_TYPE, ROLE_PREFIX, TOAST_TYPE, USER_ROLE, USER_STATUS} from "@/utils/enums";
 import {
     FIRST_PAGE, checkAllSelected,
     redirectWhenInvalidPage, updateQueryWhenParamChange, getSelectValue
@@ -140,9 +140,9 @@ const Users = () => {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="__all__">All</SelectItem>
-                                        {Object.values(USER_ROLE).map((item) => (
-                                            <SelectItem key={item} value={item}>
-                                                {item}
+                                        {Object.entries(USER_ROLE).map(([key, value]) => (
+                                            <SelectItem key={key} value={value}>
+                                                {key}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -159,9 +159,9 @@ const Users = () => {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="__all__">All</SelectItem>
-                                        {Object.values(USER_STATUS).map((item) => (
-                                            <SelectItem key={item} value={item}>
-                                                {item}
+                                        {Object.entries(USER_STATUS).map(([key, value]) => (
+                                            <SelectItem key={key} value={value}>
+                                                {key}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -186,7 +186,7 @@ const Users = () => {
                                                     : "text-gray-700"
                                         }
                                     >
-                                        {user.roleValues.join(", ")}
+                                        {user.roleValues.map(role => role.replace(ROLE_PREFIX, "")).join(", ")}
                                     </TableCell>
                                     <TableCell>{formatDate(user.createdAt)}</TableCell>
                                     <TableCell

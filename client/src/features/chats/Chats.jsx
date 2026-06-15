@@ -112,7 +112,7 @@ const Chat = () => {
         <>
             {(isChatsLoading || isSelectedChatLoading || !user?.id) && <PageLoadingOverlay/>}
 
-            <div className="px-8 flex justify-between pb-8 mt-[-20px] overflow-hidden">
+            <div className="flex justify-between pb-8 pt-4 overflow-hidden">
                 <div className='w-[23.3%] bg-white h-[calc(90vh-2rem)] px-2'>
                     <div className='p-2'>
                         <h1 className="text-2xl font-semibold text-black mt-1 mb-3">Messages</h1>

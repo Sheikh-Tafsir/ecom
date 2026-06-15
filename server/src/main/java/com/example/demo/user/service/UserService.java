@@ -2,6 +2,7 @@ package com.example.demo.user.service;
 
 import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.common.service.fileStorage.FileStorageService;
+import com.example.demo.role.service.RoleService;
 import com.example.demo.user.dto.ChangePasswordRequest;
 import com.example.demo.user.dto.UpdateProfileRequest;
 import com.example.demo.user.repository.UserRepository;
