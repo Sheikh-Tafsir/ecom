@@ -1,9 +1,6 @@
 import axios from 'axios';
 
-import {
-    getAccessToken,
-    isAccessTokenExpired, removeAccessToken, saveAccessToken
-} from '@/utils/AuthUtils';
+import {getAccessToken,isAccessTokenExpired, removeAccessToken, saveAccessToken} from '@/utils/AuthUtils';
 
 const API_PATH = import.meta.env.VITE_API_PATH;
 
@@ -17,11 +14,6 @@ const Axios = axios.create({
     baseURL: API_PATH,
     withCredentials: true,
     timeout: 5000,
-    headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache',
-        Pragma: 'no-cache',
-    },
 });
 
 Axios.interceptors.request.use(
@@ -61,6 +53,7 @@ Axios.interceptors.response.use(
                 return Axios.request(originalRequest);
             } catch (err) {
                 await logout();
+                redirectAfterLogout();
                 return Promise.reject(err);
             }
         }
@@ -104,6 +97,7 @@ const getValidAccessToken = async () => {
     } catch (error) {
         onRefreshFailure(error);
         await logout();
+        redirectAfterLogout();
         throw error;
     } finally {
         isRefreshing = false;
@@ -137,7 +131,6 @@ const onRefreshFailure = (error) => {
 const refreshAccessToken = async () => {
     try {
         const response = await AxiosNoInterceptor.post('/auth/access-token/refresh');
-        //console.log(data.message);
         const token = response.data.data;
         saveAccessToken(token)
         return token;
@@ -154,12 +147,14 @@ const logout = async () => {
         console.error("Logout failed:", error);
     } finally {
         removeAccessToken();
-
-        isRefreshing = false;
-        queue = [];
-
-        window.location.replace("/");
     }
 };
 
-export {API_PATH, Axios, AxiosNoInterceptor};
+const redirectAfterLogout = () => {
+    isRefreshing = false;
+    queue = [];
+
+    window.location.replace("/");
+}
+
+export {API_PATH, Axios, AxiosNoInterceptor, refreshAccessToken, logout};

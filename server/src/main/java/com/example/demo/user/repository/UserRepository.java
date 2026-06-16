@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -30,6 +31,19 @@ public interface UserRepository extends JpaRepository<User, Long> {
             @Param("name") String name,
             @Param("role") Role role,
             @Param("status") UserStatus status,
+            Pageable pageable
+    );
+
+    @Query("""
+                SELECT u FROM User u
+                WHERE (:name IS NULL OR u.name ILIKE CONCAT('%', CAST(:name AS string), '%'))
+                  AND (:status IS NULL OR u.status = :status)
+                  AND u.id != :userId
+            """)
+    List<User> findAllByNameAndStatus(
+            @Param("name") String name,
+            @Param("status") UserStatus status,
+            @Param("userId") Long userId,
             Pageable pageable
     );
 

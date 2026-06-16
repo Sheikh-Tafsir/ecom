@@ -1,5 +1,5 @@
 import {useCallback} from 'react';
-import socket from "@/services/realtime/socket.js";
+import { getSocket } from '@/services/realtime/socket';
 import {Axios} from "@/services/http/Axios.js";
 import {CONTENT_TYPE, REGULAR_ACTION} from '@/utils/enums';
 import {
@@ -45,7 +45,8 @@ export const useChatActions = (id, userId, updateChatOnMessage, onNewChat, showT
     }, [id, userId, updateChatOnMessage]);
 
     const handleSendMessage = useCallback(async (content, image, searchedUser) => {
-        if (!id && !searchedUser) return;
+        const socket = getSocket();
+        if ((!id && !searchedUser) || !socket) return;
 
         let contentType = CONTENT_TYPE.TEXT;
         if (image) {
@@ -63,19 +64,22 @@ export const useChatActions = (id, userId, updateChatOnMessage, onNewChat, showT
             tempId,
         }, (acknowledgment) => {
             if (acknowledgment.error) {
-                console.log(acknowledgment.error);
+                // console.log(acknowledgment.error);
                 showToast(acknowledgment.error, 'error');
                 return;
             }
 
-            console.log('sent message:', acknowledgment);
+            // console.log('sent message:', acknowledgment);
             const sentMessage = acknowledgment.data;
             onNewChat(sentMessage.chatId);
         });
     }, [id, updateChatLocally, onNewChat, showToast]);
 
     const handleGroupManagementRequest = useCallback((users, action, onSuccess) => {
-        socket.emit(action === REGULAR_ACTION.CREATE ? GROUP_CREATE_REQUEST_EVENT : GROUP_UPDATE_REQUEST_EVENT, {
+        const socket = getSocket();
+        if (!socket) return;
+
+        socket.emit(action == REGULAR_ACTION.CREATE ? GROUP_CREATE_REQUEST_EVENT : GROUP_UPDATE_REQUEST_EVENT, {
             users,
             chatId: id
         }, (acknowledgment) => {
@@ -85,7 +89,7 @@ export const useChatActions = (id, userId, updateChatOnMessage, onNewChat, showT
                 return;
             }
 
-            onSuccess(acknowledgment.data);
+            onSuccess(acknowledgment);
         });
     }, [id, showToast]);
 

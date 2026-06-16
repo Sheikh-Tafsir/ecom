@@ -5,6 +5,7 @@ import com.example.demo.common.service.fileStorage.FileStorageService;
 import com.example.demo.role.service.RoleService;
 import com.example.demo.user.dto.ChangePasswordRequest;
 import com.example.demo.user.dto.UpdateProfileRequest;
+import com.example.demo.user.dto.UserSearchResponse;
 import com.example.demo.user.repository.UserRepository;
 import com.example.demo.common.enums.UserStatus;
 import com.example.demo.common.model.User;
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static com.example.demo.common.enums.UserStatus.BANNED;
 import static com.example.demo.common.enums.UserStatus.DELETED;
@@ -50,6 +52,13 @@ public class UserService {
     @PreAuthorize(HAS_ROLE_ADMIN)
     public Page<User> findAll(Pageable pageable, String name, String role, String status) {
         return userRepository.findByRoleAndStatus(name, roleService.findByName(role), UserStatus.fromValue(status), getValidPageable(pageable));
+    }
+
+    public List<UserSearchResponse> findAllByName(String name, CustomUserDetails userDetails) {
+        return userRepository.findAllByNameAndStatus(name, UserStatus.ACTIVE, userDetails.getId(), getValidPageable(Pageable.unpaged()))
+                .stream()
+                .map(UserSearchResponse::new)
+                .toList();
     }
 
     @PreAuthorize(HAS_ROLE_ADMIN)

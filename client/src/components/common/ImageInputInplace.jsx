@@ -10,10 +10,9 @@ export default function ImageInputInplace({ image, setImage }) {
   const handleImageChange = ({ target: { files } }) => {
     const file = files[0];
     if (validateFile(file)) {
-      //console.log("yes");
       setImage(file);
     } else {
-      console.log("File too large, select an image smaller than 5MB.");
+      console.warn("File too large, select an image smaller than 5MB.");
       alert("File too large, select an image smaller than 5MB.");
     }
   };

@@ -16,11 +16,9 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.example.demo.common.utils.SecurityConstants.HAS_ROLE_ADMIN;
 import static com.example.demo.common.utils.SecurityUtil.isAdmin;
 import static com.example.demo.common.utils.Utils.getValidPageable;
 import static com.example.demo.common.utils.Utils.isNull;
@@ -42,13 +40,12 @@ public class OrderService {
 
     private final CommonHelper commonHelper;
 
-    @PreAuthorize(HAS_ROLE_ADMIN)
-    public Page<OrderListResponse> findAll(Pageable pageable, OrderStatus status) {
-        return orderRepository.findAllByStatus(status, getValidPageable(pageable)).map(OrderListResponse::new);
-    }
+    public Page<OrderListResponse> findAll(OrderStatus status, CustomUserDetails userDetails, Pageable pageable) {
+        if (isAdmin(userDetails)) {
+            return orderRepository.findAllByStatus(status, getValidPageable(pageable)).map(OrderListResponse::new);
+        }
 
-    public Page<OrderListResponse> findByUser(Long userId, Pageable pageable) {
-        return orderRepository.findByUser_Id(userId, getValidPageable(pageable)).map(OrderListResponse::new);
+        return orderRepository.findByUser_Id(userDetails.getId(), getValidPageable(pageable)).map(OrderListResponse::new);
     }
 
     public OrderResponse findById(Long id, CustomUserDetails userDetails) {

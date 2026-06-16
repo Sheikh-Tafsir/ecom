@@ -55,7 +55,6 @@ export default function ProductDetails() {
         setIsPageLoading(true);
         try {
             const response = await Axios.get(`/products/${id}`);
-            // console.log(response.data.data);
             setProduct(response.data.data);
         } catch (err) {
             console.error('Error fetching product:', err);

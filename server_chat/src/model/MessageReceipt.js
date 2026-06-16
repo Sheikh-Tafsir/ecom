@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
             userId: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
-                field: 'viewer_id',
+                field: 'user_id',
                 validate: {
                     notNull: { msg: IS_REQUIRED },
                     isInt: true,
@@ -53,7 +53,7 @@ module.exports = (sequelize, DataTypes) => {
             version: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
-                defaultValue: 1,
+                defaultValue: 0,
             }
         },
         {

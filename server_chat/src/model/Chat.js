@@ -65,7 +65,7 @@ module.exports = (sequelize, DataTypes) => {
             version: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
-                defaultValue: 1,
+                defaultValue: 0,
             }
         },
         {

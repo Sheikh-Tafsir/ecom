@@ -14,6 +14,7 @@ import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
 import {Axios} from '@/services/http/Axios.js';
 import {ButtonLoading} from '@/components/common/ButtonLoading';
+import { handleErrors } from '@/utils';
 
 const ForgotPassword = () => {
     const navigate = useNavigate();
@@ -21,11 +22,6 @@ const ForgotPassword = () => {
     const [email, setEmail] = useState("");
     const [errors, setErrors] = useState([]);
     const [isButtonLoading, setIsButtonLoading] = useState(false);
-
-    const handleError = (error) => {
-        const responseErrors = error.response?.data || {message: error?.response?.data?.message};
-        setErrors(responseErrors);
-    };
 
     const handleForgotPassword = async (e) => {
         e.preventDefault();
@@ -35,16 +31,16 @@ const ForgotPassword = () => {
             await Axios.post(`/auth/forgot-password`,
                 {
                     email,
-                })
+                }
+            )
 
-            //console.log(response);
             setEmail('');
             setErrors([]);
 
             navigate("/auth/reset-password");
         } catch (error) {
-            console.log(error);
-            handleError(error);
+            console.error(error);
+            handleErrors(error, setErrors);
         } finally {
             setIsButtonLoading(false);
         }

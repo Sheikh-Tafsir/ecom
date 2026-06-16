@@ -39,15 +39,32 @@ const findAllChatsByUserId = async (filters = {}, userId) => {
 
     const limit = CHAT_LIST_DEFAULT_SIZE;
 
+    // Get all chat IDs the user is participant of
+    const userParticipants = await ChatParticipant.findAll({
+        where: { userId },
+        attributes: ["chatId"],
+        raw: true,
+    });
+
+    const chatIds = userParticipants.map(up => up.chatId);
+
     const chats = await Chat.findAll({
-        where,
+        where: {
+            ...where,
+            id: chatIds
+        },
         include: [
             {
                 model: ChatParticipant,
                 as: "Participants",
-                where: {userId},
-                required: true,
-                attributes: []
+                attributes: ["userId", "role", "unreadMessage"],
+                include: [
+                    {
+                        model: User,
+                        as: "User",
+                        attributes: ["id", "name", "image"],
+                    },
+                ],
             }
         ],
         order: [
@@ -63,18 +80,64 @@ const findAllChatsByUserId = async (filters = {}, userId) => {
         ? chats.slice(0, limit)
         : chats;
 
+    const formattedChats = pageChats.map(chat => formatChatListDetails(chat, userId));
+
     const nextCursor =
         hasMore && pageChats.length
             ? pageChats[pageChats.length - 1].id
             : null;
 
     return {
-        chats: pageChats,
+        chats: formattedChats,
         pagination: {
             hasMore,
             nextCursor,
             limit,
         },
+    };
+};
+
+const formatChatListDetails = (chat, userId) => {
+    const c = chat.get({plain: true});
+
+    const participants = c.Participants.map(p => ({
+        id: p.userId,
+        userId: p.userId,
+        name: p.User?.name,
+        image: p.User?.image,
+        role: p.role,
+    }));
+
+    const currentUserParticipant = c.Participants.find(p => Number(p.userId) === Number(userId));
+    const unreadMessage = currentUserParticipant ? currentUserParticipant.unreadMessage : 0;
+
+    let name = c.name;
+    let image = c.image;
+    let otherUserId = null;
+    let shortName = null;
+
+    if (c.type === CHAT_TYPE.DIRECT) {
+        const other = participants.find(p => Number(p.id) !== Number(userId));
+        name = other?.name || "Unknown";
+        image = other?.image;
+        otherUserId = other?.id;
+        shortName = other?.name ? other.name.split(" ")[0] : "Unknown";
+    } else {
+        shortName = name;
+    }
+
+    return {
+        id: c.id,
+        type: c.type,
+        name,
+        image,
+        lastMessage: c.lastMessage,
+        lastSent: c.lastSent,
+        unreadMessage,
+        participants,
+        Participants: participants,
+        otherUserId,
+        shortName
     };
 };
 
@@ -166,6 +229,7 @@ const formatChatDetails = (chat, userId) => {
 
     const participants = c.Participants.map(p => ({
         id: p.userId,
+        userId: p.userId,
         name: p.User?.name,
         image: p.User?.image,
         role: p.role,
@@ -174,7 +238,7 @@ const formatChatDetails = (chat, userId) => {
     let name = c.name;
 
     if (c.type === CHAT_TYPE.DIRECT) {
-        const other = participants.find(p => p.id !== userId);
+        const other = participants.find(p => Number(p.id) !== Number(userId));
         name = other?.name || "Unknown";
     }
 
@@ -187,7 +251,7 @@ const formatChatDetails = (chat, userId) => {
     };
 };
 
-const findAllChatsByUserIdToJoinRoom = async (userId) => {
+const findAllChatParticipantsByUserId = async (userId) => {
     return await ChatParticipant.findAll({
         where: {userId},
         attributes: ['chatId'],
@@ -196,7 +260,7 @@ const findAllChatsByUserIdToJoinRoom = async (userId) => {
 }
 
 const sendMessage = async (senderId, body) => {
-    const {chatId, receiverId, content, contentType} = body;
+    const {chatId, receiverId, content, contentType, tempId} = body;
 
     if (!content) {
         throw new RuntimeError(400, "Message is required");
@@ -220,7 +284,7 @@ const sendMessage = async (senderId, body) => {
         );
 
         await chat.update(
-            {lastSent: new Date()},
+            {lastSent: new Date(), lastMessage: content},
             {transaction: t}
         );
 
@@ -244,6 +308,7 @@ const sendMessage = async (senderId, body) => {
         throw err;
     }
 };
+
 
 /* =========================
    DIRECT CHAT FIND/CREATE
@@ -318,22 +383,25 @@ const checkChatParticipant = async (chatId, userId, transaction) => {
 }
 
 
-const saveMessageReceipts = async (activeUsers = [], messageId, userId) => {
+const saveMessageReceipts = async (activeUsers = [], messageId, chatId, senderId) => {
     const now = Date.now();
 
-    const allParticipants = await findAllChatsByUserIdToJoinRoom(userId);
+    const allParticipants = await findChatParticipantsByChatId(chatId);
     const activeSet = new Set(activeUsers.map(String));
 
-    const receipts = allParticipants.map(p => {
-        const isActive = activeSet.has(String(p.userId));
+    const receipts = allParticipants
+        .filter(participant => participant.userId != senderId)
+        .map(participant => {
+            const isActive = activeSet.has(String(participant.userId));
 
-        return {
-            messageId,
-            userId: p.userId,
-            deliveredAt: now,
-            read_at: isActive ? now : null
-        };
-    });
+            return {
+                messageId,
+                userId: participant.userId,
+                deliveredAt: now,
+                read_at: isActive ? now : null
+            };
+        }
+    );
 
     const t = await sequelize.transaction();
 
@@ -351,6 +419,15 @@ const saveMessageReceipts = async (activeUsers = [], messageId, userId) => {
         throw err;
     }
 }
+
+const findChatParticipantsByChatId = async (chatId) => {
+    return await ChatParticipant.findAll({
+        where: { chatId },
+        attributes: ['userId'],
+        raw: true,
+    });
+};
+
 /* =========================
    SEEN / READ RECEIPTS
 ========================= */
@@ -424,6 +501,43 @@ const createGroup = async (body, user) => {
     }
 };
 
+const updateGroup = async (body, user) => {
+    const { chatId, users } = body;
+
+    if (!chatId) {
+        throw new RuntimeError(400, "Chat ID is required");
+    }
+
+    if (!users?.length) {
+        throw new RuntimeError(400, "At least one user is required to add");
+    }
+
+    const t = await sequelize.transaction();
+
+    try {
+        await checkChatParticipant(chatId, user.id, t);
+
+        await ChatParticipant.bulkCreate(
+            users.map(u => ({
+                chatId: Number(chatId),
+                userId: u.id,
+                role: CHAT_MEMBER_TYPE.MEMBER,
+            })),
+            {
+                ignoreDuplicates: true,
+                transaction: t
+            }
+        );
+
+        await t.commit();
+
+        return { chatId };
+    } catch (err) {
+        await t.rollback();
+        throw err;
+    }
+};
+
 const buildGroupName = (creator, users) =>
     `${creator.name.split(" ")[0]}, ${users.map(u => u.name.split(" ")[0]).join(", ")}`;
 
@@ -433,9 +547,10 @@ const buildGroupName = (creator, users) =>
 module.exports = {
     findAllChatsByUserId,
     findDetailsChatById,
-    findAllChatsByUserIdToJoinRoom,
+    findAllChatParticipantsByUserId,
     sendMessage,
     saveMessageReceipts,
     seenChatMessage,
     createGroup,
+    updateGroup,
 };

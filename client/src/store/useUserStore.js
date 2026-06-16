@@ -1,10 +1,9 @@
 import {create} from "zustand";
 import {
-    ACCESS_TOKEN,
     getAccessUser,
     saveAccessToken
 } from "@/utils/AuthUtils";
-import {AxiosNoInterceptor} from "@/services/http/Axios.js";
+import {AxiosNoInterceptor, logout} from "@/services/http/Axios.js";
 
 export const useUserStore = create((set, get) => ({
     user: getAccessUser(),
@@ -16,15 +15,9 @@ export const useUserStore = create((set, get) => ({
     },
 
     logout: async () => {
-        try {
-            await AxiosNoInterceptor.post("/auth/logout");
-        } catch (error) {
-            console.error("Logout failed:", error);
-        } finally {
-            set({user: null});
-            localStorage.removeItem(ACCESS_TOKEN);
-            window.location.replace("/");
-        }
+        await logout()
+        set({user: null});
+        window.location.replace("/");
     },
 
     isAuthenticated: () => {

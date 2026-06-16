@@ -134,19 +134,19 @@ const uploadImage = async (image) => {
 }
 
 const streamVideo = async (filename, range) => {
-    console.log("1");
+    //console.log("1");
     const filePath = path.join(__dirname, '../../videos', filename);
 
     if (!fs.existsSync(filePath)) {
-        console.log("2");
+        //console.log("2");
         throw new RuntimeError(404, 'VIDEO_NOT_FOUND');
     }
 
-    console.log("3" + range);
+    //console.log("3" + range);
     const stat = fs.statSync(filePath);
     const fileSize = stat.size;
 
-    console.log("4" + range);
+    //console.log("4" + range);
     const parts = range.replace(/bytes=/, '').split('-');
     const start = parseInt(parts[0], 10);
     const end = parts[1] ? parseInt(parts[1], 10) : Math.min(start + MAX_VIDEO_CHUNK_SIZE, fileSize) - 1;

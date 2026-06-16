@@ -1,5 +1,7 @@
 package com.example.demo.user.controller;
 
+import com.example.demo.common.dto.CustomUserDetails;
+import com.example.demo.user.dto.UserSearchResponse;
 import com.example.demo.user.service.UserService;
 import com.example.demo.common.dto.ApiResponse;
 import com.example.demo.common.model.User;
@@ -10,7 +12,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -31,6 +36,14 @@ public class UserController {
         log.debug("role: {}, status: {}", role, status);
         Page<User> users = userService.findAll(pageable, name, role, status);
         return ResponseUtils.ok(users, messageService.get("successfully.found", "User List"));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<UserSearchResponse>>> findForNameSearch(@RequestParam(required = false) String name,
+                                                                                   @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        List<UserSearchResponse> users = userService.findAllByName(name, userDetails);
+        return ResponseUtils.ok(users, messageService.get("successfully.found", "User search List"));
     }
 
     @GetMapping("/{id}")

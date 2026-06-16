@@ -53,7 +53,7 @@ const Signup = () => {
             const response = await AxiosNoInterceptor.post(`/users`, data);
             login(response.data.data);
         } catch (error) {
-            console.log(error);
+            //console.log(error);
             handleErrors(error, setError);
         }
     };

@@ -49,9 +49,9 @@ const ChatList = ({ chats, handleUserSelectorDialogOpen }) => {
         <ScrollArea>
           <div className="flex flex-col gap-2 p-1 max-h-[calc(80vh-8rem)]">
             {filteredChats.length > 0 ?
-              filteredChats.map((chat) => (
+              filteredChats.map((chat, index) => (
                 <div
-                  key={chat.id}
+                  key={index}
                   className={`flex justify-between gap-2 p-4 transition-colors ${chat.id == id
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 hover:bg-blue-500 hover:text-white'

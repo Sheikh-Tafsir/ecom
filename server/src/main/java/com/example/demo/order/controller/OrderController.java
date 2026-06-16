@@ -41,17 +41,10 @@ public class OrderController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<OrderListResponse>>> findAll(Pageable pageable,
-                                                                        @RequestParam(required = false) OrderStatus status) {
+                                                                        @RequestParam(required = false) OrderStatus status,
+                                                                        @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        Page<OrderListResponse> orders = orderService.findAll(pageable, status);
-        return ResponseUtils.ok(orders, messageService.get("successfully.found", "Order List"));
-    }
-
-    @GetMapping("/my")
-    public ResponseEntity<ApiResponse<Page<OrderListResponse>>> findMyOrders(Pageable pageable,
-                                                                             @AuthenticationPrincipal CustomUserDetails userDetails) {
-
-        Page<OrderListResponse> orders = orderService.findByUser(userDetails.user().getId(), pageable);
+        Page<OrderListResponse> orders = orderService.findAll(status, userDetails, pageable);
         return ResponseUtils.ok(orders, messageService.get("successfully.found", "Order List"));
     }
 

@@ -13,6 +13,7 @@ import ChatInfo from './ChatInfo';
 import { useUserStore } from '@/store/useUserStore';
 
 const ChatMessages = ({ onSendMessage, chat, handleUserSelectorDialogOpen }) => {
+
   const { user } = useUserStore();
   const messagesEndRef = useRef(null);
   const [newMessage, setNewMessage] = useState('');
@@ -73,7 +74,7 @@ const ChatMessages = ({ onSendMessage, chat, handleUserSelectorDialogOpen }) => 
                   {chat.id && chat?.messages?.length > 0 && chat?.messages.map((message, index) => (
                     <div
                       key={message.id || index}
-                      className={`flex ${message.senderId === user.id ? 'justify-end' : 'justify-start'}`}
+                      className={`flex ${message.senderId == user.id ? 'justify-end' : 'justify-start'}`}
                     >
                       <div className='max-w-[80%]'>
                         {chat?.type == CHAT_TYPE.GROUP && message.senderId != user.id &&
@@ -81,7 +82,11 @@ const ChatMessages = ({ onSendMessage, chat, handleUserSelectorDialogOpen }) => 
                         }
                         <div
                           className={`rounded-lg px-4 py-2 w-fit text-sm 2xl:text-md
-                        ${message.senderId == user.id ? (message.isTemporary ? 'text-primary-foreground bg-blue-500' : 'text-primary-foreground bg-blue-600') : 'bg-muted'}`}
+                        ${message.senderId == user.id 
+                          ? (message.isTemporary 
+                            ? 'text-primary-foreground bg-blue-500' 
+                            : 'text-primary-foreground bg-blue-600') 
+                          : 'bg-muted'}`}
                         >
                           {message.contentType == CONTENT_TYPE.TEXT ?
                             <p>{message.content}</p>

@@ -1,6 +1,6 @@
 import {useEffect, useCallback} from 'react';
 import {useQueryClient} from '@tanstack/react-query';
-import socket from "@/services/realtime/socket.js";
+import { getSocket } from '@/services/realtime/socket';
 import {Axios} from "@/services/http/Axios.js";
 import {isNull} from "@/utils/index.js";
 import {
@@ -13,16 +13,21 @@ export const useChatSync = (id, userId) => {
     const queryClient = useQueryClient();
 
     const updateChatOnMessage = useCallback((newMessage) => {
+        //console.log("Received new message:", newMessage);
         if (isNull(newMessage.content)) return;
 
         queryClient.setQueryData(['chats'], (oldChats = []) => {
-            const currentChat = oldChats.find(chat => chat.id === newMessage.chatId);
+            if (!Array.isArray(oldChats)) {
+                oldChats = [];
+            }
+
+            const currentChat = oldChats.find(chat => chat?.id == newMessage.chatId);
             if (!currentChat) {
                 queryClient.invalidateQueries(['chats']);
                 return oldChats;
             }
 
-            const isOwnSentMessage = newMessage.senderId === userId;
+            const isOwnSentMessage = newMessage.senderId == userId;
 
             const updatedChat = {
                 ...currentChat,
@@ -30,21 +35,30 @@ export const useChatSync = (id, userId) => {
                 unreadMessage: !isOwnSentMessage ? (currentChat.unreadMessage || 0) + 1 : currentChat.unreadMessage,
             };
 
-            const filteredChats = oldChats.filter(chat => chat.id !== newMessage.chatId);
+            const filteredChats = oldChats.filter(chat => chat?.id != newMessage.chatId);
             return [updatedChat, ...filteredChats];
         });
 
-        if (newMessage.chatId === Number(id)) {
+        if (newMessage.chatId == id) {
             queryClient.setQueryData(['selected_chat', id], (oldChat = {}) => {
                 const messages = oldChat.messages || [];
 
                 let updatedMessages;
-                const isOwnSentMessage = newMessage.senderId === userId && !newMessage?.isTemporary && newMessage.tempId;
+                const isOwnSentMessage = newMessage.senderId == userId && !newMessage?.isTemporary && newMessage.tempId;
 
                 if (isOwnSentMessage) {
-                    updatedMessages = messages.map(msg =>
-                        msg.tempId === newMessage.tempId ? newMessage : msg
-                    );
+                    let found = false;
+                    updatedMessages = messages.map(msg => {
+                        if (msg.tempId == newMessage.tempId) {
+                            found = true;
+                            return newMessage;
+                        }
+                        return msg;
+                    });
+                    
+                    if (!found) {
+                        updatedMessages = [...messages, newMessage];
+                    }
                 } else {
                     updatedMessages = [...messages, newMessage];
                 }
@@ -58,6 +72,7 @@ export const useChatSync = (id, userId) => {
     }, [id, userId, queryClient]);
 
     useEffect(() => {
+        const socket = getSocket();
         if (!socket) return;
 
         const handleReceiveMessage = (response) => updateChatOnMessage(response.data);
@@ -81,14 +96,14 @@ export const useChatSync = (id, userId) => {
         const markMessagesAsSeen = async () => {
             try {
                 queryClient.setQueryData(['chats'], (oldChats = []) => {
-                    const currentChat = oldChats.find(chat => chat.id === Number(id));
+                    const currentChat = oldChats.find(chat => chat.id == Number(id));
                     if (!currentChat) {
                         queryClient.invalidateQueries(['chats']);
                         return oldChats;
                     }
 
                     return oldChats.map(chat =>
-                        chat.id === Number(id) ? {...chat, unreadMessage: 0} : chat
+                        chat.id == Number(id) ? {...chat, unreadMessage: 0} : chat
                     );
                 });
 

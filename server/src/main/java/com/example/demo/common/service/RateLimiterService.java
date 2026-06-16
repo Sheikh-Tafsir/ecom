@@ -16,8 +16,8 @@ public class RateLimiterService {
     private static final String API_EMAIL_KEY_PREFIX = "api:email:";
     private static final String API_IP_KEY_PREFIX = "api:ip:";
 
-    private static final int MAX_AUTH_REQUESTS = 3;
-    private static final int MAX_API_REQUESTS = 20;
+    private static final int MAX_AUTH_REQUESTS = 5;
+    private static final int MAX_API_REQUESTS = 60;
     private static final int WINDOW_SECONDS = 60;
 
     private final StringRedisTemplate redisTemplate;

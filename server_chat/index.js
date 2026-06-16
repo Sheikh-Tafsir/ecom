@@ -3,6 +3,7 @@ const cookieParser = require('cookie-parser');
 const http = require('http');
 
 require("dotenv").config();
+require("./src/config/logger"); 
 
 // const {CorsMiddleware} = require("./src/middleware/CorsMiddleware");
 const TrimInput = require("./src/middleware/TrimInput");

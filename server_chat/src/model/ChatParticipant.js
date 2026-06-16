@@ -69,7 +69,7 @@ module.exports = (sequelize, DataTypes) => {
             version: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
-                defaultValue: 1,
+                defaultValue: 0,
             }
         },
         {
@@ -89,7 +89,7 @@ module.exports = (sequelize, DataTypes) => {
 
     // Define associations
     ChatParticipant.associate = models => {
-        // ChatParticipant.belongsTo(models.Chat, { foreignKey: 'chatId', as: 'Chat' });
+        ChatParticipant.belongsTo(models.User, { foreignKey: 'userId', as: 'User' });
     };
 
     return ChatParticipant;

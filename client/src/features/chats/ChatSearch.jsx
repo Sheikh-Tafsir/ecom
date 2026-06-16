@@ -17,13 +17,13 @@ const ChatSearch = ({ setSearchedUser }) => {
     const [searchTerm, setSearchTerm] = useState("");
 
     const fetchUsers = async () => {
-        const response = await Axios.get(`/users`, {
+        const response = await Axios.get(`/users/search`, {
             params: {
                 name: searchTerm,
-                size: 20
             }
         });
-        return response.data.data?.content || [];
+
+        return response.data?.data || [];
     };
 
     const { data: users = [], isLoading } = useQuery({
@@ -65,7 +65,8 @@ const ChatSearch = ({ setSearchedUser }) => {
                                         handleUserSelect(user);
                                     }}
                                 >
-                                    {user.name}
+                                    <img src={user.image} alt={user.name} className="w-6 h-6 rounded-full mr-2"/>
+                                    <p>{user.name}</p>
                                 </CommandItem>
                             ))}
                         </CommandGroup>

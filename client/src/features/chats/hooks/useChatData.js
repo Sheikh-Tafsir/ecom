@@ -1,12 +1,11 @@
 import {useMemo} from 'react';
 import {useQuery} from '@tanstack/react-query';
 import {Axios} from "@/services/http/Axios.js";
-import { isEmptyArray } from '@/utils';
 
 export const useChatData = (id) => {
     const fetchChatList = async () => {
         const response = await Axios.get(`/chats`);
-        return response.data.data || [];
+        return response.data.data?.chats || [];
     };
 
     const {data: chats = [], isLoading: isChatsLoading} = useQuery({

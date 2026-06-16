@@ -67,10 +67,16 @@ module.exports = (sequelize, DataTypes) => {
                 defaultValue: DataTypes.NOW,
                 onUpdate: DataTypes.NOW,
                 field: 'updated_at'
+            },
+
+            version: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+                defaultValue: 0,
             }
         },
         {
-            tableName: 'product_users',
+            tableName: 'users',
             timestamps: true,
             createdAt: 'createdAt',
             updatedAt: 'updatedAt',
