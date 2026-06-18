@@ -1,5 +1,7 @@
 spring:
-  application.name: demo
+  application:
+    name: demo
+    standalone: false
 
   servlet.multipart:
     enabled: true
@@ -37,6 +39,16 @@ spring:
           enabled: true
           initial-interval: 2000
           max-retries: 3
+
+    mail:
+      queue: mail.queue
+      exchange: mail.exchange
+      routing-key: mail.send
+
+    service:
+      queue: service.queue
+      exchange: service.exchange
+      routing-key: service.routing.key
 
   http:
     converters:
@@ -83,11 +95,12 @@ supabase:
   api-key: ${SUPABASE_API_KEY}
   bucket: ${SUPABASE_BUCKET}
 
-# RabbitMQ configuration
 mail:
-  queue: mail.queue
-  exchange: mail.exchange
-  routing-key: mail.send
+  smtp:
+    host: ${MAIL_SMTP_HOST}
+    port: ${MAIL_SMTP_PORT}
+    username: ${MAIL_SMTP_USERNAME}
+    password: ${MAIL_SMTP_PASSWORD}
 
 service:
   queue: service.queue

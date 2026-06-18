@@ -12,10 +12,10 @@ import java.util.Properties;
 public class MailConfig {
 
     @Bean
-    public JavaMailSender javaMailSender(@Value("${SMTP_HOST}") String host,
-                                         @Value("${SMTP_PORT}") int port,
-                                         @Value("${SMTP_USERNAME}") String username,
-                                         @Value("${SMTP_PASSWORD}") String password) {
+    public JavaMailSender javaMailSender(@Value("${mail.smtp.host}") String host,
+                                         @Value("${mail.smtp.port}") int port,
+                                         @Value("${mail.smtp.username}") String username,
+                                         @Value("${mail.smtp.password}") String password) {
 
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost(host);

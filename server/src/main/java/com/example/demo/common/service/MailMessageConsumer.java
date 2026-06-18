@@ -13,7 +13,7 @@ public class MailMessageConsumer {
 
     private final MailService mailService;
 
-    @RabbitListener(queues = "${mail.queue}")
+    @RabbitListener(queues = "${spring.rabbitmq.mail.queue}")
     public void handleMail(MailMessageDto mailMessageDto) {
         mailService.sendEmail(mailMessageDto.to(), mailMessageDto.subject(), mailMessageDto.body());
 

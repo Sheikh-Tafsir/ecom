@@ -17,7 +17,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -44,15 +43,13 @@ import static org.springframework.util.StringUtils.hasText;
 @RequiredArgsConstructor
 public class AuthService {
 
-    public static final String RESET_PASSWORD_MAIL_SUBJECT = "Reset password process";
+    public static final String FORGET_PASSWORD_MAIL_SUBJECT = "Forget password process";
 
-    public static final String RESET_PASSWORD_MAIL_TEXT = "Your One time password for password reset is below:\n";
+    public static final String FORGET_PASSWORD_MAIL_TEXT = "Your One time password for forget password is below:\n";
 
     public static final String SIGNUP_MAIL_SUBJECT = "Signup process";
 
     public static final String SIGNUP_MAIL_TEXT = "Your One time password for password for signup is below:\n";
-
-    public static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
 
     public static final String GOOGLE_OAUTH_API= "https://www.googleapis.com/oauth2/v1/userinfo?access_token={access_token}";
 
@@ -75,8 +72,6 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
 
     private final WebClient webClient;
-
-    private final ModelMapper modelMapper;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -102,7 +97,9 @@ public class AuthService {
             throw new BadCredentialsException("Email already exists! Account is " + user.getStatus().getValue());
         }
 
-        user = modelMapper.map(signupRequest, User.class);
+        user = new User();
+        user.setName(signupRequest.name());
+        user.setEmail(signupRequest.email());
         user = save(user, signupRequest.password());
         
         Otp otp = otpService.createOtp(user, OtpType.SIGNUP);
@@ -137,6 +134,8 @@ public class AuthService {
 
         otpService.verifyOtp(OtpType.SIGNUP, request.otp(), request.email());
 
+        Role role = roleService.findByName(ROLE_USER);
+        user.getRoles().add(role);
         user.setStatus(UserStatus.ACTIVE);
         user = authRepository.save(user);
 
@@ -179,6 +178,9 @@ public class AuthService {
             user.setEmail(googleUser.getEmail());
             user.setStatus(UserStatus.ACTIVE);
 
+            Role role = roleService.findByName(ROLE_USER);
+            user.getRoles().add(role);
+
             user = save(user, generatePassword(googleUser.getName()));
         }
 
@@ -214,30 +216,28 @@ public class AuthService {
         addCookie(response, refreshTokenName, null, 0);
     }
 
-    public void resetPassword(OtpEmailRequest resetPasswordRequest) {
-        User user = findByEmail(resetPasswordRequest.email());
+    public void forgetPassword(OtpEmailRequest request) {
+        User user = findByEmail(request.email());
 
         if (isNull(user)) {
             throw new BadCredentialsException("Email is invalid");
         }
 
-        Otp userOtp = otpService.getOrCreateOtp(user, OtpType.RESET);
-
-        mailService.sendEmail(user.getEmail(), RESET_PASSWORD_MAIL_SUBJECT, RESET_PASSWORD_MAIL_TEXT + userOtp.getValue());
+        Otp userOtp = otpService.getOrCreateOtp(user, OtpType.FORGET);
+        mailService.sendEmail(user.getEmail(), FORGET_PASSWORD_MAIL_SUBJECT, FORGET_PASSWORD_MAIL_TEXT + userOtp.getValue());
     }
 
     @Transactional
-    public void verifyResetPasswordOtp(VerifyResetPasswordOtpRequest request) {
+    public void verifyForgetPasswordOtp(VerifyForgetPasswordOtpRequest request) {
         User user = findByEmail(request.email());
 
         if (isNull(user)) {
             throw new BadCredentialsException("User not found");
         }
 
-        otpService.verifyOtp(OtpType.RESET, request.otp(), request.email());
+        otpService.verifyOtp(OtpType.FORGET, request.otp(), request.email());
 
-        user.setPassword(passwordEncoder.encode(request.password()));
-        authRepository.save(user);
+        save(user, request.password());
     }
 
     public TokenDto getTokens(User user) {
@@ -257,10 +257,6 @@ public class AuthService {
     
     private User save(User user, String password) {
         user.setPassword(passwordEncoder.encode(password));
-
-        Role role = roleService.findByName(ROLE_USER);
-        user.getRoles().add(role);
-
         return authRepository.save(user);
     }
 

@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {Link} from 'react-router-dom';
+import {useNavigate, Link} from 'react-router-dom';
 import {useGoogleLogin} from '@react-oauth/google';
 import {FcGoogle} from "react-icons/fc";
 import {EyeOff, Eye} from "lucide-react";
@@ -29,20 +29,24 @@ import InputError from "@/components/common/InputError.jsx";
 const LoginSchema = z.object({
     email: z
         .string()
+        .nonempty('Email is required')
         .max(31, 'Email must be shorter than 31 characters'),
     password: z
         .string()
+        .nonempty('Password is required')
         .min(8, 'Password must be at least 8 characters long')
         .max(15, 'Password must be shorter than 15 characters'),
 });
 
 const Login = () => {
+     const navigate = useNavigate();
     const {login} = useUserStore();
 
     const {
         register,
         handleSubmit,
         setError,
+        reset,
         formState: {errors, isSubmitting},
     } = useForm({
         resolver: zodResolver(LoginSchema),
@@ -56,6 +60,8 @@ const Login = () => {
         try {
             const response = await AxiosNoInterceptor.post(`/auth/login`, data);
             login(response.data.data);
+
+            navigate(`/`, {replace: true});
         } catch (error) {
             console.error(error);
             handleErrors(error, setError);
@@ -74,6 +80,7 @@ const Login = () => {
 
                 //console.log(response.data.data);
                 login(response.data.data);
+                reset();
             } catch (err) {
                 console.error(err);
                 handleErrors(err, setError);
@@ -142,7 +149,7 @@ const Login = () => {
                             </div>
 
                             {/* Remember me + Forgot password */}
-                            <Link to="/auth/forgot-password" className='text-sm'>
+                            <Link to="/auth/forget-password" className='text-sm'>
                                 Forgot Password?
                             </Link>
                         </CardContent>

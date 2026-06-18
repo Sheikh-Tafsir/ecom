@@ -15,6 +15,7 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class OtpService {
 
+    public static final int MAX_TRIES = 3;
     public static final int OTP_VALIDITY_INT_MINUTES = 5;
 
     private final RedisTemplate<String, Object> redisTemplate;
@@ -26,7 +27,7 @@ public class OtpService {
         otp.setType(type);
         otp.setValue(generateOtpValue());
 
-        redisTemplate.opsForValue().set(otp.getOtpKey(), otp, Duration.ofMinutes(OTP_VALIDITY_INT_MINUTES));
+        redisTemplate.opsForValue().set(getKey(type, user.getEmail()), otp, Duration.ofMinutes(OTP_VALIDITY_INT_MINUTES));
 
         return otp;
     }
@@ -45,19 +46,23 @@ public class OtpService {
         Otp otp = getOtp(type, email);
 
         if (otp == null) {
-            throw new BadCredentialsException("Invalid Email or otp type");
+            throw new BadCredentialsException("No OTP found");
+        }
+
+        if (otp.getTries() >= MAX_TRIES) {
+            throw new BadCredentialsException("Max tries attempted");
         }
 
         if (otp.getValue() != otpInput) {
-            throw new BadCredentialsException("Invalid Email or otp type");
+            otp.setTries(otp.getTries() + 1);
+            throw new BadCredentialsException("Invalid OTP");
         }
 
         deleteOtp(type, email);
     }
 
     private Otp getOtp(OtpType type, String email) {
-        String otpKey = getKey(type, email);
-        return (Otp) redisTemplate.opsForValue().get(otpKey);
+        return (Otp) redisTemplate.opsForValue().get(getKey(type, email));
     }
 
     private int generateOtpValue() {
@@ -66,8 +71,7 @@ public class OtpService {
     }
 
     private void deleteOtp(OtpType type, String email) {
-        String otpKey = getKey(type, email);
-        redisTemplate.delete(otpKey);
+        redisTemplate.delete(getKey(type, email));
     }
 
     private String getKey(OtpType type, String email) {

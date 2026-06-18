@@ -10,10 +10,10 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class MailMessageProducer {
 
-    @Value("${mail.exchange}")
+    @Value("${spring.rabbitmq.mail.exchange}")
     private String mailExchange;
 
-    @Value("${mail.routing-key}")
+    @Value("${spring.rabbitmq.mail.routing-key}")
     private String mailRoutingKey;
 
     private final RabbitTemplate rabbitTemplate;

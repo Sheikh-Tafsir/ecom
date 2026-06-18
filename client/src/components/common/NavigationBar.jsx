@@ -44,7 +44,7 @@ export default function Navbar() {
                 ],
             },
 
-            ...(isAuthenticated
+            ...(isAuthenticated()
                 ? [
                     {name: "Chats", href: "/chats",},
                 ]

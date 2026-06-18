@@ -10,14 +10,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
-import static com.example.demo.auth.service.AuthService.REFRESH_TOKEN_COOKIE_NAME;
-
+@Slf4j
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -30,7 +30,9 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponse<Void>> signup(@Valid @RequestBody SignupRequest signupRequest, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse<Void>> signup(@Valid @RequestBody SignupRequest signupRequest,
+                                                    BindingResult bindingResult) {
+
         authValidator.validateSignup(signupRequest, bindingResult);
         commonHelper.checkErrors(bindingResult);
 
@@ -47,13 +49,13 @@ public class AuthController {
     }
 
     @PostMapping("/signup/verify")
-    public ResponseEntity<ApiResponse<String>> verifySignupOtp(@Valid @RequestBody VerifySignupOtpRequest otpVerificationRequest,
+    public ResponseEntity<ApiResponse<String>> verifySignupOtp(@Valid @RequestBody VerifySignupOtpRequest verifySignupOtpRequest,
                                                                HttpServletResponse response) {
 
-        TokenDto tokenDto = authService.verifySignupOtp(otpVerificationRequest);
+        TokenDto tokenDto = authService.verifySignupOtp(verifySignupOtpRequest);
         authService.addRefreshCookie(response, tokenDto);
 
-        return ResponseUtils.created(tokenDto.getAccessToken(), "Signed up successful!");
+        return ResponseUtils.created(tokenDto.getAccessToken(), "Sign up successful!");
     }
 
     @PostMapping("/login")
@@ -67,7 +69,9 @@ public class AuthController {
     }
 
     @PostMapping("/google-login")
-    public ResponseEntity<ApiResponse<String>> loginWithGoogle(@RequestBody Map<String, String> request, HttpServletResponse response) {
+    public ResponseEntity<ApiResponse<String>> loginWithGoogle(@RequestBody Map<String, String> request,
+                                                               HttpServletResponse response) {
+        
         TokenDto tokenDto = authService.loginWithGoogle(request);
         authService.addRefreshCookie(response, tokenDto);
 
@@ -80,26 +84,26 @@ public class AuthController {
         return ResponseUtils.ok(accessToken, "Access Token refreshed successfully");
     }
 
-    @PostMapping("/password-reset")
-    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody OtpEmailRequest request) {
-        authService.resetPassword(request);
+    @PostMapping("/forget-password")
+    public ResponseEntity<ApiResponse<Void>> forgetPassword(@Valid @RequestBody OtpEmailRequest request) {
+        authService.forgetPassword(request);
         return ResponseUtils.ok("Password Reset OTP send to mail");
     }
 
-    @PostMapping("/password-reset/resend")
-    public ResponseEntity<ApiResponse<Void>> resendResetPasswordOtp(@Valid @RequestBody OtpEmailRequest request) {
-        authService.resetPassword(request);
+    @PostMapping("/forget-password/resend")
+    public ResponseEntity<ApiResponse<Void>> forgetPasswordOtp(@Valid @RequestBody OtpEmailRequest request) {
+        authService.forgetPassword(request);
         return ResponseUtils.ok("Password Reset OTP again send to mail");
     }
 
-    @PostMapping("/password-reset/verify")
-    public ResponseEntity<ApiResponse<Void>> verifyResetPasswordOtp(@Valid @RequestBody VerifyResetPasswordOtpRequest resetPasswordOtpVerificationRequest,
+    @PostMapping("/forget-password/verify")
+    public ResponseEntity<ApiResponse<Void>> verifyForgetPasswordOtp(@Valid @RequestBody VerifyForgetPasswordOtpRequest request,
                                                                     BindingResult bindingResult) {
 
-        authValidator.validatePasswords(resetPasswordOtpVerificationRequest.password(), resetPasswordOtpVerificationRequest.confirmPassword(), bindingResult);
+        authValidator.validatePasswords(request.password(), request.confirmPassword(), bindingResult);
         commonHelper.checkErrors(bindingResult);
 
-        authService.verifyResetPasswordOtp(resetPasswordOtpVerificationRequest);
+        authService.verifyForgetPasswordOtp(request);
         return ResponseUtils.ok("Password Reset successful");
     }
 

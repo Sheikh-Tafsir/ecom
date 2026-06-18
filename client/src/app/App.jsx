@@ -15,8 +15,8 @@ import NotFound from '@/features/NotFound';
 
 import Login from "@/features/auth/Login.jsx";
 import Signup from "@/features/auth/Signup.jsx";
-import ForgotPassword from "@/features/auth/ForgotPassword";
-import ResetPassword from "@/features/auth/ResetPassword";
+import ForgetPassword from "@/features/auth/ForgetPassword";
+import ForgetPasswordVerify from "@/features/auth/ForgetPasswordVerify";
 
 import Profile from '@/features/profile/Profile.jsx'
 
@@ -40,6 +40,7 @@ import StockItems from "@/features/stock/StockItems.jsx";
 import StockDetails from "@/features/stock/StockDetails.jsx";
 import {getAccessToken} from "@/utils/index.js";
 import Chat from "@/features/chats/Chats.jsx";
+import SignupVerify from "@/features/auth/SignupVerify";
 
 const App = () => {
 
@@ -83,9 +84,10 @@ const InnerApp = () => {
 
             <Route element={<AuthRoute/>}>
                 <Route path="/auth/signup" element={<Signup/>}/>
+                <Route path="/auth/signup/verify" element={<SignupVerify/>}/>
                 <Route path="/auth/login" element={<Login/>}/>
-                <Route path="/auth/forgot-password" element={<ForgotPassword/>}/>
-                <Route path="/auth/reset-password" element={<ResetPassword/>}/>
+                <Route path="/auth/forget-password" element={<ForgetPassword/>}/>
+                <Route path="/auth/forget-password/verify" element={<ForgetPasswordVerify/>}/>
             </Route>
 
             <Route element={<ProtectedRoute/>}>

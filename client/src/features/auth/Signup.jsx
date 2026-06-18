@@ -1,4 +1,4 @@
-import {Link} from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {z} from 'zod';
@@ -17,24 +17,27 @@ import {Label} from "@/components/ui/label.jsx"
 import {ButtonLoading} from '@/components/common/ButtonLoading';
 import {AxiosNoInterceptor} from '@/services/http/Axios';
 import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils.js';
-import {useUserStore} from '@/store/useUserStore.js';
 import InputError from "@/components/common/InputError.jsx";
 
 const SignupSchema = z.object({
     name: z
         .string()
+        .nonempty('Name is required')
         .min(2, 'Name must be at least 2 characters')
         .max(31, 'Name must be shorter than 31 characters'),
     email: z
         .string()
+        .nonempty('Email is required')
         .max(31, 'Email must be shorter than 31 characters'),
     password: z
         .string()
-        .min(8, 'Password must be at least 6 characters long')
+        .nonempty('Password is required')
+        .min(8, 'Password must be at least 8 characters long')
         .max(15, 'Password must be shorter than 15 characters'),
     confirmPassword: z
         .string()
-        .min(8, 'Confirm Password must be at least 6 characters long')
+        .nonempty('Confirm Password is required')
+        .min(8, 'Confirm Password must be at least 8 characters long')
         .max(15, 'Confirm Password must be shorter than 15 characters'),
 }).refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match',
@@ -42,25 +45,28 @@ const SignupSchema = z.object({
 });
 
 const Signup = () => {
-    const {login} = useUserStore();
+    const navigate = useNavigate();
 
-    const {register, handleSubmit, setError, formState: {errors, isSubmitting}} = useForm({
+    const {register, handleSubmit, setError, reset, formState: {errors, isSubmitting}} = useForm({
         resolver: zodResolver(SignupSchema)
     });
 
     const handleSignup = async (data) => {
         try {
-            const response = await AxiosNoInterceptor.post(`/users`, data);
-            login(response.data.data);
+            await AxiosNoInterceptor.post(`/auth/signup`, data);
+
+            const email = data.email;
+            reset();
+
+            navigate(`/auth/signup/verify?email=${email}`);
         } catch (error) {
-            //console.log(error);
+            console.error(error);
             handleErrors(error, setError);
         }
     };
 
     return (
         <div className="lg:flex h-[100vh]">
-            {/* Left Image */}
             <div className="lg:w-[50%]">
                 <img
                     src="https://static.vecteezy.com/system/resources/thumbnails/005/879/539/small_2x/cloud-computing-modern-flat-concept-for-web-banner-design-man-enters-password-and-login-to-access-cloud-storage-for-uploading-and-processing-files-illustration-with-isolated-people-scene-free-vector.jpg"
@@ -69,7 +75,6 @@ const Signup = () => {
                 />
             </div>
 
-            {/* Form Section */}
             <div className="flex w-full lg:w-[50%] h-full">
                 <Card className="mx-auto my-auto w-[450px]">
                     <form onSubmit={handleSubmit(handleSignup)}>
@@ -123,20 +128,11 @@ const Signup = () => {
                         </CardContent>
 
                         <CardFooter className="flex-col">
-                            {isSubmitting
-                                ? (
-                                    <ButtonLoading />
-                                )
-                                : (
-                                    <Button
-                                        type="submit"
-                                        className="w-full"
-                                        style={{backgroundColor: "rgb(24,62,139)"}}
-                                    >
-                                        Sign Up
-                                    </Button>
-                                )}
-
+                            {isSubmitting ? 
+                                <ButtonLoading />
+                                : 
+                                <Button type="submit" className="w-full">Sign Up</Button>
+                            }
                             <div className="flex mt-4">
                                 <Link to="/auth/login" className="flex mx-auto text-sm">
                                     Already have an account?

@@ -8,22 +8,22 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
 
-    @Value("${mail.queue}")
+    @Value("${spring.rabbitmq.mail.queue}")
     private String mailQueue;
 
-    @Value("${mail.exchange}")
+    @Value("${spring.rabbitmq.mail.exchange}")
     private String mailExchange;
 
-    @Value("${mail.routing-key}")
+    @Value("${spring.rabbitmq.mail.routing-key}")
     private String mailRoutingKey;
 
-    @Value("${service.queue}")
+    @Value("${spring.rabbitmq.service.queue}")
     private String serviceQueue;
 
-    @Value("${service.exchange}")
+    @Value("${spring.rabbitmq.service.exchange}")
     private String serviceExchange;
 
-    @Value("${service.routing-key}")
+    @Value("${spring.rabbitmq.service.routing-key}")
     private String serviceRoutingKey;
 
     // For mail

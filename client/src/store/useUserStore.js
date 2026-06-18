@@ -3,7 +3,8 @@ import {
     getAccessUser,
     saveAccessToken
 } from "@/utils/AuthUtils";
-import {AxiosNoInterceptor, logout} from "@/services/http/Axios.js";
+import { logout} from "@/services/http/Axios.js";
+import { isNotNull } from "@/utils";
 
 export const useUserStore = create((set, get) => ({
     user: getAccessUser(),
@@ -21,6 +22,7 @@ export const useUserStore = create((set, get) => ({
     },
 
     isAuthenticated: () => {
-        return !!get().user;
+        // console.log("isAuthenticated: ", isNotNull(getAccessUser()));
+        return isNotNull(getAccessUser());
     },
 }));

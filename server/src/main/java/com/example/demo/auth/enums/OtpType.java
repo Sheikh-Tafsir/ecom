@@ -10,7 +10,7 @@ import lombok.Getter;
 public enum OtpType {
 
     SIGNUP("Signup"),
-    RESET("Reset");
+    FORGET("Forget");
 
     @JsonValue
     private final String value;

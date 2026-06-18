@@ -14,6 +14,7 @@ export const handleErrors = (error, setError) => {
 
         if (errors && typeof errors === "object") {
             handleFieldErrors(errors, setError);
+            return;
         }
 
         if (data?.message) {
@@ -23,7 +24,7 @@ export const handleErrors = (error, setError) => {
         return;
     }
 
-    if (error?.message === NETWORK_ERROR || error?.request) {
+    if (error?.message == NETWORK_ERROR || error?.request) {
         handleClientSideGlobalError(NETWORK_ERROR, setError);
         return;
     }
@@ -54,7 +55,9 @@ export const handleClientSideError = (field, message, setError) => {
 };
 
 const extractMessage = (message) => {
-    if (Array.isArray(message)) return message[0];
+    if (Array.isArray(message)) {
+        return message[0];
+    }
     if (typeof message === "string") return message;
     return JSON.stringify(message);
 };

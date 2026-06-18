@@ -1,5 +1,7 @@
-import {useState} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import z from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 import {Button} from "@/components/ui/button"
 import {
@@ -11,38 +13,36 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import {Input} from "@/components/ui/input"
-import {Label} from "@/components/ui/label"
-import {Axios} from '@/services/http/Axios.js';
+import {AxiosNoInterceptor} from '@/services/http/Axios.js';
 import {ButtonLoading} from '@/components/common/ButtonLoading';
 import { handleErrors } from '@/utils';
+import StaredLabel from '@/components/common/StaredLabel';
+import InputError from '@/components/common/InputError';
 
-const ForgotPassword = () => {
+
+const ForgetPasswordSchema = z.object({
+    email: z
+        .string()
+        .nonempty('Email is required')
+        .max(31, 'Email must be shorter than 31 characters'),
+});
+
+const ForgetPassword = () => {
     const navigate = useNavigate();
 
-    const [email, setEmail] = useState("");
-    const [errors, setErrors] = useState([]);
-    const [isButtonLoading, setIsButtonLoading] = useState(false);
+    const {register, handleSubmit, setError, reset, formState: {errors, isSubmitting}} = useForm({
+        resolver: zodResolver(ForgetPasswordSchema)
+    });
 
-    const handleForgotPassword = async (e) => {
-        e.preventDefault();
-
-        setIsButtonLoading(true);
+    const handleForgetPassword = async (data) => {
         try {
-            await Axios.post(`/auth/forgot-password`,
-                {
-                    email,
-                }
-            )
+            await AxiosNoInterceptor.post(`/auth/forget-password`, data)
 
-            setEmail('');
-            setErrors([]);
-
-            navigate("/auth/reset-password");
+            reset();
+            navigate("/auth/forget-password/verify");
         } catch (error) {
             console.error(error);
-            handleErrors(error, setErrors);
-        } finally {
-            setIsButtonLoading(false);
+            handleErrors(error, setError);
         }
     }
 
@@ -50,7 +50,7 @@ const ForgotPassword = () => {
         <div className='lg:flex h-[100vh]  overflow-hidden'>
             <div className='flex w-full lg:w-[50%] bg-gray-100 h-full'>
                 <Card className="mx-auto my-auto w-[420px]">
-                    <form onSubmit={handleForgotPassword}>
+                    <form onSubmit={handleSubmit(handleForgetPassword)}>
                         <CardHeader>
                             <CardTitle>Forgot Password</CardTitle>
                             <CardDescription>
@@ -59,21 +59,19 @@ const ForgotPassword = () => {
                         </CardHeader>
                         <CardContent className="space-y-2">
                             <div className="space-y-1">
-                                <Label htmlFor="name">Email</Label>
-                                <Input type="email" placeholder="ex something12@gmail.com" value={email}
-                                       onChange={(event) => {
-                                           setEmail(event.target.value);
-                                       }} required/>
+                                <StaredLabel label = "Email"/>
+                                <Input type="email" placeholder="ex something12@gmail.com" {...register('email')} required/>
+                                <InputError errors={errors} field={"email"}/>
                             </div>
-                            <p className='validation-error'>{errors.message || ""}</p>
                         </CardContent>
 
                         <CardFooter className="flex-col gap-2 ">
-                            {isButtonLoading ?
+                            {isSubmitting ? 
                                 <ButtonLoading/>
-                                :
-                                <Button type="submit" className="w-full">Reset</Button>
+                                : 
+                                <Button type="submit" className="w-full">Reset Password</Button>
                             }
+
                             <Link to="/auth/login" className='text-sm'>Remember Password?</Link>
                         </CardFooter>
                     </form>
@@ -88,4 +86,4 @@ const ForgotPassword = () => {
     )
 }
 
-export default ForgotPassword
+export default ForgetPassword

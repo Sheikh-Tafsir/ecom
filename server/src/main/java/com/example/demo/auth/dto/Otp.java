@@ -16,8 +16,4 @@ public class Otp implements Serializable {
     private int value;
 
     private int tries;
-
-    public String getOtpKey() {
-        return "otp:" + type.name() + ":" + email;
-    }
 }
