@@ -1,10 +1,12 @@
 package com.example.demo.stock.service;
 
 import com.example.demo.common.model.Product;
+import com.example.demo.common.model.Sale;
 import com.example.demo.common.model.Stock;
 import com.example.demo.common.model.StockItem;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.product.service.ProductService;
+import com.example.demo.sale.SaleService;
 import com.example.demo.stock.dto.*;
 import com.example.demo.stock.repository.StockItemRepository;
 import com.example.demo.stock.repository.StockRepository;
@@ -17,6 +19,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.example.demo.common.utils.SecurityConstants.HAS_ROLE_ADMIN;
@@ -31,6 +34,8 @@ public class StockService {
     private final StockItemRepository stockItemRepository;
 
     private final ProductService productService;
+
+    private final SaleService saleService;
 
     private final MessageService messageService;
 
@@ -138,6 +143,8 @@ public class StockService {
     public void consume(Product product, int quantityToConsume) {
         List<StockItem> stockItems = stockItemRepository.findAvailableByProductIdOrderByOldest(product.getId());
 
+        List<Sale> sales = new ArrayList<>();
+
         for (StockItem item : stockItems) {
             if (quantityToConsume <= 0) {
                 break;
@@ -148,10 +155,16 @@ public class StockService {
 
             item.setRemaining(available - consumed);
             quantityToConsume -= consumed;
+
+            sales.add(saleService.add(product, consumed, product.getPrice().subtract(item.getPurchasePrice())));
         }
 
         if (quantityToConsume > 0) {
             throw new ValidationException("Insufficient stock for product id: " + product.getId());
+        }
+
+        if (!sales.isEmpty()) {
+            saleService.createAll(sales);
         }
     }
 
