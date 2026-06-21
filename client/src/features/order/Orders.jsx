@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { View, CheckCheck, Trash2 } from "lucide-react"
 
 import {
@@ -14,7 +15,8 @@ import {
 import { Axios } from '@/services/http/Axios';
 import PaginationButton from '@/components/common/PaginationButton';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay';
-import {FIRST_PAGE, getQueryString, userIsAdmin, REGULAR_DATE_FORMAT, toastInitialState} from '@/utils';
+import {userIsAdmin, REGULAR_DATE_FORMAT, toastInitialState} from '@/utils';
+import {FIRST_PAGE, getQueryString, normalizeQuery, redirectWhenInvalidPage} from '@/utils/PaginationUtils';
 import { Label } from '@/components/ui/label';
 import {
     Card,
@@ -28,155 +30,181 @@ import { Button } from '@/components/ui/button';
 import { useUserStore } from "@/store/useUserStore"
 import { ToastAlert } from '@/components/common/ToastAlert';
 import { ORDER_STATUS, TOAST_TYPE } from '@/utils/enums';
+import InputError from "@/components/common/InputError";
+import StaredLabel from "@/components/common/StaredLabel";
 
-const OrderList = () => {
-    const navigate = useNavigate();
-    const { user } = useUserStore();
-    const [searchParams] = useSearchParams();
-    const queryParams = Object.fromEntries(searchParams.entries());
+const fetchOrders = async ({ queryKey }) => {
+    const [, params] = queryKey;
 
-    const [isPageLoading, setIsPageLoading] = useState(true);
-    const [orders, setOrders] = useState([]);
-    const [totalPages, setTotalPages] = useState(FIRST_PAGE);
-    const [searchFilter, setSearchFilter] = useState({
-        userId: '',
-        fromDate: '',
-        toDate: ''
+    const response = await Axios.get("/orders", {
+        params: {
+            page: params.page - 1,
+            sort: params.sort,
+            productName: params.productName || undefined,
+            fromDate: params.fromDate || undefined,
+            toDate: params.toDate || undefined,
+        },
     });
-    const [errors, setErrors] = useState({});
+
+    return response.data.data;
+};
+
+const Orders = () => {
+    const { user } = useUserStore();
+    
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const queryParams = useMemo(() => Object.fromEntries(searchParams.entries()),[searchParams]);
+
+    const filters = useMemo(
+        () => ({
+            ...normalizeQuery(queryParams, []),
+            productName: queryParams.productName || "",
+            fromDate: queryParams.fromDate || "",
+            toDate: queryParams.toDate || "",
+        }),
+        [queryParams]
+    );
+    const { page, sort, productName, fromDate, toDate } = filters;
+
+    const [form, setForm] = useState({
+        productName: "",
+        fromDate: "",
+        toDate: "",
+    });
     const [toastData, setToastData] = useState(toastInitialState);
 
-    const page = parseInt(queryParams.page) || FIRST_PAGE;
+        const {
+        data,
+        isFetching: isPageLoading,
+        isError,
+        error,
+    } = useQuery({
+        queryKey: ["orders", filters],
+        queryFn: fetchOrders,
+        placeholderData: keepPreviousData,
+    });
 
-    const handleError = (error) => {
-        setErrors(error.response?.data || { global: error.message });
-    };
+    const orders = data?.content ?? [];
+    const totalPages = data?.totalPages ?? FIRST_PAGE;
 
     useEffect(() => {
-        if (page <= 0 || totalPages < page) {
-            navigate("/orders", { replace: true });
-        };
-
-        const fetchOrders = async () => {
-            setIsPageLoading(true);
-
-            try {
-                const response = await Axios.get('/orders', {
-                    params: {
-                        ...queryParams,
-                    }
-                });
-
-                setOrders(response.data.data.content);
-                setTotalPages(response.data.data.totalPages);
-            } catch (error) {
-                console.error('Error getting user list', error);
-                showToast("Could not get order", TOAST_TYPE.ERROR);
-            } finally {
-                setIsPageLoading(false);
-            }
-        };
-
-        fetchOrders();
-    }, [searchParams]);
-
-    const handleSearch = (e) => {
-        e.preventDefault();
-
-        const navQueryParams = {
-            ...queryParams,
-            ...searchFilter,
-        };
-
-        navigate(getQueryString(navQueryParams), { replace: true });
-    }
-
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setSearchFilter((prev) => ({ ...prev, [name]: value }));
-    };
-
-    const changeOrderStatus = async (id, status) => {
-        try {
-            await Axios.put(`/orders/${id}/status`, {
-                status
-            });
-
-            setOrders(prevOrders =>
-                prevOrders.map(order =>
-                    order.id === id ? { ...order, status } : order
-                )
-            );
-
-            showToast(`Order ${status}`, TOAST_TYPE.SUCCESS);
-        } catch (error) {
-            console.error('Error getting user list', error);
-            showToast("Could not get order", TOAST_TYPE.ERROR);
-            handleError(error);
+        if (isError) {
+            console.error(error);
+            showToast("Failed to load orders", TOAST_TYPE.ERROR);
         }
-    }
+    }, [error, isError]);
 
-    const showToast = (message, type) => {
-        setToastData({ message, type, id: Date.now() })
-    }
+    useEffect(() => {
+        redirectWhenInvalidPage({page, totalPages, navigate, queryParams})
+    }, [page, totalPages, navigate, queryParams])
+
+    const showToast = useCallback((message, type) => {
+        setToastData({
+            message,
+            type,
+            id: Date.now(),
+        });
+    }, []);
+
+    useEffect(() => {
+        setForm({
+            productName,
+            fromDate,
+            toDate,
+        });
+    }, [productName, fromDate, toDate]);
+
+    const handleChange = useCallback((e) => {
+        const { name, value } = e.target;
+
+        setForm((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+    }, []);
+
+    const handleFilter = useCallback(
+        (e) => {
+            e.preventDefault();
+
+            navigate(
+                getQueryString({
+                    ...queryParams,
+                    productName: form.productName || undefined,
+                    fromDate: form.fromDate || undefined,
+                    toDate: form.toDate || undefined,
+                    page: FIRST_PAGE,
+                }),
+                { replace: true }
+            );
+        },
+        [navigate, queryParams, form]
+    );
 
     return (
         <>
             {isPageLoading && <PageLoadingOverlay />}
 
-            <div className='container pb-8'>
-                <h1 className='text-center text-2xl lg:text-2xl xl:text-3xl mb-6'>Orders</h1>
+            <div className='container pb-8 pt-8'>
+                <h1 className='text-center text-2xl lg:text-2xl xl:text-3xl mb-6 font-semibold'>Orders</h1>
 
-                <div className='grid lg:grid-cols-3 gap-8'>
-                    <Card className="g:col-span-1">
-                        <form onSubmit={handleSearch}>
+                <div className='grid lg:grid-cols-4 gap-8'>
+                    <Card className='lg:col-span-1 space-y-4'>
+                        <form onSubmit={handleFilter}>
                             <CardHeader>
-                                <CardTitle>Filter </CardTitle>
+                                <CardTitle>Filter</CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-4">
-                                {userIsAdmin(user?.role) &&
-                                    <div className='space-y-1'>
-                                        <Label>User Id: </Label>
-                                        <Input
-                                            name="userId"
-                                            type="number"
-                                            value={searchFilter.userId}
-                                            onChange={handleInputChange}
-                                        />
-                                        {errors.userId && <p className='validation-error'>{errors.userId}</p>}
-                                    </div>
-                                }
 
-                                <div className='space-y-1'>
-                                    <Label>Date From: </Label>
+                            <CardContent className="space-y-4">
+                                {/* Product Name */}
+                                <div className="space-y-1">
+                                    <Label>Product Name</Label>
                                     <Input
-                                        name="fromDate"
-                                        type="date"
-                                        value={searchFilter.fromDate}
-                                        onChange={handleInputChange}
+                                        value={productName}
+                                        onChange={handleChange}
                                     />
-                                    {errors.fromDate && <p className='validation-error'>{errors.fromDate}</p>}
+                                    <InputError field="productName" />
                                 </div>
-                                <div className='space-y-1'>
-                                    <Label>Date To: </Label>
-                                    <Input
-                                        name="toDate"
-                                        type="date"
-                                        value={searchFilter.toDate}
-                                        onChange={handleInputChange}
+
+                                {/* From Date */}
+                                <div className="space-y-1">
+                                    <StaredLabel
+                                        label="From Date"
+                                        field="fromDate"
                                     />
-                                    {errors.toDate && <p className='validation-error'>{errors.toDate}</p>}
+                                    <Input
+                                        type="date"
+                                        value={fromDate}
+                                        onChange={handleChange}
+                                    />
+                                    <InputError field="fromDate" />
+                                </div>
+
+                                {/* To Date */}
+                                <div className="space-y-1">
+                                    <StaredLabel
+                                        label="To Date"
+                                        field="toDate"
+                                    />
+                                    <Input
+                                        type="date"
+                                        value={toDate}
+                                        onChange={handleChange}
+                                    />
+                                    <InputError field="toDate" />
                                 </div>
                             </CardContent>
+
                             <CardFooter>
-                                <Button type="submit" className="w-full cursor-pointer bg-blue-600">
+                                <Button className="w-full bg-blue-600">
                                     Search
                                 </Button>
                             </CardFooter>
                         </form>
                     </Card>
 
-                    <div className='lg:col-span-2 space-y-4'>
+                    <div className='lg:col-span-3 space-y-4'>
                         <Table className="cursor-pointer bg-white w-[100%]">
                             <TableHeader>
                                 <TableRow className="bg-blue-100 hover:bg-blue-200 transform transition-colors duration-200">
@@ -243,4 +271,4 @@ const OrderList = () => {
     )
 }
 
-export default OrderList
+export default Orders

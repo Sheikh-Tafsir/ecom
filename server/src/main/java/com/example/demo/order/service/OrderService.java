@@ -1,6 +1,7 @@
 package com.example.demo.order.service;
 
 import com.example.demo.common.dto.CustomUserDetails;
+import com.example.demo.common.dto.DateRangeDto;
 import com.example.demo.common.enums.OrderStatus;
 import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.common.model.*;
@@ -19,6 +20,9 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
+import static com.example.demo.common.utils.DateUtils.resolveDates;
 import static com.example.demo.common.utils.SecurityUtil.isAdmin;
 import static com.example.demo.common.utils.Utils.getValidPageable;
 import static com.example.demo.common.utils.Utils.isNull;
@@ -40,12 +44,14 @@ public class OrderService {
 
     private final CommonHelper commonHelper;
 
-    public Page<OrderListResponse> findAll(OrderStatus status, CustomUserDetails userDetails, Pageable pageable) {
+    public Page<OrderListResponse> findAll(LocalDateTime fromDate, LocalDateTime toDate, OrderStatus status, CustomUserDetails userDetails, Pageable pageable) {
+        DateRangeDto dateRange = resolveDates(fromDate, toDate);
+
         if (isAdmin(userDetails)) {
-            return orderRepository.findAllByStatus(status, getValidPageable(pageable)).map(OrderListResponse::new);
+            return orderRepository.findAllByStatus(status, dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable)).map(OrderListResponse::new);
         }
 
-        return orderRepository.findByUser_Id(userDetails.getId(), getValidPageable(pageable)).map(OrderListResponse::new);
+        return orderRepository.findAllByUser_Id(userDetails.getId(), dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable)).map(OrderListResponse::new);
     }
 
     public OrderResponse findById(Long id, CustomUserDetails userDetails) {

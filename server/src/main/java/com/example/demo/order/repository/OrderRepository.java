@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
@@ -23,9 +24,22 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("""
                 SELECT DISTINCT o FROM Order o
                 WHERE (:status IS NULL OR o.status = :status)
+                    AND o.createdAt BETWEEN :fromDate AND :toDate
             """)
-    Page<Order> findAllByStatus(@Param("status") OrderStatus status, Pageable pageable);
+    Page<Order> findAllByStatus(@Param("status") OrderStatus status,
+                                @Param("fromDate") LocalDateTime fromDate,
+                                @Param("toDate") LocalDateTime toDate,
+                                Pageable pageable);
 
     @EntityGraph(attributePaths = {"user"})
-    Page<Order> findByUser_Id(Long userId, Pageable pageable);
+    @Query("""
+                SELECT o
+                FROM Order o
+                WHERE o.user.id = :userId
+                  AND o.createdAt BETWEEN :fromDate AND :toDate
+            """)
+    Page<Order> findAllByUser_Id(@Param("userId") Long userId,
+                                 @Param("fromDate") LocalDateTime fromDate,
+                                 @Param("toDate") LocalDateTime toDate,
+                                 Pageable pageable);
 }

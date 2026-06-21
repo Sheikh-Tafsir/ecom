@@ -29,40 +29,56 @@ import {formatDate} from "@/utils/DateUtils";
 import {handleErrors} from "@/utils/ErrorUtils";
 import {ALERT_TYPE, ROLE_PREFIX, TOAST_TYPE, USER_ROLE, USER_STATUS} from "@/utils/enums";
 import {
-    FIRST_PAGE, checkAllSelected,
-    redirectWhenInvalidPage, updateQueryWhenParamChange, getSelectValue
+    FIRST_PAGE, 
+    checkAllSelected,
+    redirectWhenInvalidPage, 
+    updateQueryWhenParamChange, 
+    getSelectValue,
+    normalizeQuery
 } from "@/utils/PaginationUtils.js";
 import {isAdmin, toastInitialState} from "@/utils";
-import {normalizeQuery} from "@/features/users/UserPaginationUtils.js";
 
+const ALLOWED_SORT_FIELDS = new Set([
+    "createdAt",
+    "name",
+])
+
+const fetchUsers = async ({queryKey}) => {
+    const [, params] = queryKey
+
+    const response = await Axios.get("/users", {
+        params: {
+            page: params.page - 1,
+            sort: params.sort,
+            size: params.size,
+            name: params.search || undefined,
+            role: checkAllSelected(params.role),
+            status: checkAllSelected(params.status),
+        },
+    })
+
+    return response.data.data
+};
 
 const Users = () => {
     const navigate = useNavigate();
 
     const [searchParams] = useSearchParams();
     const queryParams = useMemo(() => Object.fromEntries(searchParams.entries()), [searchParams])
-    const filters = useMemo(() => normalizeQuery(queryParams), [queryParams])
+    
+    const filters = useMemo(
+        () => ({
+            ...normalizeQuery(queryParams, ALLOWED_SORT_FIELDS),
+            role: queryParams.role || "",
+            status: queryParams.status || "",
+            search: queryParams.search || "",
+        }),
+        [queryParams]
+    );
     const {page, role, status} = filters
 
     const [toastData, setToastData] = useState(toastInitialState);
     const [selectedUser, setSelectedUser] = useState(null);
-
-    const fetchUsers = async ({queryKey}) => {
-        const [, params] = queryKey
-
-        const response = await Axios.get("/users", {
-            params: {
-                page: params.page - 1, // already normalized (safe)
-                sort: params.sort,
-                size: params.size,
-                name: params.search || undefined,
-                role: checkAllSelected(params.role),
-                status: checkAllSelected(params.status),
-            },
-        })
-
-        return response.data.data
-    };
 
     const {
         data, isFetching: isPageLoading, isError, error, refetch,
@@ -74,6 +90,13 @@ const Users = () => {
 
     const users = data?.content || [];
     const totalPages = data?.totalPages || FIRST_PAGE;
+
+    useEffect(() => {
+        if (isError) {
+            console.error(error);
+            showToast("Failed to load users", TOAST_TYPE.ERROR);
+        }
+    }, [error, isError]);
 
     const showToast = (message, type) => {
         setToastData({message, type, id: Date.now()});

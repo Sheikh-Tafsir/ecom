@@ -1,6 +1,6 @@
 package com.example.gateway.config;
 
-import com.example.gateway.filter.ReactiveAuthenticationFilter;
+import com.example.gateway.filter.AuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -39,7 +39,7 @@ public class SecurityConfig {
     @Value("${cors.allowed.origins}")
     private String allowedOrigins;
 
-    private final ReactiveAuthenticationFilter authenticationFilter;
+    private final AuthenticationFilter authenticationFilter;
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {

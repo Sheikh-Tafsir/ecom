@@ -28,10 +28,10 @@ import ProductDetails from "@/features/product/ProductDetails.jsx";
 import ProductCreate from "@/features/product/ProductCreate";
 import Stocks from "@/features/stock/Stocks.jsx";
 import StockCreate from "@/features/stock/StockCreate.jsx";
-import Sales from "@/features/product/Sales";
+import Sales from "@/features/sale/Sales";
 
 import Cart from "@/features/order/Cart";
-import OrderList from "@/features/order/OrderList";
+import Orders from "@/features/order/Orders";
 import OrderView from "@/features/order/OrderView";
 import OrderCreate from "@/features/order/OrderCreate";
 
@@ -95,7 +95,7 @@ const InnerApp = () => {
                 <Route path='/profile/edit' element={<Profile/>}/>
 
                 <Route path="/cart" element={<Cart/>}/>
-                <Route path="/orders" element={<OrderList/>}/>
+                <Route path="/orders" element={<Orders/>}/>
                 <Route path="/orders/:id" element={<OrderView/>}/>
                 <Route path="/orders/create" element={<OrderCreate/>}/>
 

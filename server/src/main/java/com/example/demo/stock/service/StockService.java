@@ -1,5 +1,6 @@
 package com.example.demo.stock.service;
 
+import com.example.demo.common.dto.DateRangeDto;
 import com.example.demo.common.model.Product;
 import com.example.demo.common.model.Sale;
 import com.example.demo.common.model.Stock;
@@ -19,9 +20,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.example.demo.common.utils.DateUtils.resolveDates;
 import static com.example.demo.common.utils.SecurityConstants.HAS_ROLE_ADMIN;
 import static com.example.demo.common.utils.Utils.getValidPageable;
 
@@ -40,8 +43,9 @@ public class StockService {
     private final MessageService messageService;
 
     @PreAuthorize(HAS_ROLE_ADMIN)
-    public Page<StockListResponse> findAll(Pageable pageable) {
-        return stockRepository.findAll(getValidPageable(pageable)).map(StockListResponse::new);
+    public Page<StockListResponse> findAll(LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable) {
+        DateRangeDto dateRange = resolveDates(fromDate, toDate);
+        return stockRepository.findAll(dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable)).map(StockListResponse::new);
     }
 
     @PreAuthorize(HAS_ROLE_ADMIN)
@@ -94,8 +98,9 @@ public class StockService {
     }
 
     @PreAuthorize(HAS_ROLE_ADMIN)
-    public Page<StockItemResponse> findAllItems(Pageable pageable) {
-        return stockItemRepository.findAll(getValidPageable(pageable)).map(StockItemResponse::new);
+    public Page<StockItemResponse> findAllItems(LocalDateTime fromDate, LocalDateTime toDate, Long productId, Pageable pageable) {
+        DateRangeDto dateRange = resolveDates(fromDate, toDate);
+        return stockItemRepository.findAll(dateRange.fromDate(), dateRange.toDate(), productId, getValidPageable(pageable)).map(StockItemResponse::new);
     }
 
     @PreAuthorize(HAS_ROLE_ADMIN)

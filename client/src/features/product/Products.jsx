@@ -1,5 +1,8 @@
-import {useEffect, useState, useMemo} from "react"
+import {useEffect, useState, useMemo, useCallback} from "react"
 import {Search} from "lucide-react"
+import {useQuery, keepPreviousData} from "@tanstack/react-query"
+import {useNavigate, useSearchParams} from "react-router-dom"
+
 import {Input} from "@/components/ui/input"
 import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -9,23 +12,57 @@ import ProductCard from "./ProductCard"
 import PaginationButton from "@/components/common/PaginationButton"
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay"
 import {ToastAlert} from "@/components/common/ToastAlert"
-
 import {Axios} from "@/services/http/Axios"
-import {useNavigate, useSearchParams} from "react-router-dom"
-import {
-    getQueryString, getSelectValue, toastInitialState, redirectWhenInvalidPage, updateQueryWhenParamChange
+import { 
+    getSelectValue, 
+    toastInitialState, 
 } from "@/utils"
-import {PRODUCT_SORTBY} from "@/utils/enums"
+import {FIRST_PAGE, getQueryString, normalizeQuery, redirectWhenInvalidPage, updateQueryWhenParamChange} from '@/utils/PaginationUtils';
+import {PRODUCT_SORTBY, TOAST_TYPE} from "@/utils/enums"
 
-import {useQuery, keepPreviousData} from "@tanstack/react-query"
-import {normalizeQuery} from "@/features/product/ProductPaginationUtils.js"
+const ALLOWED_SORT_FIELDS = new Set([
+    "createdAt",
+    "price",
+    "name",
+    "rating",
+])
+
+// Fetch products
+const fetchProducts = async ({queryKey}) => {
+    const [, params] = queryKey;
+    
+    const response = await Axios.get("/products", {
+        params: {
+            page: params.page - 1,
+            sort: params.sort,
+            size: params.size,
+            name: params.search || undefined,
+            category: params.category || undefined,
+        },
+    })
+
+    return response.data.data
+}
+
+// Fetch categories
+const fetchCategories = async () => {
+    const response = await Axios.get("/categories")
+    return response.data.data
+}
 
 export default function Products() {
-    const navigate = useNavigate()
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const queryParams = useMemo(() => Object.fromEntries(searchParams.entries()),[searchParams]);
 
-    const [searchParams] = useSearchParams()
-    const queryParams = useMemo(() => Object.fromEntries(searchParams.entries()), [searchParams])
-    const filters = useMemo(() => normalizeQuery(queryParams), [queryParams])
+    const filters = useMemo(
+        () => ({
+                ...normalizeQuery(queryParams, ALLOWED_SORT_FIELDS),
+                search: queryParams.search || "",
+                category: queryParams.category || "",
+        }),
+        [queryParams]
+    );
     const {page, sort, search, category} = filters
 
     const [searchInput, setSearchInput] = useState(search)
@@ -36,74 +73,82 @@ export default function Products() {
     }, [search])
 
     useEffect(() => {
-        if (!searchInput && !search) return;
+        const trimmed = searchInput.trim();
+        if (trimmed === search) return;
 
         const timer = setTimeout(() => {
-            navigate(getQueryString({
-                ...queryParams, search: searchInput || undefined, page: 1,
-            }), {replace: true})
-        }, 400)
+            const newQuery = getQueryString({
+                ...queryParams,
+                search: trimmed || undefined,
+                page: FIRST_PAGE,
+            });
+
+            navigate(newQuery, { replace: true });
+        }, 400);
 
         return () => clearTimeout(timer)
-    }, [searchInput, navigate])
+    }, [searchInput, search, queryParams, navigate])
 
-    // Fetch products
-    const fetchProducts = async ({queryKey}) => {
-        const [, params] = queryKey
-        const response = await Axios.get("/products", {
-            params: {
-                page: params.page - 1, // already normalized (safe)
-                sort: params.sort,
-                size: params.size,
-                name: params.search || undefined,
-                category: params.category || undefined,
-            },
-        })
-
-        return response.data.data
-    }
-
-    // Fetch categories
-    const fetchCategories = async () => {
-        const res = await Axios.get("/categories")
-        return res.data.data
-    }
 
     // Queries
     const {
-        data: categories = [], isFetching: categoriesLoading
+        data: categories = [], 
+        isFetching: isCategoriesLoading,
+        isError: isErrorCategories,
+        error: errorCategories,
     } = useQuery({
-        queryKey: ["categories"], queryFn: fetchCategories, staleTime: 60 * 60 * 1000, keepPreviousData: true,
+        queryKey: ["categories"], 
+        queryFn: fetchCategories, 
+        staleTime: 60 * 60 * 1000,
     })
 
-    const {data: productData, isFetching: productsLoading} = useQuery({
+    const {
+        data: productData, 
+        isFetching: isProductsLoading,
+        isError: isErrorProducts,
+        error: errorProducts,
+    } = useQuery({
         queryKey: ["products", filters],
-        queryFn: fetchProducts, placeholderData: keepPreviousData,
+        queryFn: fetchProducts, 
+        placeholderData: keepPreviousData,
     })
 
-    const products = productData?.content || []
-    const totalPages = productData?.totalPages || 0
+    const products = productData?.content ?? []
+    const totalPages = productData?.totalPages ?? FIRST_PAGE
 
     useEffect(() => {
         redirectWhenInvalidPage({page, totalPages, navigate, queryParams})
     }, [page, totalPages, navigate, queryParams])
 
-    const updateQuery = (newParams) => {
-        updateQueryWhenParamChange({queryParams, newParams, navigate})
-    }
+    const updateQuery = useCallback(
+        (newParams) => {
+            updateQueryWhenParamChange({
+                queryParams,
+                newParams,
+                navigate,
+            });
+        },
+        [queryParams, navigate]
+    );
 
     const showToast = (message, type) => {
         setToastData({message, type, id: Date.now()})
     }
 
-    return (<>
-        {(categoriesLoading || productsLoading) && (<PageLoadingOverlay/>)}
+    useEffect(() => {
+        if (isErrorProducts || isErrorCategories) {
+            console.error(errorProducts || errorCategories);
+            showToast("Failed to load products", TOAST_TYPE.ERROR);
+        }
+    }, [errorProducts, isErrorProducts, errorCategories, isErrorCategories]);
+
+    return (
+    <>
+        {(isCategoriesLoading || isProductsLoading) && (<PageLoadingOverlay/>)}
 
         <div className="container pb-8 pt-8">
             <div className="mb-8">
-                <div className="flex">
-                    <h1 className="text-3xl font-bold m-auto mb-6">Products</h1>
-                </div>
+                <h1 className='text-center text-2xl lg:text-2xl xl:text-3xl mb-6 font-semibold'>Products</h1>
 
                 {/* Filters */}
                 <div className="flex flex-col md:flex-row gap-4 mb-6">

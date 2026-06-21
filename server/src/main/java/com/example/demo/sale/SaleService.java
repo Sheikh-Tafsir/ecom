@@ -1,12 +1,21 @@
 package com.example.demo.sale;
 
+import com.example.demo.common.dto.DateRangeDto;
 import com.example.demo.common.model.Product;
 import com.example.demo.common.model.Sale;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
+
+import static com.example.demo.common.utils.DateUtils.*;
+import static com.example.demo.common.utils.SecurityConstants.HAS_ROLE_ADMIN;
+import static com.example.demo.common.utils.Utils.getValidPageable;
 
 @Service
 @RequiredArgsConstructor
@@ -25,5 +34,12 @@ public class SaleService {
 
     public void createAll(List<Sale> sales) {
         saleRepository.saveAll(sales);
+    }
+
+    @PreAuthorize(HAS_ROLE_ADMIN)
+    public Page<Sale> findAll(LocalDateTime fromDate, LocalDateTime toDate, Long productId, Pageable pageable) {
+        DateRangeDto dateRange = resolveDates(fromDate, toDate);
+
+        return saleRepository.findAllByMonth(dateRange.fromDate(), dateRange.toDate(), productId, getValidPageable(pageable));
     }
 }

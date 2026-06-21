@@ -21,7 +21,7 @@ import java.util.Collections;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ReactiveAuthenticationFilter implements WebFilter {
+public class AuthenticationFilter implements WebFilter {
 
     public static final String BEARER_PREFIX = "Bearer ";
 

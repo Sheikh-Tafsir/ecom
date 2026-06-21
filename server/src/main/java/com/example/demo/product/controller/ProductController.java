@@ -22,6 +22,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 @Slf4j
 @RestController
@@ -43,9 +44,11 @@ public class ProductController {
     public ResponseEntity<ApiResponse<Page<ProductListResponse>>> findAll(Pageable pageable,
                                                                           @RequestParam(required = false) String name,
                                                                           @RequestParam(required = false) String category,
+                                                                          @RequestParam(required = false) LocalDateTime fromDate,
+                                                                          @RequestParam(required = false) LocalDateTime toDate,
                                                                           @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        Page<ProductListResponse> products = productService.findAll(pageable, name, category, userDetails);
+        Page<ProductListResponse> products = productService.findAll(pageable, name, category, fromDate, toDate, userDetails);
         return ResponseUtils.ok(products, messageService.get("successfully.found", "Product List"));
     }
 

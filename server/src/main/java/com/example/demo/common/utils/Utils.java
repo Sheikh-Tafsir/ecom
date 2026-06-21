@@ -19,6 +19,8 @@ public final class Utils {
 
     public static final int MAX_PAGE_SIZE = 24;
 
+    public static final int MAX_SEARCH_SIZE = 5;
+
     public static final ObjectMapper OBJECT_MAPPER;
 
     static {

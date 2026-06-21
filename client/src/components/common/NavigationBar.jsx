@@ -44,12 +44,6 @@ export default function Navbar() {
                 ],
             },
 
-            ...(isAuthenticated()
-                ? [
-                    {name: "Chats", href: "/chats",},
-                ]
-                : []),
-
             ...(isAdmin
                 ? [
                     {
@@ -61,6 +55,13 @@ export default function Navbar() {
                             {name: "Add Stock", href: "/stocks/create"},
                         ],
                     },
+                    {name: "Sales", href: "/sales",},
+                ]
+                : []),
+
+            ...(isAuthenticated()
+                ? [
+                    {name: "Chats", href: "/chats",},
                 ]
                 : []),
 

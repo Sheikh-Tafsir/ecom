@@ -30,14 +30,16 @@ export const parsePage = (page) => {
 }
 
 export const parseSize = (size) => {
-    if (size <= 0) {
-        return FIRST_PAGE;
+    const s = Number(size);
+
+    if (!Number.isFinite(s) || s <= 0) {
+        return DEFAULT_PAGE_SIZE;
     }
 
-    return Math.min(MAX_PAGE_SIZE, size)
-}
+    return Math.min(MAX_PAGE_SIZE, s);
+};
 
-export const parseSort = (sort = DEFAULT_SORT, allowedSortFields) => {
+export const parseSort = (sort = DEFAULT_SORT, allowedSortFields= []) => {
     if (isEmptyArray(allowedSortFields)) {
         return DEFAULT_SORT;
     }
@@ -49,16 +51,19 @@ export const parseSort = (sort = DEFAULT_SORT, allowedSortFields) => {
         : DEFAULT_SORT;
 }
 
-export const normalizeQuery = (q = {}) => {
+export const normalizeQuery = (q = {}, allowedSortFields = []) => {
     const page = parsePage(q.page)
     const size = parseSize(q.size)
-    const sort = parseSort(q.sort, [])
+    const sort = parseSort(q.sort, allowedSortFields)
+
+    const { page: _p, size: _s, sort: _so, ...rest } = q;
 
     return {
         page,
         size,
         sort,
-    }
+        ...rest,
+    };
 }
 
 export const isInvalidPageNo = (page, totalPages) => {

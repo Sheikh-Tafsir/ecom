@@ -1,6 +1,7 @@
 package com.example.demo.stock.controller;
 
 import com.example.demo.common.dto.ApiResponse;
+import com.example.demo.common.enums.OrderStatus;
 import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.common.service.IdempotencyService;
 import com.example.demo.common.service.MessageService;
@@ -15,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 
 import static com.example.demo.common.service.IdempotencyService.IDEMPOTENCY_HEADER;
 
@@ -34,14 +37,21 @@ public class StockController {
     private final MessageService messageService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<StockListResponse>>> findAll(Pageable pageable) {
-        Page<StockListResponse> stocks = stockService.findAll(pageable);
+    public ResponseEntity<ApiResponse<Page<StockListResponse>>> findAll(@RequestParam(required = false) LocalDateTime fromDate,
+                                                                        @RequestParam(required = false) LocalDateTime toDate,
+                                                                        Pageable pageable) {
+
+        Page<StockListResponse> stocks = stockService.findAll(fromDate, toDate, pageable);
         return ResponseUtils.ok(stocks, messageService.get("successfully.found", "Stock List"));
     }
 
     @GetMapping("/items")
-    public ResponseEntity<ApiResponse<Page<StockItemResponse>>> findAllItems(Pageable pageable) {
-        Page<StockItemResponse> stocks = stockService.findAllItems(pageable);
+    public ResponseEntity<ApiResponse<Page<StockItemResponse>>> findAllItems(@RequestParam(required = false) LocalDateTime fromDate,
+                                                                             @RequestParam(required = false) LocalDateTime toDate,
+                                                                             @RequestParam(required = false) Long productId,
+                                                                             Pageable pageable) {
+
+        Page<StockItemResponse> stocks = stockService.findAllItems(fromDate, toDate, productId, pageable);
         return ResponseUtils.ok(stocks, messageService.get("successfully.found", "Stock Item List"));
     }
 

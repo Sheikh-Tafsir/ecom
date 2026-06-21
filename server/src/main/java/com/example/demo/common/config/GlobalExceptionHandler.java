@@ -31,15 +31,16 @@ public class GlobalExceptionHandler {
 
     private static final String SOMETHING_WENT_WRONG = "Something went wrong";
 
-//    @ExceptionHandler(HttpMessageNotReadableException.class)
-//    public ResponseEntity<?> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
-//        log.error("Request body is missing or unreadable", ex);
-//        return error("Request body is missing or malformed", HttpStatusCode.valueOf(400));
-//    }
+    // 401
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException ex) {
+        log.error("Input values are invalid: {}", ex.getMessage());
+        return error(ex.getMessage(), HttpStatusCode.valueOf(400));
+    }
 
     // 401
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<?> handleInvalidCredentialsExceptions(BadCredentialsException ex) {
+    public ResponseEntity<?> handleIllegalArgumentException(BadCredentialsException ex) {
         log.error("Authentication credentials invalid: {}", ex.getMessage());
         return error(ex.getMessage(), HttpStatusCode.valueOf(401));
     }
@@ -85,7 +86,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
-        log.error("Multiple Validation: {}", ex.getBindingResult().toString());
+        log.error("Multiple Validation: {}", ex.getBindingResult());
         return error(ex.getBindingResult());
     }
 

@@ -22,6 +22,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+
 import static com.example.demo.common.service.IdempotencyService.IDEMPOTENCY_HEADER;
 
 @RestController
@@ -40,11 +42,13 @@ public class OrderController {
     private final MessageService messageService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<OrderListResponse>>> findAll(Pageable pageable,
+    public ResponseEntity<ApiResponse<Page<OrderListResponse>>> findAll(@RequestParam(required = false) LocalDateTime fromDate,
+                                                                        @RequestParam(required = false) LocalDateTime toDate,
                                                                         @RequestParam(required = false) OrderStatus status,
+                                                                        Pageable pageable,
                                                                         @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        Page<OrderListResponse> orders = orderService.findAll(status, userDetails, pageable);
+        Page<OrderListResponse> orders = orderService.findAll(fromDate, toDate, status, userDetails, pageable);
         return ResponseUtils.ok(orders, messageService.get("successfully.found", "Order List"));
     }
 
