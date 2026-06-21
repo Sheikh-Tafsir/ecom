@@ -38,8 +38,10 @@ const ForgetPassword = () => {
         try {
             await AxiosNoInterceptor.post(`/auth/forget-password`, data)
 
+            const email = data.email;
             reset();
-            navigate("/auth/forget-password/verify");
+
+            navigate(`/auth/forget-password/verify?email=${email}`);
         } catch (error) {
             console.error(error);
             handleErrors(error, setError);

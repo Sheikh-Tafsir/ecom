@@ -58,6 +58,7 @@ export default function ProductDetails() {
             setProduct(response.data.data);
         } catch (err) {
             console.error('Error fetching product:', err);
+            showToast("Could not get product", TOAST_TYPE.ERROR);
         } finally {
             setIsPageLoading(false);
         }
@@ -172,8 +173,8 @@ export default function ProductDetails() {
                                         ))}
                                     </div>
                                     <span className="text-gray-600 ml-2">
-                  {product.reviewCount === 0 ? 'Not Rated Yet' : `${product.rating} out of 5`}
-                </span>
+                                        {product.reviewCount === 0 ? 'Not Rated Yet' : `${product.rating} out of 5`}
+                                    </span>
                                 </div>
 
                                 <p className="text-2xl font-bold text-primary">${product.price}</p>
@@ -187,10 +188,9 @@ export default function ProductDetails() {
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <span className="font-medium">Stock:</span>
-                                <span
-                                    className={`font-medium ${product.quantity > 0 ? "text-green-600" : "text-red-600"}`}>
-                {product.quantity > 0 ? `${product.quantity} available` : "Out of stock"}
-              </span>
+                                <span className={`font-medium ${product.quantity > 0 ? "text-green-600" : "text-red-600"}`}>
+                                    {product.quantity > 0 ? `${product.quantity} available` : "Out of stock"}
+                                </span>
                             </div>
 
                             {product.quantity > 0 && (

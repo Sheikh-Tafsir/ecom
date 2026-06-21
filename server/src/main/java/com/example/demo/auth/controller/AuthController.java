@@ -42,8 +42,8 @@ public class AuthController {
     }
 
     @PostMapping("/signup/resend")
-    public ResponseEntity<ApiResponse<Void>> resendSignupOtp(@Valid @RequestBody OtpEmailRequest resetSignupOtpRequest) {
-        authService.resendSignupOtp(resetSignupOtpRequest);
+    public ResponseEntity<ApiResponse<Void>> resendSignupOtp(@Valid @RequestBody OtpRequest request) {
+        authService.resendSignupOtp(request);
 
         return ResponseUtils.created("Signup OTP again send to mail");
     }
@@ -71,7 +71,7 @@ public class AuthController {
     @PostMapping("/google-login")
     public ResponseEntity<ApiResponse<String>> loginWithGoogle(@RequestBody Map<String, String> request,
                                                                HttpServletResponse response) {
-        
+
         TokenDto tokenDto = authService.loginWithGoogle(request);
         authService.addRefreshCookie(response, tokenDto);
 
@@ -85,13 +85,13 @@ public class AuthController {
     }
 
     @PostMapping("/forget-password")
-    public ResponseEntity<ApiResponse<Void>> forgetPassword(@Valid @RequestBody OtpEmailRequest request) {
+    public ResponseEntity<ApiResponse<Void>> forgetPassword(@Valid @RequestBody OtpRequest request) {
         authService.forgetPassword(request);
         return ResponseUtils.ok("Password Reset OTP send to mail");
     }
 
     @PostMapping("/forget-password/resend")
-    public ResponseEntity<ApiResponse<Void>> forgetPasswordOtp(@Valid @RequestBody OtpEmailRequest request) {
+    public ResponseEntity<ApiResponse<Void>> forgetPasswordOtp(@Valid @RequestBody OtpRequest request) {
         authService.forgetPassword(request);
         return ResponseUtils.ok("Password Reset OTP again send to mail");
     }

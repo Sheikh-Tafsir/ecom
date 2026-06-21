@@ -141,26 +141,24 @@ const ProductCreate = () => {
                 formData.append("images", file);
             });
 
-            let response;
             if (isCreatePage) {
-                response = await Axios.post("/products", formData, {
+               const response = await Axios.post("/products", formData, {
                     headers: {'Content-Type': 'multipart/form-data'},
                     timeout: 15000,
                 });
 
+                showToast("Successfully created", TOAST_TYPE.SUCCESS);
+                
                 reset();
-
                 setExistingImages([]);
                 setNewImages([]);
                 setResetImagesKey(Date.now());
-
-                showToast("Successfully created", TOAST_TYPE.SUCCESS);
 
                 setTimeout(() => {
                     navigate(`/products/${response.data.data}`);
                 }, 500);
             } else {
-                response = await Axios.put(`/products/${id}`, formData, {
+                const response = await Axios.put(`/products/${id}`, formData, {
                     headers: {'Content-Type': 'multipart/form-data'},
                     timeout: 15000,
                 });

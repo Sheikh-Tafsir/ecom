@@ -2,6 +2,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {z} from 'zod';
+import {EyeOff, Eye} from "lucide-react";
 
 import {Button} from "@/components/ui/button.jsx"
 import {
@@ -18,6 +19,8 @@ import {ButtonLoading} from '@/components/common/ButtonLoading';
 import {AxiosNoInterceptor} from '@/services/http/Axios';
 import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils.js';
 import InputError from "@/components/common/InputError.jsx";
+import StaredLabel from '@/components/common/StaredLabel';
+import { useState } from 'react';
 
 const SignupSchema = z.object({
     name: z
@@ -50,6 +53,9 @@ const Signup = () => {
     const {register, handleSubmit, setError, reset, formState: {errors, isSubmitting}} = useForm({
         resolver: zodResolver(SignupSchema)
     });
+
+    const [showPassword, setShowPassword] = useState(true);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(true);
 
     const handleSignup = async (data) => {
         try {
@@ -91,7 +97,7 @@ const Signup = () => {
                                 <Label htmlFor="name" className="flex">
                                     Name<p className="text-red-600 ml-1">*</p>
                                 </Label>
-                                <Input type="text" id="name" {...register("name")} />
+                                <Input type="text" id="name" {...register("name")} required/>
                                 <InputError errors={errors} field={"name"}/>
                             </div>
 
@@ -100,29 +106,65 @@ const Signup = () => {
                                 <Label htmlFor="email" className="flex">
                                     Email<p className="text-red-600 ml-1">*</p>
                                 </Label>
-                                <Input type="email" id="email" {...register("email")} />
+                                <Input type="email" id="email" {...register("email")} required />
                                 <InputError errors={errors} field={"email"}/>
                             </div>
 
                             {/* Password */}
                             <div className="space-y-2">
-                                <Label htmlFor="password" className="flex">
-                                    Password<p className="text-red-600 ml-1">*</p>
-                                </Label>
-                                <Input type="password" id="password" {...register("password")} />
+                                 <StaredLabel label="Password"/>
+                                <div
+                                    className='flex rounded-lg'
+                                    style={{border: "0.5px solid rgba(0,0,0,0.1)"}}
+                                >
+                                    <Input
+                                        id="password"
+                                        type={showPassword ? "text" : "password"}
+                                        {...register('password')}
+                                        required
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        className="my-auto cursor-pointer bg-gray-100"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                        {showPassword ? (
+                                            <Eye className=''/>
+                                        ) : (
+                                            <EyeOff className=''/>
+                                        )}
+                                    </Button>
+                                </div>
                                 <InputError errors={errors} field={"password"}/>
                             </div>
 
                             {/* Confirm Password */}
                             <div className="space-y-2">
-                                <Label htmlFor="confirmPassword" className="flex">
-                                    Confirm Password<p className="text-red-600 ml-1">*</p>
-                                </Label>
-                                <Input
-                                    type="password"
-                                    id="confirmPassword"
-                                    {...register("confirmPassword")}
-                                />
+                                <StaredLabel label="Confirm Password"/>
+                                <div
+                                    className='flex rounded-lg'
+                                    style={{border: "0.5px solid rgba(0,0,0,0.1)"}}
+                                >
+                                    <Input
+                                        id="confirmPassword"
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        {...register('confirmPassword')}
+                                        required
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        className="my-auto cursor-pointer bg-gray-100"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    >
+                                        {showConfirmPassword ? (
+                                            <Eye className=''/>
+                                        ) : (
+                                            <EyeOff className=''/>
+                                        )}
+                                    </Button>
+                                </div>
                                 <InputError errors={errors} field={"confirmPassword"}/>
                             </div>
                         </CardContent>

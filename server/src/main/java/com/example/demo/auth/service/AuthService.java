@@ -103,10 +103,10 @@ public class AuthService {
         user = save(user, signupRequest.password());
         
         Otp otp = otpService.createOtp(user, OtpType.SIGNUP);
-        mailService.sendEmail(user.getEmail(), SIGNUP_MAIL_SUBJECT, SIGNUP_MAIL_TEXT + otp.getValue());
+        mailService.sendEmailAsync(user.getEmail(), SIGNUP_MAIL_SUBJECT, SIGNUP_MAIL_TEXT + otp.getValue());
     }
 
-    public void resendSignupOtp(OtpEmailRequest request) {
+    public void resendSignupOtp(OtpRequest request) {
         User user = findByEmail(request.email());
 
         if (isNull(user)) {
@@ -118,7 +118,7 @@ public class AuthService {
         }
 
         Otp otp = otpService.getOrCreateOtp(user, OtpType.SIGNUP);
-        mailService.sendEmail(user.getEmail(), SIGNUP_MAIL_SUBJECT, SIGNUP_MAIL_TEXT + otp.getValue());
+        mailService.sendEmailAsync(user.getEmail(), SIGNUP_MAIL_SUBJECT, SIGNUP_MAIL_TEXT + otp.getValue());
     }
 
     @Transactional
@@ -216,7 +216,7 @@ public class AuthService {
         addCookie(response, refreshTokenName, null, 0);
     }
 
-    public void forgetPassword(OtpEmailRequest request) {
+    public void forgetPassword(OtpRequest request) {
         User user = findByEmail(request.email());
 
         if (isNull(user)) {
@@ -224,7 +224,7 @@ public class AuthService {
         }
 
         Otp userOtp = otpService.getOrCreateOtp(user, OtpType.FORGET);
-        mailService.sendEmail(user.getEmail(), FORGET_PASSWORD_MAIL_SUBJECT, FORGET_PASSWORD_MAIL_TEXT + userOtp.getValue());
+        mailService.sendEmailAsync(user.getEmail(), FORGET_PASSWORD_MAIL_SUBJECT, FORGET_PASSWORD_MAIL_TEXT + userOtp.getValue());
     }
 
     @Transactional

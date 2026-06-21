@@ -36,7 +36,6 @@ export default function Products() {
     }, [search])
 
     useEffect(() => {
-        // Skip initial mount sync if there's no search input and no search in URL
         if (!searchInput && !search) return;
 
         const timer = setTimeout(() => {

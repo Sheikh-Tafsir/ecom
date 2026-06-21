@@ -57,13 +57,17 @@ const Profile = () => {
         resolver: zodResolver(ProfileSchema),
     });
 
-    const {data: profile, isFetching: isPageLoading} = useQuery({
+    const {data: profile, isFetching: isPageLoading, isError} = useQuery({
         queryKey: ["profile"],
         queryFn: async () => {
             const response = await Axios.get("/profile");
             return response.data.data;
         },
     });
+
+    if(isError) {
+        showToast("Could not load profile", TOAST_TYPE.ERROR);
+    }
 
     useEffect(() => {
         if (profile) {

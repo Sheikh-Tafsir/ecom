@@ -19,8 +19,8 @@ import { useUserStore } from "@/store/useUserStore"
 import InputReadOnly from "@/components/common/InputReadOnly"
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay"
 import { Axios } from "@/services/http/Axios"
-import {GLOBAL_ERROR, handleErrors} from "@/utils"
-import InputError from "@/components/common/InputError.jsx";
+import {toastInitialState} from "@/utils"
+import { TOAST_TYPE } from "@/utils/enums"
 
 export default function OrderView() {
     const { id } = useParams();
@@ -28,7 +28,7 @@ export default function OrderView() {
 
     const [isPageLoading, setIsPageLoading] = useState(true);
     const [order, setOrder] = useState();
-    const [errors, setErrors] = useState({});
+    const [toastData, setToastData] = useState(toastInitialState);
 
     useEffect(() => {
         const fetchOrder = async (id) => {
@@ -37,7 +37,7 @@ export default function OrderView() {
                 setOrder(response.data.data);
             } catch (error) {
                 console.error(error)
-                handleErrors(error, setErrors);
+                showToast("Could not get order", TOAST_TYPE.ERROR);
             } finally {
                 setIsPageLoading(false);
             }
@@ -45,6 +45,11 @@ export default function OrderView() {
 
         fetchOrder(id);
     }, [id])
+
+
+    const showToast = (message, type) => {
+        setToastData({ message, type, id: Date.now() })
+    }
 
     return (
         <>
@@ -65,8 +70,6 @@ export default function OrderView() {
                             <CardContent className="space-y-6">
                                 <div className="space-y-6">
                                     <div className="space-y-4">
-                                        <InputError errors={errors} field={GLOBAL_ERROR} />
-
                                         <div className="grid gap-2">
                                             <Label>Name</Label>
                                             <InputReadOnly value={user?.name} />
@@ -164,6 +167,12 @@ export default function OrderView() {
                     </div>
                 </div>
             </div>
+
+            <ToastAlert
+                key={toastData.id}
+                message={toastData.message}
+                type={toastData.type}
+            />
         </>
     )
 }

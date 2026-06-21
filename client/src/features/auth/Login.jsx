@@ -114,7 +114,7 @@ const Login = () => {
                                 <Label htmlFor="email" className="flex">
                                     Email<p className='text-red-600'>*</p>
                                 </Label>
-                                <Input id="email" type="email" {...register('email')} />
+                                <Input id="email" type="email" {...register('email')} required/>
                                 <InputError errors={errors} field={"email"}/>
                             </div>
 
@@ -131,6 +131,7 @@ const Login = () => {
                                         id="password"
                                         type={showPassword ? "text" : "password"}
                                         {...register('password')}
+                                        required
                                     />
                                     <Button
                                         type="button"

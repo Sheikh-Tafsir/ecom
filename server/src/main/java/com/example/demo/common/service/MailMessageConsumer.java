@@ -15,7 +15,7 @@ public class MailMessageConsumer {
 
     @RabbitListener(queues = "${spring.rabbitmq.mail.queue}")
     public void handleMail(MailMessageDto mailMessageDto) {
-        mailService.sendEmail(mailMessageDto.to(), mailMessageDto.subject(), mailMessageDto.body());
+        mailService.sendEmailAsync(mailMessageDto.to(), mailMessageDto.subject(), mailMessageDto.body());
 
         log.info("Mail sent to {}", mailMessageDto.to());
     }

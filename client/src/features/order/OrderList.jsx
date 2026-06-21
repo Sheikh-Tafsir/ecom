@@ -72,7 +72,6 @@ const OrderList = () => {
             } catch (error) {
                 console.error('Error getting user list', error);
                 showToast("Could not get order", TOAST_TYPE.ERROR);
-                handleError(error);
             } finally {
                 setIsPageLoading(false);
             }

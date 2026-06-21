@@ -52,7 +52,10 @@ const ForgetPasswordVerify = () => {
 
     const handleForgetResetVerify = async (data) => {
         try {
-            await AxiosNoInterceptor.post(`/auth/forget-password/verify`, data)
+            await AxiosNoInterceptor.post(`/auth/forget-password/verify`, {
+                ...data,
+                email,
+            })
         
             reset();
             navigate("/auth/login", { replace: true });

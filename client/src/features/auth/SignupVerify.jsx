@@ -43,7 +43,10 @@ const SignupVerify = () => {
 
     const handleSignupVerify = async (data) => {
         try {
-            const response = await AxiosNoInterceptor.post('/auth/signup/verify', data);
+            const response = await AxiosNoInterceptor.post('/auth/signup/verify', {
+                ...data,
+                email
+            });
 
             reset();
             login(response.data.data);
