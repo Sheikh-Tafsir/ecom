@@ -1,6 +1,8 @@
 package com.example.gateway.config;
 
 import com.example.gateway.filter.AuthenticationFilter;
+import com.example.gateway.filter.IpRateLimiterFilter;
+import com.example.gateway.filter.UserRateLimiterFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -41,6 +43,10 @@ public class SecurityConfig {
 
     private final AuthenticationFilter authenticationFilter;
 
+    private final UserRateLimiterFilter userRateLimiterFilter;
+
+    private final IpRateLimiterFilter ipRateLimiterFilter;
+
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
@@ -54,7 +60,9 @@ public class SecurityConfig {
                             return exchange.getResponse().setComplete();
                         })
                 )
-                .addFilterAt(authenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
+                .addFilterBefore(ipRateLimiterFilter, SecurityWebFiltersOrder.AUTHENTICATION)
+                .addFilterBefore(authenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
+                .addFilterAfter(userRateLimiterFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers(PUBLIC_URLS.toArray(new String[0])).permitAll()
                         .pathMatchers("/auth/**").permitAll()

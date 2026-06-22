@@ -3,6 +3,7 @@ package com.example.demo.auth.service;
 import com.example.demo.auth.dto.Otp;
 import com.example.demo.auth.enums.OtpType;
 import com.example.demo.common.model.User;
+import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -36,7 +37,7 @@ public class OtpService {
         Otp otp = getOtp(type, user.getEmail());
 
         if (otp != null) {
-            return otp;
+            throw new ValidationException(type.name() + " OTP already sent to user with email: " + user.getEmail());
         }
 
         return createOtp(user, type);

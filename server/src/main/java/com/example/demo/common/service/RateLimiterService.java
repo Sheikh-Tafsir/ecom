@@ -13,6 +13,7 @@ public class RateLimiterService {
 
     private static final String AUTH_EMAIL_KEY_PREFIX = "auth:email:";
     private static final String AUTH_IP_KEY_PREFIX = "auth:ip:";
+
     private static final String API_EMAIL_KEY_PREFIX = "api:email:";
     private static final String API_IP_KEY_PREFIX = "api:ip:";
 

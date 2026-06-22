@@ -49,10 +49,13 @@ public class SecurityConfig {
             "/actuator/**"
     );
 
+    @Value("${spring.application.standalone:true}")
+    private boolean isStandAloneServer;
+
     @Value("${cors.allowed.origins}")
     private String allowedOrigins;
 
-    private final UserRepository userRepository;
+    private final CustomUserDetailsService userDetailsService;
 
     private final AuthenticationFilter authenticationFilter;
 
@@ -60,13 +63,14 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
+        http
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider(userDetailsService()))
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_URLS.toArray(new String[0])).permitAll()
 
@@ -77,9 +81,13 @@ public class SecurityConfig {
 
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(rateLimiterFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(authenticationFilter, RateLimiterFilter.class)
-                .build();
+                .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        if (isStandAloneServer) {
+            http.addFilterBefore(rateLimiterFilter, UsernamePasswordAuthenticationFilter.class);
+        }
+
+        return http.build();
     }
 
     @Bean
@@ -88,17 +96,12 @@ public class SecurityConfig {
     }
 
     @Bean
-    public UserDetailsService userDetailsService() {
-        return new CustomUserDetailsService(userRepository);
-    }
-
-    @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
 
     @Bean
-    public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService) {
+    public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder());
         return provider;

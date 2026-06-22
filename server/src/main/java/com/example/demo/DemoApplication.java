@@ -12,8 +12,8 @@ public class DemoApplication {
                 .ignoreIfMissing()
                 .load();
 
-        // Set environment variables programmatically for Spring to read
-        dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
+        dotenv.entries().forEach(entry ->
+                System.setProperty(entry.getKey(), entry.getValue()));
 
         SpringApplication.run(DemoApplication.class, args);
     }
