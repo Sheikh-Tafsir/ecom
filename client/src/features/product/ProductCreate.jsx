@@ -158,16 +158,16 @@ const ProductCreate = () => {
                     navigate(`/products/${response.data.data}`);
                 }, 500);
             } else {
-                const response = await Axios.put(`/products/${id}`, formData, {
+                await Axios.put(`/products/${id}`, formData, {
                     headers: {'Content-Type': 'multipart/form-data'},
                     timeout: 15000,
                 });
 
                 showToast("Successfully updated", TOAST_TYPE.SUCCESS);
 
-                setTimeout(() => {
-                    navigate(`/products/${id}`);
-                }, 500);
+                // setTimeout(() => {
+                //     navigate(`/products/${id}`);
+                // }, 500);
             }
         } catch (error) {
             console.error(error);

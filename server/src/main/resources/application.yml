@@ -15,12 +15,12 @@ spring:
     driver-class-name: ${DB_DRIVER_CLASS}
 
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-    open-in-view: false
     hibernate:
       ddl-auto: none
-      dialect: org.hibernate.dialect.PostgreSQLDialect
-    show-sql: true
+    show-sql: false
+    properties.hibernate.hibernate.format_sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
 
   data:
     redis:
@@ -124,4 +124,8 @@ management:
 
 springdoc:
   api-docs.path: /v3/api-docs
-  swagger-ui.url: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    url: /v3/api-docs
+    path: /swagger-ui.html
+    operations-sorter: method

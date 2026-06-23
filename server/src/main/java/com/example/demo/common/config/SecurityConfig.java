@@ -1,6 +1,5 @@
 package com.example.demo.common.config;
 
-import com.example.demo.user.repository.UserRepository;
 import com.example.demo.common.filter.AuthenticationFilter;
 import com.example.demo.common.filter.RateLimiterFilter;
 import com.example.demo.common.service.CustomUserDetailsService;

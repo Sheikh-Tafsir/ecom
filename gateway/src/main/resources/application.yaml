@@ -26,6 +26,12 @@ spring:
               uri: http://localhost:8081
               predicates:
                 - Path=/**
+#              filters:
+#                - name: RequestRateLimiter
+#                  args:
+#                    key-resolver: "#{@ipKeyResolver}"
+#                    redis-rate-limiter.replenishRate: 2
+#                    redis-rate-limiter.burstCapacity: 4
 
 server.port: 8080
 
@@ -39,3 +45,12 @@ logging:
     org.springframework.security: DEBUG
     org.springframework.cloud.gateway: DEBUG
     org.springframework.security.oauth2: DEBUG
+
+springdoc:
+  swagger-ui:
+    enabled: true
+    url: /v3/api-docs
+    path: /swagger-ui.html
+    operationsSorter: method
+  api-docs:
+    enabled: true

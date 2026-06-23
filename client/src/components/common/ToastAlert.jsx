@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button"
 import { TOAST_TYPE } from "@/utils/enums"
 import {isNull} from "@/utils/index.js";
 
+const TOAST_ACTIVE_TIME = 1500;
+
 export function ToastAlert({ message, type }) {
   if (isNull(message) && isNull(type)) {
     return
@@ -21,7 +23,7 @@ export function ToastAlert({ message, type }) {
   useEffect(() => {
     if (type === TOAST_TYPE.FIXED) return;
 
-    const timer = setTimeout(() => setIsOpen(false), 1500)
+    const timer = setTimeout(() => setIsOpen(false), TOAST_ACTIVE_TIME)
     return () => clearTimeout(timer)
   }, [])
 
