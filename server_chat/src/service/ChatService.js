@@ -262,10 +262,6 @@ const findAllChatParticipantsByUserId = async (userId) => {
 const sendMessage = async (senderId, body) => {
     const {chatId, receiverId, content, contentType, tempId} = body;
 
-    if (!content) {
-        throw new RuntimeError(400, "Message is required");
-    }
-
     const t = await sequelize.transaction();
 
     try {
@@ -320,9 +316,10 @@ const findOrCreateDirectChat = async (user1, user2, transaction) => {
             FROM chats c
                      JOIN chat_participants cp ON cp.chat_id = c.id
             WHERE c.type = 'direct'
-              AND cp.user_id IN (:user1, :user2)
+              AND (cp.user_id = :user1 OR cp.user_id = :user2)
             GROUP BY c.id
-            HAVING COUNT(DISTINCT cp.user_id) = 2 LIMIT 1
+            HAVING COUNT(DISTINCT cp.user_id) = 2 
+                AND COUNT(cp.user_id) = 2 LIMIT 1
         `,
         {
             replacements: {user1, user2},
