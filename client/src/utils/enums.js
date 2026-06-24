@@ -56,24 +56,6 @@ export const REGULAR_ACTION = Object.freeze({
     DELETE: 'delete',
 });
 
-export const TRANSACTION_TYPE = Object.freeze({
-    EXPENSE: "Expense",
-    INCOME: "Income",
-    // TRANSFER: "Transfer",
-});
-
-export const PRIORITY_LEVEL = Object.freeze({
-    Low: "1",
-    Medium: "2",
-    High: "3",
-});
-
-export const getPriorityKey = (value) => {
-    return Object.keys(PRIORITY_LEVEL).find(
-        (key) => PRIORITY_LEVEL[key] == value
-    );
-}
-
 export const PRODUCT_SORTBY = Object.freeze({
     NEWEST: {label: "Newest", value: "createdAt,DESC"},
     OLDEST: {label: "Oldest", value: "createdAt,ASC"},
@@ -84,7 +66,7 @@ export const PRODUCT_SORTBY = Object.freeze({
 
 export const PAYMENT_METHOD = Object.freeze({
     CASH_ON_DELIVERY: "Cash on Delivery",
-    CARD: "Card",
+    BKASH: "Bkash"
 });
 
 export const ORDER_STATUS = Object.freeze({

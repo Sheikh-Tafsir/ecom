@@ -68,6 +68,7 @@ public class SecurityConfig {
                         .pathMatchers("/auth/**").permitAll()
                         .pathMatchers(HttpMethod.GET, "/products", "/products/*").permitAll()
                         .pathMatchers(HttpMethod.GET, "/categories", "/categories/*").permitAll()
+                        .pathMatchers("/payment/callback").permitAll()
                         .anyExchange().authenticated()
                 )
                 .build();

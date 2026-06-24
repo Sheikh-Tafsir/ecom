@@ -4,17 +4,14 @@ import com.example.demo.common.dto.ApiResponse;
 import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.common.enums.OrderStatus;
 import com.example.demo.common.helper.CommonHelper;
-import com.example.demo.common.service.IdempotencyService;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.common.utils.ResponseUtils;
-import com.example.demo.order.dto.CreateOrderRequest;
-import com.example.demo.order.dto.OrderListResponse;
-import com.example.demo.order.dto.OrderResponse;
-import com.example.demo.order.dto.UpdateOrderStatusRequest;
+import com.example.demo.order.dto.*;
 import com.example.demo.order.service.OrderService;
 import com.example.demo.order.validator.OrderValidator;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +23,7 @@ import java.time.LocalDateTime;
 
 import static com.example.demo.common.service.IdempotencyService.IDEMPOTENCY_HEADER;
 
+@Slf4j
 @RestController
 @RequestMapping("/orders")
 @RequiredArgsConstructor
@@ -36,8 +34,6 @@ public class OrderController {
     private final CommonHelper commonHelper;
 
     private final OrderService orderService;
-
-    private final IdempotencyService idempotencyService;
 
     private final MessageService messageService;
 
@@ -61,22 +57,17 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Long>> create(@Valid @RequestBody CreateOrderRequest orderRequest,
-                                                    BindingResult bindingResult,
-                                                    @RequestHeader(IDEMPOTENCY_HEADER) String key,
-                                                    @AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<ApiResponse<CreateOrderResponse>> create(@Valid @RequestBody CreateOrderRequest request,
+                                                                   BindingResult bindingResult,
+                                                                   @RequestHeader(IDEMPOTENCY_HEADER) String idempotencyKey,
+                                                                   @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        Object response = idempotencyService.getCachedResponse(key, orderRequest);
-        if (response != null) {
-            return ResponseUtils.ok((Long) response, messageService.get("entity.creating", "Order"));
-        }
-
-        orderValidator.validate(orderRequest, bindingResult);
+        log.info("request {}", request);
+        orderValidator.validate(request, bindingResult);
         commonHelper.checkErrors(bindingResult);
 
-        long id = orderService.create(orderRequest, userDetails);
-        idempotencyService.save(key, orderRequest, id);
-        return ResponseUtils.created(id, messageService.get("entity.creating", "Order"));
+        CreateOrderResponse response = orderService.create(request, idempotencyKey, userDetails);
+        return ResponseUtils.created(response, messageService.get("entity.creating", "Order"));
     }
 
     @PutMapping("/{id}/status")

@@ -40,19 +40,19 @@ export default function Cart() {
         {/* Cart Items */}
         <div className="lg:col-span-2 space-y-4">
           {cart?.map((item) => (
-            <Card key={item.id}>
+            <Card key={item.productId}>
               <CardContent className="p-6">
                 <div className="flex items-center space-x-4  overflow-hidden">
                   <div className="bg-red-600 w-[15%]">
                     <img
-                      src={item.image || item.images[0] || "/placeholder.svg"}
+                      src={item.image || item.images?.[0] || "/placeholder.svg"}
                       alt={item.name}
                       className="aspect-square object-cover rounded-md"
                     />
                   </div>
 
                   <div className="flex-1">
-                    <Link to={`/product/${item.id}`}>
+                    <Link to={`/products/${item.productId}`}>
                       <h3 className="font-semibold hover:text-primary cursor-pointer">{item.name}</h3>
                     </Link>
                     <p className="text-gray-600 text-sm">{item?.category?.name}</p>
@@ -63,7 +63,7 @@ export default function Cart() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                       disabled={item.quantity <= 1}
                     >
                       <Minus className="h-4 w-4" />
@@ -72,7 +72,7 @@ export default function Cart() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                       disabled={item.quantity >= item.stock}
                     >
                       <Plus className="h-4 w-4" />
@@ -84,7 +84,7 @@ export default function Cart() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => removeFromCart(item.id)}
+                      onClick={() => removeFromCart(item.productId)}
                       className="text-red-600 hover:text-red-700 p-6"
                     >
                       <Trash2 className="!h-6 !w-6" />

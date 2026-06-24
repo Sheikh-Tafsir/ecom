@@ -1,6 +1,7 @@
 package com.example.demo.order.dto;
 
 import com.example.demo.common.enums.OrderStatus;
+import com.example.demo.common.enums.PaymentMethod;
 import com.example.demo.common.model.Order;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,7 +19,11 @@ public class OrderResponse {
     String userName;
     BigDecimal totalPrice;
     OrderStatus status;
+    String name;
+    String address;
+    String phone;
     Set<OrderItemResponse> items;
+    PaymentMethod paymentMethod;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 
@@ -28,9 +33,13 @@ public class OrderResponse {
         userName = order.getUser().getName();
         totalPrice = order.getTotalPrice();
         status = order.getStatus();
+        name = order.getName();
+        address = order.getAddress();
+        phone = order.getPhone();
         items = order.getItems()
                 .stream()
                 .map(OrderItemResponse::new).collect(Collectors.toSet());
+        paymentMethod = order.getPaymentMethod();
         createdAt = order.getCreatedAt();
         updatedAt = order.getUpdatedAt();
     }

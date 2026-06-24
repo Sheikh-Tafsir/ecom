@@ -37,7 +37,7 @@ import {toastInitialState} from "@/utils/index.js";
 export default function ProductDetails() {
     const {id} = useParams()
     const {user} = useUserStore();
-    const {addToCart} = useCartStore()
+    const {cart, getCartTotal, addToCart} = useCartStore();
 
     const [isPageLoading, setIsPageLoading] = useState(true);
     const [isButtonLoading, setIsButtonLoading] = useState(false);
@@ -46,6 +46,10 @@ export default function ProductDetails() {
     const [review, setReview] = useState({});
     const [errors, setErrors] = useState({});
     const [toastData, setToastData] = useState(toastInitialState);
+
+    const itemInCart = product?.id ? cart.find(item => item.productId == product.id) : null;
+    const inCartQuantity = itemInCart ? itemInCart.quantity : 0;
+    const maxAvailable = product?.quantity ? (product.quantity - inCartQuantity) : 0;
 
     useEffect(() => {
         fetchProduct(id);
@@ -71,7 +75,7 @@ export default function ProductDetails() {
     }
 
     const incrementQuantity = () => {
-        if (quantity < product.quantity) {
+        if (quantity < maxAvailable) {
             setQuantity(quantity + 1)
         }
     }
@@ -199,24 +203,29 @@ export default function ProductDetails() {
                                         <span className="font-medium">Quantity:</span>
                                         <div className="flex items-center space-x-2">
                                             <Button variant="outline" size="sm" onClick={decrementQuantity}
-                                                    disabled={quantity <= 1}>
+                                                    disabled={quantity <= 1 || maxAvailable <= 0}>
                                                 <Minus className="h-4 w-4"/>
                                             </Button>
-                                            <span className="w-12 text-center font-medium">{quantity}</span>
+                                            <span className="w-12 text-center font-medium">{maxAvailable <= 0 ? 0 : quantity}</span>
                                             <Button
                                                 variant="outline"
                                                 size="sm"
                                                 onClick={incrementQuantity}
-                                                disabled={quantity >= product.quantity}
+                                                disabled={quantity >= maxAvailable}
                                             >
                                                 <Plus className="h-4 w-4"/>
                                             </Button>
                                         </div>
                                     </div>
 
-                                    <Button onClick={handleAddToCart} size="lg" className="w-full bg-blue-600">
+                                    <Button 
+                                        onClick={handleAddToCart} 
+                                        size="lg" 
+                                        className="w-full bg-blue-600"
+                                        disabled={maxAvailable <= 0}
+                                    >
                                         <ShoppingCart className="h-5 w-5 mr-2"/>
-                                        Add {quantity} to Cart
+                                        {maxAvailable <= 0 ? 'Maximum quantity in cart' : `Add ${quantity} to Cart`}
                                     </Button>
                                 </>
                             )}

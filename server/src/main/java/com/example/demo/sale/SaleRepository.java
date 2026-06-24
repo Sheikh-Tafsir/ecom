@@ -14,9 +14,12 @@ import java.time.LocalDateTime;
 public interface SaleRepository extends JpaRepository<Sale, Long> {
 
     @Query("""
-                SELECT s FROM Sale s
+                SELECT DISTINCT s
+                FROM Sale s
+                JOIN FETCH s.product p
+                LEFT JOIN FETCH p.images
                 WHERE s.createdAt BETWEEN :fromDate AND :toDate
-                     AND (:productId IS NULL OR s.product.id = :productId)
+                  AND (:productId IS NULL OR p.id = :productId)
             """)
     Page<Sale> findAllByMonth(
             @Param("fromDate") LocalDateTime fromDate,

@@ -3,6 +3,8 @@ package com.example.demo.sale;
 import com.example.demo.common.dto.DateRangeDto;
 import com.example.demo.common.model.Product;
 import com.example.demo.common.model.Sale;
+import com.example.demo.order.dto.OrderListResponse;
+import com.example.demo.sale.dto.SaleResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,9 +39,10 @@ public class SaleService {
     }
 
     @PreAuthorize(HAS_ROLE_ADMIN)
-    public Page<Sale> findAll(LocalDateTime fromDate, LocalDateTime toDate, Long productId, Pageable pageable) {
+    public Page<SaleResponse> findAll(LocalDateTime fromDate, LocalDateTime toDate, Long productId, Pageable pageable) {
         DateRangeDto dateRange = resolveDates(fromDate, toDate);
 
-        return saleRepository.findAllByMonth(dateRange.fromDate(), dateRange.toDate(), productId, getValidPageable(pageable));
+        return saleRepository.findAllByMonth(dateRange.fromDate(), dateRange.toDate(), productId, getValidPageable(pageable))
+                .map(SaleResponse::new);
     }
 }

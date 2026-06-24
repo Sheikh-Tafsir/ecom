@@ -41,6 +41,8 @@ import StockDetails from "@/features/stock/StockDetails.jsx";
 import {getAccessToken} from "@/utils/index.js";
 import Chat from "@/features/chats/Chats.jsx";
 import SignupVerify from "@/features/auth/SignupVerify";
+import PaymentSuccess from "@/features/payment/PaymentSuccess";
+import PaymentFail from "@/features/payment/PaymentFail";
 
 const App = () => {
 
@@ -101,6 +103,9 @@ const InnerApp = () => {
 
                 <Route path="/chats" element={<Chat/>}/>
                 <Route path="/chats/:id" element={<Chat/>}/>
+
+                <Route path="/payment/success" element={<PaymentSuccess />} />
+                <Route path="/payment/fail"    element={<PaymentFail />} />
             </Route>
 
             <Route element={<ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.SUPER_ADMIN]}/>}>

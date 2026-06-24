@@ -218,7 +218,7 @@ const Orders = () => {
                             <TableBody>
                                 {orders?.map((item) => (
                                     <TableRow key={item.id}>
-                                        <TableCell>{item.user.name}</TableCell>
+                                        <TableCell>{item.userName}</TableCell>
                                         <TableCell>{item.totalPrice}</TableCell>
                                         <TableCell>{format(item.createdAt, REGULAR_DATE_FORMAT)}</TableCell>
                                         <TableCell>{item.status}</TableCell>

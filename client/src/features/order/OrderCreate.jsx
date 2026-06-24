@@ -1,20 +1,14 @@
 import {useState} from "react"
 import {useNavigate} from "react-router-dom"
 import {Package} from "lucide-react"
-import {useForm} from "react-hook-form"
+import {useForm, Controller} from "react-hook-form"  // ← add Controller
 import {zodResolver} from "@hookform/resolvers/zod"
 import * as z from "zod"
 
 import {Button} from "@/components/ui/button"
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card"
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog"
+import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog"
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select.jsx"
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
 import {Separator} from "@/components/ui/separator"
@@ -25,19 +19,17 @@ import InputReadOnly from "@/components/common/InputReadOnly"
 import {Axios} from "@/services/http/Axios"
 import {GLOBAL_ERROR, handleErrors, toastInitialState} from "@/utils"
 import {ButtonLoading} from "@/components/common/ButtonLoading"
-import InputError from "@/components/common/InputError.jsx";
-import {TOAST_TYPE} from "@/utils/enums.js";
-import {ToastAlert} from "@/components/common/ToastAlert.jsx";
-import {
-    getIdempotencyKey, IDEMPOTENCY_HEADER,
-    removeIdempotencyKey
-} from "@/utils/idempotencyUtil.js";
+import InputError from "@/components/common/InputError.jsx"
+import {PAYMENT_METHOD, TOAST_TYPE} from "@/utils/enums.js"
+import {ToastAlert} from "@/components/common/ToastAlert.jsx"
+import {getIdempotencyKey, IDEMPOTENCY_HEADER, removeIdempotencyKey} from "@/utils/idempotencyUtil.js"
 
 const checkoutSchema = z.object({
     phone: z.string()
         .min(11, 'Phone number must be 11 digits')
         .max(11, 'Phone number must be 11 digits'),
     address: z.string().min(5, 'Address must be at least 5 characters'),
+    paymentMethod: z.string().min(1, 'Please select a payment method'),  // ← add to schema
 })
 
 export default function OrderCreate() {
@@ -53,12 +45,16 @@ export default function OrderCreate() {
         register,
         handleSubmit,
         setError,
+        control,
+        reset,
         formState: {errors, isSubmitting},
     } = useForm({
         resolver: zodResolver(checkoutSchema),
         defaultValues: {
             phone: '',
             address: '',
+            paymentMethod: PAYMENT_METHOD.CASH_ON_DELIVERY,
+            // paymentMethod: Object.keys(PAYMENT_METHOD)[0],
         },
     });
 
@@ -68,6 +64,7 @@ export default function OrderCreate() {
         try {
             const response = await Axios.post('/orders', {
                 items: cart,
+                name: user?.name,
                 ...data,
             }, {
                 headers: {
@@ -75,22 +72,32 @@ export default function OrderCreate() {
                 },
             });
 
-            clearCart();
-            removeIdempotencyKey()
+            showToast("Successfully placed order", TOAST_TYPE.SUCCESS);
 
+            const { paymentMethod } = data;
+            
+            clearCart();
+            reset()
+            removeIdempotencyKey();
             showToast("Successfully updated", TOAST_TYPE.SUCCESS);
 
-            setTimeout(() => {
-                navigate(`/orders/${response.data.data}`);
-            }, 500);
+
+            if (paymentMethod != PAYMENT_METHOD.CASH_ON_DELIVERY) {
+                window.location.href = response.data.data.paymentURL;
+            } else {
+                navigate(`/orders/${response.data.data.id}`)
+            }
+            // setTimeout(() => {
+            //     navigate(`/orders/${response.data.data}`);
+            // }, 500);
         } catch (error) {
-            console.error(error)
+            console.error(error);
             handleErrors(error, setError);
         }
     };
 
     const showToast = (message, type) => {
-        setToastData({message, type, id: Date.now(),});
+        setToastData({message, type, id: Date.now()});
     };
 
     return (
@@ -98,15 +105,13 @@ export default function OrderCreate() {
             <div className="container pb-8">
                 <div className="max-w-4xl mx-auto">
                     <div className="grid gap-8 lg:grid-cols-2">
-                        {/* Checkout Form */}
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <Package className="h-5 w-5"/>
                                     Checkout
                                 </CardTitle>
-                                <CardDescription>Complete your order by filling out the information
-                                    below</CardDescription>
+                                <CardDescription>Complete your order by filling out the information below</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
                                 <form className="space-y-6" onSubmit={handleSubmit(saveOrder)}>
@@ -136,14 +141,36 @@ export default function OrderCreate() {
                                             />
                                             <InputError errors={errors} field={"address"}/>
                                         </div>
+
+                                        <div className="grid gap-2">
+                                            <StaredLabel label="Payment Method"/>
+                                            <Controller
+                                                name="paymentMethod"
+                                                control={control}
+                                                render={({field}) => (
+                                                    <Select value={field.value} onValueChange={field.onChange}>
+                                                        <SelectTrigger className="w-full">
+                                                            <SelectValue placeholder="Select payment method"/>
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {Object.entries(PAYMENT_METHOD).map(([key, label]) => (
+                                                                <SelectItem key={key} value={label}>
+                                                                    {label}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                )}
+                                            />
+                                            <InputError errors={errors} field={"paymentMethod"}/>
+                                        </div>
                                     </div>
 
-                                    {isSubmitting ?
-                                        <ButtonLoading/>
-                                        :
-                                        <Button type="submit" className="w-full bg-blue-600" size="lg">
+                                    {isSubmitting
+                                        ? <ButtonLoading/>
+                                        : <Button type="submit" className="w-full bg-blue-600" size="lg">
                                             Complete Order
-                                        </Button>
+                                          </Button>
                                     }
                                 </form>
                             </CardContent>
@@ -156,12 +183,9 @@ export default function OrderCreate() {
                                 <CardDescription>Review your items and total</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                {/* View Items Button */}
                                 <Dialog>
                                     <DialogTrigger asChild>
-                                        <Button variant="outline" className="w-full">
-                                            View Items
-                                        </Button>
+                                        <Button variant="outline" className="w-full">View Items</Button>
                                     </DialogTrigger>
                                     <DialogContent className="max-w-2xl">
                                         <DialogHeader>
@@ -170,10 +194,9 @@ export default function OrderCreate() {
                                         </DialogHeader>
                                         <div className="space-y-4">
                                             {cart?.map((item) => (
-                                                <div key={item.id}
-                                                     className="flex items-center gap-4 p-4 border rounded-lg">
+                                                <div key={item.productId} className="flex items-center gap-4 p-4 border rounded-lg">
                                                     <img
-                                                        src={item?.images[0]?.image || "/placeholder.svg"}
+                                                        src={item.image || "/placeholder.svg"}
                                                         alt={item.name}
                                                         className="w-16 h-16 object-cover rounded-md"
                                                         loading="lazy"
@@ -194,32 +217,26 @@ export default function OrderCreate() {
 
                                 <Separator/>
 
-                                {/* Order Totals */}
                                 <div className="space-y-2">
                                     <div className="flex justify-between">
                                         <span>Subtotal ({cart.reduce((sum, item) => sum + item.quantity, 0)} items)</span>
                                         <span>${cartTotal.toFixed(2)}</span>
                                     </div>
-
                                     <div className="flex justify-between">
                                         <span>Shipping</span>
                                         <span>0</span>
                                     </div>
-
                                     <div className="flex justify-between">
                                         <span>Discount</span>
                                         <span>0</span>
                                     </div>
-
                                     <Separator/>
-
                                     <div className="flex justify-between font-bold text-lg">
                                         <span>Total</span>
                                         <span>${cartTotal.toFixed(2)}</span>
                                     </div>
                                 </div>
 
-                                {/* Estimated Delivery */}
                                 <div className="bg-muted p-4 rounded-lg">
                                     <h4 className="font-medium mb-2">Estimated Delivery</h4>
                                     <p className="text-sm text-muted-foreground">3-5 business days</p>
@@ -230,11 +247,7 @@ export default function OrderCreate() {
                 </div>
             </div>
 
-            <ToastAlert
-                key={toastData.id}
-                message={toastData.message}
-                type={toastData.type}
-            />
+            <ToastAlert key={toastData.id} message={toastData.message} type={toastData.type}/>
         </>
     )
 }

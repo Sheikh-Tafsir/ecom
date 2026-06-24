@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
- const LOCAL_STORAGE_CART = 'visoredCart'
+
+const LOCAL_STORAGE_CART = 'visoredCart';
 
 export const useCartStore = create(
     persist(
@@ -9,37 +10,65 @@ export const useCartStore = create(
 
             addToCart: (product, quantity = 1) => {
                 const cart = get().cart;
-                const existingItem = cart.find(item => item.id === product.id);
-                let isNew = false;
+
+                const existingItem = cart.find(
+                    item => item.productId == product.id
+                );
 
                 if (existingItem) {
                     set({
                         cart: cart.map(item =>
-                            item.id === product.id
-                                ? { ...item, quantity: item.quantity + quantity }
+                            item.productId == product.id
+                                ? {
+                                    ...item,
+                                    quantity: item.quantity + quantity,
+                                    stock: product.quantity,
+                                }
                                 : item
-                        )
+                        ),
                     });
-                } else {
-                    set({ cart: [...cart, { ...product, quantity }] });
-                    isNew = true;
+
+                    return 0;
                 }
-                return isNew ? 1 : 0;
+
+                set({
+                    cart: [
+                        ...cart,
+                        {
+                            productId: product.id,
+                            name: product.name,
+                            description: product.description,
+                            image: product.image ?? product.images?.[0]?.image ?? null,
+                            price: product.price,
+                            quantity,
+                            stock: product.quantity,
+                        },
+                    ],
+                });
+
+                return 1;
             },
 
             removeFromCart: (productId) => {
-                set({ cart: get().cart.filter(item => item.id !== productId) });
+                set({
+                    cart: get().cart.filter(
+                        item => item.productId != productId
+                    ),
+                });
             },
 
             updateQuantity: (productId, quantity) => {
-                if (quantity < 1) {
+                if (quantity <= 0) {
                     get().removeFromCart(productId);
                     return;
                 }
+
                 set({
                     cart: get().cart.map(item =>
-                        item.id === productId ? { ...item, quantity } : item
-                    )
+                        item.productId == productId
+                            ? { ...item, quantity }
+                            : item
+                    ),
                 });
             },
 
@@ -47,13 +76,17 @@ export const useCartStore = create(
                 set({ cart: [] });
             },
 
-            getCartTotal: () => {
-                return get().cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
-            },
+            getCartTotal: () =>
+                get().cart.reduce(
+                    (total, item) => total + item.price * item.quantity,
+                    0
+                ),
 
-            getCartCount: () => {
-                return get().cart.reduce((acc, item) => acc + item.quantity, 0);
-            },
+            getCartCount: () =>
+                get().cart.reduce(
+                    (count, item) => count + item.quantity,
+                    0
+                ),
         }),
         {
             name: LOCAL_STORAGE_CART,

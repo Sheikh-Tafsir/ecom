@@ -3,17 +3,21 @@ package com.example.demo.order.service;
 import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.common.dto.DateRangeDto;
 import com.example.demo.common.enums.OrderStatus;
+import com.example.demo.common.enums.PaymentMethod;
 import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.common.model.*;
+import com.example.demo.common.service.IdempotencyService;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.order.dto.*;
 import com.example.demo.order.repository.OrderRepository;
+import com.example.demo.payment.dto.CreatePaymentRequest;
+import com.example.demo.order.dto.CreateOrderResponse;
+import com.example.demo.payment.service.PaymentService;
 import com.example.demo.product.service.ProductService;
 import com.example.demo.stock.service.StockService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -36,11 +40,13 @@ public class OrderService {
 
     private final MessageService messageService;
 
+    private final PaymentService paymentService;
+
     private final OrderRepository orderRepository;
 
     private final StockService stockService;
 
-    private final ModelMapper modelMapper;
+    private final IdempotencyService idempotencyService;
 
     private final CommonHelper commonHelper;
 
@@ -64,8 +70,18 @@ public class OrderService {
     }
 
     @Transactional
-    public long create(CreateOrderRequest request, CustomUserDetails userDetails) {
-        Order order = modelMapper.map(request, Order.class);
+    public CreateOrderResponse create(CreateOrderRequest request, String idempotencyKey, CustomUserDetails userDetails) {
+        Object cachedResponse = idempotencyService.getCachedResponse(idempotencyKey, request);
+        if (cachedResponse != null) {
+            return (CreateOrderResponse) cachedResponse;
+        }
+
+        Order order = new Order();
+        order.setName(request.name());
+        order.setPhone(request.phone());
+        order.setAddress(request.address());
+        order.setPaymentMethod(request.paymentMethod());
+
         if (isNull(order.getName())) {
             order.setName(userDetails.user().getName());
         }
@@ -75,7 +91,16 @@ public class OrderService {
 
         orderRepository.save(order);
 
-        return order.getId();
+        CreateOrderResponse response = new CreateOrderResponse();
+        if (request.paymentMethod() != PaymentMethod.CASH_ON_DELIVERY) {
+            response = paymentService.create(
+                    new CreatePaymentRequest(userDetails.getId().toString(), order.getTotalPrice().toString()), order.getId());
+        }
+
+        response.setId(order.getId());
+        idempotencyService.save(idempotencyKey, request, response);
+
+        return response;
     }
 
     @Transactional
@@ -118,6 +143,13 @@ public class OrderService {
     public void delete(Long id) {
         Order order = findByIdHelper(id);
         orderRepository.delete(order);
+    }
+
+    @Transactional
+    public void acceptOrder(long id) {
+        Order order = findByIdHelper(id);
+        acceptOrder(order);
+        orderRepository.save(order);
     }
 
     private Order findByIdHelper(Long id) {

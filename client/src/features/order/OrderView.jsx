@@ -21,6 +21,7 @@ import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadi
 import { Axios } from "@/services/http/Axios"
 import {toastInitialState} from "@/utils"
 import { TOAST_TYPE } from "@/utils/enums"
+import { ToastAlert } from "@/components/common/ToastAlert"
 
 export default function OrderView() {
     const { id } = useParams();
@@ -84,6 +85,11 @@ export default function OrderView() {
                                             <StaredLabel label="Street Address" />
                                             <InputReadOnly value={order?.address} />
                                         </div>
+
+                                        <div className="grid gap-2">
+                                            <StaredLabel label="Payment Method"/>
+                                            <InputReadOnly value={order?.paymentMethod} />
+                                        </div>
                                     </div>
                                 </div>
                             </CardContent>
@@ -112,17 +118,17 @@ export default function OrderView() {
                                             {order?.items?.map((item) => (
                                                 <div key={item.id} className="flex items-center gap-4 p-4 border rounded-lg">
                                                     <img
-                                                        src={item?.product?.images[0]?.image || "/placeholder.svg"}
+                                                        src={item?.productImage || "/placeholder.svg"}
                                                         alt={item.name}
                                                         className="w-16 h-16 object-cover rounded-md"
                                                     />
                                                     <div className="flex-1">
-                                                        <h4 className="font-medium">{item.product.name}</h4>
+                                                        <h4 className="font-medium">{item?.productName}</h4>
                                                         <p className="text-sm text-muted-foreground">Quantity: {item.quantity}</p>
                                                     </div>
                                                     <div className="text-right">
-                                                        <p className="font-medium">{(item.product.price * item.quantity).toFixed(2)}</p>
-                                                        <p className="text-sm text-muted-foreground">${item.product.price} each</p>
+                                                        <p className="font-medium">{(item.productPrice * item.quantity).toFixed(2)}</p>
+                                                        <p className="text-sm text-muted-foreground">${item.productPrice} each</p>
                                                     </div>
                                                 </div>
                                             ))}

@@ -77,7 +77,7 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/products", "/products/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/categories", "/categories/*").permitAll()
-
+                        .requestMatchers("/payment/callback").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);

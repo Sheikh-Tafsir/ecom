@@ -1,6 +1,7 @@
 package com.example.demo.common.model;
 
 import com.example.demo.common.enums.OrderStatus;
+import com.example.demo.common.enums.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -45,8 +46,8 @@ public class Order extends BaseEntity {
     @Column(nullable = false)
     private String address;
 
-    @Column(nullable = false)
-    private String trackingNumber;
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod = PaymentMethod.CASH_ON_DELIVERY;
 
     public boolean isCancelledOrRejected() {
         return status == OrderStatus.CANCELLED || status == OrderStatus.REJECTED;

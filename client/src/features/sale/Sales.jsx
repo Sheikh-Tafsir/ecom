@@ -17,6 +17,7 @@ import PaginationButton from "@/components/common/PaginationButton";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
 
 import {
+    formatDate,
     REGULAR_DATE_FORMAT,
     toastInitialState,
 } from "@/utils";
@@ -211,8 +212,8 @@ export default function Sales() {
                             <TableHeader>
                                 <TableRow className="bg-blue-100">
                                     <TableHead>Name</TableHead>
-                                    <TableHead>Buying Price</TableHead>
-                                    <TableHead>Selling Price</TableHead>
+                                    {/* <TableHead>Buying Price</TableHead>
+                                    <TableHead>Selling Price</TableHead> */}
                                     <TableHead>Quantity</TableHead>
                                     <TableHead>Profit</TableHead>
                                     <TableHead>Date</TableHead>
@@ -223,14 +224,14 @@ export default function Sales() {
                                 {sales.map((item) => (
                                     <TableRow key={item.id}>
                                         <TableCell>
-                                            {item.product.name}
+                                            {item.productName}
                                         </TableCell>
-                                        <TableCell>
+                                        {/* <TableCell>
                                             {item.buyingPrice}
                                         </TableCell>
                                         <TableCell>
                                             {item.sellingPrice}
-                                        </TableCell>
+                                        </TableCell> */}
                                         <TableCell>
                                             {item.quantity}
                                         </TableCell>
@@ -238,10 +239,7 @@ export default function Sales() {
                                             {item.profit}
                                         </TableCell>
                                         <TableCell>
-                                            {format(
-                                                new Date(item.createdAt),
-                                                REGULAR_DATE_FORMAT
-                                            )}
+                                            {formatDate(item.createdAt)}
                                         </TableCell>
                                     </TableRow>
                                 ))}

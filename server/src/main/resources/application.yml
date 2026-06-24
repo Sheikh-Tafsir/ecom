@@ -129,3 +129,13 @@ springdoc:
     url: /v3/api-docs
     path: /swagger-ui.html
     operations-sorter: method
+
+bkash:
+  base-url: https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized/checkout
+  app-key: 4f6o0cjiki2rfm34kfdadl1eqq
+  app-secret: 2is7hdktrekvrbljjh44ll3d9l1dtjo4pasmjvs5vl5qr3fug4b
+  username: sandboxTokenizedUser02
+  password: sandboxTokenizedUser02@12345
+  callback-url: ${SERVER_URL}/payment/callback
+  frontend-success-url: ${FRONTEND_URL}/payment/success
+  frontend-fail-url: ${FRONTEND_URL}/payment/fail

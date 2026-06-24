@@ -10,13 +10,13 @@ import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilde
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * {@link Jackson2ObjectMapperBuilderCustomizer} trims empty spaces from @RequestBdy in form submissions (application/json)
+ * through {@link StringTrimmerDeserializer}
+ */
 @Configuration
 public class JacksonConfig {
 
-    /**
-     * {@link StringTrimmerDeserializer} trims empty spaces from @RequestParam, @PathVariable, @ModelAttribute
-     * and form submissions (application/x-www-form-urlencoded)
-     */
     @Bean
     public Jackson2ObjectMapperBuilderCustomizer jacksonCustomizer() {
         return builder -> {

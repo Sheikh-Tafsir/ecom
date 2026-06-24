@@ -4,6 +4,7 @@ import com.example.demo.common.dto.ApiResponse;
 import com.example.demo.common.model.Sale;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.common.utils.ResponseUtils;
+import com.example.demo.sale.dto.SaleResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,12 +26,12 @@ public class SaleController {
     private final MessageService messageService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<Sale>>> findAll(@RequestParam(required = false) LocalDateTime fromDate,
-                                                           @RequestParam(required = false) LocalDateTime toDate,
-                                                           @RequestParam(required = false) Long productId,
-                                                           Pageable pageable) {
+    public ResponseEntity<ApiResponse<Page<SaleResponse>>> findAll(@RequestParam(required = false) LocalDateTime fromDate,
+                                                                   @RequestParam(required = false) LocalDateTime toDate,
+                                                                   @RequestParam(required = false) Long productId,
+                                                                   Pageable pageable) {
 
-        Page<Sale> sales = saleService.findAll(fromDate, toDate, productId, pageable);
+        Page<SaleResponse> sales = saleService.findAll(fromDate, toDate, productId, pageable);
         return ResponseUtils.ok(sales, messageService.get("successfully.found", "Sales"));
     }
 }

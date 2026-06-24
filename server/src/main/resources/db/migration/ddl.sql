@@ -101,7 +101,7 @@ CREATE TABLE orders
     name            VARCHAR(63)    NOT NULL,
     phone           VARCHAR(11)    NOT NULL,
     address         VARCHAR(255)   NOT NULL,
-    tracking_number VARCHAR(255)   NOT NULL,
+    payment_method  VARCHAR(20)    NOT NULL DEFAULT 'CASH_ON_DELIVERY',
     version         INT            NOT NULL DEFAULT 0,
     created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP

@@ -7,6 +7,10 @@ import com.fasterxml.jackson.databind.deser.std.StringDeserializer;
 
 import java.io.IOException;
 
+/**
+ * {@link StringTrimmerDeserializer} trims empty spaces from @RequestParam, @PathVariable, @ModelAttribute
+ * and form submissions (application/x-www-form-urlencoded)
+ */
 public class StringTrimmerDeserializer extends StdScalarDeserializer<String> {
 
     public StringTrimmerDeserializer() {
