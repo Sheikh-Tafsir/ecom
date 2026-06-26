@@ -58,38 +58,55 @@ export default function OrderCreate() {
         },
     });
 
+    const createOrder = async (data, idempotencyKey) => {
+        return Axios.post("/orders", {
+                items: cart,
+                name: user?.name,
+                ...data,
+            },
+            {
+                headers: {
+                    [IDEMPOTENCY_HEADER]: idempotencyKey,
+                },
+            }
+        );
+    };
+
+    const createPayment = async (order, phone) => {
+        return await Axios.post("/payment", {
+            userId: user.id,
+            orderId: order.id,
+            amount: order.amount,
+            payerReference: phone,
+        });
+    };
+
+    const cleanupAfterOrder = () => {
+        clearCart();
+        reset();
+        removeIdempotencyKey();
+    };
+
     const saveOrder = async (data) => {
         const idempotencyKey = getIdempotencyKey();
 
         try {
-            const response = await Axios.post('/orders', {
-                items: cart,
-                name: user?.name,
-                ...data,
-            }, {
-                headers: {
-                    [IDEMPOTENCY_HEADER]: idempotencyKey,
-                },
-            });
+            const orderResponse = await createOrder(data, idempotencyKey);
+            const order = orderResponse.data.data;
 
             showToast("Successfully placed order", TOAST_TYPE.SUCCESS);
 
-            const { paymentMethod } = data;
-            
-            clearCart();
-            reset()
-            removeIdempotencyKey();
-            showToast("Successfully updated", TOAST_TYPE.SUCCESS);
-
-
-            if (paymentMethod != PAYMENT_METHOD.CASH_ON_DELIVERY) {
-                window.location.href = response.data.data.paymentURL;
-            } else {
-                navigate(`/orders/${response.data.data.id}`)
+            if (data.paymentMethod == PAYMENT_METHOD.CASH_ON_DELIVERY) {
+                cleanupAfterOrder();
+                navigate(`/orders/${order.id}`);
+                return;
             }
-            // setTimeout(() => {
-            //     navigate(`/orders/${response.data.data}`);
-            // }, 500);
+
+            const paymentResponse = await createPayment(order, data.phone);
+            console.log(paymentResponse.data.data);
+
+            cleanupAfterOrder();
+            window.location.assign(paymentResponse.data.data);
         } catch (error) {
             console.error(error);
             handleErrors(error, setError);

@@ -1,8 +1,11 @@
 package com.example.demo.payment.controller;
 
 import com.example.demo.common.config.BkashConfig;
+import com.example.demo.common.dto.ApiResponse;
+import com.example.demo.common.utils.ResponseUtils;
 import com.example.demo.order.service.OrderService;
-import com.example.demo.payment.dto.ExecutePaymentResponse;
+import com.example.demo.payment.dto.CreatePaymentRequest;
+import com.example.demo.payment.dto.CreatePaymentResponse;
 import com.example.demo.payment.service.BkashPaymentService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -11,12 +14,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.Map;
 
 @Slf4j
 @RestController
 @RequestMapping("/payment")
 @RequiredArgsConstructor
-public class BkashPaymentController {
+public class PaymentController {
 
     private final BkashPaymentService paymentService;
 
@@ -24,14 +28,14 @@ public class BkashPaymentController {
 
     private final BkashConfig config;
 
-//    /**
-//     * Called by React to initiate payment
-//     */
-//    @PostMapping("/create")
-//    public ResponseEntity<ApiResponse<CreateOrderResponse>> createPayment(@RequestBody CreatePaymentRequest request) {
-//        CreateOrderResponse response = paymentService.create(request);
-//        return ResponseUtils.ok(response, "Payment initiated");
-//    }
+    /**
+     * Called by React to initiate payment
+     */
+    @PostMapping
+    public ResponseEntity<ApiResponse<String>> createPayment(@RequestBody CreatePaymentRequest request) {
+        String bkashURL = paymentService.create(request);;
+        return ResponseUtils.ok(bkashURL, "found");
+    }
 
     /**
      * bKash redirects here after user completes/cancels/fails payment.
@@ -40,14 +44,21 @@ public class BkashPaymentController {
     @GetMapping("/callback")
     public void callback(@RequestParam String paymentID,
                          @RequestParam String status,
-                         @RequestParam long orderId,
                          HttpServletResponse httpResponse) throws IOException {
 
-        log.info("Callback hit — paymentID={}, status={}, orderId={}", paymentID, status, orderId);
+        log.info("Callback hit — paymentID={}, status={}", paymentID, status);
+
+        Long orderId = paymentService.getOrderIdByPaymentId(paymentID);
+
+        if (orderId == null) {
+            log.error("Order not found for paymentID: {}", paymentID);
+            httpResponse.sendRedirect(config.getFrontendFailUrl() + "?reason=not_found");
+            return;
+        }
 
         if (!"success".equalsIgnoreCase(status)) {
             log.warn("payment failed/cancelled. paymentID={}, status={}", paymentID, status);
-            orderService.delete(orderId);
+            paymentService.updatePaymentStatus(paymentID, null, false);
 
             httpResponse.sendRedirect(config.getFrontendFailUrl()
                     + "?orderId=" + orderId
@@ -56,26 +67,32 @@ public class BkashPaymentController {
         }
 
         try {
-            ExecutePaymentResponse result = paymentService.execute(paymentID);
+            CreatePaymentResponse result = paymentService.execute(paymentID);
 
             if ("0000".equals(result.getStatusCode())) {
                 orderService.acceptOrder(orderId);
+                paymentService.updatePaymentStatus(paymentID, result, true);
 
                 httpResponse.sendRedirect(config.getFrontendSuccessUrl()
                         + "?orderId=" + orderId
+                        + "&paymentID=" + result.getPaymentID()
                         + "&trxID=" + result.getTrxID()
+                        + "&amount=" + result.getAmount()
                         + "&status=success");
             } else {
-                orderService.delete(orderId);
+                paymentService.updatePaymentStatus(paymentID, result, false);
 
                 httpResponse.sendRedirect(config.getFrontendFailUrl()
                         + "?orderId=" + orderId
-                        + "&status=failure");
+                        + "&status=failure"
+                        + "&reason=" + result.getStatusMessage());
             }
         } catch (Exception e) {
             log.error("Execute payment error", e);
-            httpResponse.sendRedirect(config.getFrontendFailUrl() +
-                    "?paymentID=" + paymentID
+            paymentService.updatePaymentStatus(paymentID, null, false);
+
+            httpResponse.sendRedirect(config.getFrontendFailUrl()
+                    + "?orderId=" + orderId
                     + "&reason=server_error");
         }
     }
@@ -83,9 +100,9 @@ public class BkashPaymentController {
     /**
      * Query payment status
      */
-    @GetMapping("/query/{paymentID}")
-    public ResponseEntity<?> queryPayment(@PathVariable String paymentID) {
-        return ResponseEntity.ok(paymentService.queryPayment(paymentID));
+    @GetMapping("/query/{paymentId}")
+    public ResponseEntity<?> findById(@PathVariable String paymentId) {
+        return ResponseEntity.ok(paymentService.findByPaymentId(paymentId));
     }
 
     /**

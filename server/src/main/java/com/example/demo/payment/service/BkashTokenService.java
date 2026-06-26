@@ -47,7 +47,8 @@ public class BkashTokenService {
     private String refreshToken(String refreshToken) {
         try {
             HttpHeaders headers = baseHeaders();
-            headers.setBasicAuth(config.getUsername(), config.getPassword());
+            headers.set("username", config.getUsername());
+            headers.set("password", config.getPassword());
 
             Map<String, String> body = Map.of(
                     "app_key", config.getAppKey(),
@@ -72,7 +73,8 @@ public class BkashTokenService {
 
     private String grantToken() {
         HttpHeaders headers = baseHeaders();
-        headers.setBasicAuth(config.getUsername(), config.getPassword());
+        headers.set("username", config.getUsername());
+        headers.set("password", config.getPassword());
 
         Map<String, String> body = Map.of(
                 "app_key", config.getAppKey(),

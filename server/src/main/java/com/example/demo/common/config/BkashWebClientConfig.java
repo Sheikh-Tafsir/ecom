@@ -10,7 +10,7 @@ public class BkashWebClientConfig {
     @Bean
     public WebClient bkashWebClient(BkashConfig config) {
         return WebClient.builder()
-                .baseUrl("https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized/checkout") // ← no trailing /
+                .baseUrl(config.getBaseUrl()) // ← no trailing /
                 .defaultHeader("Accept", "application/json")
                 .defaultHeader("Content-Type", "application/json")
                 .defaultHeader("username", config.getUsername())      // ← bKash needs these

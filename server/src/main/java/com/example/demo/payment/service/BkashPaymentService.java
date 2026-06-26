@@ -1,9 +1,11 @@
 package com.example.demo.payment.service;
 
 import com.example.demo.common.config.BkashConfig;
+import com.example.demo.common.enums.PaymentStatus;
+import com.example.demo.common.model.Payment;
 import com.example.demo.payment.dto.CreatePaymentRequest;
-import com.example.demo.order.dto.CreateOrderResponse;
-import com.example.demo.payment.dto.ExecutePaymentResponse;
+import com.example.demo.payment.dto.CreatePaymentResponse;
+import com.example.demo.payment.repository.PaymentRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.Map;
@@ -25,23 +28,29 @@ public class BkashPaymentService implements PaymentService {
     private final BkashTokenService tokenService;
     private final WebClient bkashWebClient;
     private final ObjectMapper objectMapper;
+    private final PaymentRepository paymentRepository;
 
     /**
      * Step 1: Create a payment and return the bKash payment URL
      */
     @Override
-    public CreateOrderResponse create(CreatePaymentRequest request, Long orderId) {
+    @Transactional
+    public String create(CreatePaymentRequest request) {
         HttpHeaders headers = authHeaders();
+
+        String merchantInvoiceNumber = "INV-" + UUID.randomUUID().toString().replace("-", "").substring(0, 11).toUpperCase();
 
         Map<String, Object> body = Map.of(
                 "mode", "0011",          // Checkout URL mode
-                "payerReference", request.userId(),
-                "callbackURL", config.getCallbackUrl() + "?orderId=" + orderId,
-                "amount", request.amount(),
+                "payerReference", request.payerReference() != null ? request.payerReference() : String.valueOf(request.userId()),
+                "callbackURL", config.getCallbackUrl(),
+                "amount", request.amount().setScale(2, java.math.RoundingMode.HALF_UP).toString(),
                 "currency", "BDT",
                 "intent", "sale",
-                "merchantInvoiceNumber", "INV-" + UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase()
+                "merchantInvoiceNumber", merchantInvoiceNumber
         );
+
+        log.info("Requesting bKash payment with body: {}", body);
 
         String responseBody = bkashWebClient.post()
                 .uri(config.getBaseUrl() + "/create")
@@ -59,30 +68,56 @@ public class BkashPaymentService implements PaymentService {
                 throw new RuntimeException("bKash create payment failed: " + node.path("statusMessage").asText());
             }
 
-            return CreateOrderResponse.builder()
-                    .id(orderId)
-                    .paymentID(node.path("paymentID").asText())
-                    .paymentURL(node.path("bkashURL").asText())
-                    .statusCode(node.path("statusCode").asText())
-                    .statusMessage(node.path("statusMessage").asText())
-                    .build();
+            String bkashURL = node.path("bkashURL").asText();
+            String paymentID = node.path("paymentID").asText();
 
+            paymentRepository.save(com.example.demo.common.model.Payment.builder()
+                    .orderId(request.orderId())
+                    .paymentIntentId(paymentID)
+                    .merchantInvoiceNumber(merchantInvoiceNumber)
+                    .amount(request.amount())
+                    .status(PaymentStatus.PENDING)
+                    .build());
+
+            return bkashURL;
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse create payment response", e);
         }
+    }
+
+    @Override
+    public Long getOrderIdByPaymentId(String paymentID) {
+        return paymentRepository.findByPaymentIntentId(paymentID)
+                .map(Payment::getOrderId)
+                .orElse(null);
+    }
+
+    @Override
+    @Transactional
+    public void updatePaymentStatus(String paymentID, CreatePaymentResponse result, boolean success) {
+        paymentRepository.findByPaymentIntentId(paymentID).ifPresent(payment -> {
+            if (success && result != null) {
+                payment.setTransactionId(result.getTrxID());
+                payment.setMerchantInvoiceNumber(result.getMerchantInvoiceNumber());
+                payment.setStatus(PaymentStatus.COMPLETED);
+            } else {
+                payment.setStatus(PaymentStatus.FAILED);
+            }
+            paymentRepository.save(payment);
+        });
     }
 
     /**
      * Step 2: Execute payment after user completes on bKash side
      */
     @Override
-    public ExecutePaymentResponse execute(String paymentID) {
+    public CreatePaymentResponse execute(String paymentID) {
         HttpHeaders headers = authHeaders();
 
         Map<String, String> body = Map.of("paymentID", paymentID);
 
         String responseBody = bkashWebClient.post()
-                .uri( "/execute")
+                .uri(config.getBaseUrl() + "/execute")
                 .headers(httpHeaders -> httpHeaders.addAll(headers))
                 .bodyValue(body)
                 .retrieve()
@@ -93,7 +128,7 @@ public class BkashPaymentService implements PaymentService {
         try {
             JsonNode node = objectMapper.readTree(responseBody);
 
-            return ExecutePaymentResponse.builder()
+            return CreatePaymentResponse.builder()
                     .paymentID(node.path("paymentID").asText())
                     .trxID(node.path("trxID").asText())
                     .transactionStatus(node.path("transactionStatus").asText())
@@ -113,11 +148,11 @@ public class BkashPaymentService implements PaymentService {
      * Query payment status
      */
     @Override
-    public JsonNode queryPayment(String paymentID) {
+    public JsonNode findByPaymentId(String paymentId) {
         HttpHeaders headers = authHeaders();
 
         String responseBody = bkashWebClient.get()
-                .uri(config.getBaseUrl() + "/payment/status?paymentID=" + paymentID)
+                .uri(config.getBaseUrl() + "/payment/status?paymentID=" + paymentId)
                 .headers(httpHeaders -> httpHeaders.addAll(headers))
                 .retrieve()
                 .bodyToMono(String.class)

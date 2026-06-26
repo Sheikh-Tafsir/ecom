@@ -117,6 +117,20 @@ CREATE TABLE order_items
     CONSTRAINT uq_order_items_order_product UNIQUE (order_id, product_id)
 );
 
+CREATE TABLE payments
+(
+    id                      BIGSERIAL PRIMARY KEY,
+    order_id                BIGINT         NOT NULL REFERENCES orders (id) ON DELETE RESTRICT,
+    payment_intent_id       VARCHAR(255),
+    transaction_id          VARCHAR(255),
+    merchant_invoice_number VARCHAR(255),
+    amount                  DECIMAL(19, 2) NOT NULL CHECK (amount >= 0),
+    status                  VARCHAR(31)    NOT NULL DEFAULT 'PENDING',
+    version                 INT            NOT NULL DEFAULT 0,
+    created_at              TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at              TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE reviews
 (
     id         BIGSERIAL PRIMARY KEY,

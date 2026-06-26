@@ -1,7 +1,11 @@
 package com.example.demo.payment.dto;
 
+import java.math.BigDecimal;
+
 public record CreatePaymentRequest(
-        String userId,
-        String amount
+        Long userId,
+        Long orderId,
+        BigDecimal amount,
+        String payerReference
 ) {
 }

@@ -3,16 +3,13 @@ package com.example.demo.order.service;
 import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.common.dto.DateRangeDto;
 import com.example.demo.common.enums.OrderStatus;
-import com.example.demo.common.enums.PaymentMethod;
 import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.common.model.*;
 import com.example.demo.common.service.IdempotencyService;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.order.dto.*;
 import com.example.demo.order.repository.OrderRepository;
-import com.example.demo.payment.dto.CreatePaymentRequest;
 import com.example.demo.order.dto.CreateOrderResponse;
-import com.example.demo.payment.service.PaymentService;
 import com.example.demo.product.service.ProductService;
 import com.example.demo.stock.service.StockService;
 import jakarta.persistence.EntityNotFoundException;
@@ -39,8 +36,6 @@ public class OrderService {
     private final ProductService productService;
 
     private final MessageService messageService;
-
-    private final PaymentService paymentService;
 
     private final OrderRepository orderRepository;
 
@@ -91,13 +86,7 @@ public class OrderService {
 
         orderRepository.save(order);
 
-        CreateOrderResponse response = new CreateOrderResponse();
-        if (request.paymentMethod() != PaymentMethod.CASH_ON_DELIVERY) {
-            response = paymentService.create(
-                    new CreatePaymentRequest(userDetails.getId().toString(), order.getTotalPrice().toString()), order.getId());
-        }
-
-        response.setId(order.getId());
+        CreateOrderResponse response = new CreateOrderResponse(order.getId(), order.getTotalPrice());
         idempotencyService.save(idempotencyKey, request, response);
 
         return response;
@@ -122,11 +111,11 @@ public class OrderService {
 
         if (isAdmin) {
             if (!status.canBeSetByAdmin()) {
-                throw new AccessDeniedException("Admin with id: "+ userId + " attempting to set status with user owner access");
+                throw new AccessDeniedException("Admin with id: " + userId + " attempting to set status with user owner access");
             }
         } else {
             if (!status.canBeSetByUser()) {
-                throw new AccessDeniedException("User with id: "+ userId + " attempting to set status with admin access");
+                throw new AccessDeniedException("User with id: " + userId + " attempting to set status with admin access");
             }
         }
 
@@ -149,6 +138,7 @@ public class OrderService {
     public void acceptOrder(long id) {
         Order order = findByIdHelper(id);
         acceptOrder(order);
+        order.setStatus(OrderStatus.ACCEPTED);
         orderRepository.save(order);
     }
 

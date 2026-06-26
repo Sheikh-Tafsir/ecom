@@ -9,7 +9,7 @@ import lombok.Getter;
 public enum PaymentStatus {
 
     PENDING("Pending"),
-    SUCCEEDED("Succeeded"),
+    COMPLETED("Completed"),
     FAILED("Failed");
 
     @JsonValue

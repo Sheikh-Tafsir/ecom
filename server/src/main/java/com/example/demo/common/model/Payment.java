@@ -26,7 +26,13 @@ public class Payment extends BaseEntity {
     @Column(name = "payment_intent_id")
     private String paymentIntentId;
 
-    @Column(nullable = false)
+    @Column(name = "transaction_id")
+    private String transactionId;
+
+    @Column(name = "merchant_invoice_number")
+    private String merchantInvoiceNumber;
+
+    @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
 
     @Column(nullable = false)
