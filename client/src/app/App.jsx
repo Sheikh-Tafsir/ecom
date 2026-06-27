@@ -1,6 +1,8 @@
 import {Routes, Route, BrowserRouter} from "react-router-dom";
 import {useEffect} from 'react';
 import './App.css'
+import {Bounce, ToastContainer} from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import AuthRoute from "@/routes/AuthRoute";
 import ProtectedRoute from "@/routes/ProtectedRoute";
@@ -77,55 +79,71 @@ const InnerApp = () => {
     }, [user])
 
     return (
-        <Routes>
-            <Route element={<PublicRoute/>}>
-                <Route path="/" element={<Homepage/>}/>
-                <Route path="/products" element={<Products/>}/>
-                <Route path="/products/:id" element={<ProductDetails/>}/>
-            </Route>
+        <>
+            <Routes>
+                <Route element={<PublicRoute/>}>
+                    <Route path="/" element={<Homepage/>}/>
+                    <Route path="/products" element={<Products/>}/>
+                    <Route path="/products/:id" element={<ProductDetails/>}/>
+                </Route>
 
-            <Route element={<AuthRoute/>}>
-                <Route path="/auth/signup" element={<Signup/>}/>
-                <Route path="/auth/signup/verify" element={<SignupVerify/>}/>
-                <Route path="/auth/login" element={<Login/>}/>
-                <Route path="/auth/forget-password" element={<ForgetPassword/>}/>
-                <Route path="/auth/forget-password/verify" element={<ForgetPasswordVerify/>}/>
-            </Route>
+                <Route element={<AuthRoute/>}>
+                    <Route path="/auth/signup" element={<Signup/>}/>
+                    <Route path="/auth/signup/verify" element={<SignupVerify/>}/>
+                    <Route path="/auth/login" element={<Login/>}/>
+                    <Route path="/auth/forget-password" element={<ForgetPassword/>}/>
+                    <Route path="/auth/forget-password/verify" element={<ForgetPasswordVerify/>}/>
+                </Route>
 
-            <Route element={<ProtectedRoute/>}>
-                <Route path='/profile' element={<Profile/>}/>
-                <Route path='/profile/edit' element={<Profile/>}/>
+                <Route element={<ProtectedRoute/>}>
+                    <Route path='/profile' element={<Profile/>}/>
+                    <Route path='/profile/edit' element={<Profile/>}/>
 
-                <Route path="/cart" element={<Cart/>}/>
-                <Route path="/orders" element={<Orders/>}/>
-                <Route path="/orders/:id" element={<OrderView/>}/>
-                <Route path="/orders/create" element={<OrderCreate/>}/>
+                    <Route path="/cart" element={<Cart/>}/>
+                    <Route path="/orders" element={<Orders/>}/>
+                    <Route path="/orders/:id" element={<OrderView/>}/>
+                    <Route path="/orders/create" element={<OrderCreate/>}/>
 
-                <Route path="/chats" element={<Chat/>}/>
-                <Route path="/chats/:id" element={<Chat/>}/>
+                    <Route path="/chats" element={<Chat/>}/>
+                    <Route path="/chats/:id" element={<Chat/>}/>
 
-                <Route path="/payment/success" element={<PaymentSuccess />} />
-                <Route path="/payment/fail"    element={<PaymentFail />} />
-            </Route>
+                    <Route path="/payment/success" element={<PaymentSuccess/>}/>
+                    <Route path="/payment/fail" element={<PaymentFail/>}/>
+                </Route>
 
-            <Route element={<ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.SUPER_ADMIN]}/>}>
-                <Route path='/users' element={<Users/>}/>
-                <Route path='/users/:id' element={<UserEdit/>}/>
-                <Route path='/users/:id/edit' element={<UserEdit/>}/>
+                <Route element={<ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.SUPER_ADMIN]}/>}>
+                    <Route path='/users' element={<Users/>}/>
+                    <Route path='/users/:id' element={<UserEdit/>}/>
+                    <Route path='/users/:id/edit' element={<UserEdit/>}/>
 
-                <Route path="/products/create" element={<ProductCreate/>}/>
-                <Route path="/products/:id/edit" element={<ProductCreate/>}/>
+                    <Route path="/products/create" element={<ProductCreate/>}/>
+                    <Route path="/products/:id/edit" element={<ProductCreate/>}/>
 
-                <Route path="/stocks" element={<Stocks/>}/>
-                <Route path="/stocks/items" element={<StockItems/>}/>
-                <Route path="/stocks/:id" element={<StockDetails/>}/>
-                <Route path="/stocks/create" element={<StockCreate/>}/>
+                    <Route path="/stocks" element={<Stocks/>}/>
+                    <Route path="/stocks/items" element={<StockItems/>}/>
+                    <Route path="/stocks/:id" element={<StockDetails/>}/>
+                    <Route path="/stocks/create" element={<StockCreate/>}/>
 
-                <Route path="/sales" element={<Sales/>}/>
-            </Route>
+                    <Route path="/sales" element={<Sales/>}/>
+                </Route>
 
-            <Route path="*" element={<NotFound/>}/>
-        </Routes>
+                <Route path="*" element={<NotFound/>}/>
+            </Routes>
+
+            <ToastContainer
+                position="bottom-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick={false}
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+                transition={Bounce}
+            />
+        </>
     );
 };
 

@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { format } from "date-fns";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import React, {useEffect, useMemo, useState, useCallback} from "react";
+import {useNavigate, useSearchParams} from "react-router-dom";
+import {useQuery, keepPreviousData} from "@tanstack/react-query";
 
 import {
     Table,
@@ -12,18 +11,14 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
-import { Axios } from "@/services/http/Axios";
+import {Axios} from "@/services/http/Axios";
 import PaginationButton from "@/components/common/PaginationButton";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
 
-import {
-    formatDate,
-    REGULAR_DATE_FORMAT,
-    toastInitialState,
-} from "@/utils";
+import {formatDate} from "@/utils";
 import {FIRST_PAGE, getQueryString, normalizeQuery, redirectWhenInvalidPage} from '@/utils/PaginationUtils';
 
-import { Label } from "@/components/ui/label";
+import {Label} from "@/components/ui/label";
 import {
     Card,
     CardContent,
@@ -31,14 +26,14 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { ToastAlert } from "@/components/common/ToastAlert";
+import {Input} from "@/components/ui/input";
+import {Button} from "@/components/ui/button";
 import InputError from "@/components/common/InputError";
 import StaredLabel from "@/components/common/StaredLabel";
-import { TOAST_TYPE } from "@/utils/enums";
+import {TOAST_TYPE} from "@/utils/enums";
+import {notify} from "@/components/common/notification";
 
-const fetchSales = async ({ queryKey }) => {
+const fetchSales = async ({queryKey}) => {
     const [, params] = queryKey;
 
     const response = await Axios.get("/sales", {
@@ -57,7 +52,7 @@ const fetchSales = async ({ queryKey }) => {
 export default function Sales() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const queryParams = useMemo(() => Object.fromEntries(searchParams.entries()),[searchParams]);
+    const queryParams = useMemo(() => Object.fromEntries(searchParams.entries()), [searchParams]);
 
     const filters = useMemo(
         () => ({
@@ -68,16 +63,15 @@ export default function Sales() {
         }),
         [queryParams]
     );
-    const { page, productName, fromDate, toDate } = filters;
+    const {page, productName, fromDate, toDate} = filters;
 
     const [form, setForm] = useState({
         productName: "",
         fromDate: "",
         toDate: "",
     });
-    const [toastData, setToastData] = useState(toastInitialState);
 
-        const {
+    const {
         data,
         isFetching: isPageLoading,
         isError,
@@ -92,23 +86,9 @@ export default function Sales() {
     const totalPages = data?.totalPages ?? FIRST_PAGE;
 
     useEffect(() => {
-        if (isError) {
-            console.error(error);
-            showToast("Failed to load sales", TOAST_TYPE.ERROR);
-        }
-    }, [error, isError]);
-
-    useEffect(() => {
         redirectWhenInvalidPage({page, totalPages, navigate, queryParams})
     }, [page, totalPages, navigate, queryParams])
 
-    const showToast = useCallback((message, type) => {
-        setToastData({
-            message,
-            type,
-            id: Date.now(),
-        });
-    }, []);
 
     useEffect(() => {
         setForm({
@@ -119,7 +99,7 @@ export default function Sales() {
     }, [productName, fromDate, toDate]);
 
     const handleChange = useCallback((e) => {
-        const { name, value } = e.target;
+        const {name, value} = e.target;
 
         setForm((prev) => ({
             ...prev,
@@ -139,21 +119,28 @@ export default function Sales() {
                     toDate: form.toDate || undefined,
                     page: FIRST_PAGE,
                 }),
-                { replace: true }
+                {replace: true}
             );
         },
         [navigate, queryParams, form]
     );
 
+    useEffect(() => {
+        if (isError) {
+            console.error(error);
+            notify(TOAST_TYPE.ERROR, "Failed to show sales")
+        }
+    }, [error, isError]);
+
     return (
         <>
-            {isPageLoading && <PageLoadingOverlay />}
+            {isPageLoading && <PageLoadingOverlay/>}
 
             <div className="container pb-8 pt-8">
                 <h1 className='text-center text-2xl lg:text-2xl xl:text-3xl mb-6 font-semibold'>Sales</h1>
 
                 <div className="grid lg:grid-cols-4 gap-8">
-                                        <Card className='lg:col-span-1 space-y-4'>
+                    <Card className='lg:col-span-1 space-y-4'>
                         <form onSubmit={handleFilter}>
                             <CardHeader>
                                 <CardTitle>Filter</CardTitle>
@@ -167,7 +154,7 @@ export default function Sales() {
                                         value={productName}
                                         onChange={handleChange}
                                     />
-                                    <InputError field="productName" />
+                                    <InputError field="productName"/>
                                 </div>
 
                                 {/* From Date */}
@@ -181,7 +168,7 @@ export default function Sales() {
                                         value={fromDate}
                                         onChange={handleChange}
                                     />
-                                    <InputError field="fromDate" />
+                                    <InputError field="fromDate"/>
                                 </div>
 
                                 {/* To Date */}
@@ -195,7 +182,7 @@ export default function Sales() {
                                         value={toDate}
                                         onChange={handleChange}
                                     />
-                                    <InputError field="toDate" />
+                                    <InputError field="toDate"/>
                                 </div>
                             </CardContent>
 
@@ -221,47 +208,43 @@ export default function Sales() {
                             </TableHeader>
 
                             <TableBody>
-                                {sales.map((item) => (
-                                    <TableRow key={item.id}>
-                                        <TableCell>
-                                            {item.productName}
-                                        </TableCell>
-                                        {/* <TableCell>
-                                            {item.buyingPrice}
-                                        </TableCell>
-                                        <TableCell>
-                                            {item.sellingPrice}
-                                        </TableCell> */}
-                                        <TableCell>
-                                            {item.quantity}
-                                        </TableCell>
-                                        <TableCell>
-                                            {item.profit}
-                                        </TableCell>
-                                        <TableCell>
-                                            {formatDate(item.createdAt)}
+                                {sales.length > 0 ?
+                                    sales.map((item) => (
+                                        <TableRow key={item.id}>
+                                            <TableCell>
+                                                {item.productName}
+                                            </TableCell>
+                                            {/* <TableCell>
+                                                {item.buyingPrice}
+                                            </TableCell>
+                                            <TableCell>
+                                                {item.sellingPrice}
+                                            </TableCell> */}
+                                            <TableCell>
+                                                {item.quantity}
+                                            </TableCell>
+                                            <TableCell>
+                                                {item.profit}
+                                            </TableCell>
+                                            <TableCell>
+                                                {formatDate(item.createdAt)}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                    :
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="text-center">
+                                            No sales found.
                                         </TableCell>
                                     </TableRow>
-                                ))}
+                                }
                             </TableBody>
                         </Table>
 
-                        {sales.length > 0 ? (
-                            <PaginationButton totalPages={totalPages} />
-                        ) : (
-                            <div className="bg-white p-4 text-center">
-                                Nothing to show
-                            </div>
-                        )}
+                        <PaginationButton totalPages={totalPages}/>
                     </div>
                 </div>
             </div>
-
-            <ToastAlert
-                key={toastData.id}
-                message={toastData.message}
-                type={toastData.type}
-            />
         </>
     );
 }

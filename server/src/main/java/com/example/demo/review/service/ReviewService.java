@@ -7,11 +7,11 @@ import com.example.demo.common.model.Review;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.product.service.ProductService;
 import com.example.demo.review.dto.CreateReviewRequest;
+import com.example.demo.review.dto.ReviewResponse;
 import com.example.demo.review.dto.UpdateReviewRequest;
 import com.example.demo.review.repository.ReviewRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,8 +26,6 @@ import static com.example.demo.common.utils.Utils.getValidPageable;
 @RequiredArgsConstructor
 public class ReviewService {
 
-    private final ModelMapper modelMapper;
-
     private final ProductService productService;
 
     private final MessageService messageService;
@@ -36,8 +34,8 @@ public class ReviewService {
 
     private final CommonHelper commonHelper;
 
-    public Page<Review> findAllByProductAndUser(Long productId, Pageable pageable, CustomUserDetails userDetails) {
-        return reviewRepository.findAllByProduct_IdAndUser_Id(productId, userDetails.getId(), getValidPageable(pageable));
+    public Page<ReviewResponse> findAllByProduct(Long productId, Pageable pageable) {
+        return reviewRepository.findAllByProduct_Id(productId, getValidPageable(pageable)).map(ReviewResponse::new);
     }
 
     @Transactional

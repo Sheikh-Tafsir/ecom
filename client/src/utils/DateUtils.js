@@ -11,7 +11,6 @@ export const REGULAR_TIME_FORMAT_24 = "HH:mm";
 export const formatDate = (dateStr) => {
     if (!dateStr) return "-";
 
-    // convert "2026-06-04 22:21:46.170915" → "2026-06-04T22:21:46"
     const normalized = dateStr.replace(" ", "T").split(".")[0];
 
     const date = new Date(normalized);
@@ -23,6 +22,26 @@ export const formatDate = (dateStr) => {
     const year = date.getFullYear();
 
     return `${day}-${month}-${year}`;
+};
+
+export const formatDateAndTime = (dateStr) => {
+    if (!dateStr) return "-";
+
+    const normalized = dateStr.replace(" ", "T").split(".")[0];
+    const date = new Date(normalized);
+
+    if (isNaN(date.getTime())) return "-";
+
+    const hours24 = date.getHours();
+    const hours12 = hours24 % 12 || 12;
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const period = hours24 >= 12 ? "PM" : "AM";
+
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+
+    return `${hours12}:${minutes} ${period} ${day}-${month}-${year}`;
 };
 
 export const isSameDay = (date1, date2) => {

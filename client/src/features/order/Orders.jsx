@@ -1,8 +1,6 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { format } from "date-fns";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { View, CheckCheck, Trash2 } from "lucide-react"
+import React, {useEffect, useMemo, useState, useCallback} from "react";
+import {useNavigate, useSearchParams} from "react-router-dom";
+import {useQuery, keepPreviousData} from "@tanstack/react-query";
 
 import {
     Table,
@@ -12,12 +10,12 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { Axios } from '@/services/http/Axios';
+import {Axios} from '@/services/http/Axios';
 import PaginationButton from '@/components/common/PaginationButton';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay';
-import {userIsAdmin, REGULAR_DATE_FORMAT, toastInitialState} from '@/utils';
+import {formatDateAndTime, userIsAdmin} from '@/utils';
 import {FIRST_PAGE, getQueryString, normalizeQuery, redirectWhenInvalidPage} from '@/utils/PaginationUtils';
-import { Label } from '@/components/ui/label';
+import {Label} from '@/components/ui/label';
 import {
     Card,
     CardContent,
@@ -25,15 +23,15 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card.jsx';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { useUserStore } from "@/store/useUserStore"
-import { ToastAlert } from '@/components/common/ToastAlert';
-import { ORDER_STATUS, TOAST_TYPE } from '@/utils/enums';
+import {Input} from '@/components/ui/input';
+import {Button} from '@/components/ui/button';
+import {ORDER_STATUS, TOAST_TYPE} from '@/utils/enums';
 import InputError from "@/components/common/InputError";
 import StaredLabel from "@/components/common/StaredLabel";
+import {notify} from "@/components/common/notification";
+import { queryClient } from "@/services/queryClient";
 
-const fetchOrders = async ({ queryKey }) => {
+const fetchOrders = async ({queryKey}) => {
     const [, params] = queryKey;
 
     const response = await Axios.get("/orders", {
@@ -50,11 +48,9 @@ const fetchOrders = async ({ queryKey }) => {
 };
 
 const Orders = () => {
-    const { user } = useUserStore();
-    
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const queryParams = useMemo(() => Object.fromEntries(searchParams.entries()),[searchParams]);
+    const queryParams = useMemo(() => Object.fromEntries(searchParams.entries()), [searchParams]);
 
     const filters = useMemo(
         () => ({
@@ -65,16 +61,15 @@ const Orders = () => {
         }),
         [queryParams]
     );
-    const { page, sort, productName, fromDate, toDate } = filters;
+    const {page, productName, fromDate, toDate} = filters;
 
     const [form, setForm] = useState({
         productName: "",
         fromDate: "",
         toDate: "",
     });
-    const [toastData, setToastData] = useState(toastInitialState);
 
-        const {
+    const {
         data,
         isFetching: isPageLoading,
         isError,
@@ -91,21 +86,13 @@ const Orders = () => {
     useEffect(() => {
         if (isError) {
             console.error(error);
-            showToast("Failed to load orders", TOAST_TYPE.ERROR);
+            notify(TOAST_TYPE.ERROR, "Failed to show orders")
         }
     }, [error, isError]);
 
     useEffect(() => {
         redirectWhenInvalidPage({page, totalPages, navigate, queryParams})
     }, [page, totalPages, navigate, queryParams])
-
-    const showToast = useCallback((message, type) => {
-        setToastData({
-            message,
-            type,
-            id: Date.now(),
-        });
-    }, []);
 
     useEffect(() => {
         setForm({
@@ -116,7 +103,7 @@ const Orders = () => {
     }, [productName, fromDate, toDate]);
 
     const handleChange = useCallback((e) => {
-        const { name, value } = e.target;
+        const {name, value} = e.target;
 
         setForm((prev) => ({
             ...prev,
@@ -136,15 +123,28 @@ const Orders = () => {
                     toDate: form.toDate || undefined,
                     page: FIRST_PAGE,
                 }),
-                { replace: true }
+                {replace: true}
             );
         },
         [navigate, queryParams, form]
     );
 
+    const changeOrderStatus = async (id, status) => {
+        try {
+            await Axios.put(`/orders/${id}/status`, {
+                status
+            });
+            await queryClient.invalidateQueries({queryKey: ["orders"]});
+            notify(TOAST_TYPE.SUCCESS, `Updated order with ID ${id} status changed to ${status}`)
+        } catch (error) {
+            console.error(error);
+            notify(TOAST_TYPE.ERROR, error.response.data.errors.global[0])
+        }
+    }
+
     return (
         <>
-            {isPageLoading && <PageLoadingOverlay />}
+            {isPageLoading && <PageLoadingOverlay/>}
 
             <div className='container pb-8 pt-8'>
                 <h1 className='text-center text-2xl lg:text-2xl xl:text-3xl mb-6 font-semibold'>Orders</h1>
@@ -164,7 +164,7 @@ const Orders = () => {
                                         value={productName}
                                         onChange={handleChange}
                                     />
-                                    <InputError field="productName" />
+                                    <InputError field="productName"/>
                                 </div>
 
                                 {/* From Date */}
@@ -178,7 +178,7 @@ const Orders = () => {
                                         value={fromDate}
                                         onChange={handleChange}
                                     />
-                                    <InputError field="fromDate" />
+                                    <InputError field="fromDate"/>
                                 </div>
 
                                 {/* To Date */}
@@ -192,7 +192,7 @@ const Orders = () => {
                                         value={toDate}
                                         onChange={handleChange}
                                     />
-                                    <InputError field="toDate" />
+                                    <InputError field="toDate"/>
                                 </div>
                             </CardContent>
 
@@ -207,7 +207,8 @@ const Orders = () => {
                     <div className='lg:col-span-3 space-y-4'>
                         <Table className="cursor-pointer bg-white w-[100%]">
                             <TableHeader>
-                                <TableRow className="bg-blue-100 hover:bg-blue-200 transform transition-colors duration-200">
+                                <TableRow
+                                    className="bg-blue-100 hover:bg-blue-200 transform transition-colors duration-200">
                                     <TableHead className="text-black text-base">Name</TableHead>
                                     <TableHead className="text-black text-base">Total Price</TableHead>
                                     <TableHead className="text-black text-base">Date</TableHead>
@@ -216,57 +217,54 @@ const Orders = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {orders?.map((item) => (
-                                    <TableRow key={item.id}>
-                                        <TableCell>{item.userName}</TableCell>
-                                        <TableCell>{item.totalPrice}</TableCell>
-                                        <TableCell>{format(item.createdAt, REGULAR_DATE_FORMAT)}</TableCell>
-                                        <TableCell>{item.status}</TableCell>
-                                        <TableCell className="flex gap-2">
-                                            <Button className="text-blue-600 hover:text-white hover:bg-blue-600"
-                                                onClick={() => navigate(`/orders/${item.id}`)}
-                                                size="icon" variant="outline"
-                                            >
-                                                <View />
-                                            </Button>
-                                            {ORDER_STATUS.PENDING == item.status && userIsAdmin(user.role) &&
-                                                <>
-                                                    <Button className="text-green-600 hover:text-white hover:bg-green-600"
-                                                        onClick={() => changeOrderStatus(item.id, ORDER_STATUS.PROCESSING)}
-                                                        size="icon" variant="outline"
-                                                    >
-                                                        <CheckCheck />
-                                                    </Button>
-                                                    <Button className="text-red-600 hover:text-white hover:bg-red-600"
-                                                        onClick={() => changeOrderStatus(item.id, ORDER_STATUS.REJECTED)}
-                                                        size="icon" variant="outline"
-                                                    >
-                                                        <Trash2 />
-                                                    </Button>
-                                                </>
-                                            }
+                                {orders.length > 0 ?
+                                    orders.map((item) => (
+                                        <TableRow key={item.id}>
+                                            <TableCell>{item.userName}</TableCell>
+                                            <TableCell>{item.totalPrice}</TableCell>
+                                            <TableCell>{formatDateAndTime(item.createdAt)}</TableCell>
+                                            <TableCell>{item.status}</TableCell>
+                                            <TableCell className="flex gap-2">
+                                                <Button className="text-blue-600 hover:text-white hover:bg-blue-600"
+                                                        onClick={() => navigate(`/orders/${item.id}`)} variant="outline"
+                                                >
+                                                    View
+                                                </Button>
+                                                {ORDER_STATUS.PENDING == item.status && userIsAdmin() &&
+                                                    <>
+                                                        <Button
+                                                            className="text-green-600 hover:text-white hover:bg-green-600"
+                                                            onClick={() => changeOrderStatus(item.id, ORDER_STATUS.ACCEPTED)}
+                                                            variant="outline"
+                                                        >
+                                                            Accept
+                                                        </Button>
+                                                        <Button
+                                                            className="text-red-600 hover:text-white hover:bg-red-600"
+                                                            onClick={() => changeOrderStatus(item.id, ORDER_STATUS.REJECTED)}
+                                                            variant="outline"
+                                                        >
+                                                            Delete
+                                                        </Button>
+                                                    </>
+                                                }
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                    :
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="text-center">
+                                            No sales found.
                                         </TableCell>
                                     </TableRow>
-                                ))}
+                                }
                             </TableBody>
                         </Table>
 
-                        {orders?.length > 0 ?
-                            <PaginationButton totalPages={totalPages} />
-                            :
-                            <div className='w-full flex bg-white p-4'>
-                                <p className='mx-auto'>Nothing to show</p>
-                            </div>
-                        }
+                        <PaginationButton totalPages={totalPages}/>
                     </div>
                 </div>
             </div>
-
-            <ToastAlert
-                key={toastData.id}
-                message={toastData.message}
-                type={toastData.type}
-            />
         </>
     )
 }

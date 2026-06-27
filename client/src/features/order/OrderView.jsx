@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react"
-import { useParams } from "react-router-dom"
-import { Package } from "lucide-react"
+import {useEffect, useState} from "react"
+import {useParams} from "react-router-dom"
+import {Package} from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {Button} from "@/components/ui/button"
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card"
 import {
     Dialog,
     DialogContent,
@@ -12,58 +12,56 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
+import {Label} from "@/components/ui/label"
+import {Separator} from "@/components/ui/separator"
 import StaredLabel from "@/components/common/StaredLabel"
-import { useUserStore } from "@/store/useUserStore"
+import {useUserStore} from "@/store/useUserStore"
 import InputReadOnly from "@/components/common/InputReadOnly"
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay"
-import { Axios } from "@/services/http/Axios"
-import {toastInitialState} from "@/utils"
-import { TOAST_TYPE } from "@/utils/enums"
-import { ToastAlert } from "@/components/common/ToastAlert"
+import {Axios} from "@/services/http/Axios"
+import {TOAST_TYPE} from "@/utils/enums"
+import {notify} from "@/components/common/notification"
+import {useQuery} from "@tanstack/react-query"
+
+const fetchOrder = async (id) => {
+    const response = await Axios.get(`/orders/${id}`);
+    return response.data.data;
+}
 
 export default function OrderView() {
-    const { id } = useParams();
-    const { user } = useUserStore();
+    const {id} = useParams()
+    const {user} = useUserStore();
 
-    const [isPageLoading, setIsPageLoading] = useState(true);
-    const [order, setOrder] = useState();
-    const [toastData, setToastData] = useState(toastInitialState);
+    const {
+        data: order = [],
+        isFetching: isPageLoading,
+        isError,
+        error,
+    } = useQuery({
+        enabled: !!id,
+        queryKey: ["order", id],
+        queryFn: () => fetchOrder(id),
+    })
 
     useEffect(() => {
-        const fetchOrder = async (id) => {
-            try {
-                const response = await Axios.get(`/orders/${id}`);
-                setOrder(response.data.data);
-            } catch (error) {
-                console.error(error)
-                showToast("Could not get order", TOAST_TYPE.ERROR);
-            } finally {
-                setIsPageLoading(false);
-            }
-        }
+        if (!isError) return;
 
-        fetchOrder(id);
-    }, [id])
-
-
-    const showToast = (message, type) => {
-        setToastData({ message, type, id: Date.now() })
-    }
+        console.error(error);
+        notify(TOAST_TYPE.ERROR, "Failed to show order");
+    }, [isError, error]);
 
     return (
         <>
-            {isPageLoading && <PageLoadingOverlay />}
+            {isPageLoading && <PageLoadingOverlay/>}
 
-            <div className="container pb-8">
+            <div className="container pb-8 pt-8">
                 <div className="max-w-4xl mx-auto">
                     <div className="grid gap-8 lg:grid-cols-2">
                         {/* Checkout Form */}
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                    <Package className="h-5 w-5" />
+                                    <Package className="h-5 w-5"/>
                                     Checkout
                                 </CardTitle>
                                 <CardDescription>Complete your order by filling out the information below</CardDescription>
@@ -73,22 +71,22 @@ export default function OrderView() {
                                     <div className="space-y-4">
                                         <div className="grid gap-2">
                                             <Label>Name</Label>
-                                            <InputReadOnly value={user?.name} />
+                                            <InputReadOnly value={user?.name}/>
                                         </div>
 
                                         <div className="grid gap-2">
-                                            <StaredLabel label="Phone Number" />
-                                            <InputReadOnly value={order?.phone} />
+                                            <StaredLabel label="Phone Number"/>
+                                            <InputReadOnly value={order?.phone}/>
                                         </div>
 
                                         <div className="grid gap-2">
-                                            <StaredLabel label="Street Address" />
-                                            <InputReadOnly value={order?.address} />
+                                            <StaredLabel label="Street Address"/>
+                                            <InputReadOnly value={order?.address}/>
                                         </div>
 
                                         <div className="grid gap-2">
                                             <StaredLabel label="Payment Method"/>
-                                            <InputReadOnly value={order?.paymentMethod} />
+                                            <InputReadOnly value={order?.paymentMethod}/>
                                         </div>
                                     </div>
                                 </div>
@@ -116,7 +114,8 @@ export default function OrderView() {
                                         </DialogHeader>
                                         <div className="space-y-4">
                                             {order?.items?.map((item) => (
-                                                <div key={item.id} className="flex items-center gap-4 p-4 border rounded-lg">
+                                                <div key={item.id}
+                                                     className="flex items-center gap-4 p-4 border rounded-lg">
                                                     <img
                                                         src={item?.productImage || "/placeholder.svg"}
                                                         alt={item.name}
@@ -136,7 +135,7 @@ export default function OrderView() {
                                     </DialogContent>
                                 </Dialog>
 
-                                <Separator />
+                                <Separator/>
 
                                 {/* Order Totals */}
                                 <div className="space-y-2">
@@ -155,7 +154,7 @@ export default function OrderView() {
                                         <span>0</span>
                                     </div>
 
-                                    <Separator />
+                                    <Separator/>
 
                                     <div className="flex justify-between font-bold text-lg">
                                         <span>Total</span>
@@ -173,12 +172,6 @@ export default function OrderView() {
                     </div>
                 </div>
             </div>
-
-            <ToastAlert
-                key={toastData.id}
-                message={toastData.message}
-                type={toastData.type}
-            />
         </>
     )
 }

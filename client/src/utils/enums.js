@@ -71,6 +71,8 @@ export const PAYMENT_METHOD = Object.freeze({
 
 export const ORDER_STATUS = Object.freeze({
     PENDING: "Pending",
+    ACCEPTED: "Accepted",
+    REJECTED: "Rejected",
     PROCESSING: "Processing",
     SHIPPED: "Shipped",
     DELIVERED: "Delivered",

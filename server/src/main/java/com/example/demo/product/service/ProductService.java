@@ -12,6 +12,7 @@ import com.example.demo.category.repository.CategoryRepository;
 import com.example.demo.product.repository.ProductRepository;
 import com.example.demo.stock.dto.CreateStockItemRequest;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -151,7 +152,7 @@ public class ProductService {
         checkActive(product);
 
         if (product.getQuantity() < quantity) {
-            throw new RuntimeException("Product quantity is not available for product id: " + product.getId());
+            throw new ValidationException("Product quantity is not available for product id: " + product.getId());
         }
 
         product.setQuantity(product.getQuantity() - quantity);

@@ -11,7 +11,7 @@ import java.util.EnumSet;
 @AllArgsConstructor
 public enum OrderStatus {
 
-    CREATED("Created"),
+    PENDING("Pending"),
     ACCEPTED("Accepted"),
     SHIPPED("Shipped"),     // dispatched
     DELIVERED("Delivered"), // received by customer
@@ -45,7 +45,7 @@ public enum OrderStatus {
         }
 
         return switch (this) {
-            case CREATED -> newStatus == ACCEPTED
+            case PENDING -> newStatus == ACCEPTED
                     || newStatus == CANCELLED
                     || newStatus == REJECTED;
 

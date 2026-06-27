@@ -50,7 +50,10 @@ const UserEdit = () => {
 
     const [toastData, setToastData] = useState(toastInitialState);
 
-    const {data: user, isFetching: isPageLoading} = useQuery({
+    const {
+        data: user,
+        isFetching: isPageLoading
+    } = useQuery({
         queryKey: ["user", id],
         queryFn: async () => {
             const res = await Axios.get(`/users/${id}`);

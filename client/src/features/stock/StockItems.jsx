@@ -17,8 +17,8 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {Input} from "@/components/ui/input";
+import {Label} from "@/components/ui/label";
 import {Button} from '@/components/ui/button.jsx';
 import {Axios} from '@/services/http/Axios.js';
 import PaginationButton from '@/components/common/PaginationButton.jsx';
@@ -34,6 +34,7 @@ import {ToastAlert} from '@/components/common/ToastAlert.jsx';
 import {TOAST_TYPE} from "@/utils/enums.js";
 import InputError from "@/components/common/InputError";
 import StaredLabel from "@/components/common/StaredLabel";
+import {notify} from '@/components/common/notification';
 
 const fetchStockItems = async ({queryKey}) => {
     const [, params] = queryKey
@@ -55,9 +56,8 @@ const StockItems = () => {
     const [searchParams] = useSearchParams()
     const queryParams = useMemo(() => Object.fromEntries(searchParams.entries()), [searchParams])
     const filters = useMemo(() => normalizeQuery(queryParams), [queryParams])
-    const { page, productName, fromDate, toDate } = filters;
+    const {page, productName, fromDate, toDate} = filters;
 
-    const [toastData, setToastData] = useState(toastInitialState);
     const [form, setForm] = useState({
         productName: "",
         fromDate: "",
@@ -70,27 +70,14 @@ const StockItems = () => {
         queryKey: ["stockItems", filters],
         queryFn: fetchStockItems,
         placeholderData: keepPreviousData,
-        keepPreviousData: true,
     })
 
     const stockItems = data?.content || [];
     const totalPages = data?.totalPages || FIRST_PAGE;
 
     useEffect(() => {
-        if (isError) {
-            console.error(error);
-            showToast("Failed to load stock items", TOAST_TYPE.ERROR);
-        }
-    }, [error, isError]);
-
-    // Page validation (safe)
-    useEffect(() => {
         redirectWhenInvalidPage({page, totalPages, navigate, queryParams})
     }, [page, totalPages, navigate, queryParams]);
-
-    const showToast = (message, type) => {
-        setToastData({message, type, id: Date.now()});
-    };
 
     useEffect(() => {
         setForm({
@@ -101,7 +88,7 @@ const StockItems = () => {
     }, [productName, fromDate, toDate]);
 
     const handleChange = useCallback((e) => {
-        const { name, value } = e.target;
+        const {name, value} = e.target;
 
         setForm((prev) => ({
             ...prev,
@@ -121,11 +108,18 @@ const StockItems = () => {
                     toDate: form.toDate || undefined,
                     page: FIRST_PAGE,
                 }),
-                { replace: true }
+                {replace: true}
             );
         },
         [navigate, queryParams, form]
     );
+
+    useEffect(() => {
+        if (isError) {
+            console.error(error);
+            notify(TOAST_TYPE.ERROR, "Failed to load stock items")
+        }
+    }, [error, isError]);
 
     return (
         <>
@@ -151,7 +145,7 @@ const StockItems = () => {
                                         value={productName}
                                         onChange={handleChange}
                                     />
-                                    <InputError field="productName" />
+                                    <InputError field="productName"/>
                                 </div>
 
                                 {/* From Date */}
@@ -165,7 +159,7 @@ const StockItems = () => {
                                         value={fromDate}
                                         onChange={handleChange}
                                     />
-                                    <InputError field="fromDate" />
+                                    <InputError field="fromDate"/>
                                 </div>
 
                                 {/* To Date */}
@@ -179,7 +173,7 @@ const StockItems = () => {
                                         value={toDate}
                                         onChange={handleChange}
                                     />
-                                    <InputError field="toDate" />
+                                    <InputError field="toDate"/>
                                 </div>
                             </CardContent>
 
@@ -206,36 +200,33 @@ const StockItems = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {stockItems.map((stockItem) => (
-                                    <TableRow key={stockItem.id}>
-                                        <TableCell>#{stockItem.id}</TableCell>
-                                        <TableCell>{stockItem.productName}</TableCell>
-                                        <TableCell>{stockItem.quantity}</TableCell>
-                                        <TableCell>${stockItem.purchasePrice}</TableCell>
-                                        <TableCell>${stockItem.subtotal}</TableCell>
-                                        <TableCell>{stockItem.remaining}</TableCell>
-                                        <TableCell>{formatDate(stockItem.createdAt)}</TableCell>
+                                {stockItems.length > 0 ?
+                                    stockItems.map((stockItem) => (
+                                        <TableRow key={stockItem.id}>
+                                            <TableCell>#{stockItem.id}</TableCell>
+                                            <TableCell>{stockItem.productName}</TableCell>
+                                            <TableCell>{stockItem.quantity}</TableCell>
+                                            <TableCell>${stockItem.purchasePrice}</TableCell>
+                                            <TableCell>${stockItem.subtotal}</TableCell>
+                                            <TableCell>{stockItem.remaining}</TableCell>
+                                            <TableCell>{formatDate(stockItem.createdAt)}</TableCell>
+                                        </TableRow>
+                                    ))
+                                    :
+                                    <TableRow>
+                                        <TableCell colSpan={7} className="text-center">
+                                            No sales found.
+                                        </TableCell>
                                     </TableRow>
-                                ))}
+                                    
+                                }
                             </TableBody>
                         </Table>
 
-                        {stockItems?.length > 0 ?
-                            <PaginationButton totalPages={totalPages}/>
-                            :
-                            <div className='w-full flex bg-white p-4 border rounded-md'>
-                                <p className='mx-auto'>No stock records found</p>
-                            </div>
-                        }
+                        <PaginationButton totalPages={totalPages}/>
                     </div>
                 </div>
             </div>
-
-            <ToastAlert
-                key={toastData.id}
-                message={toastData.message}
-                type={toastData.type}
-            />
         </>
     )
 }

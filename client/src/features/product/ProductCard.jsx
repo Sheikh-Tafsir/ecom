@@ -8,16 +8,17 @@ import {Badge} from "@/components/ui/badge"
 import {useCartStore} from "@/store/useCartStore"
 import {TOAST_TYPE} from "@/utils/enums"
 import {userIsAdmin} from "@/utils/index.js";
+import { notify } from "@/components/common/notification"
 
-const ProductCard = ({product, showToast}) => {
+const ProductCard = ({product}) => {
     const {addToCart} = useCartStore();
     const navigate = useNavigate();
 
     const handleAddToCart = (e) => {
         e.preventDefault();
 
-        const res = addToCart(product, 1);
-        showToast(res ? "Added to cart" : "Item increased", TOAST_TYPE.SUCCESS)
+        const response = addToCart(product, 1);
+        notify(TOAST_TYPE.SUCCESS, response ? "Added to cart" : "Item increased")
     }
 
     const deleteProduct = () => {

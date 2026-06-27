@@ -9,6 +9,7 @@ import com.example.demo.product.dto.*;
 import com.example.demo.product.service.ProductService;
 import com.example.demo.product.validator.ProductValidator;
 import com.example.demo.review.dto.CreateReviewRequest;
+import com.example.demo.review.dto.ReviewResponse;
 import com.example.demo.review.service.ReviewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -101,11 +102,19 @@ public class ProductController {
         return ResponseUtils.ok(messageService.get("successfully.deleted", "Product"));
     }
 
+    @GetMapping("/{id}/reviews")
+    public ResponseEntity<ApiResponse<Page<ReviewResponse>>> getReviews(@PathVariable Long id,
+                                                                        Pageable pageable) {
+
+        Page<ReviewResponse> reviews = reviewService.findAllByProduct(id, pageable);
+        return ResponseUtils.ok(reviews, messageService.get("successfully.found", "Reviews"));
+    }
     @PostMapping("/{id}/review")
     public ResponseEntity<ApiResponse<Void>> addReview(@PathVariable Long id,
                                                        @Valid @RequestBody CreateReviewRequest request,
                                                        @AuthenticationPrincipal CustomUserDetails userDetails) {
 
+        log.info("request: {}", request);
         reviewService.create(id, request, userDetails);
         return ResponseUtils.created(messageService.get("entity.creating", "Review"));
     }

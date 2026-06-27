@@ -35,7 +35,7 @@ public class Order extends BaseEntity {
     private BigDecimal totalPrice = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
-    private OrderStatus status = OrderStatus.CREATED;
+    private OrderStatus status = OrderStatus.PENDING;
 
     @Column(nullable = false)
     private String name;

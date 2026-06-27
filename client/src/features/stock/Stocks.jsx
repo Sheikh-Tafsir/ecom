@@ -1,7 +1,6 @@
 import {useState, useEffect, useMemo, useCallback} from 'react';
 import {useNavigate, useSearchParams} from 'react-router-dom';
 import {keepPreviousData, useQuery} from "@tanstack/react-query";
-import {Plus} from 'lucide-react';
 
 import {
     Table,
@@ -11,8 +10,8 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table.jsx"
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {Input} from "@/components/ui/input";
+import {Label} from "@/components/ui/label";
 import {
     Card,
     CardContent,
@@ -25,16 +24,15 @@ import PaginationButton from '@/components/common/PaginationButton.jsx';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay.jsx';
 import {
     FIRST_PAGE,
-    toastInitialState,
     redirectWhenInvalidPage,
-    formatDate,
-    normalizeQuery
+    normalizeQuery,
+    formatDateAndTime
 } from '@/utils/index.js';
 import {Button} from '@/components/ui/button.jsx';
-import {ToastAlert} from '@/components/common/ToastAlert.jsx';
 import {TOAST_TYPE} from "@/utils/enums.js";
 import InputError from "@/components/common/InputError";
 import StaredLabel from "@/components/common/StaredLabel";
+import {notify} from '@/components/common/notification';
 
 const fetchStocks = async ({queryKey}) => {
     const [, params] = queryKey
@@ -56,9 +54,8 @@ const Stocks = () => {
     const [searchParams] = useSearchParams()
     const queryParams = useMemo(() => Object.fromEntries(searchParams.entries()), [searchParams])
     const filters = useMemo(() => normalizeQuery(queryParams, []), [queryParams])
-    const { page, productName, fromDate, toDate } = filters;
+    const {page, productName, fromDate, toDate} = filters;
 
-    const [toastData, setToastData] = useState(toastInitialState);
     const [form, setForm] = useState({
         productName: "",
         fromDate: "",
@@ -66,31 +63,22 @@ const Stocks = () => {
     });
 
     const {
-        data, isFetching: isPageLoading, isError, error
+        data,
+        isFetching: isPageLoading,
+        isError,
+        error
     } = useQuery({
         queryKey: ["stocks", filters],
         queryFn: fetchStocks,
         placeholderData: keepPreviousData,
-        keepPreviousData: true,
     })
 
     const stocks = data?.content || [];
     const totalPages = data?.totalPages || FIRST_PAGE;
 
     useEffect(() => {
-        if (isError) {
-            console.error(error);
-            showToast("Failed to load stocks", TOAST_TYPE.ERROR);
-        }
-    }, [error, isError]);
-
-     useEffect(() => {
         redirectWhenInvalidPage({page, totalPages, navigate, queryParams})
     }, [page, totalPages, navigate, queryParams]);
-
-    const showToast = (message, type) => {
-        setToastData({message, type, id: Date.now()});
-    };
 
     useEffect(() => {
         setForm({
@@ -101,7 +89,7 @@ const Stocks = () => {
     }, [productName, fromDate, toDate]);
 
     const handleChange = useCallback((e) => {
-        const { name, value } = e.target;
+        const {name, value} = e.target;
 
         setForm((prev) => ({
             ...prev,
@@ -121,11 +109,18 @@ const Stocks = () => {
                     toDate: form.toDate || undefined,
                     page: FIRST_PAGE,
                 }),
-                { replace: true }
+                {replace: true}
             );
         },
         [navigate, queryParams, form]
     );
+
+    useEffect(() => {
+        if (isError) {
+            console.error(error);
+            notify(TOAST_TYPE.ERROR, "Failed to load stocks")
+        }
+    }, [error, isError]);
 
     return (
         <>
@@ -138,7 +133,7 @@ const Stocks = () => {
 
 
                 <div className='grid lg:grid-cols-4 gap-8'>
-                     <Card className='lg:col-span-1 space-y-4'>
+                    <Card className='lg:col-span-1 space-y-4'>
                         <form onSubmit={handleFilter}>
                             <CardHeader>
                                 <CardTitle>Filter</CardTitle>
@@ -152,7 +147,7 @@ const Stocks = () => {
                                         value={productName}
                                         onChange={handleChange}
                                     />
-                                    <InputError field="productName" />
+                                    <InputError field="productName"/>
                                 </div>
 
                                 {/* From Date */}
@@ -166,7 +161,7 @@ const Stocks = () => {
                                         value={fromDate}
                                         onChange={handleChange}
                                     />
-                                    <InputError field="fromDate" />
+                                    <InputError field="fromDate"/>
                                 </div>
 
                                 {/* To Date */}
@@ -180,7 +175,7 @@ const Stocks = () => {
                                         value={toDate}
                                         onChange={handleChange}
                                     />
-                                    <InputError field="toDate" />
+                                    <InputError field="toDate"/>
                                 </div>
                             </CardContent>
 
@@ -207,32 +202,29 @@ const Stocks = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {stocks.map((stock) => (
-                                    <TableRow key={stock.id} onClick={() => navigate(`/stocks/${stock.id}`)}>
-                                        <TableCell>#{stock.id}</TableCell>
-                                        <TableCell>${stock.totalCost}</TableCell>
-                                        <TableCell>{formatDate(stock.createdAt)}</TableCell>
+                                {stocks.length > 0 ?
+                                    stocks.map((stock) => (
+                                        <TableRow key={stock.id} onClick={() => navigate(`/stocks/${stock.id}`)}>
+                                            <TableCell>#{stock.id}</TableCell>
+                                            <TableCell>${stock.totalCost}</TableCell>
+                                            <TableCell>{formatDateAndTime(stock.createdAt)}</TableCell>
+                                        </TableRow>
+                                    ))
+                                    :
+                                    <TableRow>
+                                        <TableCell colSpan={3} className="text-center">
+                                            No sales found.
+                                        </TableCell>
                                     </TableRow>
-                                ))}
+                                    
+                                }
                             </TableBody>
                         </Table>
 
-                        {stocks?.length > 0 ?
-                            <PaginationButton totalPages={totalPages}/>
-                            :
-                            <div className='w-full flex bg-white p-4 border rounded-md'>
-                                <p className='mx-auto'>No stock records found</p>
-                            </div>
-                        }
+                        <PaginationButton totalPages={totalPages}/>
                     </div>
                 </div>
             </div>
-
-            <ToastAlert
-                key={toastData.id}
-                message={toastData.message}
-                type={toastData.type}
-            />
         </>
     )
 }

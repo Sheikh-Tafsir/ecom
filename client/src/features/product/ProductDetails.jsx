@@ -1,19 +1,12 @@
 import {useEffect, useState} from "react"
 import {useParams} from "react-router-dom"
+import { useQueryClient } from "@tanstack/react-query";
 
 import {Star, ShoppingCart, Minus, Plus} from "lucide-react"
 import {Button} from "@/components/ui/button"
 import {Badge} from "@/components/ui/badge"
-import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components/ui/card"
+import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import {Separator} from "@/components/ui/separator"
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select.jsx"
 import {
     Carousel,
     CarouselContent,
@@ -24,49 +17,58 @@ import {
 import {useCartStore} from '@/store/useCartStore'
 import {Axios} from "@/services/http/Axios"
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay"
-import {Label} from "@/components/ui/label"
-import {Textarea} from "@/components/ui/textarea"
-import {ButtonLoading} from "@/components/common/ButtonLoading"
 import {ScrollArea} from "@/components/ui/scroll-area"
 import ReviewCard from "./ReviewCard"
-import {ToastAlert} from "@/components/common/ToastAlert"
 import {TOAST_TYPE} from "@/utils/enums"
-import {useUserStore} from "@/store/useUserStore"
-import {toastInitialState} from "@/utils/index.js";
+import {useQuery} from "@tanstack/react-query"
+import { notify } from "@/components/common/notification"
+import ReviewCreate from "./ReviewCreate";
+
+const fetchProduct = async (id) => {
+    const response = await Axios.get(`/products/${id}`);
+    return response.data.data;
+};
+
+const fetchReviews = async (id) => {
+    const response = await Axios.get(`/products/${id}/reviews`);
+    return response.data.data;
+}
 
 export default function ProductDetails() {
     const {id} = useParams()
-    const {user} = useUserStore();
-    const {cart, getCartTotal, addToCart} = useCartStore();
+    const {cart, addToCart} = useCartStore();
+    const queryClient = useQueryClient();
 
-    const [isPageLoading, setIsPageLoading] = useState(true);
-    const [isButtonLoading, setIsButtonLoading] = useState(false);
-    const [product, setProduct] = useState({});
     const [quantity, setQuantity] = useState(1);
-    const [review, setReview] = useState({});
-    const [errors, setErrors] = useState({});
-    const [toastData, setToastData] = useState(toastInitialState);
+
+    const {
+        data: product,
+        isFetching: isProductLoading,
+        isError: isProductError,
+        error: productError,
+    } = useQuery({
+        enabled: !!id,
+        queryKey: ["product", id],
+        queryFn: () => fetchProduct(id),
+    });
+
+    const {
+        data: reviewsData,
+        isFetching: isReviewsLoading,
+        isError: isReviewsError,
+        error: reviewsError,
+        refetch: reviewsRefetch
+    } = useQuery({
+        enabled: !!id,
+        queryKey: ["reviews", id],
+        queryFn: () => fetchReviews(id),
+    });
+
+    const reviews = reviewsData?.content ?? [];
 
     const itemInCart = product?.id ? cart.find(item => item.productId == product.id) : null;
     const inCartQuantity = itemInCart ? itemInCart.quantity : 0;
     const maxAvailable = product?.quantity ? (product.quantity - inCartQuantity) : 0;
-
-    useEffect(() => {
-        fetchProduct(id);
-    }, [id])
-
-    const fetchProduct = async () => {
-        setIsPageLoading(true);
-        try {
-            const response = await Axios.get(`/products/${id}`);
-            setProduct(response.data.data);
-        } catch (err) {
-            console.error('Error fetching product:', err);
-            showToast("Could not get product", TOAST_TYPE.ERROR);
-        } finally {
-            setIsPageLoading(false);
-        }
-    }
 
     const handleAddToCart = () => {
         addToCart(product, quantity);
@@ -92,7 +94,7 @@ export default function ProductDetails() {
         else setErrors(responseErrors);
     };
 
-    const handleComment = async (e) => {
+    const handleReviewCreate = async (e) => {
         e.preventDefault();
         setIsButtonLoading(true);
 
@@ -101,7 +103,16 @@ export default function ProductDetails() {
                 ...review
             });
 
-            await fetchProduct();
+            //await reviewsRefetch();
+            queryClient.setQueryData(["reviews", id], (old) => ({
+                ...old,
+                review,
+            }));
+
+            setReview({
+                rating: 5,
+                comment: "",
+            })
         } catch (error) {
             console.error("Error adding review", error);
             handleError(error);
@@ -110,11 +121,21 @@ export default function ProductDetails() {
         }
     }
 
-    const showToast = (message, type) => {
-        setToastData({message, type, id: Date.now()});
-    };
+    useEffect(() => {
+        if (!isProductError) return;
 
-    if (!isPageLoading && !product) {
+        console.error(productError);
+        notify(TOAST_TYPE.ERROR, "Failed to show product");
+    }, [isProductError, productError]);
+
+    useEffect(() => {
+        if (!isReviewsError) return;
+
+        console.error(reviewsError);
+        notify(TOAST_TYPE.ERROR, "Failed to show reviews");
+    }, [isReviewsError, reviewsError]);
+
+    if (!isProductLoading && !product) {
         return (
             <div className="container mx-auto px-4 py-8 bg-gradient-to-br from-blue-50 to-indigo-100 ">
                 <div className="text-center">
@@ -127,7 +148,7 @@ export default function ProductDetails() {
 
     return (
         <>
-            {isPageLoading && <PageLoadingOverlay/>}
+            {isProductLoading && <PageLoadingOverlay/>}
 
             <div className="container pb-8 pt-6">
                 <div className="grid md:grid-cols-2 gap-8 mb-10">
@@ -155,10 +176,10 @@ export default function ProductDetails() {
 
                     <div className="space-y-6 bg-white h-fit p-10 rounded-lg">
                         <div>
-                            <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
+                            <h1 className="text-3xl font-bold mb-4">{product?.name}</h1>
 
                             <div className="flex flex-wrap gap-2 mb-6">
-                                {product.categories?.map((category) => (
+                                {product?.categories?.map((category) => (
                                     <Badge key={category.id} variant="secondary">
                                         {category.name}
                                     </Badge>
@@ -171,20 +192,20 @@ export default function ProductDetails() {
                                         {[...Array(5)].map((_, i) => (
                                             <Star
                                                 key={i}
-                                                className={`h-5 w-5 ${i < Math.floor(product.rating) ? "text-yellow-400 fill-current" : "text-gray-300"
+                                                className={`h-5 w-5 ${i < Math.floor(product?.rating) ? "text-yellow-400 fill-current" : "text-gray-300"
                                                 }`}
                                             />
                                         ))}
                                     </div>
                                     <span className="text-gray-600 ml-2">
-                                        {product.reviewCount === 0 ? 'Not Rated Yet' : `${product.rating} out of 5`}
+                                        {product?.reviewCount === 0 ? 'Not Rated Yet' : `${product?.rating} out of 5`}
                                     </span>
                                 </div>
 
-                                <p className="text-2xl font-bold text-primary">${product.price}</p>
+                                <p className="text-2xl font-bold text-primary">${product?.price}</p>
                             </div>
 
-                            <p className="text-gray-600 mb-6 leading-relaxed">{product.description}</p>
+                            <p className="text-gray-600 mb-6 leading-relaxed">{product?.description}</p>
                         </div>
 
                         <Separator/>
@@ -192,12 +213,13 @@ export default function ProductDetails() {
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <span className="font-medium">Stock:</span>
-                                <span className={`font-medium ${product.quantity > 0 ? "text-green-600" : "text-red-600"}`}>
-                                    {product.quantity > 0 ? `${product.quantity} available` : "Out of stock"}
+                                <span
+                                    className={`font-medium ${product?.quantity > 0 ? "text-green-600" : "text-red-600"}`}>
+                                    {product?.quantity > 0 ? `${product?.quantity} available` : "Out of stock"}
                                 </span>
                             </div>
 
-                            {product.quantity > 0 && (
+                            {product?.quantity > 0 && (
                                 <>
                                     <div className="flex items-center space-x-4">
                                         <span className="font-medium">Quantity:</span>
@@ -206,7 +228,8 @@ export default function ProductDetails() {
                                                     disabled={quantity <= 1 || maxAvailable <= 0}>
                                                 <Minus className="h-4 w-4"/>
                                             </Button>
-                                            <span className="w-12 text-center font-medium">{maxAvailable <= 0 ? 0 : quantity}</span>
+                                            <span
+                                                className="w-12 text-center font-medium">{maxAvailable <= 0 ? 0 : quantity}</span>
                                             <Button
                                                 variant="outline"
                                                 size="sm"
@@ -218,9 +241,9 @@ export default function ProductDetails() {
                                         </div>
                                     </div>
 
-                                    <Button 
-                                        onClick={handleAddToCart} 
-                                        size="lg" 
+                                    <Button
+                                        onClick={handleAddToCart}
+                                        size="lg"
                                         className="w-full bg-blue-600"
                                         disabled={maxAvailable <= 0}
                                     >
@@ -240,8 +263,8 @@ export default function ProductDetails() {
                         </CardHeader>
                         <CardContent className="px-6 max-h-[270px] overflow-y-scroll">
                             <ScrollArea>
-                                {product?.reviews?.length > 0 ?
-                                    product.reviews.map((review) => (
+                                {reviews?.length > 0 ?
+                                    reviews.map((review) => (
                                         <ReviewCard key={review.id} review={review}/>
                                     ))
                                     :
@@ -251,72 +274,9 @@ export default function ProductDetails() {
                         </CardContent>
                     </Card>
 
-                    {user?.id && !product.reviews?.some(r => r.user.id === user.id) && (
-                        <Card className="w-[49%] h-fit">
-                            <form onSubmit={handleComment}>
-                                <CardHeader>
-                                    <CardTitle>Add Review</CardTitle>
-                                </CardHeader>
-                                <CardContent className="px-6 space-y-4">
-                                    <div className="space-y-2">
-                                        <Label className="flex">Rating<p className='text-red-600'>*</p></Label>
-                                        <Select
-                                            onValueChange={(value) =>
-                                                setReview((prev) => ({...prev, rating: Number(value)}))
-                                            }
-                                            value={review.rating || 5}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select Rating (1–5)"/>
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                    {[1, 2, 3, 4, 5].map((num) => (
-                                                        <SelectItem key={num} value={num} className="cursor-pointer">
-                                                            {num} Star{num > 1 && "s"}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
-                                        <p className='validation-error'>{errors.rating || ""}</p>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="flex">
-                                            Review<p className="text-red-600">*</p>
-                                        </Label>
-                                        <Textarea
-                                            placeholder=""
-                                            value={review.comment}
-                                            onChange={(event) =>
-                                                setReview((prev) => ({...prev, comment: event.target.value}))
-                                            }
-                                        />
-                                        <p className="validation-error">{errors.comment || ""}</p>
-                                    </div>
-                                    <p className="validation-error">{errors.global || ""}</p>
-                                </CardContent>
-
-                                <CardFooter className="flex-col gap-2">
-                                    {isButtonLoading ? (
-                                        <ButtonLoading/>
-                                    ) : (
-                                        <Button type="submit" className="w-full bg-blue-600">
-                                            Add
-                                        </Button>
-                                    )}
-                                </CardFooter>
-                            </form>
-                        </Card>
-                    )}
+                    <ReviewCreate />
                 </div>
             </div>
-
-            <ToastAlert
-                key={toastData.id}
-                message={toastData.message}
-                type={toastData.type}
-            />
         </>
     )
 }

@@ -1,13 +1,19 @@
-import {useState} from "react"
 import {useNavigate} from "react-router-dom"
 import {Package} from "lucide-react"
-import {useForm, Controller} from "react-hook-form"  // ← add Controller
+import {useForm, Controller} from "react-hook-form"
 import {zodResolver} from "@hookform/resolvers/zod"
 import * as z from "zod"
 
 import {Button} from "@/components/ui/button"
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card"
-import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger
+} from "@/components/ui/dialog"
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select.jsx"
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
@@ -17,19 +23,19 @@ import StaredLabel from "@/components/common/StaredLabel"
 import {useUserStore} from "@/store/useUserStore"
 import InputReadOnly from "@/components/common/InputReadOnly"
 import {Axios} from "@/services/http/Axios"
-import {GLOBAL_ERROR, handleErrors, toastInitialState} from "@/utils"
+import {GLOBAL_ERROR, handleErrors} from "@/utils"
 import {ButtonLoading} from "@/components/common/ButtonLoading"
 import InputError from "@/components/common/InputError.jsx"
 import {PAYMENT_METHOD, TOAST_TYPE} from "@/utils/enums.js"
-import {ToastAlert} from "@/components/common/ToastAlert.jsx"
 import {getIdempotencyKey, IDEMPOTENCY_HEADER, removeIdempotencyKey} from "@/utils/idempotencyUtil.js"
+import {notify} from "@/components/common/notification"
 
 const checkoutSchema = z.object({
     phone: z.string()
         .min(11, 'Phone number must be 11 digits')
         .max(11, 'Phone number must be 11 digits'),
     address: z.string().min(5, 'Address must be at least 5 characters'),
-    paymentMethod: z.string().min(1, 'Please select a payment method'),  // ← add to schema
+    paymentMethod: z.string().min(1, 'Please select a payment method'),
 })
 
 export default function OrderCreate() {
@@ -38,8 +44,6 @@ export default function OrderCreate() {
     const {user} = useUserStore();
     const {cart, getCartTotal, clearCart} = useCartStore();
     const cartTotal = getCartTotal();
-
-    const [toastData, setToastData] = useState(toastInitialState);
 
     const {
         register,
@@ -54,31 +58,40 @@ export default function OrderCreate() {
             phone: '',
             address: '',
             paymentMethod: PAYMENT_METHOD.CASH_ON_DELIVERY,
-            // paymentMethod: Object.keys(PAYMENT_METHOD)[0],
         },
     });
 
     const createOrder = async (data, idempotencyKey) => {
-        return Axios.post("/orders", {
-                items: cart,
-                name: user?.name,
-                ...data,
-            },
-            {
-                headers: {
-                    [IDEMPOTENCY_HEADER]: idempotencyKey,
+        try {
+            return Axios.post("/orders", {
+                    items: cart,
+                    name: user?.name,
+                    ...data,
                 },
-            }
-        );
+                {
+                    headers: {
+                        [IDEMPOTENCY_HEADER]: idempotencyKey,
+                    },
+                }
+            );
+        } catch (error) {
+            console.error(error);
+            notify(TOAST_TYPE.ERROR, "Order placed Failed!");
+        }
     };
 
     const createPayment = async (order, phone) => {
-        return await Axios.post("/payment", {
-            userId: user.id,
-            orderId: order.id,
-            amount: order.amount,
-            payerReference: phone,
-        });
+        try {
+            return await Axios.post("/payment", {
+                userId: user.id,
+                orderId: order.id,
+                amount: order.amount,
+                payerReference: phone,
+            });
+        } catch (error) {
+            console.error(error);
+            notify(TOAST_TYPE.ERROR, "Payment Failed!");
+        }
     };
 
     const cleanupAfterOrder = () => {
@@ -94,10 +107,10 @@ export default function OrderCreate() {
             const orderResponse = await createOrder(data, idempotencyKey);
             const order = orderResponse.data.data;
 
-            showToast("Successfully placed order", TOAST_TYPE.SUCCESS);
 
             if (data.paymentMethod == PAYMENT_METHOD.CASH_ON_DELIVERY) {
                 cleanupAfterOrder();
+                notify(TOAST_TYPE.SUCCESS, "Order placed successfully!");
                 navigate(`/orders/${order.id}`);
                 return;
             }
@@ -106,15 +119,12 @@ export default function OrderCreate() {
             console.log(paymentResponse.data.data);
 
             cleanupAfterOrder();
+            notify(TOAST_TYPE.SUCCESS, "Order placed and payment completed successfully!");
             window.location.assign(paymentResponse.data.data);
         } catch (error) {
             console.error(error);
             handleErrors(error, setError);
         }
-    };
-
-    const showToast = (message, type) => {
-        setToastData({message, type, id: Date.now()});
     };
 
     return (
@@ -187,7 +197,7 @@ export default function OrderCreate() {
                                         ? <ButtonLoading/>
                                         : <Button type="submit" className="w-full bg-blue-600" size="lg">
                                             Complete Order
-                                          </Button>
+                                        </Button>
                                     }
                                 </form>
                             </CardContent>
@@ -211,7 +221,8 @@ export default function OrderCreate() {
                                         </DialogHeader>
                                         <div className="space-y-4">
                                             {cart?.map((item) => (
-                                                <div key={item.productId} className="flex items-center gap-4 p-4 border rounded-lg">
+                                                <div key={item.productId}
+                                                     className="flex items-center gap-4 p-4 border rounded-lg">
                                                     <img
                                                         src={item.image || "/placeholder.svg"}
                                                         alt={item.name}
@@ -263,8 +274,6 @@ export default function OrderCreate() {
                     </div>
                 </div>
             </div>
-
-            <ToastAlert key={toastData.id} message={toastData.message} type={toastData.type}/>
         </>
     )
 }

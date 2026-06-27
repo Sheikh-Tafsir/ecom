@@ -22,9 +22,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @EntityGraph(attributePaths = {"user"})
     @Query("""
-                SELECT DISTINCT o FROM Order o
+                SELECT o FROM Order o
                 WHERE (:status IS NULL OR o.status = :status)
                     AND o.createdAt BETWEEN :fromDate AND :toDate
+                ORDER BY o.createdAt ASC
             """)
     Page<Order> findAllByStatus(@Param("status") OrderStatus status,
                                 @Param("fromDate") LocalDateTime fromDate,
@@ -33,10 +34,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @EntityGraph(attributePaths = {"user"})
     @Query("""
-                SELECT o
-                FROM Order o
+                SELECT o FROM Order o
                 WHERE o.user.id = :userId
-                  AND o.createdAt BETWEEN :fromDate AND :toDate
+                    AND o.createdAt BETWEEN :fromDate AND :toDate
+                ORDER BY o.createdAt ASC
             """)
     Page<Order> findAllByUser_Id(@Param("userId") Long userId,
                                  @Param("fromDate") LocalDateTime fromDate,

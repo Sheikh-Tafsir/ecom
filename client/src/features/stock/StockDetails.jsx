@@ -15,19 +15,17 @@ import {
     toastInitialState,
     formatDate
 } from '@/utils/index.js';
-import {ToastAlert} from '@/components/common/ToastAlert.jsx';
 import {useQuery} from "@tanstack/react-query";
 import {TOAST_TYPE} from "@/utils/enums.js";
+import {notify} from '@/components/common/notification';
+
+const fetchStocks = async () => {
+    const response = await Axios.get(`/stocks/${id}`)
+    return response.data.data
+}
 
 const StockDetails = () => {
     const {id} = useParams();
-
-    const [toastData, setToastData] = useState(toastInitialState);
-
-    const fetchStockItems = async () => {
-        const response = await Axios.get(`/stocks/${id}`)
-        return response.data.data
-    }
 
     const {
         data: stock,
@@ -35,19 +33,15 @@ const StockDetails = () => {
         isError,
         error
     } = useQuery({
-        queryKey: ["stockItems", id],
-        queryFn: fetchStockItems,
         enabled: !!id,
+        queryKey: ["stock", id],
+        queryFn: fetchStocks,
     });
-
-    const showToast = (message, type) => {
-        setToastData({message, type, id: Date.now()});
-    };
 
     useEffect(() => {
         if (isError) {
             console.error(error);
-            showToast("Failed to load stock items", TOAST_TYPE.ERROR);
+            notify(TOAST_TYPE.ERROR, "Failed to load stock items")
         }
     }, [error, isError]);
 
@@ -94,12 +88,6 @@ const StockDetails = () => {
                     </Table>
                 </div>
             </div>
-
-            <ToastAlert
-                key={toastData.id}
-                message={toastData.message}
-                type={toastData.type}
-            />
         </>
     )
 }

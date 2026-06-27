@@ -97,7 +97,7 @@ CREATE TABLE orders
     id              BIGSERIAL PRIMARY KEY,
     user_id         BIGINT REFERENCES users (id) ON DELETE RESTRICT,
     total_price     DECIMAL(19, 2) NOT NULL DEFAULT 0.00 CHECK (total_price >= 0),
-    status          VARCHAR(31)    NOT NULL DEFAULT 'CREATED',
+    status          VARCHAR(31)    NOT NULL DEFAULT 'PENDING',
     name            VARCHAR(63)    NOT NULL,
     phone           VARCHAR(11)    NOT NULL,
     address         VARCHAR(255)   NOT NULL,

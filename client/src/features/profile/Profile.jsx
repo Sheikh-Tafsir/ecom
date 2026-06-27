@@ -17,13 +17,12 @@ import ImageInput from "@/components/common/ImageInput";
 import InputViewMode from "@/components/common/InputViewMode";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
 import StaredLabel from "@/components/common/StaredLabel";
-import {ToastAlert} from "@/components/common/ToastAlert";
 
 import {useUserStore} from "@/store/useUserStore";
 import {GLOBAL_ERROR, handleErrors} from "@/utils/ErrorUtils";
 import {TOAST_TYPE, ALERT_TYPE} from "@/utils/enums";
-import {toastInitialState} from "@/utils";
 import InputError from "@/components/common/InputError.jsx";
+import {notify} from "@/components/common/notification";
 
 const ProfileSchema = z.object({
     name: z.string()
@@ -31,6 +30,11 @@ const ProfileSchema = z.object({
         .max(31, "Name must be shorter than 31 characters"),
     image: z.any().optional(),
 });
+
+const fetchProfile = async () => {
+    const response = await Axios.get("/profile");
+    return response.data.data;
+}
 
 const Profile = () => {
     const navigate = useNavigate();
@@ -44,8 +48,6 @@ const Profile = () => {
     const [existingImage, setExistingImage] = useState();
     const [newImage, setNewImage] = useState();
 
-    const [toastData, setToastData] = useState(toastInitialState);
-
     const {
         register,
         handleSubmit,
@@ -57,17 +59,14 @@ const Profile = () => {
         resolver: zodResolver(ProfileSchema),
     });
 
-    const {data: profile, isFetching: isPageLoading, isError} = useQuery({
+    const {
+        data: profile,
+        isFetching: isPageLoading,
+        isError
+    } = useQuery({
         queryKey: ["profile"],
-        queryFn: async () => {
-            const response = await Axios.get("/profile");
-            return response.data.data;
-        },
+        queryFn: fetchProfile
     });
-
-    if(isError) {
-        showToast("Could not load profile", TOAST_TYPE.ERROR);
-    }
 
     useEffect(() => {
         if (profile) {
@@ -81,7 +80,7 @@ const Profile = () => {
             const formData = new FormData();
 
             Object.entries(data).forEach(([key, value]) => {
-                if (key === "image") return;
+                if (key == "image") return;
 
                 if (Array.isArray(value)) {
                     value.forEach((item) => formData.append(key, item));
@@ -106,17 +105,14 @@ const Profile = () => {
 
         onSuccess: async () => {
             await queryClient.invalidateQueries({queryKey: ["profile"]});
+            notify(TOAST_TYPE.SUCCESS, "Profile updated successfully")
 
-            showToast("Successfully updated", TOAST_TYPE.SUCCESS);
-
-            setTimeout(() => {
-                navigate("/profile");
-            }, 500);
+            navigate("/profile");
         },
 
         onError: (error) => {
-            showToast("Failed to update profile", TOAST_TYPE.ERROR);
             console.error(error);
+            notify(TOAST_TYPE.ERROR, "Failed to update profile")
             handleErrors(error, setError);
         },
     });
@@ -131,7 +127,7 @@ const Profile = () => {
         },
 
         onSuccess: async () => {
-            showToast("Account deleted successfully", TOAST_TYPE.SUCCESS);
+            notify(TOAST_TYPE.SUCCESS, "Account deleted successfully")
 
             await logout();
 
@@ -143,7 +139,6 @@ const Profile = () => {
         },
 
         onError: (error) => {
-            showToast("Failed to delete account", TOAST_TYPE.ERROR);
             console.error(error);
             handleErrors(error, setError);
         },
@@ -153,13 +148,11 @@ const Profile = () => {
         navigate("edit");
     };
 
-    const showToast = (message, type) => {
-        setToastData({
-            message,
-            type,
-            id: Date.now(),
-        });
-    };
+    useEffect(() => {
+        if (isError) {
+            notify(TOAST_TYPE.ERROR, "Could not load profile")
+        }
+    }, [isError, errors])
 
     return (
         <React.Fragment>
@@ -230,14 +223,6 @@ const Profile = () => {
                     </form>
                 </Card>
             </div>
-
-            {toastData.message && (
-                <ToastAlert
-                    key={toastData.id}
-                    message={toastData.message}
-                    type={toastData.type}
-                />
-            )}
         </React.Fragment>
     );
 };

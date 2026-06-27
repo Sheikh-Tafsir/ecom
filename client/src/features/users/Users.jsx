@@ -1,6 +1,6 @@
 import {useEffect, useMemo, useState} from "react";
 import {useNavigate, useSearchParams} from "react-router-dom";
-import {useQuery} from "@tanstack/react-query";
+import {keepPreviousData, useQuery} from "@tanstack/react-query";
 import {Pencil} from "lucide-react";
 
 import {
@@ -24,19 +24,18 @@ import {AlertAction} from "@/components/common/AlertAction";
 import PaginationButton from "@/components/common/PaginationButton";
 import PaginationSearch from "@/components/common/PaginationSearch";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
-import {ToastAlert} from "@/components/common/ToastAlert";
 import {formatDate} from "@/utils/DateUtils";
-import {handleErrors} from "@/utils/ErrorUtils";
 import {ALERT_TYPE, ROLE_PREFIX, TOAST_TYPE, USER_ROLE, USER_STATUS} from "@/utils/enums";
 import {
-    FIRST_PAGE, 
+    FIRST_PAGE,
     checkAllSelected,
-    redirectWhenInvalidPage, 
-    updateQueryWhenParamChange, 
+    redirectWhenInvalidPage,
+    updateQueryWhenParamChange,
     getSelectValue,
     normalizeQuery
 } from "@/utils/PaginationUtils.js";
-import {isAdmin, toastInitialState} from "@/utils";
+import {isAdmin} from "@/utils";
+import {notify} from "@/components/common/notification";
 
 const ALLOWED_SORT_FIELDS = new Set([
     "createdAt",
@@ -65,7 +64,7 @@ const Users = () => {
 
     const [searchParams] = useSearchParams();
     const queryParams = useMemo(() => Object.fromEntries(searchParams.entries()), [searchParams])
-    
+
     const filters = useMemo(
         () => ({
             ...normalizeQuery(queryParams, ALLOWED_SORT_FIELDS),
@@ -76,8 +75,6 @@ const Users = () => {
         [queryParams]
     );
     const {page, role, status} = filters
-
-    const [toastData, setToastData] = useState(toastInitialState);
     const [selectedUser, setSelectedUser] = useState(null);
 
     const {
@@ -85,29 +82,11 @@ const Users = () => {
     } = useQuery({
         queryKey: ["users", filters],
         queryFn: fetchUsers,
-        keepPreviousData: true,
+        placeholderData: keepPreviousData,
     });
 
     const users = data?.content || [];
     const totalPages = data?.totalPages || FIRST_PAGE;
-
-    useEffect(() => {
-        if (isError) {
-            console.error(error);
-            showToast("Failed to load users", TOAST_TYPE.ERROR);
-        }
-    }, [error, isError]);
-
-    const showToast = (message, type) => {
-        setToastData({message, type, id: Date.now()});
-    };
-
-    useEffect(() => {
-        if (isError) {
-            console.error(error);
-            showToast("Failed to load users", TOAST_TYPE.ERROR);
-        }
-    }, [error, isError]);
 
     const handleEditUser = (user) => {
         navigate(`/users/${user.id}`, {state: {user}});
@@ -116,12 +95,11 @@ const Users = () => {
     const changeUserStatus = async (id, status) => {
         try {
             await Axios.put(`/users/${id}`, {status});
-            showToast(`User ${status}`, TOAST_TYPE.SUCCESS);
-            await refetch(); // Refresh list after update
+            notify(TOAST_TYPE.SUCCESS, `User status updated to ${status}`)
+            await refetch();
         } catch (error) {
             console.error("Error changing user status:", error);
-            handleErrors(error, null, null);
-            showToast("Failed to change user status", TOAST_TYPE.ERROR);
+            notify(TOAST_TYPE.ERROR, "Failed to change user status")
         }
     };
 
@@ -138,6 +116,13 @@ const Users = () => {
     useEffect(() => {
         redirectWhenInvalidPage({page, totalPages, navigate, queryParams})
     }, [page, totalPages, navigate, queryParams])
+
+    useEffect(() => {
+        if (isError) {
+            console.error(error);
+            notify(TOAST_TYPE.ERROR, "Failed to load users");
+        }
+    }, [error, isError]);
 
     return (
         <>
@@ -244,8 +229,6 @@ const Users = () => {
 
                 <PaginationButton totalPages={totalPages}/>
             </div>
-
-            <ToastAlert key={toastData.id} message={toastData.message} type={toastData.type}/>
         </>
     );
 };

@@ -21,12 +21,13 @@ import StaredLabel from "@/components/common/StaredLabel";
 import MultiImageInput from "@/components/common/MultiImageInput";
 import InputError from "@/components/common/InputError";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
-import {ToastAlert} from "@/components/common/ToastAlert";
 import {ButtonLoading} from "@/components/common/ButtonLoading";
 
 import {Axios} from "@/services/http/Axios";
-import {GLOBAL_ERROR, handleErrors, toastInitialState} from "@/utils";
+import {GLOBAL_ERROR, handleErrors} from "@/utils";
 import {TOAST_TYPE} from "@/utils/enums";
+import { notify } from "@/components/common/notification";
+import { useQuery } from "@tanstack/react-query";
 
 const MAX_IMAGES = 5;
 
@@ -40,6 +41,16 @@ const ProductSchema = z.object({
     keptImageIds: z.array(z.number()).optional(),
 });
 
+const fetchCategories = async () => {
+    const response = await Axios.get("/categories")
+    return response.data.data
+}
+
+const fetchProduct = async (id) => {
+  const response = await Axios.get(`/products/${id}`);
+  return response.data.data;
+};
+
 const ProductCreate = () => {
     const {id} = useParams();
 
@@ -48,15 +59,9 @@ const ProductCreate = () => {
 
     const isCreatePage = location.pathname.includes("/create");
 
-    const [categories, setCategories] = useState([]);
     const [newImages, setNewImages] = useState([]);
     const [existingImages, setExistingImages] = useState([]);
     const [resetImagesKey, setResetImagesKey] = useState(Date.now());
-
-    const [isCategoriesLoading, setIsCategoriesLoading] = useState(true);
-    const [isProductLoading, setIsProductLoading] = useState(false);
-
-    const [toastData, setToastData] = useState(toastInitialState);
 
     const {
         register,
@@ -79,51 +84,41 @@ const ProductCreate = () => {
 
     const categoryIds = watch("categoryIds");
 
+    const {
+        data: categories = [], 
+        isFetching: isCategoriesLoading,
+        isError: isCategoriesError,
+        error: categoriesError,
+    } = useQuery({
+        queryKey: ["categories"], 
+        queryFn: fetchCategories, 
+    })
+
+    const {
+        data: product,
+        isLoading: isProductLoading,
+        isError: isProductError,
+        error: productError,
+    } = useQuery({
+        queryKey: ["product", id],
+        queryFn: () => fetchProduct(id),
+        enabled: !isCreatePage && !!id,
+    });
+
     useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const response = await Axios.get("/categories");
-                setCategories(response.data.data);
-            } catch (error) {
-                console.error(error);
-                handleErrors(error, setError);
-            } finally {
-                setIsCategoriesLoading(false);
-            }
-        };
+        if (!product) return;
 
-        fetchCategories();
-    }, []);
+        setExistingImages(product.images);
 
-    useEffect(() => {
-        if (isCreatePage || !id) return;
+        reset({
+            name: product.name,
+            description: product.description,
+            price: product.price,
+            categoryIds: product.categories.map(c => String(c.id)),
+            keptImageIds: product.images.map(img => img.id),
+        });
+    }, [product, reset]);
 
-        setIsProductLoading(true);
-
-        const fetchProduct = async () => {
-            try {
-                const response = await Axios.get(`/products/${id}`);
-                const product = response.data.data;
-
-                setExistingImages(product.images);
-
-                reset({
-                    name: product.name || "",
-                    description: product.description || "",
-                    price: product.price || 0,
-                    categoryIds: product.categories.map((c) => String(c.id)),
-                    keptImageIds: product.images.map((img) => img.id) || [],
-                });
-            } catch (error) {
-                console.error(error);
-                handleErrors(error, setError);
-            } finally {
-                setIsProductLoading(false);
-            }
-        };
-
-        fetchProduct();
-    }, [id, isCreatePage, reset, setError]);
 
     const saveProduct = async (data) => {
         try {
@@ -163,11 +158,7 @@ const ProductCreate = () => {
                     timeout: 15000,
                 });
 
-                showToast("Successfully updated", TOAST_TYPE.SUCCESS);
-
-                // setTimeout(() => {
-                //     navigate(`/products/${id}`);
-                // }, 500);
+                notify(TOAST_TYPE.SUCCESS, "Product updated successfully")
             }
         } catch (error) {
             console.error(error);
@@ -175,9 +166,19 @@ const ProductCreate = () => {
         }
     };
 
-    const showToast = (message, type) => {
-        setToastData({message, type, id: Date.now()});
-    };
+    useEffect(() => {
+        if (!isCategoriesError) return;
+
+        console.error(categoriesError);
+        notify(TOAST_TYPE.ERROR, "Failed to show categories");
+    }, [isCategoriesError, categoriesError]);
+
+    useEffect(() => {
+        if (!isProductError) return;
+
+        console.error(productError);
+        notify(TOAST_TYPE.ERROR, "Failed to show product");
+    }, [isProductError, productError]);
 
     return (
         <>
@@ -307,12 +308,6 @@ const ProductCreate = () => {
                     </form>
                 </Card>
             </div>
-
-            <ToastAlert
-                key={toastData.id}
-                message={toastData.message}
-                type={toastData.type}
-            />
         </>
     );
 };
