@@ -7,10 +7,12 @@ import {Button} from "@/components/ui/button"
 import {Badge} from "@/components/ui/badge"
 import {useCartStore} from "@/store/useCartStore"
 import {TOAST_TYPE} from "@/utils/enums"
-import {userIsAdmin} from "@/utils/index.js";
+import {isUserAdmin} from "@/utils/index.js";
 import { notify } from "@/components/common/notification"
+import { useUserStore } from "@/store/useUserStore"
 
 const ProductCard = ({product}) => {
+    const {user} = useUserStore();
     const {addToCart} = useCartStore();
     const navigate = useNavigate();
 
@@ -72,7 +74,7 @@ const ProductCard = ({product}) => {
                 </CardContent>
 
                 <CardFooter className="p-4 pt-0">
-                    {userIsAdmin()?
+                    {isUserAdmin(user)?
                         <div className="flex justify-between w-full mt-4 gap-4">
                             <Button className='w-[50%]' onClick={navigateToEdit}>
                                 Edit

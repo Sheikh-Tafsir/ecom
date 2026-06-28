@@ -24,17 +24,14 @@ import { toastInitialState } from '@/utils';
 const ChangePasswordSchema = z.object({
     currentPassword: z
         .string()
-        .nonempty('Password is required')
         .min(8, 'Password must be at least 8 characters long')
         .max(15, 'Password must be shorter than 15 characters'),
     newPassword: z
         .string()
-        .nonempty('Password is required')
         .min(8, 'Password must be at least 8 characters long')
         .max(15, 'Password must be shorter than 15 characters'),
     confirmPassword: z
         .string()
-        .nonempty('Confirm Password is required')
         .min(8, 'Confirm Password must be at least 8 characters long')
         .max(15, 'Confirm Password must be shorter than 15 characters'),
 }).refine((data) => data.newPassword === data.confirmPassword, {

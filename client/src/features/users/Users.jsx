@@ -34,7 +34,7 @@ import {
     getSelectValue,
     normalizeQuery
 } from "@/utils/PaginationUtils.js";
-import {isAdmin} from "@/utils";
+import {isUserAdmin} from "@/utils";
 import {notify} from "@/components/common/notification";
 
 const ALLOWED_SORT_FIELDS = new Set([
@@ -78,7 +78,7 @@ const Users = () => {
     const [selectedUser, setSelectedUser] = useState(null);
 
     const {
-        data, isFetching: isPageLoading, isError, error, refetch,
+        data, isPending: isPageLoading, isError, error, refetch,
     } = useQuery({
         queryKey: ["users", filters],
         queryFn: fetchUsers,
@@ -187,7 +187,7 @@ const Users = () => {
                                     <TableCell>{user.email}</TableCell>
                                     <TableCell
                                         className={
-                                            isAdmin(user)
+                                            isUserAdmin(user)
                                                 ? "text-blue-600"
                                                 : user.role === USER_ROLE.USER
                                                     ? "text-green-600"

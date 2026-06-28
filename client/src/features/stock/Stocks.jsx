@@ -64,7 +64,7 @@ const Stocks = () => {
 
     const {
         data,
-        isFetching: isPageLoading,
+        isPending: isPageLoading,
         isError,
         error
     } = useQuery({

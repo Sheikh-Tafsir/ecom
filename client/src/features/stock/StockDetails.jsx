@@ -11,10 +11,7 @@ import {
 } from "@/components/ui/table.jsx"
 import {Axios} from '@/services/http/Axios.js';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay.jsx';
-import {
-    toastInitialState,
-    formatDate
-} from '@/utils/index.js';
+import {formatDate} from '@/utils/index.js';
 import {useQuery} from "@tanstack/react-query";
 import {TOAST_TYPE} from "@/utils/enums.js";
 import {notify} from '@/components/common/notification';

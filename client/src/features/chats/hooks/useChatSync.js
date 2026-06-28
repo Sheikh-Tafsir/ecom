@@ -2,7 +2,6 @@ import {useEffect, useCallback} from 'react';
 import {useQueryClient} from '@tanstack/react-query';
 import { getSocket } from '@/services/realtime/socket';
 import {Axios} from "@/services/http/Axios.js";
-import {isNull} from "@/utils/index.js";
 import {
     MESSAGE_RECEIVE_EVENT,
     GROUP_CREATE_RESPONSE_EVENT,
@@ -14,7 +13,7 @@ export const useChatSync = (id, userId) => {
 
     const updateChatOnMessage = useCallback((newMessage) => {
         //console.log("Received new message:", newMessage);
-        if (isNull(newMessage.content)) return;
+        if (!newMessage.content) return;
 
         queryClient.setQueryData(['chats'], (oldChats = []) => {
             if (!Array.isArray(oldChats)) {
@@ -91,7 +90,7 @@ export const useChatSync = (id, userId) => {
     }, [updateChatOnMessage, queryClient]);
 
     useEffect(() => {
-        if (!id || isNull(userId)) return;
+        if (!id || !userId) return;
 
         const markMessagesAsSeen = async () => {
             try {

@@ -13,7 +13,7 @@ import {
 import {Axios} from '@/services/http/Axios';
 import PaginationButton from '@/components/common/PaginationButton';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay';
-import {formatDateAndTime, userIsAdmin} from '@/utils';
+import {formatDateAndTime, isUserAdmin} from '@/utils';
 import {FIRST_PAGE, getQueryString, normalizeQuery, redirectWhenInvalidPage} from '@/utils/PaginationUtils';
 import {Label} from '@/components/ui/label';
 import {
@@ -30,6 +30,7 @@ import InputError from "@/components/common/InputError";
 import StaredLabel from "@/components/common/StaredLabel";
 import {notify} from "@/components/common/notification";
 import { queryClient } from "@/services/queryClient";
+import { useUserStore } from "@/store/useUserStore";
 
 const fetchOrders = async ({queryKey}) => {
     const [, params] = queryKey;
@@ -63,6 +64,8 @@ const Orders = () => {
     );
     const {page, productName, fromDate, toDate} = filters;
 
+    const {user} = useUserStore();
+
     const [form, setForm] = useState({
         productName: "",
         fromDate: "",
@@ -71,7 +74,7 @@ const Orders = () => {
 
     const {
         data,
-        isFetching: isPageLoading,
+        isPending: isPageLoading,
         isError,
         error,
     } = useQuery({
@@ -134,6 +137,7 @@ const Orders = () => {
             await Axios.put(`/orders/${id}/status`, {
                 status
             });
+            
             await queryClient.invalidateQueries({queryKey: ["orders"]});
             notify(TOAST_TYPE.SUCCESS, `Updated order with ID ${id} status changed to ${status}`)
         } catch (error) {
@@ -230,7 +234,7 @@ const Orders = () => {
                                                 >
                                                     View
                                                 </Button>
-                                                {ORDER_STATUS.PENDING == item.status && userIsAdmin() &&
+                                                {ORDER_STATUS.PENDING == item.status && isUserAdmin(user) &&
                                                     <>
                                                         <Button
                                                             className="text-green-600 hover:text-white hover:bg-green-600"

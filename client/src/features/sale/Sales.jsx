@@ -73,7 +73,7 @@ export default function Sales() {
 
     const {
         data,
-        isFetching: isPageLoading,
+        isPending: isPageLoading,
         isError,
         error,
     } = useQuery({

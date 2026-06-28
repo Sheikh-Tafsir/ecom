@@ -67,6 +67,9 @@ const InnerApp = () => {
     }, [initUser]);
 
     useEffect(() => {
+        const isSocketOn = import.meta.env.WEB_SOCKET_ON;
+        if (!isSocketOn) return;
+
         if (user?.email) {
             connectSocket(getAccessToken());
         } else {

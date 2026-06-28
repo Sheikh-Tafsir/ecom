@@ -23,7 +23,7 @@ import InputError from '@/components/common/InputError';
 const ForgetPasswordSchema = z.object({
     email: z
         .string()
-        .nonempty('Email is required')
+        .min(1, 'Email is required')
         .max(31, 'Email must be shorter than 31 characters'),
 });
 

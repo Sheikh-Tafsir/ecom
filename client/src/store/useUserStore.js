@@ -4,7 +4,6 @@ import {
     saveAccessToken
 } from "@/utils/AuthUtils";
 import { logout} from "@/services/http/Axios.js";
-import { isNotNull } from "@/utils";
 
 export const useUserStore = create((set, get) => ({
     user: getAccessUser(),
@@ -19,10 +18,5 @@ export const useUserStore = create((set, get) => ({
         await logout()
         set({user: null});
         window.location.replace("/");
-    },
-
-    isAuthenticated: () => {
-        // console.log("isAuthenticated: ", isNotNull(getAccessUser()));
-        return isNotNull(getAccessUser());
     },
 }));

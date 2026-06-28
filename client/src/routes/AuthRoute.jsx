@@ -3,10 +3,11 @@ import {APP_NAME} from '@/utils';
 import {useUserStore} from '@/store/useUserStore';
 
 const AuthRoute = () => {
-    const {isAuthenticated} = useUserStore();
+    const user = useUserStore(state => state.user);
+    const isAuthenticated = !!user;
 
     return (
-        !isAuthenticated() ?
+        !isAuthenticated ?
             <>
                 <nav className='absolute w-[100%]'>
                     <div className='flex py-3 font-semibold w-[80%] mx-auto'>

@@ -25,12 +25,10 @@ import PaginationButton from '@/components/common/PaginationButton.jsx';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay.jsx';
 import {
     FIRST_PAGE,
-    toastInitialState,
     redirectWhenInvalidPage,
     normalizeQuery, formatDate,
     getQueryString
 } from '@/utils/index.js';
-import {ToastAlert} from '@/components/common/ToastAlert.jsx';
 import {TOAST_TYPE} from "@/utils/enums.js";
 import InputError from "@/components/common/InputError";
 import StaredLabel from "@/components/common/StaredLabel";
@@ -65,7 +63,10 @@ const StockItems = () => {
     });
 
     const {
-        data, isFetching: isPageLoading, isError, error
+        data, 
+        isPending: isPageLoading, 
+        isError, 
+        error
     } = useQuery({
         queryKey: ["stockItems", filters],
         queryFn: fetchStockItems,

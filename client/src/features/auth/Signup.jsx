@@ -25,21 +25,18 @@ import { useState } from 'react';
 const SignupSchema = z.object({
     name: z
         .string()
-        .nonempty('Name is required')
         .min(2, 'Name must be at least 2 characters')
         .max(31, 'Name must be shorter than 31 characters'),
     email: z
         .string()
-        .nonempty('Email is required')
+        .min(1, 'Email is required')
         .max(31, 'Email must be shorter than 31 characters'),
     password: z
         .string()
-        .nonempty('Password is required')
         .min(8, 'Password must be at least 8 characters long')
         .max(15, 'Password must be shorter than 15 characters'),
     confirmPassword: z
         .string()
-        .nonempty('Confirm Password is required')
         .min(8, 'Confirm Password must be at least 8 characters long')
         .max(15, 'Confirm Password must be shorter than 15 characters'),
 }).refine((data) => data.password === data.confirmPassword, {

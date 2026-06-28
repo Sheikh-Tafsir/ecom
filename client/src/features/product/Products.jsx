@@ -102,7 +102,7 @@ export default function Products() {
 
     const {
         data: productData,
-        isFetching: isProductsLoading,
+        isPending: isProductsLoading,
         isError: isProductsError,
         error: productsError,
     } = useQuery({
@@ -206,20 +206,21 @@ export default function Products() {
                 </div>
 
                 {/* Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {products.length > 0 ?
-                        products.map((p) => (
-                            <ProductCard
-                                key={p.id}
-                                product={p}
-                            />
-                        ))
-                        :
-                        <div className="text-center py-12 text-gray-500">
-                            No products found matching your criteria.
-                        </div>
-                    }
-                </div>
+                {products.length > 0 ?
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {products.map((p) => (
+                                <ProductCard
+                                    key={p.id}
+                                    product={p}
+                                />
+                            ))}
+
+                    </div>
+                    :
+                    <div className="text-center py-12 text-gray-500">
+                        No products found matching your criteria.
+                    </div>
+                }
 
                 <PaginationButton totalPages={totalPages}/>
             </div>

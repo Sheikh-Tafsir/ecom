@@ -9,7 +9,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {APP_NAME, userIsAdmin} from '@/utils'
+import {APP_NAME, isUserAdmin} from '@/utils'
 import {useUserStore} from '@/store/useUserStore'
 import {useCartStore} from '@/store/useCartStore'
 
@@ -17,18 +17,19 @@ const BASE_MENU = [{name: 'Home', href: '/'}]
 const LOGIN_MENU = [{name: 'Login', href: '/auth/login'}]
 const PROFILE_MENU = [
     {name: 'Profile', href: '/profile'},
-    {name: 'Cart', href: '/cart'},
 ]
 
 export default function Navbar() {
-    const {user, logout, isAuthenticated} = useUserStore();
+    const {user, logout} = useUserStore();
     const cartCount = useCartStore((state) => state.getCartCount());
+    
+    const isAuthenticated = !!user;
+    const isAdmin = isUserAdmin(user);
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [activeMenu, setActiveMenu] = useState(null);
 
-    const isAdmin = userIsAdmin();
-
+    
     const getMenuItems = () => {
         return [
             ...BASE_MENU,
@@ -44,7 +45,7 @@ export default function Navbar() {
                 ],
             },
 
-            ...(isAuthenticated()
+            ...(isAuthenticated
                 ? [
                     {name: 'Orders', href: '/orders'},
                 ]
@@ -66,7 +67,7 @@ export default function Navbar() {
                 ]
                 : []),
 
-            ...(isAuthenticated()
+            ...(isAuthenticated
                 ? [
                     {name: "Chats", href: "/chats"},
                 ]
@@ -126,22 +127,22 @@ export default function Navbar() {
 
                             <Link to="/cart" className="relative text-white hover:text-gray-300 transition-colors mx-4">
                                 <ShoppingCart className="h-6 w-6"/>
-                                {cartCount > 0 && (
-                                    <span
-                                        className="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-                    {cartCount}
-                  </span>
-                                )}
+                                    {cartCount > 0 && (
+                                        <span
+                                            className="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                                            {cartCount}
+                                        </span>
+                                    )}
                             </Link>
 
                             <div className="flex items-center">
-                                {isAuthenticated() ?
+                                {isAuthenticated ?
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild className="max-h-[50%]">
                                             <Button variant="ghost"
                                                     className="text-white hover:text-primary/80 text-sm font-medium h-full bg-white"
                                                     style={{color: 'rgb(24,62,139)'}}>
-                                                <p>{user.name}</p>
+                                                <p>{user?.name}</p>
                                                 <ChevronDown className="ml-1 h-4 w-4"/>
                                             </Button>
                                         </DropdownMenuTrigger>
@@ -219,14 +220,23 @@ export default function Navbar() {
                             )}
                         </div>
                     ))}
+                    <Link to="/cart" className="text-white flex">
+                        <ShoppingCart className="h-6 w-6"/>
+                            {cartCount > 0 && (
+                                <span
+                                    className="mx-auto items-center">
+                                    {cartCount}
+                                </span>
+                            )}
+                    </Link>
 
                     <div className="flex items-center">
-                        {isAuthenticated() ?
+                        {isAuthenticated ?
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild className="max-h-[50%] mx-auto">
                                     <Button variant="ghost"
                                             className="bg-white text-blue-900 hover:text-primary/80 text-sm font-medium h-full">
-                                        {user.name}
+                                        {user?.name}
                                         <ChevronDown className="ml-1 h-4 w-4"/>
                                     </Button>
                                 </DropdownMenuTrigger>

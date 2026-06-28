@@ -15,10 +15,10 @@ public class RateLimiterService {
 
     private static final String EMAIL_KEY_PREFIX = "email:global:";
     private static final String IP_KEY_PREFIX = "ip:global:";
-    private static final int MAX_REQUESTS = 60;
+    private static final int MAX_REQUESTS = 100;
 
     private static final String IP_AUTH_KEY_PREFIX = "ip:auth:";
-    private static final int MAX_AUTH_REQUESTS = 10;
+    private static final int MAX_AUTH_REQUESTS = 20;
 
     private static final int WINDOW_SECONDS = 60;
 

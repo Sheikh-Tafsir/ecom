@@ -1,5 +1,5 @@
 import {useState, useEffect} from 'react'
-import {Link, useNavigate, useParams} from 'react-router-dom';
+import {Link, useNavigate} from 'react-router-dom';
 import {Plus, Trash2, Search, Minus} from 'lucide-react';
 
 import {Button} from '@/components/ui/button.jsx';
@@ -15,14 +15,14 @@ import {Input} from '@/components/ui/input.jsx';
 import {Axios} from '@/services/http/Axios.js';
 import {ButtonLoading} from "@/components/common/ButtonLoading.jsx";
 import {TOAST_TYPE} from '@/utils/enums.js';
-import {ToastAlert} from '@/components/common/ToastAlert.jsx';
-import {GLOBAL_ERROR, handleErrors, toastInitialState} from '@/utils/index.js';
+import {GLOBAL_ERROR, handleErrors} from '@/utils/index.js';
 import InputError from "@/components/common/InputError.jsx";
 import {
     getIdempotencyKey,
     IDEMPOTENCY_HEADER,
     removeIdempotencyKey
 } from "@/utils/idempotencyUtil.js";
+import { notify } from '@/components/common/notification';
 
 const StockCreate = () => {
     const navigate = useNavigate();
@@ -34,7 +34,6 @@ const StockCreate = () => {
 
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [toastData, setToastData] = useState(toastInitialState);
 
     // Debounced search
     useEffect(() => {
@@ -63,8 +62,8 @@ const StockCreate = () => {
     };
 
     const addProductToItems = (product) => {
-        if (items.some(item => item.productId === product.id)) {
-            showToast("Product already added", TOAST_TYPE.INFO);
+        if (items.some(item => item.productId == product.id)) {
+            notify(TOAST_TYPE.INFO, "Product already added")
             setSearchTerm('');
             setSearchResults([]);
             return;
@@ -83,8 +82,8 @@ const StockCreate = () => {
 
     const handleSave = async (e) => {
         e.preventDefault();
-        if (items.length === 0) {
-            showToast("Please add at least one product", TOAST_TYPE.ERROR);
+        if (items.length == 0) {
+            notify(TOAST_TYPE.ERROR, "Please add at least one product")
             return;
         }
 
@@ -109,7 +108,7 @@ const StockCreate = () => {
             setItems([]);
             removeIdempotencyKey()
 
-            showToast("Successfully created stock", TOAST_TYPE.SUCCESS);
+            notify(TOAST_TYPE.SUCCESS, "Successfully created stock")
             setTimeout(() => navigate(`/stocks/${response.data.data}`), 500);
         } catch (error) {
             console.error(error)
@@ -128,10 +127,6 @@ const StockCreate = () => {
     const removeItem = (index) => {
         const newItems = items.filter((_, i) => i !== index);
         setItems(newItems);
-    };
-
-    const showToast = (message, type) => {
-        setToastData({message, type, id: Date.now()});
     };
 
     return (
@@ -327,12 +322,6 @@ const StockCreate = () => {
                     </form>
                 </div>
             </div>
-
-            <ToastAlert
-                key={toastData.id}
-                message={toastData.message}
-                type={toastData.type}
-            />
         </>
     );
 };

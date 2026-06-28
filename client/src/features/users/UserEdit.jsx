@@ -22,11 +22,10 @@ import ImageInput from '@/components/common/ImageInput';
 import InputViewMode from '@/components/common/InputViewMode';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay';
 import StaredLabel from '@/components/common/StaredLabel';
-import {ToastAlert} from '@/components/common/ToastAlert';
 import {TOAST_TYPE, ALERT_TYPE} from '@/utils/enums';
 import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils';
-import {toastInitialState, prepareMultipartForm} from '@/utils';
 import InputError from "@/components/common/InputError.jsx";
+import { notify } from '@/components/common/notification';
 
 // Zod schema
 const UserSchema = z.object({
@@ -47,8 +46,6 @@ const UserEdit = () => {
         resolver: zodResolver(UserSchema),
         defaultValues: {},
     });
-
-    const [toastData, setToastData] = useState(toastInitialState);
 
     const {
         data: user,
@@ -72,14 +69,14 @@ const UserEdit = () => {
             await Axios.put(`/users/${id}`, formData);
         },
         onSuccess: async () => {
-            showToast("User successfully updated", TOAST_TYPE.SUCCESS);
+            notify(TOAST_TYPE.SUCCESS, "User successfully updated")
             await queryClient.invalidateQueries({queryKey: ["user", id]});
             navigate(`/user/${id}`);
         },
         onError: (error) => {
             console.error(error);
             handleErrors(error, setError);
-            showToast("Failed to update user", TOAST_TYPE.ERROR);
+            notify(TOAST_TYPE.ERROR, "Failed to update user")
         },
     });
 
@@ -87,23 +84,19 @@ const UserEdit = () => {
     const deleteUser = useMutation({
         mutationFn: async () => await Axios.delete(`/users/${id}`),
         onSuccess: async () => {
-            showToast("User deleted", TOAST_TYPE.SUCCESS);
+            notify(TOAST_TYPE.SUCCESS, "User deleted")
             await queryClient.invalidateQueries({queryKey: ["users"]});
             navigate("/users", {replace: true});
         },
         onError: (error) => {
             console.error(error);
-            showToast("Failed to delete user", TOAST_TYPE.ERROR);
+            notify(TOAST_TYPE.ERROR, "Failed to delete user")
         },
     })
 
     const handleNavigateToEdit = () => {
         navigate(`edit`);
     }
-
-    const showToast = (message, type) => {
-        setToastData({message, type, id: Date.now()});
-    };
 
     return (
         <>
@@ -171,8 +164,6 @@ const UserEdit = () => {
                     </form>
                 </Card>
             </div>
-
-            {toastData.message && <ToastAlert key={toastData.id} message={toastData.message} type={toastData.type}/>}
         </>
     );
 };

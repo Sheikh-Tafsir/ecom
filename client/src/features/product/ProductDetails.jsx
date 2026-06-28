@@ -73,7 +73,7 @@ export default function ProductDetails() {
     const handleAddToCart = () => {
         addToCart(product, quantity);
         setQuantity(1);
-        showToast("Product added", TOAST_TYPE.SUCCESS);
+        notify(TOAST_TYPE.SUCCESS, "Product added")
     }
 
     const incrementQuantity = () => {
@@ -94,32 +94,6 @@ export default function ProductDetails() {
         else setErrors(responseErrors);
     };
 
-    const handleReviewCreate = async (e) => {
-        e.preventDefault();
-        setIsButtonLoading(true);
-
-        try {
-            await Axios.post(`/products/${id}/review`, {
-                ...review
-            });
-
-            //await reviewsRefetch();
-            queryClient.setQueryData(["reviews", id], (old) => ({
-                ...old,
-                review,
-            }));
-
-            setReview({
-                rating: 5,
-                comment: "",
-            })
-        } catch (error) {
-            console.error("Error adding review", error);
-            handleError(error);
-        } finally {
-            setIsButtonLoading(false);
-        }
-    }
 
     useEffect(() => {
         if (!isProductError) return;

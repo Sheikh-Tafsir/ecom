@@ -29,11 +29,10 @@ import InputError from "@/components/common/InputError.jsx";
 const LoginSchema = z.object({
     email: z
         .string()
-        .nonempty('Email is required')
+        .min(1, 'Email is required')
         .max(31, 'Email must be shorter than 31 characters'),
     password: z
         .string()
-        .nonempty('Password is required')
         .min(8, 'Password must be at least 8 characters long')
         .max(15, 'Password must be shorter than 15 characters'),
 });

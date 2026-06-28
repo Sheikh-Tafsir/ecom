@@ -23,16 +23,14 @@ import InputError from '@/components/common/InputError';
 const ForgetPasswordVerifySchema = z.object({
     otp: z
         .string()
-        .nonempty('Reset code is required')
+        .min(1, 'Reset code is required')
         .length(6, 'Reset code must be 6 digits'),
     password: z
         .string()
-        .nonempty('Password is required')
         .min(8, 'Password must be at least 8 characters long')
         .max(15, 'Password must be shorter than 15 characters'),
     confirmPassword: z
         .string()
-        .nonempty('Confirm Password is required')
         .min(8, 'Confirm Password must be at least 8 characters long')
         .max(15, 'Confirm Password must be shorter than 15 characters'),
 }).refine((data) => data.password === data.confirmPassword, {

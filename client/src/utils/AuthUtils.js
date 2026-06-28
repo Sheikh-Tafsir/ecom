@@ -17,8 +17,8 @@ export const getAccessToken = () => {
     }
 }
 
-export const getAccessUser = () => {
-    const token = getAccessToken();
+export const getAccessUser = (token) => {
+    token ??= getAccessToken();
 
     if (!token) {
         return null;
@@ -31,20 +31,15 @@ export const getAccessUser = () => {
     }
 };
 
-export const isAccessTokenExpired = () => {
-    const storedUser = getAccessUser();
-    return !storedUser || Date.now() >= storedUser.exp * 1000;
+export const isAccessTokenExpired = (token) => {
+    const user = getAccessUser(token);
+    return !user || Date.now() >= user.exp * 1000;
 }
 
 export const removeAccessToken = () => {
     localStorage.removeItem(ACCESS_TOKEN);
 }
 
-export const userIsAdmin = () => {
-    const user = getAccessUser();
-    return user?.role.includes(USER_ROLE.ADMIN) || user?.role.includes(USER_ROLE.SUPER_ADMIN)
-}
-
-export const isAdmin = (user) => {
-    return user?.roleValues.includes(USER_ROLE.ADMIN) || user?.roleValues.includes(USER_ROLE.SUPER_ADMIN)
+export const isUserAdmin = (user) => {
+    return user?.role?.includes(USER_ROLE.ADMIN) || user?.role?.includes(USER_ROLE.SUPER_ADMIN)
 }

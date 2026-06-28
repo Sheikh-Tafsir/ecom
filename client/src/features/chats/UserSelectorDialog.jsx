@@ -18,7 +18,6 @@ import { Badge } from "@/components/ui/badge"
 import { Axios } from "@/services/http/Axios";
 import { ButtonLoading } from "@/components/common/ButtonLoading";
 import { REGULAR_ACTION } from "@/utils/enums";
-import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
 
 const UserSelectorDialog = ({ isOpen, onClose, preSelecteedUserIds, avoidUserIds, confirmUsersSelection }) => {
     const [open, setOpen] = useState(isOpen);

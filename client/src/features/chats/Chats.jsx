@@ -9,12 +9,12 @@ import {TOAST_TYPE} from '@/utils/enums';
 import UserSelectorDialog from './UserSelectorDialog';
 
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay.jsx";
-import {ToastAlert} from "@/components/common/ToastAlert.jsx";
 import {useUserStore} from "@/store/useUserStore.js";
 
 import {useChatData} from './hooks/useChatData';
 import {useChatSync} from './hooks/useChatSync';
 import {useChatActions} from './hooks/useChatActions';
+import { notify } from '@/components/common/notification';
 
 const Chat = () => {
     const {id} = useParams();
@@ -27,7 +27,6 @@ const Chat = () => {
     const [isUserSelectionDrawerOpen, setIsUserSelectionDrawerOpen] = useState(false);
     const [preSelectedUserIds, setPreSelectedUserIds] = useState([]);
     const [avoidUserIds, setAvoidUserIds] = useState([]);
-    const [toastData, setToastData] = useState({message: "", type: "", id: 0});
 
     const {
         chats,
@@ -39,10 +38,6 @@ const Chat = () => {
     } = useChatData(id);
 
     const {updateChatOnMessage} = useChatSync(id, user?.id);
-
-    const showToast = useCallback((message, type) => {
-        setToastData({message, type: type === 'error' ? TOAST_TYPE.ERROR : TOAST_TYPE.SUCCESS, id: Date.now()});
-    }, []);
 
     const handleNewChat = useCallback((chatId) => {
         setSearchedUser(null);
@@ -56,7 +51,6 @@ const Chat = () => {
         user?.id,
         updateChatOnMessage,
         handleNewChat,
-        showToast
     );
 
     useEffect(() => {
@@ -96,7 +90,7 @@ const Chat = () => {
 
     const onGroupManagementSuccess = (data) => {
         setIsUserSelectionDrawerOpen(false);
-        showToast(data.message, 'success');
+        notify(TOAST_TYPE.SUCCESS, data.message)
         if (!id) navigate(`/chats/${data.data}`);
     };
 
@@ -134,12 +128,6 @@ const Chat = () => {
                     confirmUsersSelection={handleGroupAction}
                 />
             </div>
-
-            <ToastAlert
-                key={toastData.id}
-                message={toastData.message}
-                type={toastData.type}
-            />
         </>
     );
 };

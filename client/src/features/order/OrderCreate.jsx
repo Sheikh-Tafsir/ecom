@@ -77,6 +77,7 @@ export default function OrderCreate() {
         } catch (error) {
             console.error(error);
             notify(TOAST_TYPE.ERROR, "Order placed Failed!");
+            throw error;
         }
     };
 
@@ -91,6 +92,7 @@ export default function OrderCreate() {
         } catch (error) {
             console.error(error);
             notify(TOAST_TYPE.ERROR, "Payment Failed!");
+            throw error;
         }
     };
 

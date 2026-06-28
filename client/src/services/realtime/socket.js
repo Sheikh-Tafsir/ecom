@@ -43,7 +43,7 @@ const getValidAccessToken = async () => {
         return null;
     }
 
-    if (!isAccessTokenExpired()) {
+    if (!isAccessTokenExpired(token)) {
         return token;
     }
 
