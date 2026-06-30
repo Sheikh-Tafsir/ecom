@@ -1,10 +1,7 @@
 package com.example.demo.stock.service;
 
 import com.example.demo.common.dto.DateRangeDto;
-import com.example.demo.common.model.Product;
-import com.example.demo.common.model.Sale;
-import com.example.demo.common.model.Stock;
-import com.example.demo.common.model.StockItem;
+import com.example.demo.common.model.*;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.product.service.ProductService;
 import com.example.demo.sale.SaleService;
@@ -145,7 +142,7 @@ public class StockService {
         stockRepository.delete(stock);
     }
 
-    public void consume(Product product, int quantityToConsume) {
+    public void consume(Product product, int quantityToConsume, Order order) {
         List<StockItem> stockItems = stockItemRepository.findAvailableByProductIdOrderByOldest(product.getId());
 
         List<Sale> sales = new ArrayList<>();
@@ -161,7 +158,7 @@ public class StockService {
             item.setRemaining(available - consumed);
             quantityToConsume -= consumed;
 
-            sales.add(saleService.add(product, consumed, product.getPrice().subtract(item.getPurchasePrice())));
+            sales.add(saleService.add(product, order, consumed, product.getPrice().subtract(item.getPurchasePrice())));
         }
 
         if (quantityToConsume > 0) {

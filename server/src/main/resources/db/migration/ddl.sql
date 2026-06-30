@@ -148,6 +148,7 @@ CREATE TABLE sales
 (
     id         BIGSERIAL PRIMARY KEY,
     product_id BIGINT         NOT NULL REFERENCES products (id) ON DELETE RESTRICT,
+    order_id   BIGINT         NOT NULL REFERENCES orders (id) ON DELETE RESTRICT,
     quantity   INT            NOT NULL CHECK (quantity > 0),
     profit     DECIMAL(19, 2) NOT NULL CHECK (profit >= 0),
     created_at TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP

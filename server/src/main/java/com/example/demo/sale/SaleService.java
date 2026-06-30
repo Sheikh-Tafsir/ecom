@@ -1,9 +1,9 @@
 package com.example.demo.sale;
 
 import com.example.demo.common.dto.DateRangeDto;
+import com.example.demo.common.model.Order;
 import com.example.demo.common.model.Product;
 import com.example.demo.common.model.Sale;
-import com.example.demo.order.dto.OrderListResponse;
 import com.example.demo.sale.dto.SaleResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,9 +25,10 @@ public class SaleService {
 
     private final SaleRepository saleRepository;
 
-    public Sale add(Product product, int quantity, BigDecimal unitProfit) {
+    public Sale add(Product product, Order order, int quantity, BigDecimal unitProfit) {
         Sale sale = new Sale();
         sale.setProduct(product);
+        sale.setOrder(order);
         sale.setQuantity(quantity);
         sale.setProfit(unitProfit.multiply(BigDecimal.valueOf(quantity)));
 

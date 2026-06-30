@@ -161,6 +161,6 @@ public class OrderService {
         int quantityToConsume = orderItem.getQuantity();
 
         productService.decreaseForOrder(product, quantityToConsume);
-        stockService.consume(product, quantityToConsume);
+        stockService.consume(product, quantityToConsume, orderItem.getOrder());
     }
 }
