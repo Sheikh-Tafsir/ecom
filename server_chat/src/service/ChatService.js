@@ -1,15 +1,106 @@
 const {Op} = require('sequelize');
-
 const sequelize = require('../config/SequelizeConfig');
-const {User, Chat, ChatParticipant, Message, MessageReceipt} = require('../model');
-
+const {User, Chat, ChatParticipant, Message} = require('../model');
 const {NOT_FOUND} = require('../utils/Messages');
 const {CHAT_TYPE, CHAT_MEMBER_TYPE} = require('../utils/Enum');
-
 const RuntimeError = require('../common/RuntimeError');
 
 const CHAT_LIST_DEFAULT_SIZE = 15;
 const CHAT_MESSAGE_DEFAULT_SIZE = 15;
+
+/* =========================
+   LOOKUPS / REPOSITORY
+========================= */
+
+const findChatById = async (chatId, transaction) => {
+    const chat = await Chat.findByPk(chatId, {
+        attributes: ['id'],
+        transaction,
+    });
+
+    if (!chat) throw new RuntimeError(404, "Chat with id: " + chatId + " not found");
+
+    return chat;
+}
+
+const checkChatParticipant = async (chatId, userId, transaction) => {
+    const membership = await ChatParticipant.findOne({
+        where: {
+            chatId,
+            userId,
+        },
+        attributes: ["role"],
+        transaction,
+    });
+
+    if (!membership) {
+        throw new RuntimeError(404, "User with id: " + userId + " Not a participant of chat with id: " + chatId);
+    }
+}
+
+const findChatByChatIdAndUserId = async (chatId, userId, transaction) => {
+    await checkChatParticipant(chatId, userId, transaction);
+    return await findChatById(chatId, transaction);
+};
+
+const findOrCreateDirectChat = async (user1, user2, transaction) => {
+    const [existingChat] = await sequelize.query(
+        `
+            SELECT c.id
+            FROM chats c
+                     JOIN chat_participants cp ON cp.chat_id = c.id
+            WHERE c.type = 'direct'
+              AND (cp.user_id = :user1 OR cp.user_id = :user2)
+            GROUP BY c.id
+            HAVING COUNT(DISTINCT cp.user_id) = 2 
+                AND COUNT(cp.user_id) = 2 LIMIT 1
+        `,
+        {
+            replacements: {user1, user2},
+            transaction,
+            type: sequelize.QueryTypes.SELECT
+        }
+    );
+
+    if (existingChat) {
+        return await findChatById(existingChat?.id, transaction);
+    }
+
+    const chat = await Chat.create(
+        {type: CHAT_TYPE.DIRECT},
+        {transaction}
+    );
+
+    await ChatParticipant.bulkCreate(
+        [
+            {chatId: chat.id, userId: user1, role: CHAT_MEMBER_TYPE.MEMBER},
+            {chatId: chat.id, userId: user2, role: CHAT_MEMBER_TYPE.MEMBER},
+        ],
+        {transaction}
+    );
+
+    return chat;
+};
+
+const findChatParticipantsByChatId = async (chatId) => {
+    return await ChatParticipant.findAll({
+        where: { chatId },
+        attributes: ['userId'],
+        raw: true,
+    });
+};
+
+const findAllChatParticipantsByUserId = async (userId) => {
+    return await ChatParticipant.findAll({
+        where: {userId},
+        attributes: ['chatId'],
+        raw: true,
+    });
+}
+
+/* =========================
+   READ METHODS
+========================= */
 
 const findAllChatsByUserId = async (filters = {}, userId) => {
     const {
@@ -40,12 +131,7 @@ const findAllChatsByUserId = async (filters = {}, userId) => {
     const limit = CHAT_LIST_DEFAULT_SIZE;
 
     // Get all chat IDs the user is participant of
-    const userParticipants = await ChatParticipant.findAll({
-        where: { userId },
-        attributes: ["chatId"],
-        raw: true,
-    });
-
+    const userParticipants = await findAllChatParticipantsByUserId(userId);
     const chatIds = userParticipants.map(up => up.chatId);
 
     const chats = await Chat.findAll({
@@ -251,216 +337,10 @@ const formatChatDetails = (chat, userId) => {
     };
 };
 
-const findAllChatParticipantsByUserId = async (userId) => {
-    return await ChatParticipant.findAll({
-        where: {userId},
-        attributes: ['chatId'],
-        raw: true,
-    });
-}
-
-const sendMessage = async (senderId, body) => {
-    const {chatId, receiverId, content, contentType, tempId} = body;
-
-    const t = await sequelize.transaction();
-
-    try {
-        const chat = chatId
-            ? await findChatByChatIdAndUserId(chatId, senderId, t)
-            : await findOrCreateDirectChat(senderId, receiverId, t);
-
-        const message = await Message.create(
-            {
-                chatId: chat.id,
-                senderId,
-                content,
-                contentType,
-            },
-            {transaction: t}
-        );
-
-        await chat.update(
-            {lastSent: new Date(), lastMessage: content},
-            {transaction: t}
-        );
-
-        await ChatParticipant.increment(
-            {unreadMessage: 1},
-            {
-                where: {
-                    chatId: chat.id,
-                    userId: {[Op.ne]: senderId},
-                },
-                transaction: t,
-            }
-        );
-
-        await t.commit();
-
-        return message;
-
-    } catch (err) {
-        await t.rollback();
-        throw err;
-    }
-};
-
-
 /* =========================
-   DIRECT CHAT FIND/CREATE
+   MANAGEMENT METHODS
 ========================= */
-const findOrCreateDirectChat = async (user1, user2, transaction) => {
-    const [existingChat] = await sequelize.query(
-        `
-            SELECT c.id
-            FROM chats c
-                     JOIN chat_participants cp ON cp.chat_id = c.id
-            WHERE c.type = 'direct'
-              AND (cp.user_id = :user1 OR cp.user_id = :user2)
-            GROUP BY c.id
-            HAVING COUNT(DISTINCT cp.user_id) = 2 
-                AND COUNT(cp.user_id) = 2 LIMIT 1
-        `,
-        {
-            replacements: {user1, user2},
-            transaction,
-            type: sequelize.QueryTypes.SELECT
-        }
-    );
 
-    if (existingChat) {
-        return await findChatById(existingChat?.id, transaction);
-    }
-
-    const chat = await Chat.create(
-        {type: CHAT_TYPE.DIRECT},
-        {transaction}
-    );
-
-    await ChatParticipant.bulkCreate(
-        [
-            {chatId: chat.id, userId: user1, role: CHAT_MEMBER_TYPE.MEMBER},
-            {chatId: chat.id, userId: user2, role: CHAT_MEMBER_TYPE.MEMBER},
-        ],
-        {transaction}
-    );
-
-    return chat;
-};
-
-const findChatByChatIdAndUserId = async (chatId, userId, transaction) => {
-    await checkChatParticipant(chatId, userId, transaction);
-    return await findChatById(chatId, transaction);
-};
-
-const findChatById = async (chatId, transaction) => {
-    const chat = await Chat.findByPk(chatId, {
-        attributes: ['id'],
-        transaction,
-    });
-
-    if (!chat) throw new RuntimeError(404, "Chat with id: " + chatId + " not found");
-
-    return chat;
-}
-
-const checkChatParticipant = async (chatId, userId, transaction) => {
-    const membership = await ChatParticipant.findOne({
-        where: {
-            chatId,
-            userId,
-        },
-        attributes: ["role"],
-        transaction,
-    });
-
-    if (!membership) {
-        throw new RuntimeError(404, "User with id: " + userId + " Not a participant of chat with id: " + chatId);
-    }
-}
-
-
-const saveMessageReceipts = async (activeUsers = [], messageId, chatId, senderId) => {
-    const now = Date.now();
-
-    const allParticipants = await findChatParticipantsByChatId(chatId);
-    const activeSet = new Set(activeUsers.map(String));
-
-    const receipts = allParticipants
-        .filter(participant => participant.userId != senderId)
-        .map(participant => {
-            const isActive = activeSet.has(String(participant.userId));
-
-            return {
-                messageId,
-                userId: participant.userId,
-                deliveredAt: now,
-                read_at: isActive ? now : null
-            };
-        }
-    );
-
-    const t = await sequelize.transaction();
-
-    try {
-        const result = await MessageReceipt.bulkCreate(receipts, {
-            ignoreDuplicates: true,
-            transaction: t
-        });
-
-        await t.commit();
-        return result;
-
-    } catch (err) {
-        await t.rollback();
-        throw err;
-    }
-}
-
-const findChatParticipantsByChatId = async (chatId) => {
-    return await ChatParticipant.findAll({
-        where: { chatId },
-        attributes: ['userId'],
-        raw: true,
-    });
-};
-
-/* =========================
-   SEEN / READ RECEIPTS
-========================= */
-const seenChatMessage = async (chatId, body, userId) => {
-    const {lastSeen} = body;
-
-    const t = await sequelize.transaction();
-
-    try {
-        const participant = await ChatParticipant.findOne({
-            where: {chatId, userId},
-            transaction: t,
-        });
-
-        if (!participant) {
-            throw new RuntimeError(403, "Not a participant");
-        }
-
-        await participant.update(
-            {
-                unreadMessage: 0,
-                lastSeen,
-            },
-            {transaction: t}
-        );
-
-        await t.commit();
-    } catch (err) {
-        await t.rollback();
-        throw err;
-    }
-};
-
-/* =========================
-   GROUP CHAT
-========================= */
 const createGroup = async (body, user) => {
     const t = await sequelize.transaction();
 
@@ -538,16 +418,22 @@ const updateGroup = async (body, user) => {
 const buildGroupName = (creator, users) =>
     `${creator.name.split(" ")[0]}, ${users.map(u => u.name.split(" ")[0]).join(", ")}`;
 
-/* =========================
-   EXPORTS
-========================= */
+
 module.exports = {
+    // Lookups
+    findChatById,
+    checkChatParticipant,
+    findChatByChatIdAndUserId,
+    findOrCreateDirectChat,
+    findChatParticipantsByChatId,
+    findAllChatParticipantsByUserId,
+    
+    // Read
     findAllChatsByUserId,
     findDetailsChatById,
-    findAllChatParticipantsByUserId,
-    sendMessage,
-    saveMessageReceipts,
-    seenChatMessage,
+    
+    // Management
     createGroup,
     updateGroup,
+    buildGroupName,
 };
