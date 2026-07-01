@@ -1,15 +1,17 @@
 package com.example.gateway.service;
 
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.Refill;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 
 @Slf4j
-@Component
+@Service
 @RequiredArgsConstructor
 public class RateLimiterService {
 
@@ -21,46 +23,27 @@ public class RateLimiterService {
     private static final int MAX_AUTH_REQUESTS = 20;
 
     private static final int WINDOW_SECONDS = 60;
-
     private static final String AUTH_URI= "/auth";
 
-    private final ReactiveStringRedisTemplate redisTemplate;
+    private final ProxyManager<byte[]> proxyManager;
+
+    private Mono<Boolean> isAllowed(String key, int limit) {
+        BucketConfiguration config = BucketConfiguration.builder()
+                .addLimit(Bandwidth.classic(limit, Refill.intervally(limit, Duration.ofSeconds(WINDOW_SECONDS))))
+                .build();
+
+        return Mono.fromFuture(proxyManager.asAsync().builder().build(key.getBytes(), config).tryConsume(1));
+    }
 
     public Mono<Boolean> isEmailAllowed(String email) {
-        return checkLimit(EMAIL_KEY_PREFIX + email, MAX_REQUESTS);
+        return isAllowed(EMAIL_KEY_PREFIX + email, MAX_REQUESTS);
     }
 
     public Mono<Boolean> isIpAllowed(String ip, String uri) {
         if (uri.startsWith(AUTH_URI)) {
-            return checkLimit(IP_AUTH_KEY_PREFIX + ip, MAX_AUTH_REQUESTS);
+            return isAllowed(IP_AUTH_KEY_PREFIX + ip, MAX_AUTH_REQUESTS);
         }
 
-        return checkLimit(IP_KEY_PREFIX + ip, MAX_REQUESTS);
-    }
-
-    private Mono<Boolean> checkLimit(String key, int requestLimit) {
-        return redisTemplate.opsForValue()
-                .increment(key)
-                .flatMap(count -> {
-
-                    boolean allowed = count <= requestLimit;
-
-                    if (!allowed) {
-                        log.warn(
-                                "Rate limit exceeded for key={} count={} limit={}",
-                                key,
-                                count,
-                                requestLimit
-                        );
-                    }
-
-                    if (count == 1) {
-                        return redisTemplate
-                                .expire(key, Duration.ofSeconds(WINDOW_SECONDS))
-                                .thenReturn(allowed);
-                    }
-
-                    return Mono.just(allowed);
-                });
+        return isAllowed(IP_KEY_PREFIX + ip, MAX_REQUESTS);
     }
 }

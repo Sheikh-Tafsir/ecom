@@ -15,7 +15,6 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Order(1)
-@Component
 @RequiredArgsConstructor
 public class IpRateLimiterFilter implements WebFilter {
 
@@ -24,13 +23,14 @@ public class IpRateLimiterFilter implements WebFilter {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, @NonNull WebFilterChain chain) {
         String ip = extractIp(exchange.getRequest());
+        String uri = exchange.getRequest().getPath().pathWithinApplication().value();
 
         if (ip == null || ip.trim().isEmpty()) {
             log.warn("Missing client IP");
             return reject(exchange);
         }
 
-        return rateLimiterService.isIpAllowed(ip, exchange.getRequest().getPath().pathWithinApplication().value())
+        return rateLimiterService.isIpAllowed(ip, uri)
                 .flatMap(allowed -> {
 
                     if (!allowed) {
@@ -39,7 +39,6 @@ public class IpRateLimiterFilter implements WebFilter {
 
                     return chain.filter(exchange);
                 });
-
     }
 
     private String extractIp(ServerHttpRequest request) {

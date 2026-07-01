@@ -17,7 +17,6 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Order(2)
-@Component
 @RequiredArgsConstructor
 public class UserRateLimiterFilter implements WebFilter {
 

@@ -7,17 +7,24 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
-import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 import static org.springframework.data.redis.serializer.RedisSerializationContext.SerializationPair.fromSerializer;
 
 @Configuration
 @EnableCaching
 public class RedisConfig {
+
+    @Bean
+    public JedisPool jedisPool(RedisProperties properties) {
+        JedisPoolConfig poolConfig = new JedisPoolConfig();
+        poolConfig.setJmxEnabled(false);
+        return new JedisPool(poolConfig, properties.getHost(), properties.getPort(), 2000, properties.getPassword());
+    }
 
 //    @Bean
 //    public RedisConnectionFactory redisConnectionFactory(RedisProperties redisProperties) {

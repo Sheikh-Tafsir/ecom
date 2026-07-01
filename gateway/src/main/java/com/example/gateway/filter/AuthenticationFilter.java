@@ -19,7 +19,6 @@ import reactor.core.publisher.Mono;
 import java.util.Collections;
 
 @Slf4j
-@Component
 @RequiredArgsConstructor
 public class AuthenticationFilter implements WebFilter {
 

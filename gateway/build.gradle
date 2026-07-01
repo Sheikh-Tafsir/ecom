@@ -37,6 +37,10 @@ dependencies {
 
     implementation "org.springframework.boot:spring-boot-starter-data-redis-reactive"
 
+    // Bucket4j
+    implementation 'com.giffing.bucket4j.spring.boot.starter:bucket4j-spring-boot-starter:0.12.0'
+    implementation 'com.bucket4j:bucket4j-redis:8.10.1'
+
     implementation "org.springdoc:springdoc-openapi-starter-webflux-ui:2.5.0"
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

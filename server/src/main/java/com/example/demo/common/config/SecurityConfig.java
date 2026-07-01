@@ -1,8 +1,11 @@
 package com.example.demo.common.config;
 
 import com.example.demo.common.filter.AuthenticationFilter;
-import com.example.demo.common.filter.RateLimiterFilter;
+import com.example.demo.common.filter.IpRateLimiterFilter;
+import com.example.demo.common.filter.UserRateLimiterFilter;
 import com.example.demo.common.service.CustomUserDetailsService;
+import com.example.demo.common.service.JwtService;
+import com.example.demo.common.service.RateLimiterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -19,7 +22,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -56,9 +58,24 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
 
-    private final AuthenticationFilter authenticationFilter;
+    private final JwtService jwtService;
 
-    private final RateLimiterFilter rateLimiterFilter;
+    private final RateLimiterService rateLimiterService;
+
+    @Bean
+    public AuthenticationFilter authenticationFilter() {
+        return new AuthenticationFilter(jwtService, userDetailsService);
+    }
+
+    @Bean
+    public IpRateLimiterFilter ipRateLimiterFilter() {
+        return new IpRateLimiterFilter(rateLimiterService);
+    }
+
+    @Bean
+    public UserRateLimiterFilter userRateLimiterFilter() {
+        return new UserRateLimiterFilter(rateLimiterService);
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -79,11 +96,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/categories", "/categories/*").permitAll()
                         .requestMatchers("/payment/callback").permitAll()
                         .anyRequest().authenticated()
-                )
-                .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                );
 
         if (isStandAloneServer) {
-            http.addFilterBefore(rateLimiterFilter, UsernamePasswordAuthenticationFilter.class);
+            http.addFilterBefore(ipRateLimiterFilter(), UsernamePasswordAuthenticationFilter.class);
+            http.addFilterAfter(authenticationFilter(), IpRateLimiterFilter.class);
+            http.addFilterAfter(userRateLimiterFilter(), AuthenticationFilter.class);
+        } else {
+            http.addFilterBefore(authenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         }
 
         return http.build();

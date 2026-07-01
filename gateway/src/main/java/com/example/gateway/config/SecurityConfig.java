@@ -41,14 +41,15 @@ public class SecurityConfig {
     @Value("${cors.allowed.origins}")
     private String allowedOrigins;
 
-    private final AuthenticationFilter authenticationFilter;
-
-    private final UserRateLimiterFilter userRateLimiterFilter;
-
-    private final IpRateLimiterFilter ipRateLimiterFilter;
+    private final com.example.gateway.service.JwtService jwtService;
+    private final com.example.gateway.service.RateLimiterService rateLimiterService;
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
+        AuthenticationFilter authenticationFilter = new AuthenticationFilter(jwtService);
+        IpRateLimiterFilter ipRateLimiterFilter = new IpRateLimiterFilter(rateLimiterService);
+        UserRateLimiterFilter userRateLimiterFilter = new UserRateLimiterFilter(rateLimiterService);
+
         return http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
