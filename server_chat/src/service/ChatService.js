@@ -337,6 +337,37 @@ const formatChatDetails = (chat, userId) => {
     };
 };
 
+
+const seenChatMessage = async (chatId, body, userId) => {
+    const {lastSeen} = body;
+
+    const t = await sequelize.transaction();
+
+    try {
+        const participant = await ChatParticipant.findOne({
+            where: {chatId, userId},
+            transaction: t,
+        });
+
+        if (!participant) {
+            throw new RuntimeError(403, "Not a participant");
+        }
+
+        await participant.update(
+            {
+                unreadMessage: 0,
+                lastSeen,
+            },
+            {transaction: t}
+        );
+
+        await t.commit();
+    } catch (err) {
+        await t.rollback();
+        throw err;
+    }
+};
+
 /* =========================
    MANAGEMENT METHODS
 ========================= */
@@ -431,6 +462,7 @@ module.exports = {
     // Read
     findAllChatsByUserId,
     findDetailsChatById,
+    seenChatMessage,
     
     // Management
     createGroup,

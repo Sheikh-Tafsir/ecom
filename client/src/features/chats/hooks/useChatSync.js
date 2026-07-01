@@ -1,6 +1,6 @@
 import {useEffect, useCallback} from 'react';
 import {useQueryClient} from '@tanstack/react-query';
-import { getSocket } from '@/services/realtime/socket';
+import {useUserStore} from '@/store/useUserStore';
 import {Axios} from "@/services/http/Axios.js";
 import {
     MESSAGE_RECEIVE_EVENT,
@@ -10,9 +10,10 @@ import {
 
 export const useChatSync = (id, userId) => {
     const queryClient = useQueryClient();
+    const socket = useUserStore(state => state.socket);
 
     const updateChatOnMessage = useCallback((newMessage) => {
-        //console.log("Received new message:", newMessage);
+        // console.info("Received new message:", newMessage);
         if (!newMessage.content) return;
 
         queryClient.setQueryData(['chats'], (oldChats = []) => {
@@ -71,10 +72,14 @@ export const useChatSync = (id, userId) => {
     }, [id, userId, queryClient]);
 
     useEffect(() => {
-        const socket = getSocket();
         if (!socket) return;
 
-        const handleReceiveMessage = (response) => updateChatOnMessage(response.data);
+        console.info("Socket is available in useChatSync");
+
+        const handleReceiveMessage = (response) => {
+            console.info("Received new message:", response.data);
+            updateChatOnMessage(response.data);
+        };
         const handleGroupCreationResponse = () => queryClient.invalidateQueries(['chats']);
         const handleUpdateResponse = () => queryClient.invalidateQueries(['chats']);
 
@@ -87,7 +92,7 @@ export const useChatSync = (id, userId) => {
             socket.off(GROUP_CREATE_RESPONSE_EVENT, handleGroupCreationResponse);
             socket.off(GROUP_UPDATE_RESPONSE_EVENT, handleUpdateResponse);
         };
-    }, [updateChatOnMessage, queryClient]);
+    }, [socket, updateChatOnMessage, queryClient]);
 
     useEffect(() => {
         if (!id || !userId) return;

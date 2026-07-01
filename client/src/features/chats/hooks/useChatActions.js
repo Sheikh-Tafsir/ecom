@@ -1,5 +1,5 @@
 import {useCallback} from 'react';
-import { getSocket } from '@/services/realtime/socket';
+import {useUserStore} from '@/store/useUserStore';
 import {Axios} from "@/services/http/Axios.js";
 import {CONTENT_TYPE, REGULAR_ACTION} from '@/utils/enums';
 import {
@@ -9,6 +9,7 @@ import {
 } from "@/services/realtime/socketEvents.js";
 
 export const useChatActions = (id, userId, updateChatOnMessage, onNewChat, showToast) => {
+    const socket = useUserStore(state => state.socket);
 
     const getImageLink = async (image) => {
         try {
@@ -45,7 +46,7 @@ export const useChatActions = (id, userId, updateChatOnMessage, onNewChat, showT
     }, [id, userId, updateChatOnMessage]);
 
     const handleSendMessage = useCallback(async (content, image, searchedUser) => {
-        const socket = getSocket();
+        console.info("Socket is connected in send message:", !!socket);
         if ((!id && !searchedUser) || !socket) return;
 
         let contentType = CONTENT_TYPE.TEXT;
@@ -64,19 +65,18 @@ export const useChatActions = (id, userId, updateChatOnMessage, onNewChat, showT
             tempId,
         }, (acknowledgment) => {
             if (acknowledgment.error) {
-                // console.log(acknowledgment.error);
+                console.error(acknowledgment.error);
                 showToast(acknowledgment.error, 'error');
                 return;
             }
 
-            // console.log('sent message:', acknowledgment);
+            // console.info('sent message:', acknowledgment);
             const sentMessage = acknowledgment.data;
             onNewChat(sentMessage.chatId);
         });
-    }, [id, updateChatLocally, onNewChat, showToast]);
+    }, [id, socket, updateChatLocally, onNewChat, showToast]);
 
-    const handleGroupManagementRequest = useCallback((users, action, onSuccess) => {
-        const socket = getSocket();
+    const handleGroupManagementRequest = useCallback(async (users, action, onSuccess) => {
         if (!socket) return;
 
         socket.emit(action == REGULAR_ACTION.CREATE ? GROUP_CREATE_REQUEST_EVENT : GROUP_UPDATE_REQUEST_EVENT, {
@@ -91,7 +91,7 @@ export const useChatActions = (id, userId, updateChatOnMessage, onNewChat, showT
 
             onSuccess(acknowledgment);
         });
-    }, [id, showToast]);
+    }, [id, socket, showToast]);
 
     return {handleSendMessage, handleGroupManagementRequest, updateChatLocally};
 };

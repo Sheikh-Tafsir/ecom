@@ -91,39 +91,7 @@ const saveMessageReceipts = async (activeUsers = [], messageId, chatId, senderId
     }
 }
 
-const seenChatMessage = async (chatId, body, userId) => {
-    const {lastSeen} = body;
-
-    const t = await sequelize.transaction();
-
-    try {
-        const participant = await ChatParticipant.findOne({
-            where: {chatId, userId},
-            transaction: t,
-        });
-
-        if (!participant) {
-            throw new RuntimeError(403, "Not a participant");
-        }
-
-        await participant.update(
-            {
-                unreadMessage: 0,
-                lastSeen,
-            },
-            {transaction: t}
-        );
-
-        await t.commit();
-    } catch (err) {
-        await t.rollback();
-        throw err;
-    }
-};
-
-
 module.exports = {
     sendMessage,
     saveMessageReceipts,
-    seenChatMessage,
 };

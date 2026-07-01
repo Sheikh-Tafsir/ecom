@@ -8,7 +8,7 @@ import AuthRoute from "@/routes/AuthRoute";
 import ProtectedRoute from "@/routes/ProtectedRoute";
 import PublicRoute from "@/routes/PublicRoute";
 
-import {connectSocket, disconnectSocket} from '@/services/realtime/socket';
+import {connectSocket, disconnectSocket, isSocketOn} from '@/services/realtime/socket';
 import {USER_ROLE} from "@/utils/enums";
 import NotificationListener from "@/components/common/NotificationListener";
 
@@ -61,25 +61,30 @@ const App = () => {
 const InnerApp = () => {
     const initUser = useUserStore((state) => state.init);
     const user = useUserStore((state) => state.user);
+    const setSocket = useUserStore((state) => state.setSocket);
 
     useEffect(() => {
         initUser();
     }, [initUser]);
 
     useEffect(() => {
-        const isSocketOn = import.meta.env.WEB_SOCKET_ON;
+        //console.log("Socket is on:", isSocketOn);
         if (!isSocketOn) return;
 
         if (user?.email) {
-            connectSocket(getAccessToken());
+            connectSocket().then(socket => {
+                setSocket(socket);
+            });
         } else {
             disconnectSocket();
+            setSocket(null);
         }
 
         return () => {
             disconnectSocket();
+            setSocket(null);
         };
-    }, [user])
+    }, [user, isSocketOn, setSocket])
 
     return (
         <>

@@ -12,7 +12,7 @@ const setupMessageHandlers = (io, socket) => {
 
     socket.on(MESSAGE_SEND_EVENT, async (reqBody, ack) => {
         try {
-            console.info(`Message ${reqBody?.content} send request from ${user.name}:`, reqBody);
+            //console.info(`Message ${reqBody?.content} send request from ${user.name}:`, reqBody);
 
             if (!reqBody?.content) {
                 ack(buildErrorResponse("Message is required"))
@@ -49,6 +49,7 @@ const setupMessageHandlers = (io, socket) => {
                     data: messageData,
                 })
             );
+            console.info(`Message ${reqBody?.content} sent from ${user.name}:`, messageData);
 
             const activeUsersInRoom = getActiveUsersInRoom(io, roomId);
             await MessageService.saveMessageReceipts(activeUsersInRoom, message.id, message.chatId, user.id);
