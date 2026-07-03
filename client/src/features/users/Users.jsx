@@ -25,7 +25,7 @@ import PaginationButton from "@/components/common/PaginationButton";
 import PaginationSearch from "@/components/common/PaginationSearch";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
 import {formatDate} from "@/utils/DateUtils";
-import {ALERT_TYPE, ROLE_PREFIX, TOAST_TYPE, USER_ROLE, USER_STATUS} from "@/utils/enums";
+import {ALERT_TYPE, PERMISSION, ROLE_PREFIX, TOAST_TYPE, USER_ROLE, USER_STATUS} from "@/utils/enums";
 import {
     FIRST_PAGE,
     checkAllSelected,
@@ -34,7 +34,7 @@ import {
     getSelectValue,
     normalizeQuery
 } from "@/utils/PaginationUtils.js";
-import {isUserAdmin} from "@/utils";
+import {hasPermission} from "@/utils";
 import {notify} from "@/components/common/notification";
 
 const ALLOWED_SORT_FIELDS = new Set([
@@ -187,7 +187,7 @@ const Users = () => {
                                     <TableCell>{user.email}</TableCell>
                                     <TableCell
                                         className={
-                                            isUserAdmin(user)
+                                            hasPermission(user, PERMISSION.SUPER_ADMIN_ACCESS)
                                                 ? "text-blue-600"
                                                 : user.role === USER_ROLE.USER
                                                     ? "text-green-600"

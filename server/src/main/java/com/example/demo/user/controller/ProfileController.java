@@ -2,7 +2,6 @@ package com.example.demo.user.controller;
 
 import com.example.demo.auth.dto.TokenDto;
 import com.example.demo.auth.validator.AuthValidator;
-import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.user.dto.ChangePasswordRequest;
 import com.example.demo.user.dto.UpdateProfileRequest;
 import com.example.demo.auth.service.AuthService;
@@ -26,6 +25,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
+import static com.example.demo.common.utils.Utils.checkErrors;
+
 @Slf4j
 @RestController
 @RequestMapping("/profile")
@@ -35,8 +36,6 @@ public class ProfileController {
     private final AuthValidator authValidator;
 
     private final ProfileUpdateRequestValidator profileUpdateRequestValidator;
-
-    private final CommonHelper commonHelper;
 
     private final AuthService authService;
 
@@ -56,7 +55,7 @@ public class ProfileController {
                                                                    HttpServletResponse response) throws IOException {
 
         profileUpdateRequestValidator.validate(updateProfileRequest, bindingResult);
-        commonHelper.checkErrors(bindingResult);
+        checkErrors(bindingResult);
 
         User user = userService.update(updateProfileRequest, userDetails);
 
@@ -80,7 +79,7 @@ public class ProfileController {
                                                             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         authValidator.validatePasswords(changePasswordRequest.newPassword(), changePasswordRequest.confirmNewPassword(), bindingResult);
-        commonHelper.checkErrors(bindingResult);
+        checkErrors(bindingResult);
 
         userService.updatePassword(changePasswordRequest, userDetails);
         return ResponseUtils.ok("Password change successful");

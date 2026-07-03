@@ -29,11 +29,11 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.example.demo.common.enums.Permission.ADMIN_ACCESS;
 import static com.example.demo.common.enums.ProductStatus.DISCONTINUED;
 import static com.example.demo.common.utils.DateUtils.resolveDates;
 import static com.example.demo.common.utils.FileUtils.fileExists;
-import static com.example.demo.common.utils.SecurityConstants.HAS_ROLE_ADMIN;
-import static com.example.demo.common.utils.SecurityUtil.isAdmin;
+import static com.example.demo.common.utils.SecurityUtil.hasPermission;
 import static com.example.demo.common.utils.Utils.*;
 
 @Service
@@ -48,10 +48,13 @@ public class ProductService {
 
     private final MessageService messageService;
 
-    public Page<ProductListResponse> findAll(Pageable pageable, String name, String category, LocalDateTime fromDate, LocalDateTime toDate, CustomUserDetails userDetails) {
+    public Page<ProductListResponse> findAll(Pageable pageable, String name, String category, LocalDateTime fromDate,
+                                             LocalDateTime toDate, CustomUserDetails userDetails) {
+
         DateRangeDto dateRange = resolveDates(fromDate, toDate);
 
-        return productRepository.findAll(getNameFilter(name), category, isAdmin(userDetails) ? null : DISCONTINUED, dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable))
+        return productRepository.findAll(getNameFilter(name), category, hasPermission(ADMIN_ACCESS.getValue(), userDetails)
+                        ? null : DISCONTINUED, dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable))
                 .map(ProductListResponse::new);
     }
 
@@ -64,14 +67,14 @@ public class ProductService {
         Product product = productRepository.findDetailsById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Product", id)));
 
-        if (product.getStatus() == DISCONTINUED && !isAdmin(userDetails)) {
+        if (product.getStatus() == DISCONTINUED && !hasPermission(ADMIN_ACCESS.getValue(), userDetails)) {
             throw new AccessDeniedException("User with id: " + userDetails.getId() + " attempted to access discontinued Product with id: " + id);
         }
 
         return new ProductResponse(product);
     }
 
-    @PreAuthorize(HAS_ROLE_ADMIN)
+    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
     public long create(CreateProductRequest request) throws IOException {
         Product product = new Product();
@@ -86,14 +89,14 @@ public class ProductService {
         return product.getId();
     }
 
-    @PreAuthorize(HAS_ROLE_ADMIN)
+    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     public ProductEditResponse findEditById(Long id) {
         Product product = findEditByIdHelper(id);
 
         return new ProductEditResponse(product);
     }
 
-    @PreAuthorize(HAS_ROLE_ADMIN)
+    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
     public void update(Long id, UpdateProductRequest request) throws IOException {
         Product product = findEditByIdHelper(id);
@@ -129,7 +132,7 @@ public class ProductService {
         productRepository.save(product);
     }
 
-    @PreAuthorize(HAS_ROLE_ADMIN)
+    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
     public void delete(Long id) {
         Product product = findByIdHelper(id);

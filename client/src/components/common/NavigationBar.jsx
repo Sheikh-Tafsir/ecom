@@ -9,9 +9,10 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {APP_NAME, isUserAdmin} from '@/utils'
+import {APP_NAME, hasPermission} from '@/utils'
 import {useUserStore} from '@/store/useUserStore'
 import {useCartStore} from '@/store/useCartStore'
+import { PERMISSION } from '@/utils/enums'
 
 const BASE_MENU = [{name: 'Home', href: '/'}]
 const LOGIN_MENU = [{name: 'Login', href: '/auth/login'}]
@@ -24,7 +25,6 @@ export default function Navbar() {
     const cartCount = useCartStore((state) => state.getCartCount());
     
     const isAuthenticated = !!user;
-    const isAdmin = isUserAdmin(user);
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [activeMenu, setActiveMenu] = useState(null);
@@ -39,7 +39,7 @@ export default function Navbar() {
                 href: "/products",
                 submenu: [
                     {name: "Product List", href: "/products"},
-                    ...(isAdmin
+                    ...(hasPermission(user, PERMISSION.SUPER_ADMIN_ACCESS)
                         ? [{name: "Add Product", href: "/products/create"}]
                         : []),
                 ],
@@ -51,7 +51,7 @@ export default function Navbar() {
                 ]
                 : []),
 
-            ...(isAdmin
+            ...(hasPermission(user, PERMISSION.ADMIN_ACCESS)
                 ? [
                     {
                         name: "Stock",
@@ -62,8 +62,14 @@ export default function Navbar() {
                             {name: "Add Stock", href: "/stocks/create"},
                         ],
                     },
-                    {name: "Sales", href: "/sales"},
                     {name: 'Users', href: '/users'}
+                ]
+                : []),
+
+            ...(hasPermission(user, PERMISSION.SUPER_ADMIN_ACCESS)
+                ? [
+                    
+                    {name: "Sales", href: "/sales"},
                 ]
                 : []),
 

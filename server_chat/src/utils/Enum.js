@@ -25,10 +25,16 @@ const UserRole = Object.freeze({
     USER: 'user',
 });
 
+const Permission = Object.freeze({
+    SUPER_ADMIN_ACCESS: "super_admin:access",
+    ADMIN_ACCESS: "admin:access"
+});
+
 module.exports = {
     CONTENT_TYPE,
     CHAT_TYPE,
     CHAT_MEMBER_TYPE,
     UserStatus,
     UserRole,
+    Permission,
 }

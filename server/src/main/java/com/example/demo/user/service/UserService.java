@@ -31,7 +31,6 @@ import java.util.List;
 import static com.example.demo.common.enums.UserStatus.BANNED;
 import static com.example.demo.common.enums.UserStatus.DELETED;
 import static com.example.demo.common.utils.FileUtils.fileExists;
-import static com.example.demo.common.utils.SecurityConstants.HAS_ROLE_ADMIN;
 import static com.example.demo.common.utils.Utils.getValidPageable;
 
 @Slf4j
@@ -49,7 +48,7 @@ public class UserService {
 
     private final MessageService messageService;
 
-    @PreAuthorize(HAS_ROLE_ADMIN)
+    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue())")
     public Page<User> findAll(Pageable pageable, String name, String role, String status) {
         return userRepository.findByRoleAndStatus(name, roleService.findByName(role), UserStatus.fromValue(status), getValidPageable(pageable));
     }
@@ -61,7 +60,7 @@ public class UserService {
                 .toList();
     }
 
-    @PreAuthorize(HAS_ROLE_ADMIN)
+    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue())")
     @Cacheable("usersById")
     public User findById(Long id) {
         return findByIdHelper(id);
@@ -80,7 +79,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    @PreAuthorize(HAS_ROLE_ADMIN)
+    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Caching(evict = {
             @CacheEvict(value = "usersById", key = "#id")
     })
@@ -89,7 +88,7 @@ public class UserService {
         delete(findByIdHelper(id), DELETED);
     }
 
-    @PreAuthorize(HAS_ROLE_ADMIN)
+    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Caching(evict = {
             @CacheEvict(value = "usersById", key = "#id")
     })
@@ -109,6 +108,7 @@ public class UserService {
         userRepository.save(user);
     }
 
+    // -- helpers --
     private User findByIdHelper(Long id) {
         return userRepository.findById(id).
                 orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "User", id)));

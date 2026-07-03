@@ -5,6 +5,13 @@ CREATE TABLE roles
     CONSTRAINT uq_roles_name UNIQUE (name)
 );
 
+CREATE TABLE role_permissions
+(
+    role_id    BIGINT       NOT NULL REFERENCES roles (id) ON DELETE CASCADE,
+    permission VARCHAR(255) NOT NULL,
+    PRIMARY KEY (role_id, permission)
+);
+
 CREATE TABLE users
 (
     id         BIGSERIAL PRIMARY KEY,

@@ -9,7 +9,7 @@ import ProtectedRoute from "@/routes/ProtectedRoute";
 import PublicRoute from "@/routes/PublicRoute";
 
 import {connectSocket, disconnectSocket, isSocketOn} from '@/services/realtime/socket';
-import {USER_ROLE} from "@/utils/enums";
+import {PERMISSION} from "@/utils/enums";
 import NotificationListener from "@/components/common/NotificationListener";
 
 import Homepage from '@/features/homepage/Homepage';
@@ -68,7 +68,7 @@ const InnerApp = () => {
     }, [initUser]);
 
     useEffect(() => {
-        //console.log("Socket is on:", isSocketOn);
+        const isSocketOn = import.meta.env.VITE_WEB_SOCKET_ON;
         if (!isSocketOn) return;
 
         if (user?.email) {
@@ -119,17 +119,21 @@ const InnerApp = () => {
                     <Route path="/payment/fail" element={<PaymentFail/>}/>
                 </Route>
 
-                <Route element={<ProtectedRoute allowedRoles={[USER_ROLE.ADMIN, USER_ROLE.SUPER_ADMIN]}/>}>
+                <Route element={<ProtectedRoute allowedPermissions={[PERMISSION.ADMIN_ACCESS, PERMISSION.SUPER_ADMIN_ACCESS]}/>}>
                     <Route path='/users' element={<Users/>}/>
                     <Route path='/users/:id' element={<UserEdit/>}/>
+
+                    <Route path="/stocks" element={<Stocks/>}/>
+                    <Route path="/stocks/items" element={<StockItems/>}/>
+                    <Route path="/stocks/:id" element={<StockDetails/>}/>
+                </Route>
+
+                <Route element={<ProtectedRoute allowedPermissions={[PERMISSION.SUPER_ADMIN_ACCESS]}/>}>
                     <Route path='/users/:id/edit' element={<UserEdit/>}/>
 
                     <Route path="/products/create" element={<ProductCreate/>}/>
                     <Route path="/products/:id/edit" element={<ProductCreate/>}/>
 
-                    <Route path="/stocks" element={<Stocks/>}/>
-                    <Route path="/stocks/items" element={<StockItems/>}/>
-                    <Route path="/stocks/:id" element={<StockDetails/>}/>
                     <Route path="/stocks/create" element={<StockCreate/>}/>
 
                     <Route path="/sales" element={<Sales/>}/>

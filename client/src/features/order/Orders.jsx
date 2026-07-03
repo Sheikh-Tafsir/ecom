@@ -13,7 +13,7 @@ import {
 import {Axios} from '@/services/http/Axios';
 import PaginationButton from '@/components/common/PaginationButton';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay';
-import {formatDateAndTime, isUserAdmin} from '@/utils';
+import {formatDateAndTime, hasPermission} from '@/utils';
 import {FIRST_PAGE, getQueryString, normalizeQuery, redirectWhenInvalidPage} from '@/utils/PaginationUtils';
 import {Label} from '@/components/ui/label';
 import {
@@ -25,12 +25,12 @@ import {
 } from '@/components/ui/card.jsx';
 import {Input} from '@/components/ui/input';
 import {Button} from '@/components/ui/button';
-import {ORDER_STATUS, TOAST_TYPE} from '@/utils/enums';
+import {ORDER_STATUS, PERMISSION, TOAST_TYPE} from '@/utils/enums';
 import InputError from "@/components/common/InputError";
 import StaredLabel from "@/components/common/StaredLabel";
 import {notify} from "@/components/common/notification";
-import { queryClient } from "@/services/queryClient";
-import { useUserStore } from "@/store/useUserStore";
+import {queryClient} from "@/services/queryClient";
+import {useUserStore} from "@/store/useUserStore";
 
 const fetchOrders = async ({queryKey}) => {
     const [, params] = queryKey;
@@ -134,12 +134,24 @@ const Orders = () => {
 
     const changeOrderStatus = async (id, status) => {
         try {
-            await Axios.put(`/orders/${id}/status`, {
+            await Axios.patch(`/orders/${id}/status`, {
                 status
             });
-            
+
             await queryClient.invalidateQueries({queryKey: ["orders"]});
             notify(TOAST_TYPE.SUCCESS, `Updated order with ID ${id} status changed to ${status}`)
+        } catch (error) {
+            console.error(error);
+            notify(TOAST_TYPE.ERROR, error.response.data.errors.global[0])
+        }
+    }
+
+    const cancelOrder = async (id) => {
+        try {
+            await Axios.patch(`/orders/${id}/cancel`);
+
+            await queryClient.invalidateQueries({queryKey: ["orders"]});
+            notify(TOAST_TYPE.SUCCESS, `Cancelled order with ID ${id}`)
         } catch (error) {
             console.error(error);
             notify(TOAST_TYPE.ERROR, error.response.data.errors.global[0])
@@ -234,7 +246,8 @@ const Orders = () => {
                                                 >
                                                     View
                                                 </Button>
-                                                {ORDER_STATUS.PENDING == item.status && isUserAdmin(user) &&
+                                                {ORDER_STATUS.PENDING == item.status && (
+                                                    hasPermission(user, PERMISSION.ADMIN) || hasPermission(user, PERMISSION.SUPER_ADMIN)) ? (
                                                     <>
                                                         <Button
                                                             className="text-green-600 hover:text-white hover:bg-green-600"
@@ -248,10 +261,18 @@ const Orders = () => {
                                                             onClick={() => changeOrderStatus(item.id, ORDER_STATUS.REJECTED)}
                                                             variant="outline"
                                                         >
-                                                            Delete
+                                                            Reject
                                                         </Button>
                                                     </>
-                                                }
+                                                ) : (
+                                                    <Button
+                                                        className="text-red-600 hover:text-white hover:bg-red-600"
+                                                        onClick={() => cancelOrder(item.id)}
+                                                        variant="outline"
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                )}
                                             </TableCell>
                                         </TableRow>
                                     ))

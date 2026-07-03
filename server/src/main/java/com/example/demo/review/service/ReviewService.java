@@ -1,7 +1,6 @@
 package com.example.demo.review.service;
 
 import com.example.demo.common.dto.CustomUserDetails;
-import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.common.model.Product;
 import com.example.demo.common.model.Review;
 import com.example.demo.common.service.MessageService;
@@ -20,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+import static com.example.demo.common.enums.Permission.ADMIN_ACCESS;
+import static com.example.demo.common.utils.SecurityUtil.*;
 import static com.example.demo.common.utils.Utils.getValidPageable;
 
 @Service
@@ -31,8 +32,6 @@ public class ReviewService {
     private final MessageService messageService;
 
     private final ReviewRepository reviewRepository;
-
-    private final CommonHelper commonHelper;
 
     public Page<ReviewResponse> findAllByProduct(Long productId, Pageable pageable) {
         return reviewRepository.findAllByProduct_Id(productId, getValidPageable(pageable)).map(ReviewResponse::new);
@@ -69,7 +68,10 @@ public class ReviewService {
     @Transactional
     public void update(Long id, UpdateReviewRequest request, CustomUserDetails userDetails) {
         Review review = findByIdHelper(id);
-        commonHelper.checkOwner(review.getUser().getId(), userDetails);
+
+        if (!isOwner(review.getUser().getId(), userDetails)) {
+            throwAccessException(review.getUser().getId(), userDetails.getId(), "Review", review.getId());
+        }
 
         if (request.rating() != null) {
             review.setRating(request.rating());
@@ -85,7 +87,9 @@ public class ReviewService {
     @Transactional
     public void delete(Long id, CustomUserDetails userDetails) {
         Review review = findByIdHelper(id);
-        commonHelper.checkOwner(review.getUser().getId(), userDetails);
+        if (!isOwner(review.getUser().getId(), userDetails) && !hasPermission(ADMIN_ACCESS.getValue(), userDetails)) {
+            throwAccessException(review.getUser().getId(), userDetails.getId(), "Review", review.getId());
+        }
 
         reviewRepository.delete(review);
     }

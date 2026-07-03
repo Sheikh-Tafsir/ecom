@@ -3,7 +3,6 @@ package com.example.demo.order.controller;
 import com.example.demo.common.dto.ApiResponse;
 import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.common.enums.OrderStatus;
-import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.common.utils.ResponseUtils;
 import com.example.demo.order.dto.*;
@@ -22,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 
 import static com.example.demo.common.service.IdempotencyService.IDEMPOTENCY_HEADER;
+import static com.example.demo.common.utils.Utils.checkErrors;
 
 @Slf4j
 @RestController
@@ -30,8 +30,6 @@ import static com.example.demo.common.service.IdempotencyService.IDEMPOTENCY_HEA
 public class OrderController {
 
     private final OrderValidator orderValidator;
-
-    private final CommonHelper commonHelper;
 
     private final OrderService orderService;
 
@@ -64,24 +62,26 @@ public class OrderController {
 
         log.info("request {}", request);
         orderValidator.validate(request, bindingResult);
-        commonHelper.checkErrors(bindingResult);
+        checkErrors(bindingResult);
 
         CreateOrderResponse response = orderService.create(request, idempotencyKey, userDetails);
         return ResponseUtils.created(response, messageService.get("entity.creating", "Order"));
     }
 
-    @PutMapping("/{id}/status")
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<ApiResponse<OrderResponse>> cancel(@PathVariable Long id,
+                                                             @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        OrderResponse order = orderService.cancel(id, userDetails);
+        return ResponseUtils.ok(order, messageService.get("successfully.updated", "Order"));
+    }
+
+    @PatchMapping("/{id}/status")
     public ResponseEntity<ApiResponse<OrderResponse>> updateStatus(@PathVariable Long id,
                                                                    @Valid @RequestBody UpdateOrderStatusRequest request,
                                                                    @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         OrderResponse order = orderService.updateStatus(id, request, userDetails);
         return ResponseUtils.ok(order, messageService.get("successfully.updated", "Order"));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
-        orderService.delete(id);
-        return ResponseUtils.ok(messageService.get("successfully.deleted", "Order"));
     }
 }

@@ -4,7 +4,6 @@ import com.example.demo.auth.dto.*;
 import com.example.demo.auth.service.AuthService;
 import com.example.demo.auth.validator.AuthValidator;
 import com.example.demo.common.dto.ApiResponse;
-import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.common.utils.ResponseUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+import static com.example.demo.common.utils.Utils.checkErrors;
+
 @Slf4j
 @RestController
 @RequestMapping("/auth")
@@ -25,8 +26,6 @@ public class AuthController {
 
     private final AuthValidator authValidator;
 
-    private final CommonHelper commonHelper;
-
     private final AuthService authService;
 
     @PostMapping("/signup")
@@ -34,7 +33,7 @@ public class AuthController {
                                                     BindingResult bindingResult) {
 
         authValidator.validateSignup(signupRequest, bindingResult);
-        commonHelper.checkErrors(bindingResult);
+        checkErrors(bindingResult);
 
         authService.signup(signupRequest);
 
@@ -101,7 +100,7 @@ public class AuthController {
                                                                     BindingResult bindingResult) {
 
         authValidator.validatePasswords(request.password(), request.confirmPassword(), bindingResult);
-        commonHelper.checkErrors(bindingResult);
+        checkErrors(bindingResult);
 
         authService.verifyForgetPasswordOtp(request);
         return ResponseUtils.ok("Password Reset successful");

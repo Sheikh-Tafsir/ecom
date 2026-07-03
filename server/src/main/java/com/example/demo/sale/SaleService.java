@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.example.demo.common.utils.DateUtils.*;
-import static com.example.demo.common.utils.SecurityConstants.HAS_ROLE_ADMIN;
 import static com.example.demo.common.utils.Utils.getValidPageable;
 
 @Service
@@ -39,7 +38,7 @@ public class SaleService {
         saleRepository.saveAll(sales);
     }
 
-    @PreAuthorize(HAS_ROLE_ADMIN)
+    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     public Page<SaleResponse> findAll(LocalDateTime fromDate, LocalDateTime toDate, Long productId, Pageable pageable) {
         DateRangeDto dateRange = resolveDates(fromDate, toDate);
 

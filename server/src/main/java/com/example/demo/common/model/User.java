@@ -1,6 +1,7 @@
 package com.example.demo.common.model;
 
 import com.example.demo.common.enums.Gender;
+import com.example.demo.common.enums.Permission;
 import com.example.demo.common.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -58,6 +59,13 @@ public class User extends BaseEntity {
     public Set<String> getRoleValues() {
         return roles.stream()
                 .map(Role::getName)
+                .collect(Collectors.toSet());
+    }
+
+    public Set<String> getPermissionValues() {
+        return roles.stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(Permission::getValue)
                 .collect(Collectors.toSet());
     }
 }

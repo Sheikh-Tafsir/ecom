@@ -3,7 +3,6 @@ package com.example.demo.order.service;
 import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.common.dto.DateRangeDto;
 import com.example.demo.common.enums.OrderStatus;
-import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.common.model.*;
 import com.example.demo.common.service.IdempotencyService;
 import com.example.demo.common.service.MessageService;
@@ -17,14 +16,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
+import static com.example.demo.common.enums.Permission.ADMIN_ACCESS;
 import static com.example.demo.common.utils.DateUtils.resolveDates;
-import static com.example.demo.common.utils.SecurityUtil.isAdmin;
+import static com.example.demo.common.utils.SecurityUtil.*;
 import static com.example.demo.common.utils.Utils.getValidPageable;
 import static com.example.demo.common.utils.Utils.isNull;
 
@@ -43,12 +43,10 @@ public class OrderService {
 
     private final IdempotencyService idempotencyService;
 
-    private final CommonHelper commonHelper;
-
     public Page<OrderListResponse> findAll(LocalDateTime fromDate, LocalDateTime toDate, OrderStatus status, CustomUserDetails userDetails, Pageable pageable) {
         DateRangeDto dateRange = resolveDates(fromDate, toDate);
 
-        if (isAdmin(userDetails)) {
+        if (hasPermission(ADMIN_ACCESS.getValue(), userDetails)) {
             return orderRepository.findAllByStatus(status, dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable)).map(OrderListResponse::new);
         }
 
@@ -59,7 +57,9 @@ public class OrderService {
         Order order = orderRepository.findDetailsById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Order", id)));
 
-        commonHelper.checkOwnerOrAdmin(order.getUser().getId(), userDetails);
+        if (!isOwner(order.getUser().getId(), userDetails) && !hasPermission(ADMIN_ACCESS.getValue(), userDetails)) {
+            throwAccessException(order.getUser().getId(), userDetails.getId(), "Order", order.getId());
+        }
 
         return new OrderResponse(order);
     }
@@ -93,6 +93,24 @@ public class OrderService {
     }
 
     @Transactional
+    public OrderResponse cancel(Long id, CustomUserDetails userDetails) {
+        Order order = findByIdHelper(id);
+
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new IllegalArgumentException("Order is not in pending state");
+        }
+
+        if (!isOwner(order.getUser().getId(), userDetails)) {
+            throwAccessException(order.getUser().getId(), userDetails.getId(), "Order", order.getId());
+        }
+
+        order.setStatus(OrderStatus.CANCELLED);
+
+        return new OrderResponse(orderRepository.save(order));
+    }
+
+    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue())")
+    @Transactional
     public OrderResponse updateStatus(Long id, UpdateOrderStatusRequest request, CustomUserDetails userDetails) {
         Order order = findByIdHelper(id);
         OrderStatus status = request.status();
@@ -106,19 +124,6 @@ public class OrderService {
             throw new IllegalArgumentException("Invalid order status transition");
         }
 
-        boolean isAdmin = isAdmin(userDetails);
-        Long userId = userDetails.getId();
-
-        if (isAdmin) {
-            if (!status.canBeSetByAdmin()) {
-                throw new AccessDeniedException("Admin with id: " + userId + " attempting to set status with user owner access");
-            }
-        } else {
-            if (!status.canBeSetByUser()) {
-                throw new AccessDeniedException("User with id: " + userId + " attempting to set status with admin access");
-            }
-        }
-
         if (status == OrderStatus.ACCEPTED) {
             acceptOrder(order);
         }
@@ -128,6 +133,8 @@ public class OrderService {
         return new OrderResponse(orderRepository.save(order));
     }
 
+
+    // -- helpers --
     @Transactional
     public void delete(Long id) {
         Order order = findByIdHelper(id);

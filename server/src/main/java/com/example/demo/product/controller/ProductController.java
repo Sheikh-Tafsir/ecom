@@ -2,7 +2,6 @@ package com.example.demo.product.controller;
 
 import com.example.demo.common.dto.ApiResponse;
 import com.example.demo.common.dto.CustomUserDetails;
-import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.common.utils.ResponseUtils;
 import com.example.demo.product.dto.*;
@@ -25,6 +24,8 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
+import static com.example.demo.common.utils.Utils.checkErrors;
+
 @Slf4j
 @RestController
 @RequestMapping("/products")
@@ -32,8 +33,6 @@ import java.time.LocalDateTime;
 public class ProductController {
 
     private final ProductValidator productValidator;
-
-    private final CommonHelper commonHelper;
 
     private final ProductService productService;
 
@@ -72,7 +71,7 @@ public class ProductController {
                                                                    BindingResult bindingResult) throws IOException {
 
         productValidator.validateCreate(productRequest, bindingResult);
-        commonHelper.checkErrors(bindingResult);
+        checkErrors(bindingResult);
 
         long id = productService.create(productRequest);
         return ResponseUtils.created(id, messageService.get("entity.creating", "Product"));
@@ -90,7 +89,7 @@ public class ProductController {
                                                                    BindingResult bindingResult) throws IOException {
 
         productValidator.validateUpdate(productRequest, bindingResult);
-        commonHelper.checkErrors(bindingResult);
+        checkErrors(bindingResult);
 
         productService.update(id, productRequest);
         return ResponseUtils.ok(messageService.get("successfully.updated", "Product"));

@@ -1,5 +1,4 @@
 import {jwtDecode} from 'jwt-decode';
-import {USER_ROLE} from "@/utils/enums.js";
 
 export const ACCESS_TOKEN = import.meta.env.VITE_API_PATH;
 
@@ -40,6 +39,6 @@ export const removeAccessToken = () => {
     localStorage.removeItem(ACCESS_TOKEN);
 }
 
-export const isUserAdmin = (user) => {
-    return user?.role?.includes(USER_ROLE.ADMIN) || user?.role?.includes(USER_ROLE.SUPER_ADMIN)
+export const hasPermission = (user, permission) => {
+    return user?.permissions?.includes(permission);
 }

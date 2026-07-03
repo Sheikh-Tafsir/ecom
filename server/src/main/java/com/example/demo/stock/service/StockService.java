@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.example.demo.common.utils.DateUtils.resolveDates;
-import static com.example.demo.common.utils.SecurityConstants.HAS_ROLE_ADMIN;
 import static com.example.demo.common.utils.Utils.getValidPageable;
 
 @Service
@@ -39,20 +38,20 @@ public class StockService {
 
     private final MessageService messageService;
 
-    @PreAuthorize(HAS_ROLE_ADMIN)
+    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue())")
     public Page<StockListResponse> findAll(LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable) {
         DateRangeDto dateRange = resolveDates(fromDate, toDate);
         return stockRepository.findAll(dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable)).map(StockListResponse::new);
     }
 
-    @PreAuthorize(HAS_ROLE_ADMIN)
+    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue())")
     public StockResponse findById(Long id) {
         Stock stock = stockRepository.findDetailsById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Stock", id)));
         return new StockResponse(stock);
     }
 
-    @PreAuthorize(HAS_ROLE_ADMIN)
+    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
     public long create(CreateStockRequest request) {
         Stock stock = new Stock();
@@ -67,7 +66,7 @@ public class StockService {
         return stock.getId();
     }
 
-    @PreAuthorize(HAS_ROLE_ADMIN)
+    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
     public StockResponse update(Long id, UpdateStockRequest request) {
         Stock stock = findByIdHelper(id);
@@ -94,13 +93,13 @@ public class StockService {
         return new StockResponse(stockRepository.save(stock));
     }
 
-    @PreAuthorize(HAS_ROLE_ADMIN)
+    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue())")
     public Page<StockItemResponse> findAllItems(LocalDateTime fromDate, LocalDateTime toDate, Long productId, Pageable pageable) {
         DateRangeDto dateRange = resolveDates(fromDate, toDate);
         return stockItemRepository.findAll(dateRange.fromDate(), dateRange.toDate(), productId, getValidPageable(pageable)).map(StockItemResponse::new);
     }
 
-    @PreAuthorize(HAS_ROLE_ADMIN)
+    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
     public StockResponse addItem(Long stockId, CreateStockItemRequest request) {
         Stock stock = findByIdHelper(stockId);
@@ -110,7 +109,7 @@ public class StockService {
         return new StockResponse(stockRepository.save(stock));
     }
 
-    @PreAuthorize(HAS_ROLE_ADMIN)
+    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
     public StockResponse updateItem(Long stockId, Long itemId, UpdateStockItemRequest request) {
         Stock stock = findByIdHelper(stockId);
@@ -120,7 +119,7 @@ public class StockService {
         return new StockResponse(stockRepository.save(stock));
     }
 
-    @PreAuthorize(HAS_ROLE_ADMIN)
+    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
     public StockResponse removeItem(Long stockId, Long itemId) {
         Stock stock = findByIdHelper(stockId);
@@ -131,7 +130,7 @@ public class StockService {
         return new StockResponse(stockRepository.save(stock));
     }
 
-    @PreAuthorize(HAS_ROLE_ADMIN)
+    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
     public void delete(Long id) {
         Stock stock = findByIdHelper(id);
@@ -142,6 +141,7 @@ public class StockService {
         stockRepository.delete(stock);
     }
 
+    // -- helpers --
     public void consume(Product product, int quantityToConsume, Order order) {
         List<StockItem> stockItems = stockItemRepository.findAvailableByProductIdOrderByOldest(product.getId());
 

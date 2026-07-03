@@ -20,6 +20,11 @@ export const USER_ROLE = Object.freeze({
     SUPER_ADMIN: 'ROLE_SUPER_ADMIN',
 });
 
+export const PERMISSION = Object.freeze({
+    SUPER_ADMIN_ACCESS: "super_admin:access",
+    ADMIN_ACCESS: "admin:access"
+});
+
 export const CONTENT_TYPE = Object.freeze({
     TEXT: "text",
     IMAGE: "image",

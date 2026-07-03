@@ -2,7 +2,6 @@ package com.example.demo.review.controller;
 
 import com.example.demo.common.dto.ApiResponse;
 import com.example.demo.common.dto.CustomUserDetails;
-import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.common.utils.ResponseUtils;
 import com.example.demo.review.dto.UpdateReviewRequest;
@@ -15,14 +14,14 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import static com.example.demo.common.utils.Utils.checkErrors;
+
 @RestController
 @RequestMapping("/review")
 @RequiredArgsConstructor
 public class ReviewController {
 
     private final ReviewValidator reviewValidator;
-
-    private final CommonHelper commonHelper;
 
     private final ReviewService reviewService;
 
@@ -34,7 +33,7 @@ public class ReviewController {
                                                     BindingResult bindingResult,
                                                     @AuthenticationPrincipal CustomUserDetails userDetails) {
         reviewValidator.validateUpdate(request, bindingResult);
-        commonHelper.checkErrors(bindingResult);
+        checkErrors(bindingResult);
 
         reviewService.update(id, request, userDetails);
 

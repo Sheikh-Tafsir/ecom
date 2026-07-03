@@ -1,5 +1,6 @@
 package com.example.demo.common.utils;
 
+import com.example.demo.common.exception.MultipleValidationException;
 import com.example.demo.common.serializer.StringTrimmerDeserializer;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,6 +11,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.BindingResult;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -84,10 +86,6 @@ public final class Utils {
         }
     }
 
-    public static String getModelListName(String modelName) {
-        return modelName + " list";
-    }
-
     public static boolean isEmpty(Collection<?> c) {
         return c == null || c.isEmpty();
     }
@@ -106,5 +104,11 @@ public final class Utils {
         }
 
         return PageRequest.of(pageable.getPageNumber(), Math.min(pageable.getPageSize(), maxSize), pageable.getSort());
+    }
+
+    public static void checkErrors(BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            throw new MultipleValidationException(bindingResult);
+        }
     }
 }

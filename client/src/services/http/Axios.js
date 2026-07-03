@@ -1,6 +1,8 @@
 import axios from 'axios';
 
 import {getAccessToken,isAccessTokenExpired, removeAccessToken, saveAccessToken} from '@/utils/AuthUtils';
+import { notify } from '@/components/common/notification';
+import { TOAST_TYPE } from '@/utils/enums';
 
 const API_PATH = import.meta.env.VITE_API_PATH;
 
@@ -53,6 +55,7 @@ Axios.interceptors.response.use(
                 return Axios.request(originalRequest);
             } catch (err) {
                 await logout();
+                notify(TOAST_TYPE.INFO, "Session expired. Please log in again.");
                 redirectAfterLogout();
                 return Promise.reject(err);
             }

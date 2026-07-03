@@ -3,6 +3,10 @@ INSERT INTO roles (id, name) VALUES (1, 'ROLE_SUPER_ADMIN');
 INSERT INTO roles (id, name) VALUES (2, 'ROLE_ADMIN');
 INSERT INTO roles (id, name) VALUES (3, 'ROLE_USER');
 
+-- insert permissions
+INSERT INTO role_permissions (role_id, permission) VALUES (1, 'super admin:access');
+INSERT INTO role_permissions (role_id, permission) VALUES (2, 'admin:access');
+
 -- insert Super Admin
 INSERT INTO users (id, name, email, gender, status)
     VALUES (1, 'Tafsir Rahman', '190041130tafsir@gmail.com', 'MALE', 'ACTIVE');

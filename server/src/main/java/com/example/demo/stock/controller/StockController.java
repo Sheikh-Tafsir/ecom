@@ -1,8 +1,6 @@
 package com.example.demo.stock.controller;
 
 import com.example.demo.common.dto.ApiResponse;
-import com.example.demo.common.enums.OrderStatus;
-import com.example.demo.common.helper.CommonHelper;
 import com.example.demo.common.service.IdempotencyService;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.common.utils.ResponseUtils;
@@ -20,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 
 import static com.example.demo.common.service.IdempotencyService.IDEMPOTENCY_HEADER;
+import static com.example.demo.common.utils.Utils.checkErrors;
 
 @RestController
 @RequestMapping("/stocks")
@@ -27,8 +26,6 @@ import static com.example.demo.common.service.IdempotencyService.IDEMPOTENCY_HEA
 public class StockController {
 
     private final StockValidator stockValidator;
-
-    private final CommonHelper commonHelper;
 
     private final StockService stockService;
 
@@ -72,7 +69,7 @@ public class StockController {
         }
 
         stockValidator.validateCreate(stockRequest, bindingResult);
-        commonHelper.checkErrors(bindingResult);
+        checkErrors(bindingResult);
 
         long id = stockService.create(stockRequest);
         idempotencyService.save(key, stockRequest, id);
@@ -85,7 +82,7 @@ public class StockController {
                                                              BindingResult bindingResult) {
 
         stockValidator.validateUpdate(stockRequest, bindingResult);
-        commonHelper.checkErrors(bindingResult);
+        checkErrors(bindingResult);
 
         StockResponse stock = stockService.update(id, stockRequest);
         return ResponseUtils.ok(stock, messageService.get("successfully.updated", "Stock"));
@@ -97,7 +94,7 @@ public class StockController {
                                                               BindingResult bindingResult) {
 
         stockValidator.validateCreateItem(itemRequest, bindingResult);
-        commonHelper.checkErrors(bindingResult);
+        checkErrors(bindingResult);
 
         StockResponse stock = stockService.addItem(id, itemRequest);
         return ResponseUtils.ok(stock, messageService.get("successfully.updated", "Stock"));
@@ -110,7 +107,7 @@ public class StockController {
                                                                  BindingResult bindingResult) {
 
         stockValidator.validateUpdateItem(itemRequest, bindingResult);
-        commonHelper.checkErrors(bindingResult);
+        checkErrors(bindingResult);
 
         StockResponse stock = stockService.updateItem(stockId, itemId, itemRequest);
         return ResponseUtils.ok(stock, messageService.get("successfully.updated", "Stock"));

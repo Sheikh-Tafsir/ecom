@@ -6,8 +6,8 @@ import {Card, CardContent, CardFooter} from "@/components/ui/card"
 import {Button} from "@/components/ui/button"
 import {Badge} from "@/components/ui/badge"
 import {useCartStore} from "@/store/useCartStore"
-import {TOAST_TYPE} from "@/utils/enums"
-import {isUserAdmin} from "@/utils/index.js";
+import {PERMISSION, TOAST_TYPE} from "@/utils/enums"
+import {hasPermission} from "@/utils/index.js";
 import { notify } from "@/components/common/notification"
 import { useUserStore } from "@/store/useUserStore"
 
@@ -74,7 +74,7 @@ const ProductCard = ({product}) => {
                 </CardContent>
 
                 <CardFooter className="p-4 pt-0">
-                    {isUserAdmin(user)?
+                    {hasPermission(user, PERMISSION.SUPER_ADMIN_ACCESS)?
                         <div className="flex justify-between w-full mt-4 gap-4">
                             <Button className='w-[50%]' onClick={navigateToEdit}>
                                 Edit
