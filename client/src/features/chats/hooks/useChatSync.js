@@ -74,10 +74,10 @@ export const useChatSync = (id, userId) => {
     useEffect(() => {
         if (!socket) return;
 
-        console.info("Socket is available in useChatSync");
+        //console.info("Socket is available in useChatSync");
 
         const handleReceiveMessage = (response) => {
-            console.info("Received new message:", response.data);
+            //console.info("Received new message:", response.data);
             updateChatOnMessage(response.data);
         };
         const handleGroupCreationResponse = () => queryClient.invalidateQueries(['chats']);

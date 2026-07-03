@@ -46,7 +46,7 @@ export const useChatActions = (id, userId, updateChatOnMessage, onNewChat, showT
     }, [id, userId, updateChatOnMessage]);
 
     const handleSendMessage = useCallback(async (content, image, searchedUser) => {
-        console.info("Socket is connected in send message:", !!socket);
+        //console.info("Socket is connected in send message:", !!socket);
         if ((!id && !searchedUser) || !socket) return;
 
         let contentType = CONTENT_TYPE.TEXT;
