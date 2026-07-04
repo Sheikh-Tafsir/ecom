@@ -9,6 +9,7 @@ import com.example.demo.common.exception.InvalidRefreshTokenException;
 import com.example.demo.common.model.Role;
 import com.example.demo.common.model.User;
 import com.example.demo.auth.dto.Otp;
+import com.example.demo.common.model.UserRefreshToken;
 import com.example.demo.common.service.JwtService;
 import com.example.demo.common.service.MailService;
 import com.example.demo.role.service.RoleService;
@@ -28,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -72,12 +74,15 @@ public class AuthService {
 
     private final RoleService roleService;
 
+    private final UserRefreshTokenService userRefreshTokenService;
+
     private final AuthenticationManager authenticationManager;
 
     private final WebClient webClient;
 
     private final PasswordEncoder passwordEncoder;
 
+    @Transactional
     public TokenDto login(LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.email(), loginRequest.password())
@@ -194,14 +199,11 @@ public class AuthService {
         addCookie(response, refreshTokenName, authResponse.getRefreshToken(), refreshTokenValidity/1000, isProductionEnvironment(springProfile));
     }
 
-    public String refreshAccessToken(HttpServletRequest request) {
+    @Transactional
+    public TokenDto refreshAccessToken(HttpServletRequest request) {
         String refreshToken = getCookieValue(request, refreshTokenName);
 
-        if (!hasText(refreshToken)) {
-            throw new InvalidRefreshTokenException("Refresh token cookie not found");
-        }
-
-        if (!jwtService.isRefreshTokenValid(refreshToken)) {
+        if (!hasText(refreshToken) || !jwtService.isRefreshTokenValid(refreshToken)) {
             throw new InvalidRefreshTokenException("Invalid refresh token");
         }
 
@@ -212,10 +214,29 @@ public class AuthService {
             throw new InvalidRefreshTokenException("Refresh token user is invalid");
         }
 
-        return jwtService.generateAccessToken(user);
+        UserRefreshToken userRefreshToken = userRefreshTokenService.findByUser(user);
+        if (userRefreshToken == null)  {
+            throw new InvalidRefreshTokenException("Refresh token not found for user: " + user.getId());
+        }
+
+        if (!userRefreshToken.getToken().equals(refreshToken)) {
+            userRefreshTokenService.delete(user);
+            throw new InvalidRefreshTokenException("Refresh token mismatch");
+        }
+
+        Date refreshTokenExpiration = jwtService.getExpirationFromRefreshToken(refreshToken);
+        return getTokens(user, refreshTokenExpiration);
     }
 
-    public void logout(HttpServletResponse response) {
+    @Transactional
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+        String refreshToken = getCookieValue(request, refreshTokenName);
+
+        if (hasText(refreshToken) && jwtService.isRefreshTokenValid(refreshToken)) {
+            String email = jwtService.getEmailFromRefreshToken(refreshToken);
+            authRepository.findByEmail(email).ifPresent(userRefreshTokenService::delete);
+        }
+
         addCookie(response, refreshTokenName, null, 0, isProductionEnvironment(springProfile));
     }
 
@@ -243,13 +264,23 @@ public class AuthService {
         save(user, request.password());
     }
 
+    @Transactional
     public TokenDto getTokens(User user) {
+        return getTokens(user, null);
+    }
+
+    @Transactional
+    public TokenDto getTokens(User user, Date refreshTokenExpiration) {
         if (user.isNotActive()) {
             throw new ValidationException("User is " + user.getStatus().getValue());
         }
 
         String accessToken = jwtService.generateAccessToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
+        String refreshToken = isNull(refreshTokenExpiration)
+                ? jwtService.generateRefreshToken(user)
+                : jwtService.generateRefreshToken(user, refreshTokenExpiration);
+
+        userRefreshTokenService.create(user, refreshToken);
 
         return TokenDto.builder().accessToken(accessToken).refreshToken(refreshToken).build();
     }

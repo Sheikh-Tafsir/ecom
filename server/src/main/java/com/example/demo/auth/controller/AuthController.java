@@ -78,9 +78,11 @@ public class AuthController {
     }
 
     @PostMapping("/access-token/refresh")
-    public ResponseEntity<ApiResponse<String>> refreshAccessToken(HttpServletRequest request) {
-        String accessToken = authService.refreshAccessToken(request);
-        return ResponseUtils.ok(accessToken, "Access Token refreshed successfully");
+    public ResponseEntity<ApiResponse<String>> refreshAccessToken(HttpServletRequest request,
+                                                                 HttpServletResponse response) {
+        TokenDto tokenDto = authService.refreshAccessToken(request);
+        authService.addRefreshCookie(response, tokenDto);
+        return ResponseUtils.ok(tokenDto.getAccessToken(), "Access Token refreshed successfully");
     }
 
     @PostMapping("/forget-password")
@@ -107,8 +109,8 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response) {
-        authService.logout(response);
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+        authService.logout(request, response);
         return ResponseUtils.ok("Logout Successful");
     }
 }

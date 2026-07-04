@@ -13,6 +13,7 @@ import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.common.model.User;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.common.utils.ResponseUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -66,9 +67,12 @@ public class ProfileController {
     }
 
     @DeleteMapping
-    public ResponseEntity<?> delete(@AuthenticationPrincipal CustomUserDetails userDetails, HttpServletResponse response) {
+    public ResponseEntity<?> delete(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                    HttpServletRequest request,
+                                    HttpServletResponse response) {
+
         userService.delete(userDetails.user().getId());
-        authService.logout(response);
+        authService.logout(request, response);
 
         return ResponseUtils.ok(messageService.get("successfully.deleted", "Profile"));
     }
