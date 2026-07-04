@@ -14,6 +14,7 @@ import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRepository;
+import org.springframework.security.web.server.util.matcher.OrServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
@@ -57,7 +58,12 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieServerCsrfTokenRepository.withHttpOnlyFalse())
                         .requireCsrfProtectionMatcher(
-                                new PathPatternParserServerWebExchangeMatcher("/auth/refresh", HttpMethod.POST)
+                                new OrServerWebExchangeMatcher(
+                                        new PathPatternParserServerWebExchangeMatcher(
+                                                "/auth/access-token/refresh", HttpMethod.POST),
+                                        new PathPatternParserServerWebExchangeMatcher(
+                                                "/auth/logoutlog", HttpMethod.POST)
+                                )
                         )
                 )
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)

@@ -3,11 +3,11 @@ const { ApiMessageResponse } = require("../utils/Utils");
 module.exports = function ValidateNumericParams(...paramNames) {
     return (req, res, next) => {
       for (const name of paramNames) {
-        const value = parseInt(req.params[name]);
-        // console.log(value);
-        if (isNaN(value)) {
-          return res.status(400).json(ApiMessageResponse(`${name} must be a number.`));
+        const rawValue = req.params[name];
+        if (!/^\d+$/.test(rawValue)) {
+          return res.status(400).json(ApiMessageResponse(`${name} must be a valid numeric integer.`));
         }
+        req.params[name] = parseInt(rawValue, 10);
       }
       next();
     };

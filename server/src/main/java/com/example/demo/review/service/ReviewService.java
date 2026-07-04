@@ -73,7 +73,18 @@ public class ReviewService {
             throwAccessException(review.getUser().getId(), userDetails.getId(), "Review", review.getId());
         }
 
-        if (request.rating() != null) {
+        if (request.rating() != null && !request.rating().equals(review.getRating())) {
+            Product product = review.getProduct();
+            BigDecimal oldRating = BigDecimal.valueOf(review.getRating());
+            BigDecimal newRating = BigDecimal.valueOf(request.rating());
+
+            BigDecimal newAvgRating = product.getRating()
+                    .multiply(BigDecimal.valueOf(product.getReviewCount()))
+                    .subtract(oldRating)
+                    .add(newRating)
+                    .divide(BigDecimal.valueOf(product.getReviewCount()), 2, RoundingMode.HALF_UP);
+
+            product.setRating(newAvgRating);
             review.setRating(request.rating());
         }
 
@@ -90,6 +101,24 @@ public class ReviewService {
         if (!isOwner(review.getUser().getId(), userDetails) && !hasPermission(ADMIN_ACCESS.getValue(), userDetails)) {
             throwAccessException(review.getUser().getId(), userDetails.getId(), "Review", review.getId());
         }
+
+        Product product = review.getProduct();
+        long oldReviewCount = product.getReviewCount();
+        BigDecimal oldAvgRating = product.getRating();
+
+        long newReviewCount = oldReviewCount - 1;
+
+        if (newReviewCount == 0) {
+            product.setRating(BigDecimal.ZERO);
+        } else {
+            BigDecimal newAvgRating = oldAvgRating
+                    .multiply(BigDecimal.valueOf(oldReviewCount))
+                    .subtract(BigDecimal.valueOf(review.getRating()))
+                    .divide(BigDecimal.valueOf(newReviewCount), 2, RoundingMode.HALF_UP);
+            product.setRating(newAvgRating);
+        }
+
+        product.setReviewCount(newReviewCount);
 
         reviewRepository.delete(review);
     }

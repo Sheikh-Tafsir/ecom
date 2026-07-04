@@ -1,4 +1,5 @@
 const {Op} = require('sequelize');
+const xss = require('xss');
 const sequelize = require('../config/SequelizeConfig');
 const {ChatParticipant, Message, MessageReceipt} = require('../model');
 const RuntimeError = require('../common/RuntimeError');
@@ -18,11 +19,13 @@ const sendMessage = async (senderId, body) => {
             ? await findChatByChatIdAndUserId(chatId, senderId, t)
             : await findOrCreateDirectChat(senderId, receiverId, t);
 
+        const sanitizedContent = xss(content);
+
         const message = await Message.create(
             {
                 chatId: chat.id,
                 senderId,
-                content,
+                content: sanitizedContent,
                 contentType,
             },
             {transaction: t}

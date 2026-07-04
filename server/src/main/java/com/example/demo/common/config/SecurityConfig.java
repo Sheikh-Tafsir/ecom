@@ -28,6 +28,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -86,8 +87,13 @@ public class SecurityConfig {
         if (isStandAloneServer) {
             http.csrf(csrf -> csrf
                     .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                    .requireCsrfProtectionMatcher(PathPatternRequestMatcher.withDefaults()
-                            .matcher(HttpMethod.POST, "/auth/access-token/refresh")
+                    .requireCsrfProtectionMatcher(
+                            new OrRequestMatcher(
+                                    PathPatternRequestMatcher.withDefaults()
+                                            .matcher(HttpMethod.POST, "/auth/access-token/refresh"),
+                                    PathPatternRequestMatcher.withDefaults()
+                                            .matcher(HttpMethod.POST, "/auth/logout")
+                            )
                     )
             );
         } else {

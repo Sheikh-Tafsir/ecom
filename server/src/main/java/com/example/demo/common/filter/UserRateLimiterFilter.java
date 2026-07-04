@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -29,7 +28,6 @@ public class UserRateLimiterFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        String uri = request.getRequestURI();
         String email = getEmailFromContext();
 
         if (email == null || email.trim().isEmpty()) {
@@ -37,7 +35,7 @@ public class UserRateLimiterFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (!rateLimiterService.isIpAllowed(email, uri)) {
+        if (!rateLimiterService.isEmailAllowed(email)) {
             reject(response);
             return;
         }
