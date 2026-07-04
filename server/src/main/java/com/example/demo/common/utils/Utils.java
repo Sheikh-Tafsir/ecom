@@ -23,6 +23,8 @@ public final class Utils {
 
     public static final int MAX_SEARCH_SIZE = 5;
 
+    public static final String PRODUCTION_ENVIRONMENT = "production";
+
     public static final ObjectMapper OBJECT_MAPPER;
 
     static {
@@ -110,5 +112,9 @@ public final class Utils {
         if (bindingResult.hasErrors()) {
             throw new MultipleValidationException(bindingResult);
         }
+    }
+
+    public static boolean isProductionEnvironment(String environment) {
+        return PRODUCTION_ENVIRONMENT.equals(environment);
     }
 }

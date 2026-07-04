@@ -246,32 +246,36 @@ const Orders = () => {
                                                 >
                                                     View
                                                 </Button>
+
                                                 {ORDER_STATUS.PENDING == item.status && (
-                                                    hasPermission(user, PERMISSION.ADMIN) || hasPermission(user, PERMISSION.SUPER_ADMIN)) ? (
-                                                    <>
-                                                        <Button
-                                                            className="text-green-600 hover:text-white hover:bg-green-600"
-                                                            onClick={() => changeOrderStatus(item.id, ORDER_STATUS.ACCEPTED)}
-                                                            variant="outline"
-                                                        >
-                                                            Accept
-                                                        </Button>
-                                                        <Button
-                                                            className="text-red-600 hover:text-white hover:bg-red-600"
-                                                            onClick={() => changeOrderStatus(item.id, ORDER_STATUS.REJECTED)}
-                                                            variant="outline"
-                                                        >
-                                                            Reject
-                                                        </Button>
-                                                    </>
-                                                ) : (
-                                                    <Button
-                                                        className="text-red-600 hover:text-white hover:bg-red-600"
-                                                        onClick={() => cancelOrder(item.id)}
-                                                        variant="outline"
-                                                    >
-                                                        Cancel
-                                                    </Button>
+                                                    hasPermission(user, PERMISSION.ADMIN_ACCESS) ||
+                                                    hasPermission(user, PERMISSION.SUPER_ADMIN_ACCESS)
+                                                        ? (
+                                                            <>
+                                                                <Button
+                                                                    className="text-green-600 hover:text-white hover:bg-green-600"
+                                                                    onClick={() => changeOrderStatus(item.id, ORDER_STATUS.ACCEPTED)}
+                                                                    variant="outline"
+                                                                >
+                                                                    Accept
+                                                                </Button>
+                                                                <Button
+                                                                    className="text-red-600 hover:text-white hover:bg-red-600"
+                                                                    onClick={() => changeOrderStatus(item.id, ORDER_STATUS.REJECTED)}
+                                                                    variant="outline"
+                                                                >
+                                                                    Reject
+                                                                </Button>
+                                                            </>
+                                                        ) : (
+                                                            <Button
+                                                                className="text-red-600 hover:text-white hover:bg-red-600"
+                                                                onClick={() => cancelOrder(item.id)}
+                                                                variant="outline"
+                                                            >
+                                                                Cancel
+                                                            </Button>
+                                                        )
                                                 )}
                                             </TableCell>
                                         </TableRow>

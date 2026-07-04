@@ -9,13 +9,20 @@ public final class CookieUtils {
     private CookieUtils() {
     }
 
-    public static void addCookie(HttpServletResponse response, String cookieName, String cookieValue, long validityInSeconds) {
+    public static void addCookie(HttpServletResponse response, String cookieName, String cookieValue, long validityInSeconds, boolean production) {
         Cookie cookie = new Cookie(cookieName, cookieValue);
         cookie.setMaxAge((int) validityInSeconds);
         cookie.setPath("/");
-        cookie.setSecure(false);
         cookie.setHttpOnly(true);
-        cookie.setAttribute("SameSite", "Lax"); // or "Strict"
+
+        if (production) {
+            cookie.setSecure(true);
+            cookie.setAttribute("SameSite", "None");
+        } else {
+            cookie.setSecure(false);
+            cookie.setAttribute("SameSite", "Lax");
+        }
+
         response.addCookie(cookie);
     }
 

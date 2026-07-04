@@ -3,6 +3,7 @@ import {Outlet, Navigate, useLocation} from 'react-router-dom'
 import NavigationBar from '@/components/common/NavigationBar';
 import {useUserStore} from '@/store/useUserStore';
 import Footer from "@/components/common/Footer.jsx";
+import {hasPermission} from "@/utils/AuthUtils";
 
 const ProtectedRoute = ({allowedPermissions}) => {
     const location = useLocation();
@@ -18,10 +19,8 @@ const ProtectedRoute = ({allowedPermissions}) => {
         );
     }
 
-    if (allowedPermissions && allowedPermissions.length > 0) {
-        const userPermissions = Array.isArray(user.permissions) ? user.permissions : [user.permissions];
-        
-        if (!allowedPermissions.some(permission => userPermissions.includes(permission))) {
+    if (allowedPermissions && allowedPermissions.length > 0) { 
+        if (!hasPermission(user, allowedPermissions)) {
             return (
                 <Navigate
                     to="/auth/login"

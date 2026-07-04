@@ -53,6 +53,9 @@ public class AuthService {
 
     public static final String GOOGLE_OAUTH_API= "https://www.googleapis.com/oauth2/v1/userinfo?access_token={access_token}";
 
+    @Value("${spring.profiles.active}")
+    private String springProfile;
+
     @Value("${refresh.token.name}")
     private String refreshTokenName;
 
@@ -188,7 +191,7 @@ public class AuthService {
     }
 
     public void addRefreshCookie(HttpServletResponse response, TokenDto authResponse) {
-        addCookie(response, refreshTokenName, authResponse.getRefreshToken(), refreshTokenValidity/1000);
+        addCookie(response, refreshTokenName, authResponse.getRefreshToken(), refreshTokenValidity/1000, isProductionEnvironment(springProfile));
     }
 
     public String refreshAccessToken(HttpServletRequest request) {
@@ -213,7 +216,7 @@ public class AuthService {
     }
 
     public void logout(HttpServletResponse response) {
-        addCookie(response, refreshTokenName, null, 0);
+        addCookie(response, refreshTokenName, null, 0, isProductionEnvironment(springProfile));
     }
 
     public void forgetPassword(OtpRequest request) {

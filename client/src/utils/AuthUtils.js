@@ -39,6 +39,27 @@ export const removeAccessToken = () => {
     localStorage.removeItem(ACCESS_TOKEN);
 }
 
-export const hasPermission = (user, permission) => {
-    return user?.permissions?.includes(permission);
-}
+export const getUserPermissions = (user) => {
+    const permissions = user?.permissions;
+    if (!permissions) return [];
+
+    if (Array.isArray(permissions)) {
+        return permissions;
+    }
+
+    if (typeof permissions === "string") {
+        return permissions.split(/[\s,]+/).map(p => p.trim()).filter(Boolean);
+    }
+
+    return [];
+};
+
+export const hasPermission = (user, allowedPermissions) => {
+    const permissions = getUserPermissions(user);
+
+    if (Array.isArray(allowedPermissions)) {
+        return allowedPermissions.some(p => permissions.includes(p));
+    }
+
+    return permissions.includes(allowedPermissions);
+};

@@ -4,9 +4,9 @@ const dotenv = require ("dotenv");
 dotenv.config();
 
 const corsOptions = {
-  origin: process.env.CLIENT_PATH || "*",
+  origin: process.env.CLIENT_PATHS.split(","),
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", 'Cache-Control', 'Pragma'],
+  allowedHeaders: ["Content-Type", "Authorization", "X-XSRF-TOKEN", "Cache-Control", "Pragma"],
   credentials: true,
 };
 
