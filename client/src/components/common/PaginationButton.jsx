@@ -45,8 +45,8 @@ const PaginationButton = ({ totalPages = 0 }) => {
 
     if (!canRender) return null;
 
-    const isFirst = currentPage === FIRST_PAGE;
-    const isLast = currentPage === totalPages;
+    const isFirst = currentPage == FIRST_PAGE;
+    const isLast = currentPage == totalPages;
 
     const PageButton = ({ page, active = false }) => (
         <Button

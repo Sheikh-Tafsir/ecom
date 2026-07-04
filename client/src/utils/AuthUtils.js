@@ -47,7 +47,7 @@ export const getUserPermissions = (user) => {
         return permissions;
     }
 
-    if (typeof permissions === "string") {
+    if (typeof permissions == "string") {
         return permissions.split(/[\s,]+/).map(p => p.trim()).filter(Boolean);
     }
 

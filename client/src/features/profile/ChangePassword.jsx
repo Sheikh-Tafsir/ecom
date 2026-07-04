@@ -34,7 +34,7 @@ const ChangePasswordSchema = z.object({
         .string()
         .min(8, 'Confirm Password must be at least 8 characters long')
         .max(15, 'Confirm Password must be shorter than 15 characters'),
-}).refine((data) => data.newPassword === data.confirmPassword, {
+}).refine((data) => data.newPassword == data.confirmPassword, {
     message: 'Passwords do not match',
 });
 

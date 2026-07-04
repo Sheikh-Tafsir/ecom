@@ -3,7 +3,7 @@ export const APP_NAME = "Visored";
 export const ONE_MB = 1024 * 1024;
 export const MAX_FILE_SIZE = 2 * ONE_MB;
 
-export const isEmptyArray = (arr) => !arr || arr.length === 0;
+export const isEmptyArray = (arr) => !arr || arr.length == 0;
 
 export const isInRange = (value, min, max) => {
     return value >= min && value <= max;
@@ -31,7 +31,7 @@ export const prepareMultipartForm = (data) => {
     const formData = new FormData();
 
     Object.entries(data).forEach(([key, value]) => {
-        if (key === "image") return;
+        if (key == "image") return;
 
         if (Array.isArray(value)) {
             value.forEach((item) => formData.append(key, item));

@@ -84,7 +84,7 @@ const UserSelectorDialog = ({ isOpen, onClose, preSelecteedUserIds, avoidUserIds
     // Handle user selection
     const handleUserToggle = (user) => {
         setSelectedUsers((prev) => {
-            const isSelected = prev.some((u) => u.id === user.id)
+            const isSelected = prev.some((u) => u.id == user.id)
             if (isSelected) {
                 return prev.filter((u) => u.id !== user.id)
             } else {
@@ -175,11 +175,11 @@ const UserSelectorDialog = ({ isOpen, onClose, preSelecteedUserIds, avoidUserIds
 
                     {/* User List */}
                     <div className="max-h-60 overflow-y-auto space-y-2">
-                        {filteredUsers.length === 0 ? (
+                        {filteredUsers.length == 0 ? (
                             <div className="text-center py-4 text-muted-foreground">No users found</div>
                         ) : (
                             filteredUsers.map((user) => {
-                                const isSelected = selectedUsers.some((u) => u.id === user.id)
+                                const isSelected = selectedUsers.some((u) => u.id == user.id)
                                 return (
                                     <div
                                         key={user.id}
@@ -214,7 +214,7 @@ const UserSelectorDialog = ({ isOpen, onClose, preSelecteedUserIds, avoidUserIds
                     {isButtonLoading ?
                         <ButtonLoading />
                         :
-                        <Button onClick={handleConfirm} disabled={selectedUsers.length === 0}>
+                        <Button onClick={handleConfirm} disabled={selectedUsers.length == 0}>
                             Confirm ({selectedUsers.length})
                         </Button>
                     }

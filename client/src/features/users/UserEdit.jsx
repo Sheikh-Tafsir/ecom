@@ -13,26 +13,24 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card.jsx';
-import {Input} from '@/components/ui/input.jsx';
 import {Label} from '@/components/ui/label.jsx';
 import {Axios} from '@/services/http/Axios';
 import {AlertAction} from '@/components/common/AlertAction';
 import {ButtonLoading} from "@/components/common/ButtonLoading";
-import ImageInput from '@/components/common/ImageInput';
 import InputViewMode from '@/components/common/InputViewMode';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay';
-import StaredLabel from '@/components/common/StaredLabel';
-import {TOAST_TYPE, ALERT_TYPE} from '@/utils/enums';
+import {TOAST_TYPE, ALERT_TYPE, ROLE_PREFIX, PERMISSION} from '@/utils/enums';
 import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils';
 import InputError from "@/components/common/InputError.jsx";
-import { notify } from '@/components/common/notification';
+import {notify} from '@/components/common/notification';
+import {Checkbox} from "@/components/ui/checkbox";
+import {hasPermission} from "@/utils/index.js";
+import {useUserStore} from "@/store/useUserStore.js";
 
 // Zod schema
 const UserSchema = z.object({
-    name: z.string()
-        .min(2, "Name is required")
-        .max(31, "Name must be shorter than 31 characters"),
-    image: z.any().optional(),
+    name: z.string().optional(),
+    roleNames: z.array(z.string()).min(1, "At least one role is required"),
 });
 
 const UserEdit = () => {
@@ -40,11 +38,16 @@ const UserEdit = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const isEditable = location.pathname.endsWith("/edit");
+    const currentUser = useUserStore(state => state.user);
+    const canManageRoles = hasPermission(currentUser, PERMISSION.SUPER_ADMIN_ACCESS);
 
     const queryClient = useQueryClient();
-    const {register, handleSubmit, control, watch, reset, setError, formState: {errors, isSubmitting}} = useForm({
+    const {handleSubmit, control, reset, setError, formState: {errors, isSubmitting}} = useForm({
         resolver: zodResolver(UserSchema),
-        defaultValues: {},
+        defaultValues: {
+            name: '',
+            roleNames: []
+        },
     });
 
     const {
@@ -59,19 +62,32 @@ const UserEdit = () => {
         enabled: !!id,
     });
 
+    const {data: roles} = useQuery({
+        queryKey: ["roles"],
+        queryFn: async () => {
+            const res = await Axios.get("/roles");
+            return res.data.data;
+        },
+        enabled: canManageRoles && isEditable,
+    });
+
     useEffect(() => {
-        if (user) reset(user);
+        if (user) {
+            reset({
+                ...user,
+                roleNames: user.roles || []
+            });
+        }
     }, [reset, user]);
 
     const updateUser = useMutation({
         mutationFn: async (data) => {
-            const formData = prepareMultipartForm(data);
-            await Axios.put(`/users/${id}`, formData);
+            await Axios.put(`/users/${id}`, {roles: data.roleNames});
         },
         onSuccess: async () => {
             notify(TOAST_TYPE.SUCCESS, "User successfully updated")
             await queryClient.invalidateQueries({queryKey: ["user", id]});
-            navigate(`/user/${id}`);
+            navigate(`/users/${id}`);
         },
         onError: (error) => {
             console.error(error);
@@ -102,43 +118,72 @@ const UserEdit = () => {
         <>
             {isPageLoading && <PageLoadingOverlay/>}
 
-            <div className="min-h-[90vh] flex">
+            <div className="min-h-[90vh] flex pt-8">
                 <Card className="mx-auto my-auto w-[450px]">
                     <form onSubmit={handleSubmit((data) => updateUser.mutate(data))}>
                         <fieldset disabled={!isEditable}>
                             <CardHeader>
-                                <CardTitle>Profile</CardTitle>
+                                <CardTitle>User Details</CardTitle>
                             </CardHeader>
 
                             <CardContent className="space-y-4">
                                 <InputError errors={errors} field={GLOBAL_ERROR}/>
 
-                                <Controller
-                                    name="image"
-                                    control={control}
-                                    render={({field}) => (
-                                        <ImageInput
-                                            existingImage={field.value}
-                                            onImageChange={field.onChange}
-                                            error={errors.image}
+                                <div className="flex justify-center mb-6">
+                                    <div className="relative">
+                                        <img
+                                            src={user?.image || "/vite.svg"}
+                                            alt={user?.name || "User"}
+                                            className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
                                         />
-                                    )}
-                                />
+                                    </div>
+                                </div>
 
                                 <div className="space-y-1">
                                     <Label>Email</Label>
-                                    <InputViewMode value={watch("email")} isEditable={isEditable}/>
+                                    <InputViewMode value={user?.email || "N/A"} isEditable={false}/>
                                 </div>
 
                                 <div className="space-y-1">
-                                    <StaredLabel label="Name"/>
-                                    <Input {...register("name")} placeholder="Md Rafiquddin"/>
-                                    {errors.name && <p className="validation-error">{errors.name.message}</p>}
+                                    <Label>Name</Label>
+                                    <InputViewMode value={user?.name || "N/A"} isEditable={false}/>
                                 </div>
 
                                 <div className="space-y-1">
-                                    <Label>Role</Label>
-                                    <InputViewMode value={watch("role") || user?.role} isEditable={isEditable}/>
+                                    <Label>Roles</Label>
+                                    {isEditable && canManageRoles ? (
+                                        <div className="grid grid-cols-2 gap-2 mt-2">
+                                            {roles?.map(role => (
+                                                <div key={role.id || role.name} className="flex items-center space-x-2">
+                                                    <Controller
+                                                        name="roleNames"
+                                                        control={control}
+                                                        render={({field}) => (
+                                                            <Checkbox
+                                                                id={`role-${role.id || role.name}`}
+                                                                checked={field.value?.includes(role.name)}
+                                                                onCheckedChange={(checked) => {
+                                                                    const currentValues = Array.isArray(field.value) ? field.value : [];
+                                                                    const newValue = checked
+                                                                        ? [...currentValues, role.name]
+                                                                        : currentValues.filter((v) => v !== role.name);
+                                                                    field.onChange(newValue);
+                                                                }}
+                                                            />
+                                                        )}
+                                                    />
+                                                    <Label htmlFor={`role-${role.id || role.name}`} className="text-sm cursor-pointer">
+                                                        {role.name?.replace(ROLE_PREFIX, "")}
+                                                    </Label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <InputViewMode
+                                            value={user?.roles?.join(", ")}
+                                            isEditable={false}
+                                        />
+                                    )}
                                 </div>
                             </CardContent>
                         </fieldset>
@@ -148,12 +193,14 @@ const UserEdit = () => {
                                 <ButtonLoading/>
                             ) : !isEditable ? (
                                 <div className="w-full flex gap-2">
-                                    <Button type="button" className="w-[50%] bg-gray-600 hover:bg-gray-800"
-                                            onClick={handleNavigateToEdit}>
-                                        Edit
-                                    </Button>
+                                    {canManageRoles && (
+                                        <Button type="button" className="w-[50%] bg-gray-600 hover:bg-gray-800"
+                                                onClick={handleNavigateToEdit}>
+                                            Edit
+                                        </Button>
+                                    )}
                                     <AlertAction onConfirm={() => deleteUser.mutate()} type={ALERT_TYPE.DELETE}
-                                                 css="w-[50%]"/>
+                                                 css={canManageRoles ? "w-[50%]" : "w-full"}/>
                                 </div>
                             ) : (
                                 <Button type="submit" className="w-full bg-blue-600">
@@ -167,5 +214,6 @@ const UserEdit = () => {
         </>
     );
 };
+
 
 export default UserEdit;

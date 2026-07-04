@@ -10,7 +10,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "user_refresh_token")
+@Table(name = "user_refresh_tokens")
 @Getter
 @Setter
 @AllArgsConstructor

@@ -68,7 +68,7 @@ export default function Navbar() {
 
             ...(hasPermission(user, PERMISSION.SUPER_ADMIN_ACCESS)
                 ? [
-                    
+                    {name: "Roles", href: "/roles"},
                     {name: "Sales", href: "/sales"},
                 ]
                 : []),
@@ -114,7 +114,7 @@ export default function Navbar() {
                                         {item.submenu && <ChevronDown className="h-4 w-4"/>}
                                     </Link>
 
-                                    {item.submenu && activeMenu === index && (
+                                    {item.submenu && activeMenu == index && (
                                         <div
                                             className="absolute left-0 top-full z-50 min-w-[200px] rounded-md bg-white py-2 shadow-lg dark:bg-gray-800">
                                             {item.submenu.map((subItem) => (

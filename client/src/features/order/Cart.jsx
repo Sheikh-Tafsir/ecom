@@ -12,7 +12,7 @@ export default function Cart() {
   const { cart, removeFromCart, updateQuantity, clearCart, getCartTotal } = useCartStore();
   const cartTotal = getCartTotal();
 
-  if (cart.length === 0) {
+  if (cart.length == 0) {
     return (
       <div className="container pb-8">
         <div className="text-center py-12">

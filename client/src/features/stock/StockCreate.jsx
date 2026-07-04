@@ -187,7 +187,7 @@ const StockCreate = () => {
                                         ))}
                                     </div>
                                 )}
-                                {searchTerm.trim().length >= 2 && !isSearching && searchResults.length === 0 && (
+                                {searchTerm.trim().length >= 2 && !isSearching && searchResults.length == 0 && (
                                     <div
                                         className="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg p-3 text-center text-gray-500">
                                         No products found
@@ -204,7 +204,7 @@ const StockCreate = () => {
                                 <CardDescription>Adjust quantities and purchase prices for each item</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                {items.length === 0 ? (
+                                {items.length == 0 ? (
                                     <div className="text-center py-10 text-gray-500 border-2 border-dashed rounded-lg">
                                         No items selected yet. Use the search bar above to add products.
                                     </div>
@@ -312,7 +312,7 @@ const StockCreate = () => {
                                     <Button
                                         type="submit"
                                         className="w-full bg-blue-600 text-lg"
-                                        disabled={items.length === 0}
+                                        disabled={items.length == 0}
                                     >
                                         Save Stock Purchase
                                     </Button>

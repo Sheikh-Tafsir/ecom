@@ -189,17 +189,17 @@ const Users = () => {
                                         className={
                                             hasPermission(user, PERMISSION.SUPER_ADMIN_ACCESS)
                                                 ? "text-blue-600"
-                                                : user.role === USER_ROLE.USER
+                                                : user.roleValues?.includes(USER_ROLE.USER)
                                                     ? "text-green-600"
                                                     : "text-gray-700"
                                         }
                                     >
-                                        {user.roleValues.map(role => role.replace(ROLE_PREFIX, "")).join(", ")}
+                                        {user.roles?.map(role => role.replace(ROLE_PREFIX, ""))?.join(", ")}
                                     </TableCell>
                                     <TableCell>{formatDate(user.createdAt)}</TableCell>
                                     <TableCell
                                         className={
-                                            user.status === USER_STATUS.ACTIVE ? "text-green-600" : "text-red-600"
+                                            user.status == USER_STATUS.ACTIVE ? "text-green-600" : "text-red-600"
                                         }
                                     >
                                         {user.status}

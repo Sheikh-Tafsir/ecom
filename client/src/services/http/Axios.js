@@ -44,7 +44,7 @@ Axios.interceptors.response.use(
 
         const isRefreshRequest = originalRequest?.url?.includes("/auth/access-token/refresh");
 
-        if (response.status === 401 && !originalRequest?._retry && !isRefreshRequest) {
+        if (response.status == 401 && !originalRequest?._retry && !isRefreshRequest) {
             originalRequest._retry = true;
 
             try {

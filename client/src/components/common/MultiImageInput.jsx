@@ -100,9 +100,9 @@ const MultiImageInput = ({
 
     const isDuplicate = (file) =>
         images.some(img =>
-            img.file.name === file.name &&
-            img.file.size === file.size &&
-            img.file.lastModified === file.lastModified
+            img.file.name == file.name &&
+            img.file.size == file.size &&
+            img.file.lastModified == file.lastModified
         );
 
     return (

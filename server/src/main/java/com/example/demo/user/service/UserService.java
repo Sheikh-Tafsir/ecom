@@ -1,10 +1,10 @@
 package com.example.demo.user.service;
 
 import com.example.demo.common.dto.CustomUserDetails;
-import com.example.demo.common.service.fileStorage.FileStorageService;
+import com.example.demo.common.model.Role;
 import com.example.demo.role.service.RoleService;
-import com.example.demo.user.dto.ChangePasswordRequest;
-import com.example.demo.user.dto.UpdateProfileRequest;
+import com.example.demo.user.dto.UpdateUserRequest;
+import com.example.demo.user.dto.UserResponse;
 import com.example.demo.user.dto.UserSearchResponse;
 import com.example.demo.user.repository.UserRepository;
 import com.example.demo.common.enums.UserStatus;
@@ -19,18 +19,16 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.example.demo.common.enums.UserStatus.BANNED;
 import static com.example.demo.common.enums.UserStatus.DELETED;
-import static com.example.demo.common.utils.FileUtils.fileExists;
 import static com.example.demo.common.utils.Utils.getValidPageable;
 
 @Slf4j
@@ -42,15 +40,11 @@ public class UserService {
 
     private final RoleService roleService;
 
-    private final PasswordEncoder passwordEncoder;
-
-    private final FileStorageService fileStorageService;
-
     private final MessageService messageService;
 
     @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue())")
-    public Page<User> findAll(Pageable pageable, String name, String role, String status) {
-        return userRepository.findByRoleAndStatus(name, roleService.findByName(role), UserStatus.fromValue(status), getValidPageable(pageable));
+    public Page<UserResponse> findAll(Pageable pageable, String name, String role, String status) {
+        return userRepository.findByRoleAndStatus(name, roleService.findByName(role), UserStatus.fromValue(status), getValidPageable(pageable)).map(UserResponse::new);
     }
 
     public List<UserSearchResponse> findAllByName(String name, CustomUserDetails userDetails) {
@@ -61,22 +55,28 @@ public class UserService {
     }
 
     @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue())")
-    @Cacheable("usersById")
-    public User findById(Long id) {
-        return findByIdHelper(id);
+    @Cacheable(value = "userById", key = "#id")
+    public UserResponse findById(Long id) {
+        return new UserResponse(findByIdHelper(id));
     }
 
+    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
-    public User update(UpdateProfileRequest updateProfileRequest, CustomUserDetails userDetails) throws IOException {
-        User user = findByIdHelper(userDetails.getId());
-        user.setName(updateProfileRequest.name());
+    public UserResponse update(long id, UpdateUserRequest request) {
+        User user = findByIdHelper(id);
 
-        if (fileExists(updateProfileRequest.image())) {
-            String imageUrl = fileStorageService.uploadFile(updateProfileRequest.image());
-            user.setImage(imageUrl);
+        if (request.roles() != null && !request.roles().isEmpty()) {
+            Set<Role> roles = request.roles().stream()
+                    .map(roleService::findByName)
+                    .collect(Collectors.toSet());
+            user.setRoles(roles);
         }
 
-        return userRepository.save(user);
+        if (request.status() != null) {
+            user.setStatus(UserStatus.fromValue(request.status()));
+        }
+
+        return new UserResponse(userRepository.save(user));
     }
 
     @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
@@ -97,19 +97,8 @@ public class UserService {
         delete(findByIdHelper(id), BANNED);
     }
 
-    @Transactional
-    public void updatePassword(ChangePasswordRequest changePasswordRequest, CustomUserDetails userDetails) {
-        User user = findByIdHelper(userDetails.getId());
-        if (!passwordEncoder.matches(changePasswordRequest.currentPassword(), user.getPassword())) {
-            throw new BadCredentialsException("Current password is incorrect");
-        }
-
-        user.setPassword(passwordEncoder.encode(changePasswordRequest.newPassword()));
-        userRepository.save(user);
-    }
-
     // -- helpers --
-    private User findByIdHelper(Long id) {
+    public User findByIdHelper(Long id) {
         return userRepository.findById(id).
                 orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "User", id)));
     }

@@ -37,6 +37,14 @@ CREATE TABLE user_roles
     PRIMARY KEY (user_id, role_id)
 );
 
+CREATE TABLE user_refresh_tokens
+(
+    id           BIGSERIAL PRIMARY KEY,
+    user_id      BIGINT NOT NULL REFERENCES users (id) ON DELETE RESTRICT,
+    token        VARCHAR(256)    NOT NULL,
+    created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE products
 (
     id           BIGSERIAL PRIMARY KEY,

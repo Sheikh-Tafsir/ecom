@@ -12,7 +12,7 @@ export const handleErrors = (error, setError) => {
 
         const errors = data?.errors;
 
-        if (errors && typeof errors === "object") {
+        if (errors && typeof errors == "object") {
             handleFieldErrors(errors, setError);
             return;
         }
@@ -58,6 +58,6 @@ const extractMessage = (message) => {
     if (Array.isArray(message)) {
         return message[0];
     }
-    if (typeof message === "string") return message;
+    if (typeof message == "string") return message;
     return JSON.stringify(message);
 };

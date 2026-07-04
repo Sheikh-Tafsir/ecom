@@ -114,8 +114,8 @@ const ProductCreate = () => {
             name: product.name,
             description: product.description,
             price: product.price,
-            categoryIds: product.categories.map(c => String(c.id)),
-            keptImageIds: product.images.map(img => img.id),
+            categoryIds: product.categories?.map(c => String(c.id)) || [],
+            keptImageIds: product.images?.map(img => img.id) || [],
         });
     }, [product, reset]);
 

@@ -18,11 +18,11 @@ export function Notification({ notification, onClose }) {
   }, [onClose]);
 
   const colorStyle =
-    notification.type === TOAST_TYPE.ERROR
+    notification.type == TOAST_TYPE.ERROR
       ? "bg-red-500"
-      : notification.type === TOAST_TYPE.WARNING
+      : notification.type == TOAST_TYPE.WARNING
         ? "bg-red-400"
-        : notification.type === TOAST_TYPE.SUCCESS
+        : notification.type == TOAST_TYPE.SUCCESS
           ? "bg-green-500"
           : "bg-blue-500";
 

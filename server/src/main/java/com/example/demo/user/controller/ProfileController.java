@@ -5,7 +5,8 @@ import com.example.demo.auth.validator.AuthValidator;
 import com.example.demo.user.dto.ChangePasswordRequest;
 import com.example.demo.user.dto.UpdateProfileRequest;
 import com.example.demo.auth.service.AuthService;
-import com.example.demo.user.dto.UserResponse;
+import com.example.demo.user.dto.ProfileResponse;
+import com.example.demo.user.service.ProfileService;
 import com.example.demo.user.service.UserService;
 import com.example.demo.user.validator.ProfileUpdateRequestValidator;
 import com.example.demo.common.dto.ApiResponse;
@@ -42,28 +43,32 @@ public class ProfileController {
 
     private final UserService userService;
 
+    private final ProfileService profileService;
+
     private final MessageService messageService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<UserResponse>> getProfile(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        return ResponseUtils.ok(new UserResponse(userDetails.user(), null), messageService.get("successfully.found", "Profile"));
+    public ResponseEntity<ApiResponse<ProfileResponse>> getProfile(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        User user = userService.findByIdHelper(userDetails.getId());
+        return ResponseUtils.ok(new ProfileResponse(user, null),
+                messageService.get("successfully.found", "Profile"));
     }
 
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<UserResponse>> updateProfile(@Valid @ModelAttribute UpdateProfileRequest updateProfileRequest,
-                                                                   BindingResult bindingResult,
-                                                                   @AuthenticationPrincipal CustomUserDetails userDetails,
-                                                                   HttpServletResponse response) throws IOException {
+    public ResponseEntity<ApiResponse<ProfileResponse>> updateProfile(@Valid @ModelAttribute UpdateProfileRequest updateProfileRequest,
+                                                                      BindingResult bindingResult,
+                                                                      @AuthenticationPrincipal CustomUserDetails userDetails,
+                                                                      HttpServletResponse response) throws IOException {
 
         profileUpdateRequestValidator.validate(updateProfileRequest, bindingResult);
         checkErrors(bindingResult);
 
-        User user = userService.update(updateProfileRequest, userDetails);
+        User user = profileService.update(updateProfileRequest, userDetails);
 
         TokenDto tokenDto = authService.getTokens(user);
         authService.addRefreshCookie(response, tokenDto);
 
-        return ResponseUtils.ok(new UserResponse(user, tokenDto.getAccessToken()), messageService.get("successfully.updated", "Profile"));
+        return ResponseUtils.ok(new ProfileResponse(user, tokenDto.getAccessToken()), messageService.get("successfully.updated", "Profile"));
     }
 
     @DeleteMapping
@@ -85,7 +90,7 @@ public class ProfileController {
         authValidator.validatePasswords(changePasswordRequest.newPassword(), changePasswordRequest.confirmNewPassword(), bindingResult);
         checkErrors(bindingResult);
 
-        userService.updatePassword(changePasswordRequest, userDetails);
+        profileService.updatePassword(changePasswordRequest, userDetails);
         return ResponseUtils.ok("Password change successful");
     }
 }

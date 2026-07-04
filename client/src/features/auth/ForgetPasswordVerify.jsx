@@ -33,7 +33,7 @@ const ForgetPasswordVerifySchema = z.object({
         .string()
         .min(8, 'Confirm Password must be at least 8 characters long')
         .max(15, 'Confirm Password must be shorter than 15 characters'),
-}).refine((data) => data.password === data.confirmPassword, {
+}).refine((data) => data.password == data.confirmPassword, {
     message: 'Passwords do not match',
 });
 

@@ -172,7 +172,7 @@ export default function ProductDetails() {
                                         ))}
                                     </div>
                                     <span className="text-gray-600 ml-2">
-                                        {product?.reviewCount === 0 ? 'Not Rated Yet' : `${product?.rating} out of 5`}
+                                        {product?.reviewCount == 0 ? 'Not Rated Yet' : `${product?.rating} out of 5`}
                                     </span>
                                 </div>
 

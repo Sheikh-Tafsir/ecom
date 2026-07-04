@@ -1,19 +1,16 @@
 package com.example.demo.user.dto;
 
-import com.example.demo.common.enums.UserStatus;
-import com.example.demo.common.model.Role;
 import com.example.demo.common.model.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 import java.util.Set;
-import java.util.stream.Collectors;
+
+import static com.example.demo.common.utils.Utils.isNull;
 
 @Getter
-@NoArgsConstructor
-public class UserResponse {
+@AllArgsConstructor
+public class ProfileResponse {
 
     private Long id;
 
@@ -25,17 +22,17 @@ public class UserResponse {
 
     private Set<String> roles;
 
-    private LocalDateTime createdAt;
+    private String accessToken;
 
-    private UserStatus status;
-
-    public UserResponse(User user) {
+    public ProfileResponse(User user, String accessToken) {
         id = user.getId();
         name = user.getName();
         email = user.getEmail();
         image = user.getImage();
         roles = user.getRoleValues();
-        createdAt = user.getCreatedAt();
-        status = user.getStatus();
+
+        if (!isNull(accessToken)) {
+            this.accessToken = accessToken;
+        }
     }
 }

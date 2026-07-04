@@ -47,7 +47,7 @@ export const parseSort = (sort = DEFAULT_SORT, allowedSortFields= []) => {
     const [field, order] = sort.split(",")
 
     return allowedSortFields.has(field)
-        ? `${field},${order === "ASC" ? "ASC" : DEFAULT_SORT_ORDER}`
+        ? `${field},${order == "ASC" ? "ASC" : DEFAULT_SORT_ORDER}`
         : DEFAULT_SORT;
 }
 
@@ -95,7 +95,7 @@ export const updateQueryWhenParamChange = ({queryParams, newParams, navigate}) =
             ...newParams,
             page: FIRST_PAGE,
         }).map(([key, value]) => {
-            if (value === ALL_SELECTED || value === "" || value == null) {
+            if (value == ALL_SELECTED || value == "" || value == null) {
                 return [key, undefined];
             }
             return [key, value];
