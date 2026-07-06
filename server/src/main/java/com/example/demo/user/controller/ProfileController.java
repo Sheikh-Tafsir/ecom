@@ -65,7 +65,7 @@ public class ProfileController {
 
         User user = profileService.update(updateProfileRequest, userDetails);
 
-        TokenDto tokenDto = authService.getTokens(user);
+        TokenDto tokenDto = authService.getAuthTokens(user);
         authService.addRefreshCookie(response, tokenDto);
 
         return ResponseUtils.ok(new ProfileResponse(user, tokenDto.getAccessToken()), messageService.get("successfully.updated", "Profile"));

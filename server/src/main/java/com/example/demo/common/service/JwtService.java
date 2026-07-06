@@ -78,8 +78,8 @@ public class JwtService {
         return parseClaims(token, accessTokenSecret).getSubject();
     }
 
-    public String getEmailFromRefreshToken(String token) {
-        return parseClaims(token, refreshTokenSecret).getSubject();
+    public String getJtiFromRefreshToken(String token) {
+        return parseClaims(token, refreshTokenSecret).getId();
     }
 
     public Date getExpirationFromRefreshToken(String token) {

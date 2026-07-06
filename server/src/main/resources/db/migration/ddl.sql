@@ -41,8 +41,12 @@ CREATE TABLE user_refresh_tokens
 (
     id           BIGSERIAL PRIMARY KEY,
     user_id      BIGINT NOT NULL REFERENCES users (id) ON DELETE RESTRICT,
-    token        VARCHAR(256)    NOT NULL,
-    created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+    jti          VARCHAR(256)    NOT NULL,
+    status       VARCHAR(8)  NOT NULL DEFAULT 'ACTIVE',
+    version      INT            NOT NULL DEFAULT 0,
+    created_at   TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_user_refresh_tokens_jti UNIQUE (jti)
 );
 
 CREATE TABLE products

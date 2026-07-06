@@ -9,7 +9,6 @@ import com.example.demo.common.exception.InvalidRefreshTokenException;
 import com.example.demo.common.model.Role;
 import com.example.demo.common.model.User;
 import com.example.demo.auth.dto.Otp;
-import com.example.demo.common.model.UserRefreshToken;
 import com.example.demo.common.service.JwtService;
 import com.example.demo.common.service.MailService;
 import com.example.demo.role.service.RoleService;
@@ -94,7 +93,7 @@ public class AuthService {
             throw new BadCredentialsException("Account is " + userDetails.user().getStatus().getValue());
         }
 
-        return getTokens(userDetails.user());
+        return getAuthTokens(userDetails.user());
     }
 
     @Transactional
@@ -147,7 +146,7 @@ public class AuthService {
         user.setStatus(UserStatus.ACTIVE);
         user = authRepository.save(user);
 
-        return getTokens(user);
+        return getAuthTokens(user);
     }
 
     @Transactional
@@ -192,7 +191,7 @@ public class AuthService {
             user = save(user, generatePassword(googleUser.getName()));
         }
 
-        return getTokens(user);
+        return getAuthTokens(user);
     }
 
     public void addRefreshCookie(HttpServletResponse response, TokenDto authResponse) {
@@ -207,25 +206,10 @@ public class AuthService {
             throw new InvalidRefreshTokenException("Invalid refresh token");
         }
 
-        String cookieEmail = jwtService.getEmailFromRefreshToken(refreshToken);
-        User user = findByEmail(cookieEmail);
-
-        if (isNull(user) || user.isNotActive()) {
-            throw new InvalidRefreshTokenException("Refresh token user is invalid");
-        }
-
-        UserRefreshToken userRefreshToken = userRefreshTokenService.findByUser(user);
-        if (userRefreshToken == null)  {
-            throw new InvalidRefreshTokenException("Refresh token not found for user: " + user.getId());
-        }
-
-        if (!userRefreshToken.getToken().equals(refreshToken)) {
-            userRefreshTokenService.delete(user);
-            throw new InvalidRefreshTokenException("Refresh token mismatch");
-        }
+        User user = userRefreshTokenService.validate(refreshToken);
 
         Date refreshTokenExpiration = jwtService.getExpirationFromRefreshToken(refreshToken);
-        return getTokens(user, refreshTokenExpiration);
+        return getAuthTokens(user, refreshTokenExpiration);
     }
 
     @Transactional
@@ -233,8 +217,8 @@ public class AuthService {
         String refreshToken = getCookieValue(request, refreshTokenName);
 
         if (hasText(refreshToken) && jwtService.isRefreshTokenValid(refreshToken)) {
-            String email = jwtService.getEmailFromRefreshToken(refreshToken);
-            authRepository.findByEmail(email).ifPresent(userRefreshTokenService::delete);
+            String jti = jwtService.getJtiFromRefreshToken(refreshToken);
+            userRefreshTokenService.revoke(jti);
         }
 
         addCookie(response, refreshTokenName, null, 0, isProductionEnvironment(springProfile));
@@ -265,12 +249,12 @@ public class AuthService {
     }
 
     @Transactional
-    public TokenDto getTokens(User user) {
-        return getTokens(user, null);
+    public TokenDto getAuthTokens(User user) {
+        return getAuthTokens(user, null);
     }
 
     @Transactional
-    public TokenDto getTokens(User user, Date refreshTokenExpiration) {
+    public TokenDto getAuthTokens(User user, Date refreshTokenExpiration) {
         if (user.isNotActive()) {
             throw new ValidationException("User is " + user.getStatus().getValue());
         }

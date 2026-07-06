@@ -1,32 +1,33 @@
 package com.example.demo.common.model;
 
+import com.example.demo.common.enums.UserRefreshTokenStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-
-import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "user_refresh_tokens")
+@Table(name = "user_refresh_tokens", uniqueConstraints = {@UniqueConstraint(columnNames = {"jti"})})
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserRefreshToken {
+public class UserRefreshToken extends BaseEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
+    @ManyToOne
     private User user;
 
-    private String token;
+    private String jti;
 
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
+    @Enumerated(EnumType.STRING)
+    private UserRefreshTokenStatus status = UserRefreshTokenStatus.ACTIVE;
+
+    public boolean isInvalid() {
+        return status == UserRefreshTokenStatus.REVOKED;
+    }
 }
