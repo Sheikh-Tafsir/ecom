@@ -7,6 +7,7 @@ import java.io.Serializable;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class Otp implements Serializable {
 
     private String email;

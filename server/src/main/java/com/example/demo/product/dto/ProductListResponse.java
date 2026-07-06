@@ -2,14 +2,14 @@ package com.example.demo.product.dto;
 
 import com.example.demo.common.model.Category;
 import com.example.demo.common.model.Product;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Getter
+@Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class ProductListResponse {
 

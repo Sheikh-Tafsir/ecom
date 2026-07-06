@@ -47,10 +47,9 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<OrderResponse>> findById(@PathVariable Long id,
-                                                               @AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<ApiResponse<OrderResponse>> findById(@PathVariable Long id) {
 
-        OrderResponse order = orderService.findById(id, userDetails);
+        OrderResponse order = orderService.findById(id);
         return ResponseUtils.ok(order, messageService.get("successfully.found", "Order"));
     }
 

@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useEffect} from 'react';
 import {useLocation, useNavigate, useParams} from 'react-router-dom';
 import {useForm, Controller} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
@@ -23,9 +23,9 @@ import {TOAST_TYPE, ALERT_TYPE, ROLE_PREFIX, PERMISSION} from '@/utils/enums';
 import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils';
 import InputError from "@/components/common/InputError.jsx";
 import {notify} from '@/components/common/notification';
-import {Checkbox} from "@/components/ui/checkbox";
 import {hasPermission} from "@/utils/index.js";
 import {useUserStore} from "@/store/useUserStore.js";
+import {MultiSelect} from "@/components/common/MultiSelect.jsx";
 
 // Zod schema
 const UserSchema = z.object({
@@ -87,7 +87,7 @@ const UserEdit = () => {
         onSuccess: async () => {
             notify(TOAST_TYPE.SUCCESS, "User successfully updated")
             await queryClient.invalidateQueries({queryKey: ["user", id]});
-            navigate(`/users/${id}`);
+            //navigate(`/users/${id}`);
         },
         onError: (error) => {
             console.error(error);
@@ -96,12 +96,14 @@ const UserEdit = () => {
         },
     });
 
-    // ✅ Delete
     const deleteUser = useMutation({
         mutationFn: async () => await Axios.delete(`/users/${id}`),
         onSuccess: async () => {
             notify(TOAST_TYPE.SUCCESS, "User deleted")
-            await queryClient.invalidateQueries({queryKey: ["users"]});
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ["user", id] }),
+                queryClient.invalidateQueries({ queryKey: ["users"] }),
+            ]);
             navigate("/users", {replace: true});
         },
         onError: (error) => {
@@ -152,31 +154,22 @@ const UserEdit = () => {
                                 <div className="space-y-1">
                                     <Label>Roles</Label>
                                     {isEditable && canManageRoles ? (
-                                        <div className="grid grid-cols-2 gap-2 mt-2">
-                                            {roles?.map(role => (
-                                                <div key={role.id || role.name} className="flex items-center space-x-2">
-                                                    <Controller
-                                                        name="roleNames"
-                                                        control={control}
-                                                        render={({field}) => (
-                                                            <Checkbox
-                                                                id={`role-${role.id || role.name}`}
-                                                                checked={field.value?.includes(role.name)}
-                                                                onCheckedChange={(checked) => {
-                                                                    const currentValues = Array.isArray(field.value) ? field.value : [];
-                                                                    const newValue = checked
-                                                                        ? [...currentValues, role.name]
-                                                                        : currentValues.filter((v) => v !== role.name);
-                                                                    field.onChange(newValue);
-                                                                }}
-                                                            />
-                                                        )}
+                                        <div className="mt-2">
+                                            <Controller
+                                                name="roleNames"
+                                                control={control}
+                                                render={({field}) => (
+                                                    <MultiSelect
+                                                        options={roles?.map(role => ({
+                                                            label: role.name?.replace(ROLE_PREFIX, ""),
+                                                            value: role.name
+                                                        })) || []}
+                                                        selected={field.value || []}
+                                                        onChange={field.onChange}
+                                                        placeholder="Select roles..."
                                                     />
-                                                    <Label htmlFor={`role-${role.id || role.name}`} className="text-sm cursor-pointer">
-                                                        {role.name?.replace(ROLE_PREFIX, "")}
-                                                    </Label>
-                                                </div>
-                                            ))}
+                                                )}
+                                            />
                                         </div>
                                     ) : (
                                         <InputViewMode

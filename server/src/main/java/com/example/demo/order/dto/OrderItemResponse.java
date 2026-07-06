@@ -3,11 +3,14 @@ package com.example.demo.order.dto;
 import com.example.demo.common.model.OrderItem;
 import com.example.demo.common.model.ProductImage;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
-@Getter
+@Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class OrderItemResponse {
     private Long id;

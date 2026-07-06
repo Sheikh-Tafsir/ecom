@@ -2,12 +2,15 @@ package com.example.demo.stock.dto;
 
 import com.example.demo.common.model.Stock;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Getter
+@Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class StockListResponse {
 

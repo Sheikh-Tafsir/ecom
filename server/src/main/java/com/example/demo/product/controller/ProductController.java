@@ -59,10 +59,8 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ProductResponse>> findById(@PathVariable Long id,
-                                                                 @AuthenticationPrincipal CustomUserDetails userDetails) {
-
-        ProductResponse product = productService.findById(id, userDetails);
+    public ResponseEntity<ApiResponse<ProductResponse>> findById(@PathVariable Long id) {
+        ProductResponse product = productService.findById(id);
         return ResponseUtils.ok(product, messageService.get("successfully.found", "Product"));
     }
 
@@ -84,7 +82,7 @@ public class ProductController {
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<Void>> update(@PathVariable Long id,
+    public ResponseEntity<ApiResponse<ProductEditResponse>> update(@PathVariable Long id,
                                                                    @Valid @ModelAttribute UpdateProductRequest productRequest,
                                                                    BindingResult bindingResult) throws IOException {
 

@@ -3,12 +3,15 @@ package com.example.demo.sale.dto;
 import com.example.demo.common.model.ProductImage;
 import com.example.demo.common.model.Sale;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Getter
+@Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class SaleResponse {
     private Long id;

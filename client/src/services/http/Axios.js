@@ -54,8 +54,8 @@ Axios.interceptors.response.use(
 
                 return Axios.request(originalRequest);
             } catch (err) {
-                await logout();
                 notify(TOAST_TYPE.INFO, "Session expired. Please log in again.");
+                await logout();
                 redirectAfterLogout();
                 return Promise.reject(err);
             }

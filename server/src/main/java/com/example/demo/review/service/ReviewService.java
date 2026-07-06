@@ -18,8 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 
 import static com.example.demo.common.enums.Permission.ADMIN_ACCESS;
+import static com.example.demo.common.enums.Permission.SUPER_ADMIN_ACCESS;
 import static com.example.demo.common.utils.SecurityUtil.*;
 import static com.example.demo.common.utils.Utils.getValidPageable;
 
@@ -98,7 +100,8 @@ public class ReviewService {
     @Transactional
     public void delete(Long id, CustomUserDetails userDetails) {
         Review review = findByIdHelper(id);
-        if (!isOwner(review.getUser().getId(), userDetails) && !hasPermission(ADMIN_ACCESS.getValue(), userDetails)) {
+        if (!isOwner(review.getUser().getId(), userDetails)
+                && !hasPermission(List.of(SUPER_ADMIN_ACCESS.getValue(), ADMIN_ACCESS.getValue()), userDetails)) {
             throwAccessException(review.getUser().getId(), userDetails.getId(), "Review", review.getId());
         }
 
@@ -123,6 +126,7 @@ public class ReviewService {
         reviewRepository.delete(review);
     }
 
+    // -- helpers --
     private Review findByIdHelper(Long id) {
         return reviewRepository.findById(id).
                 orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Review", id)));

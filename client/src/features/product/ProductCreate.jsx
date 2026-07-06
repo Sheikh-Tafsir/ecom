@@ -1,8 +1,9 @@
 import {useEffect, useState} from "react";
 import {Link, useLocation, useNavigate, useParams} from "react-router-dom";
-import {useForm} from "react-hook-form";
+import {useForm, Controller} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useQueryClient } from "@tanstack/react-query";
 
 import {Button} from "@/components/ui/button";
 import {
@@ -22,12 +23,13 @@ import MultiImageInput from "@/components/common/MultiImageInput";
 import InputError from "@/components/common/InputError";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
 import {ButtonLoading} from "@/components/common/ButtonLoading";
+import {MultiSelect} from "@/components/common/MultiSelect.jsx";
 
 import {Axios} from "@/services/http/Axios";
 import {GLOBAL_ERROR, handleErrors} from "@/utils";
 import {TOAST_TYPE} from "@/utils/enums";
-import { notify } from "@/components/common/notification";
-import { useQuery } from "@tanstack/react-query";
+import {notify} from "@/components/common/notification";
+import {useQuery} from "@tanstack/react-query";
 
 const MAX_IMAGES = 5;
 
@@ -47,15 +49,36 @@ const fetchCategories = async () => {
 }
 
 const fetchProduct = async (id) => {
-  const response = await Axios.get(`/products/${id}`);
-  return response.data.data;
+    const response = await Axios.get(`/products/${id}`);
+    return response.data.data;
 };
+
+const createProduct = async (formData) => {
+    const response = await Axios.post("/products", formData, {
+        headers: {'Content-Type': 'multipart/form-data'},
+        timeout: 15000,
+    });
+
+    notify(TOAST_TYPE.SUCCESS, "Product Successfully created");
+
+    return response.data.data;
+}
+
+const updateProduct = async (formData, id) => {
+    await Axios.put(`/products/${id}`, formData, {
+        headers: {'Content-Type': 'multipart/form-data'},
+        timeout: 15000,
+    });
+
+    notify(TOAST_TYPE.SUCCESS, "Product updated successfully")
+}
 
 const ProductCreate = () => {
     const {id} = useParams();
 
     const navigate = useNavigate();
     const location = useLocation();
+    const queryClient = useQueryClient();
 
     const isCreatePage = location.pathname.includes("/create");
 
@@ -68,7 +91,7 @@ const ProductCreate = () => {
         handleSubmit,
         reset,
         setValue,
-        watch,
+        control,
         setError,
         formState: {errors, isSubmitting},
     } = useForm({
@@ -82,16 +105,14 @@ const ProductCreate = () => {
         },
     });
 
-    const categoryIds = watch("categoryIds");
-
     const {
-        data: categories = [], 
+        data: categories = [],
         isFetching: isCategoriesLoading,
         isError: isCategoriesError,
         error: categoriesError,
     } = useQuery({
-        queryKey: ["categories"], 
-        queryFn: fetchCategories, 
+        queryKey: ["categories"],
+        queryFn: fetchCategories,
     })
 
     const {
@@ -137,28 +158,22 @@ const ProductCreate = () => {
             });
 
             if (isCreatePage) {
-               const response = await Axios.post("/products", formData, {
-                    headers: {'Content-Type': 'multipart/form-data'},
-                    timeout: 15000,
-                });
+                const productId = await createProduct(formData);
 
-                showToast("Successfully created", TOAST_TYPE.SUCCESS);
-                
                 reset();
                 setExistingImages([]);
                 setNewImages([]);
                 setResetImagesKey(Date.now());
 
-                setTimeout(() => {
-                    navigate(`/products/${response.data.data}`);
-                }, 500);
+                navigate(`/products/${productId}`, {replace: true});
             } else {
-                await Axios.put(`/products/${id}`, formData, {
-                    headers: {'Content-Type': 'multipart/form-data'},
-                    timeout: 15000,
-                });
-
-                notify(TOAST_TYPE.SUCCESS, "Product updated successfully")
+                await updateProduct(formData, id);
+                
+                await Promise.all([
+                    queryClient.invalidateQueries({ queryKey: ["product", id] }),
+                    queryClient.invalidateQueries({ queryKey: ["products"] }),
+                ]);
+                navigate(`/products/${id}`, {replace: true});
             }
         } catch (error) {
             console.error(error);
@@ -245,41 +260,21 @@ const ProductCreate = () => {
                             <div className="space-y-2">
                                 <StaredLabel label="Categories"/>
 
-                                <div className="grid grid-cols-2 gap-2 border rounded-md p-2">
-                                    {categories.map((category) => (
-                                        <div
-                                            key={category.id}
-                                            className="flex items-center gap-2"
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                checked={categoryIds.includes(
-                                                    String(category.id)
-                                                )}
-                                                onChange={(e) => {
-                                                    const updatedCategoryIds = e.target.checked
-                                                        ? [
-                                                            ...categoryIds,
-                                                            String(category.id),
-                                                        ]
-                                                        : categoryIds.filter(
-                                                            (id) =>
-                                                                id !== String(category.id)
-                                                        );
-
-                                                    setValue(
-                                                        "categoryIds",
-                                                        updatedCategoryIds,
-                                                        {shouldValidate: true}
-                                                    );
-                                                }}
-                                                className="h-3"
-                                            />
-
-                                            <Label>{category.name}</Label>
-                                        </div>
-                                    ))}
-                                </div>
+                                <Controller
+                                    name="categoryIds"
+                                    control={control}
+                                    render={({field}) => (
+                                        <MultiSelect
+                                            options={categories.map((category) => ({
+                                                label: category.name,
+                                                value: String(category.id),
+                                            }))}
+                                            selected={field.value}
+                                            onChange={field.onChange}
+                                            placeholder="Select categories..."
+                                        />
+                                    )}
+                                />
 
                                 <InputError errors={errors} field="categories"/>
                                 <InputError errors={errors} field="categoryIds"/>

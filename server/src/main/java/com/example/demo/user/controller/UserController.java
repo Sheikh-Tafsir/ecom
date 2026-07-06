@@ -55,11 +55,11 @@ public class UserController {
     }
 
     @PutMapping(value = "/{id}")
-    public ResponseEntity<ApiResponse<UserResponse>> update(@PathVariable Long id,
+    public ResponseEntity<ApiResponse<Void>> update(@PathVariable Long id,
                                                     @Valid @RequestBody UpdateUserRequest request) {
 
-        UserResponse user = userService.update(id, request);
-        return ResponseUtils.ok(user, messageService.get("successfully.updated", "User"));
+        userService.update(id, request);
+        return ResponseUtils.ok(messageService.get("successfully.updated", "User"));
     }
 
     @DeleteMapping("/{id}")

@@ -9,7 +9,6 @@ import com.example.demo.role.service.RoleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,7 +16,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/roles")
 @RequiredArgsConstructor
-@PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
 public class RoleController {
 
     private final RoleService roleService;

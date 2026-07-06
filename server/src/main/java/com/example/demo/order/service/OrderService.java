@@ -16,13 +16,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static com.example.demo.common.enums.Permission.ADMIN_ACCESS;
+import static com.example.demo.common.enums.Permission.SUPER_ADMIN_ACCESS;
 import static com.example.demo.common.utils.DateUtils.resolveDates;
 import static com.example.demo.common.utils.SecurityUtil.*;
 import static com.example.demo.common.utils.Utils.getValidPageable;
@@ -46,20 +49,21 @@ public class OrderService {
     public Page<OrderListResponse> findAll(LocalDateTime fromDate, LocalDateTime toDate, OrderStatus status, CustomUserDetails userDetails, Pageable pageable) {
         DateRangeDto dateRange = resolveDates(fromDate, toDate);
 
-        if (hasPermission(ADMIN_ACCESS.getValue(), userDetails)) {
+        if (hasPermission(List.of(SUPER_ADMIN_ACCESS.getValue(), ADMIN_ACCESS.getValue()), userDetails)) {
             return orderRepository.findAllByStatus(status, dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable)).map(OrderListResponse::new);
         }
 
         return orderRepository.findAllByUser_Id(userDetails.getId(), dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable)).map(OrderListResponse::new);
     }
 
-    public OrderResponse findById(Long id, CustomUserDetails userDetails) {
+    @PostAuthorize("""
+            returnObject.userId == authentication.principal.id ||
+            hasAnyAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue(),
+            T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())
+            """)
+    public OrderResponse findById(Long id) {
         Order order = orderRepository.findDetailsById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Order", id)));
-
-        if (!isOwner(order.getUser().getId(), userDetails) && !hasPermission(ADMIN_ACCESS.getValue(), userDetails)) {
-            throwAccessException(order.getUser().getId(), userDetails.getId(), "Order", order.getId());
-        }
 
         return new OrderResponse(order);
     }
@@ -109,7 +113,8 @@ public class OrderService {
         return new OrderResponse(orderRepository.save(order));
     }
 
-    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue())")
+    @PreAuthorize("hasAnyAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue()," +
+            "T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
     public OrderResponse updateStatus(Long id, UpdateOrderStatusRequest request, CustomUserDetails userDetails) {
         Order order = findByIdHelper(id);

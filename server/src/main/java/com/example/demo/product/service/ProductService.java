@@ -14,10 +14,13 @@ import com.example.demo.stock.dto.CreateStockItemRequest;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,10 +29,12 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.example.demo.common.enums.Permission.ADMIN_ACCESS;
+import static com.example.demo.common.enums.Permission.SUPER_ADMIN_ACCESS;
 import static com.example.demo.common.enums.ProductStatus.DISCONTINUED;
 import static com.example.demo.common.utils.DateUtils.resolveDates;
 import static com.example.demo.common.utils.FileUtils.fileExists;
@@ -53,7 +58,8 @@ public class ProductService {
 
         DateRangeDto dateRange = resolveDates(fromDate, toDate);
 
-        return productRepository.findAll(getNameFilter(name), category, hasPermission(ADMIN_ACCESS.getValue(), userDetails)
+        return productRepository.findAll(getNameFilter(name), category,
+                        hasPermission(List.of(SUPER_ADMIN_ACCESS.getValue(), ADMIN_ACCESS.getValue()), userDetails)
                         ? null : DISCONTINUED, dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable))
                 .map(ProductListResponse::new);
     }
@@ -63,13 +69,13 @@ public class ProductService {
                 .map(ProductListResponse::new);
     }
 
-    public ProductResponse findById(Long id, CustomUserDetails userDetails) {
+    @PostAuthorize("returnObject.status != T(com.example.demo.common.enums.ProductStatus).DISCONTINUED || " +
+            "hasAnyAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue(), " +
+            "T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
+    @Cacheable(value = "product", key = "#id")
+    public ProductResponse findById(Long id) {
         Product product = productRepository.findDetailsById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Product", id)));
-
-        if (product.getStatus() == DISCONTINUED && !hasPermission(ADMIN_ACCESS.getValue(), userDetails)) {
-            throw new AccessDeniedException("User with id: " + userDetails.getId() + " attempted to access discontinued Product with id: " + id);
-        }
 
         return new ProductResponse(product);
     }
@@ -90,6 +96,7 @@ public class ProductService {
     }
 
     @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
+    @Cacheable(value = "productEdit", key = "#id")
     public ProductEditResponse findEditById(Long id) {
         Product product = findEditByIdHelper(id);
 
@@ -97,6 +104,10 @@ public class ProductService {
     }
 
     @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
+    @Caching(evict = {
+            @CacheEvict(value = "product", key = "#id"),
+            @CacheEvict(value = "productEdit", key = "#id")
+    })
     @Transactional
     public void update(Long id, UpdateProductRequest request) throws IOException {
         Product product = findEditByIdHelper(id);
@@ -133,6 +144,10 @@ public class ProductService {
     }
 
     @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
+    @Caching(evict = {
+            @CacheEvict(value = "product", key = "#id"),
+            @CacheEvict(value = "productEdit", key = "#id")
+    })
     @Transactional
     public void delete(Long id) {
         Product product = findByIdHelper(id);
@@ -141,6 +156,7 @@ public class ProductService {
         productRepository.save(product);
     }
 
+    // --helpers --
     public Product findByIdHelper(Long id) {
         return productRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Product", id)));

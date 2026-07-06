@@ -14,8 +14,8 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -42,7 +42,8 @@ public class UserService {
 
     private final MessageService messageService;
 
-    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue())")
+    @PreAuthorize("hasAnyAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue()," +
+            "T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     public Page<UserResponse> findAll(Pageable pageable, String name, String role, String status) {
         return userRepository.findByRoleAndStatus(name, roleService.findByName(role), UserStatus.fromValue(status), getValidPageable(pageable)).map(UserResponse::new);
     }
@@ -54,15 +55,17 @@ public class UserService {
                 .toList();
     }
 
-    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue())")
-    @Cacheable(value = "userById", key = "#id")
+    @PreAuthorize("hasAnyAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue()," +
+            "T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
+    @Cacheable(value = "user", key = "#id")
     public UserResponse findById(Long id) {
         return new UserResponse(findByIdHelper(id));
     }
 
     @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
+    @CacheEvict(value = "user", key = "#id")
     @Transactional
-    public UserResponse update(long id, UpdateUserRequest request) {
+    public void update(long id, UpdateUserRequest request) {
         User user = findByIdHelper(id);
 
         if (request.roles() != null && !request.roles().isEmpty()) {
@@ -76,22 +79,18 @@ public class UserService {
             user.setStatus(UserStatus.fromValue(request.status()));
         }
 
-        return new UserResponse(userRepository.save(user));
+        userRepository.save(user);
     }
 
     @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
-    @Caching(evict = {
-            @CacheEvict(value = "usersById", key = "#id")
-    })
+    @CacheEvict(value = "user", key = "#id")
     @Transactional
     public void delete(Long id) {
         delete(findByIdHelper(id), DELETED);
     }
 
     @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
-    @Caching(evict = {
-            @CacheEvict(value = "usersById", key = "#id")
-    })
+    @CacheEvict(value = "user", key = "#id")
     @Transactional
     public void banned(Long id) {
         delete(findByIdHelper(id), BANNED);

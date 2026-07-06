@@ -38,13 +38,15 @@ public class StockService {
 
     private final MessageService messageService;
 
-    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue())")
+    @PreAuthorize("hasAnyAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue()," +
+            "T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     public Page<StockListResponse> findAll(LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable) {
         DateRangeDto dateRange = resolveDates(fromDate, toDate);
         return stockRepository.findAll(dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable)).map(StockListResponse::new);
     }
 
-    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue())")
+    @PreAuthorize("hasAnyAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue()," +
+            "T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     public StockResponse findById(Long id) {
         Stock stock = stockRepository.findDetailsById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Stock", id)));
@@ -93,7 +95,8 @@ public class StockService {
         return new StockResponse(stockRepository.save(stock));
     }
 
-    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue())")
+    @PreAuthorize("hasAnyAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue()," +
+            "T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     public Page<StockItemResponse> findAllItems(LocalDateTime fromDate, LocalDateTime toDate, Long productId, Pageable pageable) {
         DateRangeDto dateRange = resolveDates(fromDate, toDate);
         return stockItemRepository.findAll(dateRange.fromDate(), dateRange.toDate(), productId, getValidPageable(pageable)).map(StockItemResponse::new);

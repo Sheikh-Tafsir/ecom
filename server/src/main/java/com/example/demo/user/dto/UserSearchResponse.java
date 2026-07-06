@@ -2,9 +2,12 @@ package com.example.demo.user.dto;
 
 import com.example.demo.common.model.User;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-@Getter
+@Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class UserSearchResponse {
     long id;

@@ -2,11 +2,14 @@ package com.example.demo.review.dto;
 
 import com.example.demo.common.model.Review;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-@Getter
+@Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class ReviewResponse {
 

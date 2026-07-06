@@ -4,7 +4,6 @@ import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.common.service.CustomUserDetailsService;
 import com.example.demo.common.service.JwtService;
 import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -35,25 +34,26 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
-                                    @NonNull FilterChain chain) throws ServletException, IOException {
+                                    @NonNull FilterChain chain) throws IOException {
 
         MDC.put("requestId", request.getRequestId());
-
-        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-
-        if (!StringUtils.hasText(authHeader) || !authHeader.startsWith(BEARER_PREFIX)) {
-            log.debug("No Bearer token found in request headers");
-            MDC.clear();
-
-            chain.doFilter(request, response);
-            return;
-        }
-
-        String token = authHeader.substring(BEARER_PREFIX.length());
+        MDC.put("method", request.getMethod());
+        MDC.put("path", request.getRequestURI());
 
         try {
+            String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+
+            if (!StringUtils.hasText(authHeader) || !authHeader.startsWith(BEARER_PREFIX)) {
+                log.debug("No auth token found in request headers");
+
+                chain.doFilter(request, response);
+                return;
+            }
+
+            String token = authHeader.substring(BEARER_PREFIX.length());
+
             if (!jwtService.isAccessTokenValid(token)) {
-                log.error("Invalid or expired JWT token");
+                log.warn("Invalid or expired JWT token");
 
                 error(response, HttpStatus.UNAUTHORIZED, "Invalid or expired JWT token");
                 return;
@@ -73,7 +73,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
             chain.doFilter(request, response);
         } catch (Exception ex) {
-            log.error("Error validating JWT token");
+            log.error("Error validating JWT token", ex);
             error(response, HttpStatus.UNAUTHORIZED, "Error validating JWT token");
         } finally {
             MDC.clear();
