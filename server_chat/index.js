@@ -12,6 +12,7 @@ const ErrorHandler = require("./src/middleware/ErrorHandler");
 const SocketHandler = require("./src/sockets/socketHandlers")
 
 const ChatController = require("./src/controller/ChatController");
+const { isEnvironmentProduction } = require("./src/utils/Utils");
 
 const app = express();
 
@@ -21,8 +22,12 @@ app.use(
     TrimInput
 );
 
-app.get("/", (req, res) => {
-    res.status(200).json({status: "UP", timestamp: new Date()});
+app.get(["/", "/health"], (req, res) => {
+    res.status(200).json({
+        status: "UP", 
+        timestamp: new Date(),
+        uptime: process.uptime()
+    });
 });
 
 app.use("/chats", ChatController);
@@ -32,7 +37,7 @@ app.use(ErrorHandler);
 const server = http.createServer(app);
 SocketHandler(server);
 
-const listener = process.env.NODE_ENV === "production" ? app : server;
+const listener = isEnvironmentProduction() ? app : server;
 
 listener.listen(process.env.PORT, () => {
     console.info(`Chat server is running ${process.env.SERVER_PATH}.`);

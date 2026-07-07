@@ -12,9 +12,14 @@ const isNotNull = (value) => {
     return !isNull(value);
 }
 
+const isEnvironmentProduction = () => {
+    return process.env.NODE_ENV == 'production';
+}
+
 module.exports = {
     TABLE_PAGINATION_SIZE,
     pageCount,
     isNull,
     isNotNull,
+    isEnvironmentProduction
 }

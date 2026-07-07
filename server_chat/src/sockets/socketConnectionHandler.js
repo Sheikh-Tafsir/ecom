@@ -1,12 +1,12 @@
-const {addSocket, removeSocket} = require('./socketManager');
 const {getRoom, addSocketToRoom} = require('./socketRoomManager');
 const {findAllChatParticipantsByUserId} = require('../service/ChatService'); // Direct import from ChatService
 
 const socketConnectionHandler = async (io, socket) => {
     const user = socket.user;
 
-    addSocket(user.id, socket);
-    console.info(`Connected: ${user?.name}`);
+    // Join a personal room for direct cross-node emits
+    socket.join(`user_${user.id}`);
+    console.info(`Connected: ${user?.name} (Socket ID: ${socket.id})`);
 
     /* join user rooms */
     const chatParticipants = await findAllChatParticipantsByUserId(user.id);
@@ -16,7 +16,6 @@ const socketConnectionHandler = async (io, socket) => {
     });
 
     socket.on('disconnect', () => {
-        removeSocket(user.id, socket.id);
         console.info(`Disconnected: ${user.name}`);
     });
 };

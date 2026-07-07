@@ -31,6 +31,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                 WHERE (:name IS NULL OR p.name ILIKE CONCAT('%', CAST(:name AS string), '%'))
                 AND (:category IS NULL OR c.name = :category)
                 AND (:status IS NULL OR p.status <> :status)
+                AND p.createdAt BETWEEN :fromDate AND :toDate
             """)
     Page<Product> findAll(@Param("name") String name,
                           @Param("category") String category,

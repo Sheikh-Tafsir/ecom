@@ -1,5 +1,6 @@
 const { Sequelize } = require('sequelize');
 const pg = require('pg');
+const { isEnvironmentProduction } = require('../utils/Utils');
 require('dotenv').config();
 
 // Load environment variables
@@ -20,7 +21,7 @@ const sequelize = new Sequelize(POSTGRES_DATABASE, POSTGRES_USER, POSTGRES_PASSW
   dialectOptions: {
     ssl: {
       require: true,
-      rejectUnauthorized: false // Disable SSL validation
+      rejectUnauthorized: isEnvironmentProduction() // Validate SSL in production
     }
   }
 });

@@ -1,5 +1,4 @@
 const {ChatParticipant} = require('../model');
-const {getSockets} = require('./socketManager');
 const ApiResponse = require('../common/ApiResponse');
 
 const getRoom = (chatId) => `chat_${chatId}`;
@@ -13,29 +12,25 @@ const handleGroupMessage = async (io, chatId, eventName) => {
     });
 
     participants.forEach(participant => {
-        const sockets = getSockets(participant.userId);
-
-        sockets.forEach(socket => {
-            addSocketToRoom(socket, roomId);
-            io.to(socket.id).emit(eventName, ApiResponse({
-                message: "Group event",
-                data: chatId
-            }));
-        });
+        io.in(`user_${participant.userId}`).socketsJoin(roomId);
     });
+
+    io.to(roomId).emit(eventName, ApiResponse({
+        message: "Group event",
+        data: chatId
+    }));
 };
 
-const getActiveUsersInRoom = (io, roomId) => {
-    const socketIds = io.sockets.adapter.rooms.get(roomId);
-    if (!socketIds) return [];
+const getActiveUsersInRoom = async (io, roomId) => {
+    const sockets = await io.in(roomId).fetchSockets();
+    if (!sockets) return [];
 
     const activeUserIds = new Set();
-    socketIds.forEach((socketId) => {
-        const socket = io.sockets.sockets.get(socketId);
+    for (const socket of sockets) {
         if (socket?.user?.id) {
             activeUserIds.add(socket.user.id);
         }
-    });
+    }
 
     return Array.from(activeUserIds);
 }

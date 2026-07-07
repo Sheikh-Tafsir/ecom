@@ -2,7 +2,13 @@ const Redis = require('ioredis');
 require('dotenv').config();
 
 // Create Redis connection
-const RedisConfig = new Redis(process.env.REDIS_URL);
+const redisOptions = process.env.REDIS_URL || {
+    host: process.env.REDIS_HOST,
+    port: process.env.REDIS_PORT,
+    password: process.env.REDIS_PASSWORD,
+};
+
+const RedisConfig = new Redis(redisOptions);
 
 
 RedisConfig.on('connect', () => console.info('✅ Redis connected'));
