@@ -2,6 +2,7 @@ import {useState, useEffect, useCallback} from 'react';
 import {useParams, useNavigate} from "react-router-dom";
 import {useQueryClient} from '@tanstack/react-query';
 
+import { Button } from "@/components/ui/button";
 import ChatList from './ChatList';
 import ChatMessages from './ChatMessages';
 import ChatSearch from './ChatSearch';
@@ -15,6 +16,7 @@ import {useChatData} from './hooks/useChatData';
 import {useChatSync} from './hooks/useChatSync';
 import {useChatActions} from './hooks/useChatActions';
 import { notify } from '@/components/common/notification';
+import { cn } from '@/lib/utils';
 
 const Chat = () => {
     const {id} = useParams();
@@ -103,32 +105,55 @@ const Chat = () => {
     };
 
     return (
-        <>
+        <div className="h-[calc(100vh-120px)] min-h-[600px] flex bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm mx-4 my-2 relative">
             {(isChatsLoading || isSelectedChatLoading || !user?.id) && <PageLoadingOverlay/>}
 
-            <div className="flex justify-between pb-8 pt-4 overflow-hidden">
-                <div className='w-[23.3%] bg-white h-[calc(90vh-2rem)] px-2'>
-                    <div className='p-2'>
-                        <h1 className="text-2xl font-semibold text-black mt-1 mb-3">Messages</h1>
-                        <ChatSearch setSearchedUser={setSearchedUser}/>
+            {/* Sidebar - Hidden on mobile when a chat is selected */}
+            <div className={cn(
+                "w-full md:w-[300px] xl:w-[320px] 2xl:w-[380px] flex-shrink-0 flex flex-col border-r border-slate-100 bg-slate-50/50 transition-all duration-300",
+                id ? "hidden md:flex" : "flex"
+            )}>
+                <div className="p-6 pb-2">
+                    <div className="flex items-center justify-between mb-6">
+                        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Messages</h1>
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="rounded-full bg-white shadow-sm border border-slate-100 text-blue-600 hover:bg-blue-50"
+                            onClick={() => setIsUserSelectionDrawerOpen(true)}
+                        >
+                            <span className="text-xl">+</span>
+                        </Button>
                     </div>
+                    <ChatSearch setSearchedUser={setSearchedUser}/>
+                </div>
 
+                <div className="flex-1 overflow-hidden">
                     <ChatList chats={chats || []} handleUserSelectorDialogOpen={handleUserSelectorDialogOpen}/>
                 </div>
-                <div className="w-[76%]">
-                    <ChatMessages onSendMessage={onSendMessage} chat={newChat || selectedChat || {}}
-                                  handleUserSelectorDialogOpen={handleUserSelectorDialogOpen}/>
-                </div>
+            </div>
 
-                <UserSelectorDialog
-                    isOpen={isUserSelectionDrawerOpen}
-                    onClose={() => setIsUserSelectionDrawerOpen(false)}
-                    preSelecteedUserIds={preSelectedUserIds}
-                    avoidUserIds={avoidUserIds}
-                    confirmUsersSelection={handleGroupAction}
+            {/* Main Chat Area - Hidden on mobile when no chat is selected */}
+            <div className={cn(
+                "flex-1 flex flex-col min-w-0 bg-white transition-all duration-300",
+                !id && !newChat ? "hidden md:flex" : "flex"
+            )}>
+                <ChatMessages 
+                    onSendMessage={onSendMessage} 
+                    chat={newChat || selectedChat || {}}
+                    handleUserSelectorDialogOpen={handleUserSelectorDialogOpen}
+                    isMobileView={!!(id || newChat)}
                 />
             </div>
-        </>
+
+            <UserSelectorDialog
+                isOpen={isUserSelectionDrawerOpen}
+                onClose={() => setIsUserSelectionDrawerOpen(false)}
+                preSelecteedUserIds={preSelectedUserIds}
+                avoidUserIds={avoidUserIds}
+                confirmUsersSelection={handleGroupAction}
+            />
+        </div>
     );
 };
 
