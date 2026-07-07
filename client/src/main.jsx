@@ -19,7 +19,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <ErrorBoundary>
                 <QueryClientProvider client={queryClient}>
                     <App />
-                    {process.env.NODE_ENV == 'development' && <ReactQueryDevtools setInitialIsOpen={false} />}
+                    {import.meta.env.MODE == 'development' && <ReactQueryDevtools setInitialIsOpen={false} />}
                 </QueryClientProvider>
             </ErrorBoundary>
         </React.StrictMode>

@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -30,6 +31,8 @@ public class GlobalExceptionHandler {
     private static final String NOT_FOUND = "No result found";
 
     private static final String SOMETHING_WENT_WRONG = "Something went wrong";
+
+    private static final String OPTIMISTIC_LOCKING_FAILURE = "The record was updated by another session. Please try again.";
 
     // 401
     @ExceptionHandler(IllegalArgumentException.class)
@@ -75,6 +78,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> handleNoResultException(NoResultException ex) {
         log.error("No Result found: {}", ex.getMessage());
         return error(NOT_FOUND, HttpStatusCode.valueOf(404));
+    }
+
+    // 409 Conflict
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<?> handleOptimisticLockingFailureException(ObjectOptimisticLockingFailureException ex) {
+        log.error("Optimistic locking failure: {}", ex.getMessage());
+        return error(OPTIMISTIC_LOCKING_FAILURE, HttpStatusCode.valueOf(409));
     }
 
     // 422
