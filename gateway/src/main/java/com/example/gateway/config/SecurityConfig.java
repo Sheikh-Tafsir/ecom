@@ -62,7 +62,7 @@ public class SecurityConfig {
                                         new PathPatternParserServerWebExchangeMatcher(
                                                 "/auth/access-token/refresh", HttpMethod.POST),
                                         new PathPatternParserServerWebExchangeMatcher(
-                                                "/auth/logoutlog", HttpMethod.POST)
+                                                "/auth/logout", HttpMethod.POST)
                                 )
                         )
                 )

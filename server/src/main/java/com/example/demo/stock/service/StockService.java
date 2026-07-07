@@ -2,6 +2,7 @@ package com.example.demo.stock.service;
 
 import com.example.demo.common.dto.DateRangeDto;
 import com.example.demo.common.model.*;
+import com.example.demo.common.service.IdempotencyService;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.product.service.ProductService;
 import com.example.demo.sale.SaleService;
@@ -16,6 +17,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -38,6 +41,8 @@ public class StockService {
 
     private final MessageService messageService;
 
+    private final IdempotencyService idempotencyService;
+
     @PreAuthorize("hasAnyAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue()," +
             "T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     public Page<StockListResponse> findAll(LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable) {
@@ -55,7 +60,12 @@ public class StockService {
 
     @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
-    public long create(CreateStockRequest request) {
+    public long create(CreateStockRequest request, String idempotencyKey) {
+        Object cachedResponse = idempotencyService.getCachedResponse(idempotencyKey, request);
+        if (cachedResponse != null) {
+            return (Long) cachedResponse;
+        }
+
         Stock stock = new Stock();
 
         request.items().forEach(itemRequest -> {
@@ -65,6 +75,16 @@ public class StockService {
         });
 
         stockRepository.save(stock);
+
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        idempotencyService.save(idempotencyKey, request, stock.getId());
+                    }
+                }
+        );
+
         return stock.getId();
     }
 

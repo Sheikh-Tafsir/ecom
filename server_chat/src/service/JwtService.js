@@ -1,16 +1,19 @@
 const jwt = require('jsonwebtoken');
 
+const ACCESS_TOKEN_SECRET = Buffer.from(process.env.ACCESS_TOKEN_SECRET, "utf8");
+const REFRESH_TOKEN_SECRET = Buffer.from(process.env.REFRESH_TOKEN_SECRET, "utf8");
+
 const isAccessTokenValid = (token) => {
     return jwt.verify(
         token,
-        Buffer.from(process.env.ACCESS_TOKEN_SECRET, "utf8")
+        ACCESS_TOKEN_SECRET
     );
 }
 
 const isRefreshTokenValid = (token) => {
     return jwt.verify(
         token,
-        Buffer.from(process.env.REFRESH_TOKEN_SECRET || process.env.ACCESS_TOKEN_SECRET, "utf8")
+        REFRESH_TOKEN_SECRET
     );
 }
 
@@ -23,7 +26,7 @@ const generateAccessToken = (user) => {
             role: user.role,
             permissions: user.permissions
         },
-        Buffer.from(process.env.ACCESS_TOKEN_SECRET, "utf8"),
+        ACCESS_TOKEN_SECRET,
         { expiresIn: process.env.ACCESS_TOKEN_VALIDITY || '30m' }
     );
 }
@@ -44,7 +47,7 @@ const generateRefreshToken = (user, exp) => {
 
     return jwt.sign(
         payload,
-        Buffer.from(process.env.REFRESH_TOKEN_SECRET || process.env.ACCESS_TOKEN_SECRET, "utf8"),
+        REFRESH_TOKEN_SECRET,
         options
     );
 }

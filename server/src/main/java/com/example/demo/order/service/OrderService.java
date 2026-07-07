@@ -20,6 +20,8 @@ import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -91,7 +93,15 @@ public class OrderService {
         orderRepository.save(order);
 
         CreateOrderResponse response = new CreateOrderResponse(order.getId(), order.getTotalPrice());
-        idempotencyService.save(idempotencyKey, request, response);
+
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        idempotencyService.save(idempotencyKey, request, response);
+                    }
+                }
+        );
 
         return response;
     }

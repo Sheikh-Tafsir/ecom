@@ -1,7 +1,6 @@
 package com.example.demo.stock.controller;
 
 import com.example.demo.common.dto.ApiResponse;
-import com.example.demo.common.service.IdempotencyService;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.common.utils.ResponseUtils;
 import com.example.demo.stock.dto.*;
@@ -28,8 +27,6 @@ public class StockController {
     private final StockValidator stockValidator;
 
     private final StockService stockService;
-
-    private final IdempotencyService idempotencyService;
 
     private final MessageService messageService;
 
@@ -63,16 +60,10 @@ public class StockController {
                                                     BindingResult bindingResult,
                                                     @RequestHeader(IDEMPOTENCY_HEADER) String key) {
 
-        Object response = idempotencyService.getCachedResponse(key, stockRequest);
-        if (response != null) {
-            return ResponseUtils.ok((Long) response, messageService.get("entity.creating", "Stock"));
-        }
-
         stockValidator.validateCreate(stockRequest, bindingResult);
         checkErrors(bindingResult);
 
-        long id = stockService.create(stockRequest);
-        idempotencyService.save(key, stockRequest, id);
+        long id = stockService.create(stockRequest, key);
         return ResponseUtils.created(id, messageService.get("entity.creating", "Stock"));
     }
 
