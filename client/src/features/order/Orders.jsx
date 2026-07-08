@@ -31,6 +31,7 @@ import StaredLabel from "@/components/common/StaredLabel";
 import {notify} from "@/components/common/notification";
 import {queryClient} from "@/services/queryClient";
 import {useUserStore} from "@/store/useUserStore";
+import { cn } from "@/lib/utils";
 
 const fetchOrders = async ({queryKey}) => {
     const [, params] = queryKey;
@@ -159,142 +160,192 @@ const Orders = () => {
     }
 
     return (
-        <>
+        <div className="bg-slate-50 min-h-screen">
             {isPageLoading && <PageLoadingOverlay/>}
 
-            <div className='container pb-8 pt-8'>
-                <h1 className='text-center text-2xl lg:text-2xl xl:text-3xl mb-6 font-semibold'>Orders</h1>
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-5 md:py-8">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+                    <div>
+                        <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-2">My Orders</h1>
+                        <p className="text-slate-500 font-medium">Track and manage your recent purchases</p>
+                    </div>
+                </div>
 
-                <div className='grid lg:grid-cols-4 gap-8'>
-                    <Card className='lg:col-span-1 space-y-4'>
+                <div className='grid lg:grid-cols-4 gap-10 items-start'>
+                    {/* Filter Sidebar */}
+                    <Card className='lg:col-span-1 border-slate-100 shadow-xl shadow-slate-200/50 rounded-lg overflow-hidden sticky top-24'>
                         <form onSubmit={handleFilter}>
-                            <CardHeader>
-                                <CardTitle>Filter</CardTitle>
+                            <CardHeader className="bg-slate-100 border-b border-slate-100 pb-4">
+                                <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                    <span className="p-1.5 bg-blue-600 rounded-lg text-white">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                                    </span>
+                                    Filter Orders
+                                </CardTitle>
                             </CardHeader>
 
-                            <CardContent className="space-y-4">
+                            <CardContent className="space-y-6 pt-6">
                                 {/* Product Name */}
-                                <div className="space-y-1">
-                                    <Label>Product Name</Label>
+                                <div className="space-y-2">
+                                    <Label className="text-base font-semibold uppercase tracking-widest ml-1">Product Name</Label>
                                     <Input
-                                        value={productName}
+                                        placeholder="Search by name..."
+                                        className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all"
+                                        value={form.productName}
+                                        name="productName"
                                         onChange={handleChange}
                                     />
                                     <InputError field="productName"/>
                                 </div>
 
                                 {/* From Date */}
-                                <div className="space-y-1">
-                                    <StaredLabel
-                                        label="From Date"
-                                        field="fromDate"
-                                    />
+                                <div className="space-y-2">
+                                    <Label className="text-base font-semibold uppercase tracking-widest ml-1">From Date</Label>
                                     <Input
                                         type="date"
-                                        value={fromDate}
+                                        className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all"
+                                        value={form.fromDate}
+                                        name="fromDate"
                                         onChange={handleChange}
                                     />
                                     <InputError field="fromDate"/>
                                 </div>
 
                                 {/* To Date */}
-                                <div className="space-y-1">
-                                    <StaredLabel
-                                        label="To Date"
-                                        field="toDate"
-                                    />
+                                <div className="space-y-2">
+                                    <Label className="text-base font-semibold uppercase tracking-widest ml-1">To Date</Label>
                                     <Input
                                         type="date"
-                                        value={toDate}
+                                        className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all"
+                                        value={form.toDate}
+                                        name="toDate"
                                         onChange={handleChange}
                                     />
                                     <InputError field="toDate"/>
                                 </div>
                             </CardContent>
 
-                            <CardFooter>
-                                <Button className="w-full bg-blue-600">
-                                    Search
+                            <CardFooter className="pt-2">
+                                <Button className="w-full h-12 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-200 transition-all active:scale-95">
+                                    Apply Filters
                                 </Button>
                             </CardFooter>
                         </form>
                     </Card>
 
-                    <div className='lg:col-span-3 space-y-4'>
-                        <Table className="cursor-pointer bg-white w-[100%]">
-                            <TableHeader>
-                                <TableRow
-                                    className="bg-blue-100 hover:bg-blue-200 transform transition-colors duration-200">
-                                    <TableHead className="text-black text-base">Name</TableHead>
-                                    <TableHead className="text-black text-base">Total Price</TableHead>
-                                    <TableHead className="text-black text-base">Date</TableHead>
-                                    <TableHead className="text-black text-base">Status</TableHead>
-                                    <TableHead className="text-black text-base">Action</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {orders.length > 0 ?
-                                    orders.map((item) => (
-                                        <TableRow key={item.id}>
-                                            <TableCell>{item.userName}</TableCell>
-                                            <TableCell>{item.totalPrice}</TableCell>
-                                            <TableCell>{formatDateAndTime(item.createdAt)}</TableCell>
-                                            <TableCell>{item.status}</TableCell>
-                                            <TableCell className="flex gap-2">
-                                                <Button className="text-blue-600 hover:text-white hover:bg-blue-600"
-                                                        onClick={() => navigate(`/orders/${item.id}`)} variant="outline"
-                                                >
-                                                    View
-                                                </Button>
+                    <div className='lg:col-span-3 space-y-6'>
+                        <div className="bg-white rounded-lg border border-slate-100 shadow-sm overflow-hidden">
+                            <Table className="bg-white">
+                                <TableHeader>
+                                    <TableRow className="bg-slate-100 border-b border-slate-100 hover:bg-slate-50/50 transition-none">
+                                        <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4">Customer</TableHead>
+                                        <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4">Total Amount</TableHead>
+                                        <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4">Date & Time</TableHead>
+                                        <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4 text-center">Status</TableHead>
+                                        <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4 text-right">Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {orders.length > 0 ?
+                                        orders.map((item) => (
+                                            <TableRow key={item.id} className="group hover:bg-slate-50/50 border-b border-slate-50 transition-colors">
+                                                <TableCell className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-black text-blue-600">
+                                                            {item.userName?.slice(0, 1)}
+                                                        </div>
+                                                        <span className="font-bold text-slate-700">{item.userName}</span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4">
+                                                    <span className="font-semibold text-slate-900">${item.totalPrice}</span>
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4">
+                                                    <span className="text-xs font-semibold text-slate-500">{formatDateAndTime(item.createdAt)}</span>
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4 text-center">
+                                                    <span className={cn(
+                                                        "inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
+                                                        item.status === ORDER_STATUS.PENDING && "bg-amber-100 text-amber-700",
+                                                        item.status === ORDER_STATUS.ACCEPTED && "bg-emerald-100 text-emerald-700",
+                                                        item.status === ORDER_STATUS.REJECTED && "bg-red-100 text-red-700",
+                                                        item.status === ORDER_STATUS.CANCELLED && "bg-slate-200 text-slate-600"
+                                                    )}>
+                                                        {item.status}
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4 text-right">
+                                                    <div className="flex justify-end gap-2">
+                                                        <Button 
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="h-9 px-4 rounded-lg font-bold text-xs text-blue-600 hover:bg-blue-50"
+                                                            onClick={() => navigate(`/orders/${item.id}`)} 
+                                                        >
+                                                            View
+                                                        </Button>
 
-                                                {ORDER_STATUS.PENDING == item.status && (
-                                                    hasPermission(user, PERMISSION.ADMIN_ACCESS) ||
-                                                    hasPermission(user, PERMISSION.SUPER_ADMIN_ACCESS)
-                                                        ? (
-                                                            <>
-                                                                <Button
-                                                                    className="text-green-600 hover:text-white hover:bg-green-600"
-                                                                    onClick={() => changeOrderStatus(item.id, ORDER_STATUS.ACCEPTED)}
-                                                                    variant="outline"
-                                                                >
-                                                                    Accept
-                                                                </Button>
-                                                                <Button
-                                                                    className="text-red-600 hover:text-white hover:bg-red-600"
-                                                                    onClick={() => changeOrderStatus(item.id, ORDER_STATUS.REJECTED)}
-                                                                    variant="outline"
-                                                                >
-                                                                    Reject
-                                                                </Button>
-                                                            </>
-                                                        ) : (
-                                                            <Button
-                                                                className="text-red-600 hover:text-white hover:bg-red-600"
-                                                                onClick={() => cancelOrder(item.id)}
-                                                                variant="outline"
-                                                            >
-                                                                Cancel
-                                                            </Button>
-                                                        )
-                                                )}
+                                                        {ORDER_STATUS.PENDING == item.status && (
+                                                            hasPermission(user, PERMISSION.ADMIN_ACCESS) ||
+                                                            hasPermission(user, PERMISSION.SUPER_ADMIN_ACCESS)
+                                                                ? (
+                                                                    <>
+                                                                        <Button
+                                                                            variant="outline"
+                                                                            size="sm"
+                                                                            className="h-9 px-4 rounded-lg font-bold text-xs text-emerald-600 hover:bg-emerald-50"
+                                                                            onClick={() => changeOrderStatus(item.id, ORDER_STATUS.ACCEPTED)}
+                                                                        >
+                                                                            Accept
+                                                                        </Button>
+                                                                        <Button
+                                                                            variant="outline"
+                                                                            size="sm"
+                                                                            className="h-9 px-4 rounded-lg font-bold text-xs text-red-600 hover:bg-red-50"
+                                                                            onClick={() => changeOrderStatus(item.id, ORDER_STATUS.REJECTED)}
+                                                                        >
+                                                                            Reject
+                                                                        </Button>
+                                                                    </>
+                                                                ) : (
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        className="h-9 px-4 rounded-lg font-bold text-xs text-red-600 hover:bg-red-50"
+                                                                        onClick={() => cancelOrder(item.id)}
+                                                                    >
+                                                                        Cancel
+                                                                    </Button>
+                                                                )
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                        :
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="py-20 text-center">
+                                                <div className="flex flex-col items-center gap-2 opacity-40">
+                                                    <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-2">
+                                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+                                                    </div>
+                                                    <p className="text-sm font-black uppercase tracking-widest">No orders found</p>
+                                                    <p className="text-xs font-medium">Try adjusting your filters</p>
+                                                </div>
                                             </TableCell>
                                         </TableRow>
-                                    ))
-                                    :
-                                    <TableRow>
-                                        <TableCell colSpan={5} className="text-center">
-                                            No sales found.
-                                        </TableCell>
-                                    </TableRow>
-                                }
-                            </TableBody>
-                        </Table>
+                                    }
+                                </TableBody>
+                            </Table>
+                        </div>
 
-                        <PaginationButton totalPages={totalPages}/>
+                        <div className="flex justify-center pt-4">
+                            <PaginationButton totalPages={totalPages}/>
+                        </div>
                     </div>
                 </div>
             </div>
-        </>
+        </div>
     )
 }
 

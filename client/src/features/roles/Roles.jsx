@@ -47,9 +47,10 @@ const Roles = () => {
     return (
         <>
             {isLoading && <PageLoadingOverlay/>}
-            <div className="container min-h-[90vh] pt-6">
+            
+            <div className="container min-h-[90vh] py-5 md:py-8">
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold">Role Management</h1>
+                    <h1 className='text-center text-2xl lg:text-2xl xl:text-3xl font-semibold'>Role Management</h1>
                     <Button onClick={() => navigate("/roles/create")} className="bg-blue-600">
                         <Plus className="mr-2 h-4 w-4"/> Add Role
                     </Button>
@@ -57,7 +58,7 @@ const Roles = () => {
 
                 <Table className="bg-white shadow-sm border rounded-lg">
                     <TableHeader>
-                        <TableRow className="bg-gray-50">
+                        <TableRow className="bg-gray-100">
                             <TableHead>Role Name</TableHead>
                             <TableHead>Permissions</TableHead>
                             <TableHead className="text-right">Actions</TableHead>

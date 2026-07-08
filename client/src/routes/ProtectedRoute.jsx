@@ -38,7 +38,7 @@ const ProtectedRoute = ({allowedPermissions}) => {
     return (
         <>
             <NavigationBar/>
-                <main className="bg-gradient-to-br from-blue-50 to-indigo-100 pb-8" style={{paddingTop: '70px'}}>
+                <main className="bg-slate-50 from-blue-50 to-indigo-100 pb-8">
                     <Outlet/>
                 </main>
             {!hideFooter && <Footer />}
