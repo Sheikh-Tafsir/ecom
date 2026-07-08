@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ButtonLoading } from '@/components/common/ButtonLoading';
-import { AxiosNoInterceptor } from '@/services/http/Axios.js';
+import { AuthAxios } from '@/services/http/Axios.js';
 import InputError from '@/components/common/InputError';
 import StaredLabel from '@/components/common/StaredLabel';
 import { TOAST_TYPE } from '@/utils/enums';
@@ -49,7 +49,7 @@ const ChangePassword = () => {
 
     const handleChangePassword = async (data) => {
         try {
-            await AxiosNoInterceptor.put(`password`, data)
+            await AuthAxios.put(`password`, data)
         
             showToast("Password changed successfully", TOAST_TYPE.SUCCESS);
             reset();

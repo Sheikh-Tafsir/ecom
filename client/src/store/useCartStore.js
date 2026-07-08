@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
-const LOCAL_STORAGE_CART = 'visoredCart';
+const LOCAL_STORAGE_CART = import.meta.env.VITE_LOCAL_STORAGE_CART;
 
 export const useCartStore = create(
     persist(

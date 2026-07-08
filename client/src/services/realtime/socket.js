@@ -1,6 +1,8 @@
 import {io} from 'socket.io-client';
 import { logout, refreshAccessToken } from '../http/Axios';
-import { getAccessToken, isAccessTokenExpired } from '@/utils';
+import { getAccessToken } from '@/utils';
+import { notify } from '@/components/common/notification';
+import { TOAST_TYPE } from '@/utils/enums';
 
 const API_PATH = import.meta.env.VITE_API_PATH;
 const WEB_SOCKET_ON = import.meta.env.VITE_WEB_SOCKET_ON;
@@ -14,7 +16,7 @@ export const connectSocket = async () => {
 
     connectionPromise = (async () => {
         try {
-            const token = await getValidAccessToken();
+            const token = getAccessToken();
 
             if (!token) {
                 connectionPromise = null;
@@ -26,12 +28,36 @@ export const connectSocket = async () => {
                 transports: ['websocket'],
             });
 
+            let hasRetried = false;
+
             socket.on('connect', () => {
                 //console.log("Connected to socket server");
+                hasRetried = false;
             });
 
-            socket.on("connect_error", (err) => {
+            socket.once("connect_error", async (err) => {
                 console.error("Socket connection error:", err);
+
+                if (err.message == "Unauthorized" && !hasRetried) {
+                    hasRetried = true;
+
+                    try {
+                        await refreshAccessToken();
+
+                        socket.auth = {
+                            token: getAccessToken(),
+                        };
+
+                        socket.connect();
+                    } catch {
+                        notify(TOAST_TYPE.INFO, "Session expired. Please log in again.");
+                        await logout();
+                    }
+                }
+            });
+
+            socket.on("disconnect", () => {
+                connectionPromise = null;
             });
 
             return socket;
@@ -52,25 +78,6 @@ export const disconnectSocket = () => {
     connectionPromise = null;
 };
 
-const getValidAccessToken = async () => {
-    let token = getAccessToken();
-
-    if (!token) {
-        return null;
-    }
-
-    if (!isAccessTokenExpired(token)) {
-        return token;
-    }
-
-    try {
-        return await refreshAccessToken();
-    } catch (error) {
-        await logout();
-        throw error;
-    }
-};
-
 export const isSocketOn = () => {
-    return WEB_SOCKET_ON == true;
+    return WEB_SOCKET_ON == "true";
 }

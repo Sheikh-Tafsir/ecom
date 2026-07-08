@@ -16,7 +16,7 @@ import {
 import {Input} from "@/components/ui/input.jsx"
 import {Label} from "@/components/ui/label.jsx"
 import {ButtonLoading} from '@/components/common/ButtonLoading';
-import {AxiosNoInterceptor} from '@/services/http/Axios';
+import {AuthAxios} from '@/services/http/Axios';
 import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils.js';
 import InputError from "@/components/common/InputError.jsx";
 import StaredLabel from '@/components/common/StaredLabel';
@@ -56,7 +56,7 @@ const Signup = () => {
 
     const handleSignup = async (data) => {
         try {
-            await AxiosNoInterceptor.post(`/auth/signup`, data);
+            await AuthAxios.post(`/auth/signup`, data);
 
             const email = data.email;
             reset();

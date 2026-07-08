@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ButtonLoading } from '@/components/common/ButtonLoading';
-import { AxiosNoInterceptor } from '@/services/http/Axios.js';
+import { AuthAxios } from '@/services/http/Axios.js';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/common/InputError';
 
@@ -50,7 +50,7 @@ const ForgetPasswordVerify = () => {
 
     const handleForgetResetVerify = async (data) => {
         try {
-            await AxiosNoInterceptor.post(`/auth/forget-password/verify`, {
+            await AuthAxios.post(`/auth/forget-password/verify`, {
                 ...data,
                 email,
             })
@@ -67,7 +67,7 @@ const ForgetPasswordVerify = () => {
         setIsResendOtpButtonLoading(true);
 
         try {
-            await AxiosNoInterceptor.post('/auth/password-forget/resend',
+            await AuthAxios.post('/auth/password-forget/resend',
                 {
                     email,
                 }

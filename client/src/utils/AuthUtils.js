@@ -1,6 +1,7 @@
 import {jwtDecode} from 'jwt-decode';
 
-export const ACCESS_TOKEN = import.meta.env.VITE_API_PATH;
+export const ACCESS_TOKEN = import.meta.env.VITE_ACCESS_TOKEN;
+export const LOCAL_STORAGE_CART = import.meta.env.VITE_LOCAL_STORAGE_CART;
 
 export const saveAccessToken = (token) => {
     localStorage.setItem(ACCESS_TOKEN, token);
@@ -37,6 +38,10 @@ export const isAccessTokenExpired = (token) => {
 
 export const removeAccessToken = () => {
     localStorage.removeItem(ACCESS_TOKEN);
+}
+
+export const removeCart = () => {
+    localStorage.removeItem(LOCAL_STORAGE_CART);
 }
 
 export const getUserPermissions = (user) => {

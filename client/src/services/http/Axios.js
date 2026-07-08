@@ -1,12 +1,12 @@
 import axios from 'axios';
 
-import {getAccessToken,isAccessTokenExpired, removeAccessToken, saveAccessToken} from '@/utils/AuthUtils';
+import {getAccessToken, removeAccessToken, removeCart, saveAccessToken} from '@/utils/AuthUtils';
 import { notify } from '@/components/common/notification';
 import { TOAST_TYPE } from '@/utils/enums';
 
 const API_PATH = import.meta.env.VITE_API_PATH;
 
-const AxiosNoInterceptor = axios.create({
+const AuthAxios = axios.create({
     baseURL: API_PATH,
     withCredentials: true,
     timeout: 5000,
@@ -20,7 +20,7 @@ const Axios = axios.create({
 
 Axios.interceptors.request.use(
     async (config) => {
-        const token = await getValidAccessToken();
+        const token = getAccessToken();
 
         if (token) {
             config.headers = config.headers || {};
@@ -42,21 +42,22 @@ Axios.interceptors.response.use(
             return Promise.reject(error);
         }
 
-        const isRefreshRequest = originalRequest?.url?.includes("/auth/access-token/refresh");
-
-        if (response.status == 401 && !originalRequest?._retry && !isRefreshRequest) {
+        if (response.status == 401 && !originalRequest?._retry) {
+            console.log("First 401");
             originalRequest._retry = true;
 
             try {
-                const token = await getValidAccessToken();
+                console.log("Refreshing...");
+                const token = await refreshAccessToken();
                 originalRequest.headers = originalRequest.headers || {};
                 originalRequest.headers.Authorization = `Bearer ${token}`;
 
                 return Axios.request(originalRequest);
             } catch (err) {
                 notify(TOAST_TYPE.INFO, "Session expired. Please log in again.");
+
                 await logout();
-                redirectAfterLogout();
+
                 return Promise.reject(err);
             }
         }
@@ -66,41 +67,31 @@ Axios.interceptors.response.use(
 );
 
 let isRefreshing = false;
-let queue = [];
+let refreshSubscribers = [];
 
-/**
- * Optional proactive refresh before request.
- * Enable if desired.
- */
-const getValidAccessToken = async () => {
-    let token = getAccessToken();
-
-    if (!token) {
-        return null;
-    }
-
-    if (!isAccessTokenExpired(token)) {
-        return token;
-    }
-
+const refreshAccessToken = async () => {
     if (isRefreshing) {
         return new Promise((resolve, reject) => {
-            subscribeTokenRefresh(resolve, reject);
+            addRefreshSubscriber(resolve, reject);
         });
     }
 
     isRefreshing = true;
 
     try {
-        const newToken = await refreshAccessToken();
 
-        onRefreshSuccess(newToken);
+        const response = await AuthAxios.post("/auth/access-token/refresh");
+        const token = response.data.data;
+        
+        saveAccessToken(token);
 
-        return newToken;
+        resolveRefreshSubscribers(token);
+
+        return token;
     } catch (error) {
-        onRefreshFailure(error);
-        await logout();
-        redirectAfterLogout();
+        console.error("Token refresh failed:", error);
+        rejectRefreshSubscribers(error);
+
         throw error;
     } finally {
         isRefreshing = false;
@@ -110,54 +101,40 @@ const getValidAccessToken = async () => {
 /**
  * Add requests waiting for token refresh.
  */
-const subscribeTokenRefresh = (resolve, reject) => {
-    queue.push({resolve, reject});
+const addRefreshSubscriber = (resolve, reject) => {
+    refreshSubscribers.push({resolve, reject});
 };
 
 /**
  * Resolve all waiting requests.
  */
-const onRefreshSuccess = (token) => {
-    queue.forEach(({resolve}) => resolve(token));
-    queue = [];
+const resolveRefreshSubscribers = (token) => {
+    refreshSubscribers.forEach(({resolve}) => resolve(token));
+    refreshSubscribers = [];
 };
 
 /**
  * Reject all waiting requests.
  */
-const onRefreshFailure = (error) => {
-    queue.forEach(({reject}) => reject(error));
-    queue = [];
-};
-
-
-const refreshAccessToken = async () => {
-    try {
-        const response = await AxiosNoInterceptor.post('/auth/access-token/refresh');
-        const token = response.data.data;
-        saveAccessToken(token)
-        return token;
-    } catch (error) {
-        console.error(error);
-        throw error;
-    }
+const rejectRefreshSubscribers = (error) => {
+    refreshSubscribers.forEach(({reject}) => reject(error));
+    refreshSubscribers = [];
 };
 
 const logout = async () => {
     try {
-        await AxiosNoInterceptor.post("/auth/logout");
+        await AuthAxios.post("/auth/logout");
     } catch (error) {
         console.error("Logout failed:", error);
     } finally {
         removeAccessToken();
+        removeCart();
+
+        isRefreshing = false;
+        refreshSubscribers = [];
+
+        window.location.replace("/");
     }
 };
 
-const redirectAfterLogout = () => {
-    isRefreshing = false;
-    queue = [];
-
-    window.location.replace("/");
-}
-
-export {API_PATH, Axios, AxiosNoInterceptor, refreshAccessToken, logout};
+export {API_PATH, Axios, AuthAxios, refreshAccessToken, logout};
