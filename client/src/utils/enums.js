@@ -1,3 +1,9 @@
+export const APP_MODULE = Object.freeze({
+    USER: "User",
+    ORDER: "Order",
+    SALE: "Sale",
+});
+
 export const GENDER_TYPE = Object.freeze({
     MALE: "Male",
     FEMALE: "Female",

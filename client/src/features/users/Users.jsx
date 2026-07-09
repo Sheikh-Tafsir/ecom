@@ -25,7 +25,7 @@ import PaginationButton from "@/components/common/PaginationButton";
 import PaginationSearch from "@/components/common/PaginationSearch";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
 import {formatDate} from "@/utils/DateUtils";
-import {ALERT_TYPE, PERMISSION, ROLE_PREFIX, TOAST_TYPE, USER_ROLE, USER_STATUS} from "@/utils/enums";
+import {ALERT_TYPE, APP_MODULE, PERMISSION, ROLE_PREFIX, TOAST_TYPE, USER_ROLE, USER_STATUS} from "@/utils/enums";
 import {
     FIRST_PAGE,
     checkAllSelected,
@@ -36,6 +36,8 @@ import {
 } from "@/utils/PaginationUtils.js";
 import {hasPermission} from "@/utils";
 import {notify} from "@/components/common/notification";
+
+import {ReportDialog} from "@/components/common/ReportDialog";
 
 const ALLOWED_SORT_FIELDS = new Set([
     "createdAt",
@@ -228,6 +230,10 @@ const Users = () => {
                 </Table>
 
                 <PaginationButton totalPages={totalPages}/>
+
+                <div className="mt-4">
+                    <ReportDialog />
+                </div>
             </div>
         </>
     );

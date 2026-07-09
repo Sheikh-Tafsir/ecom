@@ -25,13 +25,15 @@ import {
 } from '@/components/ui/card.jsx';
 import {Input} from '@/components/ui/input';
 import {Button} from '@/components/ui/button';
-import {ORDER_STATUS, PERMISSION, TOAST_TYPE} from '@/utils/enums';
+import {APP_MODULE, ORDER_STATUS, PERMISSION, TOAST_TYPE} from '@/utils/enums';
 import InputError from "@/components/common/InputError";
 import StaredLabel from "@/components/common/StaredLabel";
 import {notify} from "@/components/common/notification";
 import {queryClient} from "@/services/queryClient";
 import {useUserStore} from "@/store/useUserStore";
 import { cn } from "@/lib/utils";
+
+import {ReportDialog} from "@/components/common/ReportDialog";
 
 const fetchOrders = async ({queryKey}) => {
     const [, params] = queryKey;
@@ -169,6 +171,7 @@ const Orders = () => {
                         <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-2">My Orders</h1>
                         <p className="text-slate-500 font-medium">Track and manage your recent purchases</p>
                     </div>
+                    {(hasPermission(user, PERMISSION.ADMIN_ACCESS) || hasPermission(user, PERMISSION.SUPER_ADMIN_ACCESS)) && <ReportDialog module={APP_MODULE.ORDER} />}
                 </div>
 
                 <div className='grid lg:grid-cols-4 gap-10 items-start'>
@@ -338,10 +341,8 @@ const Orders = () => {
                                 </TableBody>
                             </Table>
                         </div>
-
-                        <div className="flex justify-center pt-4">
-                            <PaginationButton totalPages={totalPages}/>
-                        </div>
+                        
+                        <PaginationButton totalPages={totalPages}/>
                     </div>
                 </div>
             </div>

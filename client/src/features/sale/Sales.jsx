@@ -30,8 +30,10 @@ import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
 import InputError from "@/components/common/InputError";
 import StaredLabel from "@/components/common/StaredLabel";
-import {TOAST_TYPE} from "@/utils/enums";
+import {APP_MODULE, TOAST_TYPE} from "@/utils/enums";
 import {notify} from "@/components/common/notification";
+
+import {ReportDialog} from "@/components/common/ReportDialog";
 
 const fetchSales = async ({queryKey}) => {
     const [, params] = queryKey;
@@ -137,7 +139,10 @@ export default function Sales() {
             {isPageLoading && <PageLoadingOverlay/>}
 
             <div className="container pb-8 pt-8">
-                <h1 className='text-center text-2xl lg:text-2xl xl:text-3xl mb-6 font-semibold'>Sales</h1>
+                <div className="flex justify-between items-center mb-6">
+                    <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-2">Sales</h1>
+                    <ReportDialog module={APP_MODULE.SALE} />
+                </div>
 
                 <div className="grid lg:grid-cols-4 gap-8">
                     <Card className='lg:col-span-1 space-y-4'>
