@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/card";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
-import {Checkbox} from '@/components/ui/checkbox';
 import {ButtonLoading} from '@/components/common/ButtonLoading';
 import {AuthAxios} from '@/services/http/Axios';
 import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils';
@@ -96,27 +95,18 @@ const Login = () => {
     const isAnyLoginSubmitting = () => isSubmitting || isGoogleSubmitting;
 
     return (
-        <div className='flex min-h-screen bg-slate-50 overflow-hidden'>
+        <div className='flex min-h-screen overflow-hidden'>
             {/* Left side - form */}
-            <div className='flex-1 flex items-center justify-center p-8 lg:p-12 animate-in fade-in slide-in-from-left duration-700'>
+            <div className='flex-1 flex items-center justify-center p-6 pt-20 animate-in fade-in slide-in-from-left duration-700'>
                 <div className="w-full max-w-[440px]">
-                    <div className="mb-10 text-center lg:text-left">
-                        <Link to="/" className="inline-flex items-center gap-2 mb-8 group transition-transform active:scale-95">
-                            <img src="/navbar/icon3.png" className="h-10 w-10" alt="logo"/>
-                            <span className="text-2xl font-black text-slate-900 tracking-tight">{APP_NAME}</span>
-                        </Link>
-                        <h1 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">Welcome back!</h1>
-                        <p className="text-slate-500 font-medium">Please enter your details to sign in to your account.</p>
-                    </div>
-
                     <Card className="border-slate-200/60 shadow-xl shadow-slate-200/50 rounded-3xl overflow-hidden bg-white">
                         <form onSubmit={handleSubmit(handleLogin)}>
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-xl font-bold text-slate-800">Login</CardTitle>
-                                <CardDescription className="text-slate-500">Good to see you again</CardDescription>
+                            <CardHeader>
+                                <CardTitle className="text-3xl font-bold text-slate-800 pb-1">Login</CardTitle>
+                                <CardDescription className="text-slate-500">Please enter your details to sign in to your account</CardDescription>
                             </CardHeader>
 
-                            <CardContent className="space-y-5 pt-4">
+                            <CardContent className="space-y-5">
                                 <InputError errors={errors} field={GLOBAL_ERROR}/>
 
                                 {/* Email */}

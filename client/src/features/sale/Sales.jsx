@@ -1,6 +1,7 @@
 import React, {useEffect, useMemo, useState, useCallback} from "react";
 import {useNavigate, useSearchParams} from "react-router-dom";
 import {useQuery, keepPreviousData} from "@tanstack/react-query";
+import {Filter, TrendingUp, DollarSign, Calendar} from "lucide-react";
 
 import {
     Table,
@@ -29,9 +30,9 @@ import {
 import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
 import InputError from "@/components/common/InputError";
-import StaredLabel from "@/components/common/StaredLabel";
 import {APP_MODULE, TOAST_TYPE} from "@/utils/enums";
 import {notify} from "@/components/common/notification";
+import { cn } from "@/lib/utils";
 
 import {ReportDialog} from "@/components/common/ReportDialog";
 
@@ -135,121 +136,138 @@ export default function Sales() {
     }, [error, isError]);
 
     return (
-        <>
+        <div className="bg-slate-50 min-h-screen">
             {isPageLoading && <PageLoadingOverlay/>}
 
-            <div className="container pb-8 pt-8">
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-2">Sales</h1>
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-5 md:py-8">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+                    <div>
+                        <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-2">Sales Analytics</h1>
+                        <p className="text-slate-500 font-medium">Monitor your sales performance and revenue trends</p>
+                    </div>
                     <ReportDialog module={APP_MODULE.SALE} />
                 </div>
 
-                <div className="grid lg:grid-cols-4 gap-8">
-                    <Card className='lg:col-span-1 space-y-4'>
+                <div className="grid lg:grid-cols-4 gap-10 items-start">
+                    {/* Filter Sidebar */}
+                    <Card className='lg:col-span-1 border-slate-100 shadow-xl shadow-slate-200/50 rounded-lg overflow-hidden sticky top-24'>
                         <form onSubmit={handleFilter}>
-                            <CardHeader>
-                                <CardTitle>Filter</CardTitle>
+                            <CardHeader className="bg-slate-100 border-b border-slate-100 pb-4">
+                                <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                    <span className="p-1.5 bg-blue-600 rounded-lg text-white">
+                                        <Filter className="w-4 h-4" />
+                                    </span>
+                                    Filter Sales
+                                </CardTitle>
                             </CardHeader>
 
-                            <CardContent className="space-y-4">
+                            <CardContent className="space-y-6 pt-6">
                                 {/* Product Name */}
-                                <div className="space-y-1">
-                                    <Label>Product Name</Label>
+                                <div className="space-y-2">
+                                    <Label className="text-base font-semibold uppercase tracking-widest ml-1">Product Name</Label>
                                     <Input
-                                        value={productName}
+                                        placeholder="Search by product..."
+                                        className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all"
+                                        value={form.productName}
+                                        name="productName"
                                         onChange={handleChange}
                                     />
                                     <InputError field="productName"/>
                                 </div>
 
                                 {/* From Date */}
-                                <div className="space-y-1">
-                                    <StaredLabel
-                                        label="From Date"
-                                        field="fromDate"
-                                    />
+                                <div className="space-y-2">
+                                    <Label className="text-base font-semibold uppercase tracking-widest ml-1">From Date</Label>
                                     <Input
                                         type="date"
-                                        value={fromDate}
+                                        className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all"
+                                        value={form.fromDate}
+                                        name="fromDate"
                                         onChange={handleChange}
                                     />
                                     <InputError field="fromDate"/>
                                 </div>
 
                                 {/* To Date */}
-                                <div className="space-y-1">
-                                    <StaredLabel
-                                        label="To Date"
-                                        field="toDate"
-                                    />
+                                <div className="space-y-2">
+                                    <Label className="text-base font-semibold uppercase tracking-widest ml-1">To Date</Label>
                                     <Input
                                         type="date"
-                                        value={toDate}
+                                        className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all"
+                                        value={form.toDate}
+                                        name="toDate"
                                         onChange={handleChange}
                                     />
                                     <InputError field="toDate"/>
                                 </div>
                             </CardContent>
 
-                            <CardFooter>
-                                <Button className="w-full bg-blue-600">
-                                    Search
+                            <CardFooter className="pt-2">
+                                <Button className="w-full h-12 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-200 transition-all active:scale-95">
+                                    Apply Filters
                                 </Button>
                             </CardFooter>
                         </form>
                     </Card>
 
-                    <div className="lg:col-span-3 space-y-4">
-                        <Table className="bg-white w-full">
-                            <TableHeader>
-                                <TableRow className="bg-blue-100">
-                                    <TableHead>Name</TableHead>
-                                    {/* <TableHead>Buying Price</TableHead>
-                                    <TableHead>Selling Price</TableHead> */}
-                                    <TableHead>Quantity</TableHead>
-                                    <TableHead>Profit</TableHead>
-                                    <TableHead>Date</TableHead>
-                                </TableRow>
-                            </TableHeader>
+                    <div className="lg:col-span-3 space-y-6">
+                        <div className="bg-white rounded-lg border border-slate-100 shadow-sm overflow-hidden">
+                            <Table className="bg-white">
+                                <TableHeader>
+                                    <TableRow className="bg-slate-100 border-b border-slate-100 hover:bg-slate-50/50 transition-none">
+                                        <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4">Product</TableHead>
+                                        <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4">Quantity</TableHead>
+                                        <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4">Profit</TableHead>
+                                        <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4 text-right">Date</TableHead>
+                                    </TableRow>
+                                </TableHeader>
 
-                            <TableBody>
-                                {sales.length > 0 ?
-                                    sales.map((item) => (
-                                        <TableRow key={item.id}>
-                                            <TableCell>
-                                                {item.productName}
-                                            </TableCell>
-                                            {/* <TableCell>
-                                                {item.buyingPrice}
-                                            </TableCell>
-                                            <TableCell>
-                                                {item.sellingPrice}
-                                            </TableCell> */}
-                                            <TableCell>
-                                                {item.quantity}
-                                            </TableCell>
-                                            <TableCell>
-                                                {item.profit}
-                                            </TableCell>
-                                            <TableCell>
-                                                {formatDate(item.createdAt)}
+                                <TableBody>
+                                    {sales.length > 0 ?
+                                        sales.map((item) => (
+                                            <TableRow key={item.id} className="group hover:bg-slate-50/50 border-b border-slate-50 transition-colors">
+                                                <TableCell className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                                                            <TrendingUp className="w-4 h-4 text-blue-600" />
+                                                        </div>
+                                                        <span className="font-bold text-slate-700">{item.productName}</span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4">
+                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-600">
+                                                        {item.quantity} units
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4">
+                                                    <span className="font-black text-emerald-600">${item.profit}</span>
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4 text-right">
+                                                    <span className="text-xs font-semibold text-slate-500">{formatDate(item.createdAt)}</span>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                        :
+                                        <TableRow>
+                                            <TableCell colSpan={4} className="py-20 text-center">
+                                                <div className="flex flex-col items-center gap-2 opacity-40">
+                                                    <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-2">
+                                                        <DollarSign className="w-6 h-6 text-slate-400" />
+                                                    </div>
+                                                    <p className="text-sm font-black uppercase tracking-widest">No sales records found</p>
+                                                    <p className="text-xs font-medium">Try adjusting your filters</p>
+                                                </div>
                                             </TableCell>
                                         </TableRow>
-                                    ))
-                                    :
-                                    <TableRow>
-                                        <TableCell colSpan={4} className="text-center">
-                                            No sales found.
-                                        </TableCell>
-                                    </TableRow>
-                                }
-                            </TableBody>
-                        </Table>
+                                    }
+                                </TableBody>
+                            </Table>
+                        </div>
 
                         <PaginationButton totalPages={totalPages}/>
                     </div>
                 </div>
             </div>
-        </>
+        </div>
     );
 }

@@ -199,7 +199,7 @@ const ProductCreate = () => {
         <>
             {(isCategoriesLoading || isProductLoading) && <PageLoadingOverlay/>}
 
-            <div className="container lg:flex min-h-screen py-8">
+            <div className="container lg:flex min-h-screen">
                 <Card className="mx-auto my-auto w-[450px] lg:w-[550px]">
                     <form onSubmit={handleSubmit(saveProduct)}>
                         <CardHeader>

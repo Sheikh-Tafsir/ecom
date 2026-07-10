@@ -120,7 +120,7 @@ const UserEdit = () => {
         <>
             {isPageLoading && <PageLoadingOverlay/>}
 
-            <div className="min-h-[90vh] flex pt-8">
+            <div className="min-h-[90vh] flex items-center justify-center">
                 <Card className="mx-auto my-auto w-[450px]">
                     <form onSubmit={handleSubmit((data) => updateUser.mutate(data))}>
                         <fieldset disabled={!isEditable}>

@@ -24,6 +24,7 @@ import InputError from "@/components/common/InputError.jsx";
 import {notify} from '@/components/common/notification';
 import {Checkbox} from "@/components/ui/checkbox";
 import {Label} from "@/components/ui/label";
+import { MultiSelect } from '@/components/common/MultiSelect';
 
 const RoleSchema = z.object({
     name: z.string().min(2, "Role name is required"),
@@ -67,10 +68,14 @@ const RoleEdit = () => {
 
     const mutation = useMutation({
         mutationFn: async (data) => {
+            const payload = {
+                ...data,
+                name: `ROLE_${data.name.toUpperCase()}`
+            };
             if (id) {
-                await Axios.put(`/roles/${id}`, data);
+                await Axios.put(`/roles/${id}`, payload);
             } else {
-                await Axios.post('/roles', data);
+                await Axios.post('/roles', payload);
             }
         },
         onSuccess: () => {
@@ -87,57 +92,76 @@ const RoleEdit = () => {
     if (isLoading) return <PageLoadingOverlay/>;
 
     return (
-        <div className="min-h-[90vh] flex items-center justify-center p-4">
-            <Card className="w-full max-w-md">
+        <div className="min-h-[85vh] flex items-center justify-center">
+            <Card className="w-full max-w-lg border-slate-100 shadow-xl shadow-slate-200/50 rounded-lg overflow-hidden">
                 <form onSubmit={handleSubmit((data) => mutation.mutate(data))}>
-                    <CardHeader>
-                        <CardTitle>{id ? 'Edit Role' : 'Create New Role'}</CardTitle>
+                    <CardHeader className="bg-slate-100 border-b border-slate-100 pb-6">
+                        <CardTitle className="text-2xl font-bold text-slate-800 tracking-tight">
+                            {id ? 'Edit Role' : 'Create New Role'}
+                        </CardTitle>
+                        <p className="text-slate-500 font-medium text-sm">
+                            {id ? 'Update existing role permissions and name' : 'Define a new role and assign its access levels'}
+                        </p>
                     </CardHeader>
-                    <CardContent className="space-y-6">
+                    
+                    <CardContent className="space-y-6 pt-8 px-8">
                         <InputError errors={errors} field={GLOBAL_ERROR}/>
-                        
-                        <div className="space-y-2">
-                            <StaredLabel label="Role Name"/>
-                            <Input {...register("name")} placeholder="e.g. MANAGER"/>
-                            {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
+
+                        <div className="space-y-3">
+                            <Label className="text-sm font-bold uppercase tracking-widest text-slate-600">
+                                <StaredLabel label="Role Name"/>
+                            </Label>
+                            <div className="flex items-center gap-2">
+                                <span className="bg-slate-100 px-3 h-11 flex items-center rounded-lg font-bold text-slate-400 border border-slate-200">ROLE_</span>
+                                <Input 
+                                    {...register("name")} 
+                                    placeholder="e.g. MANAGER"
+                                    className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all font-bold text-slate-700"
+                                />
+                            </div>
+                            <InputError errors={errors} field="name"/>
                         </div>
 
                         <div className="space-y-3">
-                            <StaredLabel label="Permissions"/>
-                            <div className="grid grid-cols-1 gap-2">
-                                {Object.entries(PERMISSION).map(([key, value]) => (
-                                    <div key={value} className="flex items-center space-x-2">
-                                        <Controller
-                                            name="permissions"
-                                            control={control}
-                                            render={({field}) => (
-                                                <Checkbox
-                                                    id={value}
-                                                    checked={field.value?.includes(value)}
-                                                    onCheckedChange={(checked) => {
-                                                        const newValue = checked
-                                                            ? [...(field.value || []), value]
-                                                            : field.value?.filter((v) => v !== value);
-                                                        field.onChange(newValue);
-                                                    }}
-                                                />
-                                            )}
-                                        />
-                                        <Label htmlFor={value} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                            {key} ({value})
-                                        </Label>
-                                    </div>
-                                ))}
-                            </div>
-                            {errors.permissions && <p className="text-sm text-red-500">{errors.permissions.message}</p>}
+                            <Label className="text-sm font-bold uppercase tracking-widest text-slate-600">
+                                <StaredLabel label="Permissions"/>
+                            </Label>
+                            <Controller
+                                name="permissions"
+                                control={control}
+                                render={({field}) => (
+                                    <MultiSelect
+                                        options={Object.entries(PERMISSION).map(([key, value]) => ({
+                                            label: key.split('_').map(word => word.charAt(0) + word.slice(1).toLowerCase()).join(' '),
+                                            value: value,
+                                        }))}
+                                        selected={field.value}
+                                        onChange={field.onChange}
+                                        placeholder="Select permissions..."
+                                        className="border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all"
+                                    />
+                                )}
+                            />
+                            <InputError errors={errors} field="permissions"/>
                         </div>
                     </CardContent>
-                    <CardFooter className="flex justify-end gap-2">
-                        <Button type="button" variant="outline" onClick={() => navigate('/roles')}>
+                    
+                    <CardFooter className="flex justify-end gap-3 px-8 pb-8 pt-4">
+                        <Button 
+                            type="button" 
+                            variant="ghost" 
+                            onClick={() => navigate('/roles')}
+                            className="font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-100 h-12 px-6 rounded-lg"
+                        >
                             Cancel
                         </Button>
-                        {isSubmitting ? <ButtonLoading /> : (
-                            <Button type="submit" className="bg-blue-600">
+                        {isSubmitting ? (
+                            <ButtonLoading className="h-12 px-8 rounded-lg bg-blue-600 w-[140px]" />
+                        ) : (
+                            <Button 
+                                type="submit" 
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 px-8 rounded-lg shadow-lg shadow-blue-200 transition-all active:scale-95"
+                            >
                                 {id ? 'Save Changes' : 'Create Role'}
                             </Button>
                         )}
