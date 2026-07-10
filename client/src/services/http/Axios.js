@@ -43,11 +43,9 @@ Axios.interceptors.response.use(
         }
 
         if (response.status == 401 && !originalRequest?._retry) {
-            console.log("First 401");
             originalRequest._retry = true;
 
             try {
-                console.log("Refreshing...");
                 const token = await refreshAccessToken();
                 originalRequest.headers = originalRequest.headers || {};
                 originalRequest.headers.Authorization = `Bearer ${token}`;

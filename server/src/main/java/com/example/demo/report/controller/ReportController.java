@@ -4,17 +4,18 @@ import com.example.demo.report.dto.ReportCreateRequest;
 import com.example.demo.report.service.ReportService;
 import com.example.demo.report.service.ReportServiceFactory;
 import com.example.demo.report.validator.ReportValidator;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.io.IOException;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import static com.example.demo.common.utils.Utils.checkErrors;
 
@@ -28,15 +29,21 @@ public class ReportController {
     private final ReportServiceFactory reportServiceFactory;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
-    public void create(@Valid @RequestBody ReportCreateRequest request,
-                       BindingResult bindingResult,
-                       HttpServletResponse response) throws IOException {
+    @PreAuthorize("hasAnyAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue()," +
+            "T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
+    public ResponseEntity<StreamingResponseBody> create(@Valid @RequestBody ReportCreateRequest request,
+                                                        BindingResult bindingResult) {
 
         reportValidator.validate(request, bindingResult);
         checkErrors(bindingResult);
 
         ReportService reportService = reportServiceFactory.getService(request.getModule());
-        reportService.generateFile(request, response);
+
+        StreamingResponseBody responseBody = outputStream -> reportService.writeCsv(outputStream, request);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + reportService.getFileName() + "\"")
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .body(responseBody);
     }
 }

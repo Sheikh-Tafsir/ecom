@@ -15,49 +15,80 @@ import { Input } from "@/components/ui/input";
 import { APP_MODULE, TOAST_TYPE } from "@/utils/enums";
 import { Axios } from "@/services/http/Axios";
 import { notify } from "@/components/common/notification";
+import InputError from "./InputError";
+import { GLOBAL_ERROR, handleErrors } from "@/utils";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const today = new Date();
+today.setHours(23, 59, 59, 999);
+
+const dateSchema = z.preprocess((arg) => {
+    if (arg instanceof Date && isNaN(arg.getTime())) return null;
+    return arg;
+}, z.date().nullable().optional());
+
+const ReportSchema = z.object({
+    fromDate: dateSchema,
+    toDate: dateSchema,
+})
+    .refine(
+        (data) => !data.fromDate || data.fromDate <= today,
+        {
+            message: "From Date cannot be in the future",
+            path: ["fromDate"],
+        }
+    )
+    .refine(
+        (data) => !data.toDate || data.toDate <= today,
+        {
+            message: "To Date cannot be in the future",
+            path: ["toDate"],
+        }
+    )
+    .refine(
+        (data) =>
+            !data.fromDate ||
+            !data.toDate ||
+            data.fromDate <= data.toDate,
+        {
+            message: "From Date cannot be greater than To Date",
+            path: ["toDate"],
+        }
+    );
 
 export function ReportDialog({ module = APP_MODULE.USER, trigger }) {
     const [open, setOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [form, setForm] = useState({
-        fromDate: "",
-        toDate: "",
+
+    const {
+        register,
+        handleSubmit,
+        setError,
+        reset,
+        formState: { errors, isSubmitting },
+    } = useForm({
+        resolver: zodResolver(ReportSchema),
+        defaultValues: {
+            fromDate: null,
+            toDate: null,
+        }
     });
 
-    const handleChange = (name, value) => {
-        setForm((prev) => ({ ...prev, [name]: value }));
-    };
-
-    const handleDownload = async () => {
-        if (!module) {
-            console.error("ReportDialog: module prop is missing!");
-            notify(TOAST_TYPE.ERROR, "Internal error: module selection missing");
-            return;
-        }
-
-        const today = new Date().toISOString().split("T")[0];
-
-        if (form.fromDate > today) {
-            notify(TOAST_TYPE.ERROR, "From Date cannot be in the future");
-        }
-
-        if (form.toDate > today) {
-            notify(TOAST_TYPE.ERROR, "To Date cannot be in the future");
-        }
-
-        if (form.fromDate > form.toDate) {
-            notify(TOAST_TYPE.ERROR, "From Date cannot be greater than To date");
-            return;
-        }
-
-        setLoading(true);
+    const handleDownload = async (data) => {
         try {
-            const response = await Axios.post("/reports", { ...form, module }, {
+            const payload = {
+                module,
+                fromDate: data.fromDate ? data.fromDate.toISOString().split("T")[0] : null,
+                toDate: data.toDate ? data.toDate.toISOString().split("T")[0] : null,
+            };
+
+            const response = await Axios.post("/reports", payload, {
                 responseType: "blob",
             });
 
             const disposition = response.headers["content-disposition"];
-            let filename = `report_${module.toLowerCase()}_${form.fromDate}_to_${form.toDate}.csv`;
+            let filename = `report_${module.toLowerCase()}_${payload.fromDate || "start"}_to_${payload.toDate || "end"}.csv`;
 
             if (disposition && disposition.includes("filename=")) {
                 const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
@@ -75,19 +106,28 @@ export function ReportDialog({ module = APP_MODULE.USER, trigger }) {
             link.click();
             link.remove();
             window.URL.revokeObjectURL(url);
-            
+
+            reset();
             setOpen(false);
-            //notify(TOAST_TYPE.SUCCESS, "Report downloaded successfully");
         } catch (error) {
             console.error("Report download failed:", error);
+
+            if (error.response?.data instanceof Blob && error.response.data.type === "application/json") {
+                const text = await error.response.data.text();
+                const errorData = JSON.parse(text);
+                // Wrap in a fake axios error structure so handleErrors can process it
+                handleErrors({ response: { data: errorData } }, setError);
+            }
+            
             notify(TOAST_TYPE.ERROR, "Failed to download report");
-        } finally {
-            setLoading(false);
         }
     };
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={(val) => {
+            setOpen(val);
+            if (!val) reset();
+        }}>
             <DialogTrigger asChild>
                 {trigger || (
                     <Button variant="outline" size="sm" className="gap-2">
@@ -104,28 +144,34 @@ export function ReportDialog({ module = APP_MODULE.USER, trigger }) {
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
+                    <InputError errors={errors} field={GLOBAL_ERROR} />
+
                     <div className="grid gap-2">
                         <Label htmlFor="fromDate">From Date</Label>
                         <Input
                             id="fromDate"
                             type="date"
-                            value={form.fromDate}
-                            onChange={(e) => handleChange("fromDate", e.target.value)}
+                            {...register("fromDate", {
+                                valueAsDate: true,
+                            })}
                         />
+                        <InputError errors={errors} field={"fromDate"} />
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="toDate">To Date</Label>
                         <Input
                             id="toDate"
                             type="date"
-                            value={form.toDate}
-                            onChange={(e) => handleChange("toDate", e.target.value)}
+                            {...register("toDate", {
+                                valueAsDate: true,
+                            })}
                         />
+                        <InputError errors={errors} field={"toDate"} />
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button onClick={handleDownload} disabled={loading}>
-                        {loading ? "Generating..." : "Download CSV"}
+                    <Button onClick={handleSubmit(handleDownload)} disabled={isSubmitting}>
+                        {isSubmitting ? "Generating..." : "Download CSV"}
                     </Button>
                 </DialogFooter>
             </DialogContent>

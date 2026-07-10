@@ -2,11 +2,10 @@ package com.example.demo.report.service;
 
 import com.example.demo.common.enums.AppModule;
 import com.example.demo.report.dto.ReportCreateRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -23,30 +22,15 @@ public abstract class ReportService {
 
     protected final JdbcTemplate jdbcTemplate;
 
-    public abstract AppModule getModule();
-
-    public abstract List<String> getHeaders();
-
-    protected abstract String getBaseSql();
-
-    protected abstract void mapRow(ResultSet rs, RowConsumer consumer) throws SQLException;
-
-    public void generateFile(ReportCreateRequest request, HttpServletResponse response) throws IOException {
-        response.setContentType("text/csv");
-        response.setHeader(
-                "Content-Disposition",
-                "attachment; filename=\"" + getFileName() + "\""
-        );
-
-        PrintWriter writer = response.getWriter();
+    public void writeCsv(OutputStream outputStream, ReportCreateRequest request) {
+        PrintWriter writer = new PrintWriter(outputStream);
 
         writer.println(String.join(",", getHeaders()));
 
         streamRows(
                 values -> {
                     String row = Arrays.stream(values)
-                            .map(v -> v == null ? "" : v.toString())
-                            .map(v -> v.contains(",") ? "\"" + v + "\"" : v)
+                            .map(this::formatCsvValue)
                             .collect(Collectors.joining(","));
                     writer.println(row);
                 },
@@ -57,7 +41,7 @@ public abstract class ReportService {
         writer.flush();
     }
 
-    private String getFileName() {
+    public String getFileName() {
         String timestamp = LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
 
@@ -83,6 +67,15 @@ public abstract class ReportService {
         );
     }
 
+    private String formatCsvValue(Object v) {
+        if (v == null) return "";
+        String s = v.toString();
+        if (s.contains(",") || s.contains("\"") || s.contains("\n")) {
+            return "\"" + s.replace("\"", "\"\"") + "\"";
+        }
+        return s;
+    }
+
     private static List<Object> addFilters(LocalDate fromDate, LocalDate toDate, StringBuilder sql) {
         List<Object> params = new ArrayList<>();
 
@@ -104,4 +97,12 @@ public abstract class ReportService {
         }
         return params;
     }
+
+    protected abstract AppModule getModule();
+
+    protected abstract List<String> getHeaders();
+
+    protected abstract String getBaseSql();
+
+    protected abstract void mapRow(ResultSet rs, RowConsumer consumer) throws SQLException;
 }

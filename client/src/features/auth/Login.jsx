@@ -39,7 +39,7 @@ const LoginSchema = z.object({
 });
 
 const Login = () => {
-     const navigate = useNavigate();
+    const navigate = useNavigate();
     const {login} = useUserStore();
 
     const {
