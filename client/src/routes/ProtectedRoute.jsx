@@ -22,11 +22,7 @@ const ProtectedRoute = ({allowedPermissions}) => {
     if (allowedPermissions && allowedPermissions.length > 0) { 
         if (!hasPermission(user, allowedPermissions)) {
             return (
-                <Navigate
-                    to="/auth/login"
-                    state={{ from: location }}
-                    replace
-                />
+                <Navigate to="/not-found"/>
             );
         }
     }

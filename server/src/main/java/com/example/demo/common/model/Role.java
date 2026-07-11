@@ -24,7 +24,7 @@ public class Role {
     @Column(nullable = false)
     private String name;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection
     @CollectionTable(name = "role_permissions", joinColumns = @JoinColumn(name = "role_id"))
     @Column(name = "permission", nullable = false)
     @Enumerated(EnumType.STRING)

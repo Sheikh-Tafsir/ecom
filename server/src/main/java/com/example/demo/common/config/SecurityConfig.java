@@ -65,7 +65,7 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationFilter authenticationFilter() {
-        return new AuthenticationFilter(jwtService, userDetailsService);
+        return new AuthenticationFilter(jwtService);
     }
 
     @Bean

@@ -41,8 +41,8 @@ public class UserController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<List<UserSearchResponse>>> findForNameSearch(@RequestParam(required = false) String name,
-                                                                                   @AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<ApiResponse<List<UserSearchResponse>>> searchByName(@RequestParam(required = false) String name,
+                                                                              @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         List<UserSearchResponse> users = userService.findAllByName(name, userDetails);
         return ResponseUtils.ok(users, messageService.get("successfully.found", "User search List"));

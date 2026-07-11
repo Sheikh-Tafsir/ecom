@@ -68,8 +68,8 @@ const StockItems = () => {
 
     const [form, setForm] = useState({
         productName: "",
-        fromDate: "",
-        toDate: "",
+        fromDate: undefined,
+        toDate: undefined,
     });
 
     const {

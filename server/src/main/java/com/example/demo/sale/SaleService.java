@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -24,6 +25,15 @@ public class SaleService {
 
     private final SaleRepository saleRepository;
 
+    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
+    public Page<SaleResponse> findAll(LocalDateTime fromDate, LocalDateTime toDate, Long productId, Pageable pageable) {
+        DateRangeDto dateRange = resolveDates(fromDate, toDate);
+
+        return saleRepository.findAllByMonth(dateRange.fromDate(), dateRange.toDate(), productId, getValidPageable(pageable))
+                .map(SaleResponse::new);
+    }
+
+    @Transactional
     public Sale add(Product product, Order order, int quantity, BigDecimal unitProfit) {
         Sale sale = new Sale();
         sale.setProduct(product);
@@ -34,15 +44,8 @@ public class SaleService {
         return sale;
     }
 
+    @Transactional
     public void createAll(List<Sale> sales) {
         saleRepository.saveAll(sales);
-    }
-
-    @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
-    public Page<SaleResponse> findAll(LocalDateTime fromDate, LocalDateTime toDate, Long productId, Pageable pageable) {
-        DateRangeDto dateRange = resolveDates(fromDate, toDate);
-
-        return saleRepository.findAllByMonth(dateRange.fromDate(), dateRange.toDate(), productId, getValidPageable(pageable))
-                .map(SaleResponse::new);
     }
 }

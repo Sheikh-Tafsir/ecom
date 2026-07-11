@@ -76,7 +76,7 @@ public class ProfileController {
                                     HttpServletRequest request,
                                     HttpServletResponse response) {
 
-        userService.delete(userDetails.user().getId());
+        userService.delete(userDetails.getId());
         authService.logout(request, response);
 
         return ResponseUtils.ok(messageService.get("successfully.deleted", "Profile"));

@@ -13,6 +13,7 @@ const SocketHandler = require("./src/sockets/socketHandlers")
 
 const ChatController = require("./src/controller/ChatController");
 const { isEnvironmentProduction } = require("./src/utils/Utils");
+const { specs, swaggerUi } = require("./src/config/swagger");
 
 const app = express();
 
@@ -21,6 +22,8 @@ app.use(
     cookieParser(),
     TrimInput
 );
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 app.get(["/", "/health"], (req, res) => {
     res.status(200).json({

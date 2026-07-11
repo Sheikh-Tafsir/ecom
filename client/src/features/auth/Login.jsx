@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {useNavigate, Link} from 'react-router-dom';
+import {useNavigate, useLocation, Link} from 'react-router-dom';
 import {useGoogleLogin} from '@react-oauth/google';
 import {FcGoogle} from "react-icons/fc";
 import {EyeOff, Eye} from "lucide-react";
@@ -39,7 +39,10 @@ const LoginSchema = z.object({
 
 const Login = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const {login} = useUserStore();
+
+    const requestedPath = location.state?.from?.pathname || "/";
 
     const {
         register,
@@ -60,7 +63,7 @@ const Login = () => {
             const response = await AuthAxios.post(`/auth/login`, data);
             login(response.data.data);
 
-            navigate(`/`, {replace: true});
+            navigate(requestedPath, {replace: true});
         } catch (error) {
             console.error(error);
             handleErrors(error, setError);
@@ -80,6 +83,7 @@ const Login = () => {
                 //console.log(response.data.data);
                 login(response.data.data);
                 reset();
+                navigate(requestedPath, {replace: true});
             } catch (err) {
                 console.error(err);
                 handleErrors(err, setError);

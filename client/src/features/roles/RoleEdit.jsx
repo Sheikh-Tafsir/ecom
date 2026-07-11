@@ -22,7 +22,6 @@ import {TOAST_TYPE, PERMISSION} from '@/utils/enums';
 import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils';
 import InputError from "@/components/common/InputError.jsx";
 import {notify} from '@/components/common/notification';
-import {Checkbox} from "@/components/ui/checkbox";
 import {Label} from "@/components/ui/label";
 import { MultiSelect } from '@/components/common/MultiSelect';
 

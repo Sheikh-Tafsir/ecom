@@ -37,11 +37,11 @@ public class JwtService {
 
     public String generateAccessToken(User user) {
         return Jwts.builder()
-                .setSubject(user.getEmail())
+                .setSubject(user.getId().toString())
                 .claim("id", user.getId())
                 .claim("name", user.getName())
                 .claim("email", user.getEmail())
-                .claim("role", user.getRoleValues())
+                .claim("status", user.getStatus())
                 .claim("permissions", user.getPermissionValues())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + accessTokenValidity))
@@ -57,8 +57,7 @@ public class JwtService {
         String jti = UUID.randomUUID().toString();
 
         return Jwts.builder()
-                .setSubject(user.getEmail())
-                .claim("id", user.getId())
+                .setSubject(user.getId().toString())
                 .setId(jti)
                 .setIssuedAt(new Date())
                 .setExpiration(expiration)
@@ -66,16 +65,13 @@ public class JwtService {
                 .compact();
     }
 
-    public boolean isAccessTokenValid(String token) {
-        return isTokenValid(token, accessTokenSecret);
-    }
-
     public boolean isRefreshTokenValid(String token) {
-        return isTokenValid(token, refreshTokenSecret);
-    }
-
-    public String getEmailFromAccessToken(String token) {
-        return parseClaims(token, accessTokenSecret).getSubject();
+        try {
+            parseClaims(token, refreshTokenSecret);
+            return true;
+        } catch (JwtException e) {
+            return false;
+        }
     }
 
     public String getJtiFromRefreshToken(String token) {
@@ -86,13 +82,8 @@ public class JwtService {
         return parseClaims(token, refreshTokenSecret).getExpiration();
     }
 
-    private boolean isTokenValid(String token, Key secretKey) {
-        try {
-            parseClaims(token, secretKey);
-            return true;
-        } catch (JwtException e) {
-            return false;
-        }
+    public Claims parseAccessTokenClaims(String token) {
+        return parseClaims(token, accessTokenSecret);
     }
 
     private Claims parseClaims(String token, Key secretKey) {

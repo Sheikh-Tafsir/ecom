@@ -42,12 +42,20 @@ public class UserRefreshTokenService {
         }
     }
 
+    @Transactional
     public User validate(String refreshToken) {
         String jti = jwtService.getJtiFromRefreshToken(refreshToken);
         UserRefreshToken userRefreshToken = findByJti(jti);
 
-        if (userRefreshToken == null || userRefreshToken.isInvalid()) {
-            throw new InvalidRefreshTokenException("Refresh token is already revoked");
+        if (userRefreshToken == null) {
+            throw new InvalidRefreshTokenException("Refresh token not found");
+        }
+
+        if (userRefreshToken.isInvalid()) {
+            log.warn("Refresh token reuse detected for JTI: {}. Revoking all tokens for user.", jti);
+            userRefreshTokenRepository.revokeAllForUser(userRefreshToken.getUser().getId(), UserRefreshTokenStatus.REVOKED);
+
+            throw new InvalidRefreshTokenException("Refresh token has been reused. All active sessions have been invalidated for security.");
         }
 
         userRefreshToken.setStatus(UserRefreshTokenStatus.REVOKED);
@@ -61,6 +69,7 @@ public class UserRefreshTokenService {
         return user;
     }
 
+    @Transactional
     public void deleteRevoked() {
         LocalDateTime cutoff = LocalDateTime.now().minusHours(24);
         int deletedCount = userRefreshTokenRepository.deleteRevoked(UserRefreshTokenStatus.REVOKED, cutoff);

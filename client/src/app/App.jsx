@@ -145,6 +145,7 @@ const InnerApp = () => {
                     <Route path="/sales" element={<Sales/>}/>
                 </Route>
 
+                <Route path="/not-found" element={<NotFound/>}/>
                 <Route path="*" element={<NotFound/>}/>
             </Routes>
 

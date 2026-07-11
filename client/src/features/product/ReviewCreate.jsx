@@ -68,7 +68,7 @@ const ReviewCreate = () => {
     };
 
     return (
-        <Card className="w-[49%] h-fit">
+        <Card className="h-fit">
             <form onSubmit={handleSubmit(saveReview)}>
                 <CardHeader>
                     <CardTitle>Add Review</CardTitle>

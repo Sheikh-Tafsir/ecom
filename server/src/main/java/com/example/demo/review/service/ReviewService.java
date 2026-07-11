@@ -3,12 +3,14 @@ package com.example.demo.review.service;
 import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.common.model.Product;
 import com.example.demo.common.model.Review;
+import com.example.demo.common.model.User;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.product.service.ProductService;
 import com.example.demo.review.dto.CreateReviewRequest;
 import com.example.demo.review.dto.ReviewResponse;
 import com.example.demo.review.dto.UpdateReviewRequest;
 import com.example.demo.review.repository.ReviewRepository;
+import com.example.demo.user.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -35,6 +37,8 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
 
+    private final UserService userService;
+
     public Page<ReviewResponse> findAllByProduct(Long productId, Pageable pageable) {
         return reviewRepository.findAllByProduct_Id(productId, getValidPageable(pageable)).map(ReviewResponse::new);
     }
@@ -58,10 +62,12 @@ public class ReviewService {
         product.setReviewCount(newReviewCount);
         product.setRating(newAvgRating);
 
+        User user = userService.findByIdHelper(userDetails.getId());
+
         Review review =new Review();
         review.setRating(request.rating());
         review.setComment(request.comment());
-        review.setUser(userDetails.user());
+        review.setUser(user);
         review.setProduct(product);
 
         reviewRepository.save(review);

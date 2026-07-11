@@ -5,6 +5,7 @@ import com.example.demo.common.model.Role;
 import com.example.demo.common.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -18,8 +19,13 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
+    @EntityGraph(attributePaths = {"roles", "roles.permissions"})
+    Optional<User> findById(Long id);
+
+    @EntityGraph(attributePaths = {"roles", "roles.permissions"})
     Optional<User> findByEmail(String email);
 
+    @EntityGraph(attributePaths = {"roles"})
     @Query("""
                 SELECT DISTINCT u FROM User u
                 JOIN u.roles r

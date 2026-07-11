@@ -1,7 +1,5 @@
-package com.example.demo.common.dto;
+package com.example.gateway.dto;
 
-import com.example.demo.common.enums.UserStatus;
-import com.example.demo.common.model.User;
 import io.jsonwebtoken.Claims;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
@@ -28,15 +26,6 @@ public class CustomUserDetails implements UserDetails {
         this.authorities = permissions == null
                 ? List.of()
                 : permissions.stream()
-                .map(SimpleGrantedAuthority::new)
-                .toList();
-    }
-
-    public CustomUserDetails(User user) {
-        this.id = user.getId();
-        this.email = user.getEmail();
-        this.status = user.getStatus();
-        this.authorities = user.getPermissionValues().stream()
                 .map(SimpleGrantedAuthority::new)
                 .toList();
     }

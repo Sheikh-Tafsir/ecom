@@ -165,6 +165,7 @@ public class StockService {
     }
 
     // -- helpers --
+    @Transactional
     public void consume(Product product, int quantityToConsume, Order order) {
         List<StockItem> stockItems = stockItemRepository.findAvailableByProductIdOrderByOldest(product.getId());
 

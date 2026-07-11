@@ -12,6 +12,7 @@ import com.example.demo.auth.dto.Otp;
 import com.example.demo.common.service.JwtService;
 import com.example.demo.common.service.MailService;
 import com.example.demo.role.service.RoleService;
+import com.example.demo.user.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ValidationException;
@@ -73,6 +74,8 @@ public class AuthService {
 
     private final RoleService roleService;
 
+    private final UserService userService;
+
     private final UserRefreshTokenService userRefreshTokenService;
 
     private final AuthenticationManager authenticationManager;
@@ -89,11 +92,13 @@ public class AuthService {
 
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
-        if (userDetails.user().isNotActive()) {
-            throw new BadCredentialsException("Account is " + userDetails.user().getStatus().getValue());
+        if (!userDetails.isEnabled()) {
+            throw new BadCredentialsException("Account is not active");
         }
 
-        return getAuthTokens(userDetails.user());
+        User user = userService.findByIdHelper(userDetails.getId());
+
+        return getAuthTokens(user);
     }
 
     @Transactional
@@ -228,7 +233,7 @@ public class AuthService {
         User user = findByEmail(request.email());
 
         if (isNull(user)) {
-            throw new BadCredentialsException("Email is invalid");
+            throw new ValidationException("Email is invalid");
         }
 
         Otp userOtp = otpService.getOrCreateOtp(user, OtpType.FORGET);

@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const randomUUID = require('crypto');
 
 const isAccessTokenValid = (token) => {
     return jwt.verify(
@@ -17,10 +18,10 @@ const isRefreshTokenValid = (token) => {
 const generateAccessToken = (user) => {
     return jwt.sign(
         {
+            sub: String(user.id),
             id: user.id,
             name: user.name,
             email: user.email,
-            role: user.role,
             permissions: user.permissions
         },
         Buffer.from(process.env.ACCESS_TOKEN_SECRET, "utf8"),
@@ -30,9 +31,8 @@ const generateAccessToken = (user) => {
 
 const generateRefreshToken = (user, exp) => {
     const payload = {
-        sub: user.email,
-        email: user.email,
-        id: user.id
+        sub: String(user.id),
+        jti: randomUUID()
     };
 
     const options = {};

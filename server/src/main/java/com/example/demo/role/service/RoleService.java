@@ -29,7 +29,8 @@ public class RoleService {
 
     @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     public Role findById(Long id) {
-        return findByIdHelper(id);
+        return roleRepository.findDetailsById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Role with id: " + id + " not found"));
     }
 
     @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")

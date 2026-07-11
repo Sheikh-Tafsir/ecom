@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 import {getAccessToken, removeAccessToken, removeCart, saveAccessToken} from '@/utils/AuthUtils';
-import { notify } from '@/components/common/notification';
-import { TOAST_TYPE } from '@/utils/enums';
+import {notify} from '@/components/common/notification';
+import {TOAST_TYPE} from '@/utils/enums';
 
 const API_PATH = import.meta.env.VITE_API_PATH;
 
@@ -39,25 +39,46 @@ Axios.interceptors.response.use(
         const response = error?.response;
 
         if (!response) {
+            if (!navigator.onLine) {
+                notify(TOAST_TYPE.ERROR, "You appear to be offline");
+            } else {
+                notify(TOAST_TYPE.ERROR, "Cannot reach the server. Please try again after some time");
+            }
+
             return Promise.reject(error);
         }
 
-        if (response.status == 401 && !originalRequest?._retry) {
-            originalRequest._retry = true;
+        if (response.status == 401) {
+            if (!originalRequest?._retry) {
+                originalRequest._retry = true;
 
-            try {
-                const token = await refreshAccessToken();
+                let token;
+
+                try {
+                    token = await refreshAccessToken();
+                } catch (err) {
+                    console.error(err)
+
+                    if (err.response?.status == 401) {
+                        notify(TOAST_TYPE.INFO, "Session expired. Please log in again.");
+                        await logout();
+                    } else {
+                        notify(TOAST_TYPE.ERROR, "An error occurred. Please try again after some time.");
+                    }
+
+                    return Promise.reject(err);
+                }
+
                 originalRequest.headers = originalRequest.headers || {};
                 originalRequest.headers.Authorization = `Bearer ${token}`;
 
                 return Axios.request(originalRequest);
-            } catch (err) {
-                notify(TOAST_TYPE.INFO, "Session expired. Please log in again.");
-
-                await logout();
-
-                return Promise.reject(err);
             }
+
+            console.error("Authorization error even after refreshing access token", error);
+
+            notify(TOAST_TYPE.INFO, "Session expired. Please log in again.");
+            await logout();
         }
 
         return Promise.reject(error);
@@ -66,35 +87,6 @@ Axios.interceptors.response.use(
 
 let isRefreshing = false;
 let refreshSubscribers = [];
-
-const refreshAccessToken = async () => {
-    if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-            addRefreshSubscriber(resolve, reject);
-        });
-    }
-
-    isRefreshing = true;
-
-    try {
-
-        const response = await AuthAxios.post("/auth/access-token/refresh");
-        const token = response.data.data;
-        
-        saveAccessToken(token);
-
-        resolveRefreshSubscribers(token);
-
-        return token;
-    } catch (error) {
-        console.error("Token refresh failed:", error);
-        rejectRefreshSubscribers(error);
-
-        throw error;
-    } finally {
-        isRefreshing = false;
-    }
-};
 
 /**
  * Add requests waiting for token refresh.
@@ -117,6 +109,34 @@ const resolveRefreshSubscribers = (token) => {
 const rejectRefreshSubscribers = (error) => {
     refreshSubscribers.forEach(({reject}) => reject(error));
     refreshSubscribers = [];
+};
+
+const refreshAccessToken = async () => {
+    if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+            addRefreshSubscriber(resolve, reject);
+        });
+    }
+
+    isRefreshing = true;
+
+    try {
+        const response = await AuthAxios.post("/auth/access-token/refresh");
+        const token = response.data.data;
+
+        saveAccessToken(token);
+
+        resolveRefreshSubscribers(token);
+
+        return token;
+    } catch (error) {
+        console.error("Token refresh failed:", error);
+        rejectRefreshSubscribers(error);
+
+        throw error;
+    } finally {
+        isRefreshing = false;
+    }
 };
 
 const logout = async () => {

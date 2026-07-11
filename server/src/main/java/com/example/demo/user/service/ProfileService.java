@@ -34,6 +34,10 @@ public class ProfileService {
         user.setName(updateProfileRequest.name());
 
         if (fileExists(updateProfileRequest.image())) {
+            if (user.getImage() != null && !user.getImage().isEmpty()) {
+                fileStorageService.deleteFile(user.getImage());
+            }
+
             String imageUrl = fileStorageService.uploadFile(updateProfileRequest.image());
             user.setImage(imageUrl);
         }

@@ -8,9 +8,25 @@ const {buildErrorResponse} = require("../utils/ResponseUtils");
 
 const setupMessageHandlers = (io, socket) => {
     const user = socket.user;
+    
+    // Simple rate limiting: 5 messages per second
+    let messageCount = 0;
+    let lastReset = Date.now();
 
     socket.on(MESSAGE_SEND_EVENT, async (reqBody, ack) => {
         try {
+            const now = Date.now();
+            if (now - lastReset > 1000) {
+                messageCount = 0;
+                lastReset = now;
+            }
+
+            if (messageCount >= 5) {
+                return ack(buildErrorResponse("Rate limit exceeded. Please wait a moment."));
+            }
+
+            messageCount++;
+
             if (!reqBody?.content) {
                 ack(buildErrorResponse("Message is required"))
                 return;
@@ -31,13 +47,11 @@ const setupMessageHandlers = (io, socket) => {
             const roomId = getRoom(message.chatId);
             addSocketToRoom(socket, roomId);
 
-            // Make all of sender's sockets across all nodes join the room
-            io.in(`user_${user.id}`).socketsJoin(roomId);
-
-            if (reqBody.receiverId) {
-                // Make all of receiver's sockets across all nodes join the room
-                io.in(`user_${reqBody.receiverId}`).socketsJoin(roomId);
-            }
+            // Securely join all participants of this chat to the room
+            const participants = await ChatService.findChatParticipantsByChatId(message.chatId);
+            participants.forEach(p => {
+                io.in(`user_${p.userId}`).socketsJoin(roomId);
+            });
 
             io.to(roomId).emit(MESSAGE_RECEIVE_EVENT,
                 ApiResponse({

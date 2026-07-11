@@ -1,6 +1,7 @@
 package com.example.demo.common.service.fileStorage;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
@@ -12,6 +13,7 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @Primary
 @RequiredArgsConstructor
@@ -61,6 +63,26 @@ public class SupabaseStorageService implements FileStorageService {
                 .block();
 
         return getViewUrl(filePath);
+    }
+
+    @Override
+    public void deleteFile(String fileUrl) {
+        if (fileUrl == null || fileUrl.isEmpty()) return;
+
+        try {
+            String filePath = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
+            String deleteUrl = getUploadUrl(filePath);
+
+            webClient.delete()
+                    .uri(deleteUrl)
+                    .header("apikey", apiKey)
+                    .header("Authorization", "Bearer " + apiKey)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
+        } catch (Exception e) {
+            log.error("Could not delete image from cloudinary", e);
+        }
     }
 
     private String getUploadUrl(String filePath) {

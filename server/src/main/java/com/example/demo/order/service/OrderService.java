@@ -11,6 +11,7 @@ import com.example.demo.order.repository.OrderRepository;
 import com.example.demo.order.dto.CreateOrderResponse;
 import com.example.demo.product.service.ProductService;
 import com.example.demo.stock.service.StockService;
+import com.example.demo.user.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +49,8 @@ public class OrderService {
 
     private final IdempotencyService idempotencyService;
 
+    private final UserService userService;
+
     public Page<OrderListResponse> findAll(LocalDateTime fromDate, LocalDateTime toDate, OrderStatus status, CustomUserDetails userDetails, Pageable pageable) {
         DateRangeDto dateRange = resolveDates(fromDate, toDate);
 
@@ -83,11 +86,12 @@ public class OrderService {
         order.setAddress(request.address());
         order.setPaymentMethod(request.paymentMethod());
 
+        User user = userService.findByIdHelper(userDetails.getId());
         if (isNull(order.getName())) {
-            order.setName(userDetails.user().getName());
+            order.setName(user.getName());
         }
 
-        order.setUser(userDetails.user());
+        order.setUser(user);
         request.items().forEach(itemRequest -> addProduct(order, itemRequest));
 
         orderRepository.save(order);

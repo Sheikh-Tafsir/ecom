@@ -20,6 +20,15 @@ public interface UserRefreshTokenRepository extends JpaRepository<UserRefreshTok
 
     @Modifying
     @Query("""
+                UPDATE UserRefreshToken urt
+                SET urt.status = :status
+                WHERE urt.user.id = :userId
+                  AND urt.status = 'ACTIVE'
+            """)
+    int revokeAllForUser(@Param("userId") Long userId, @Param("status") UserRefreshTokenStatus status);
+
+    @Modifying
+    @Query("""
                 DELETE FROM UserRefreshToken urt
                 WHERE urt.status = :status
                   AND urt.createdAt <= :cutoff
