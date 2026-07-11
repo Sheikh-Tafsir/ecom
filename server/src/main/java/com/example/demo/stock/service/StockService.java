@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,7 +45,7 @@ public class StockService {
 
     @PreAuthorize("hasAnyAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue()," +
             "T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
-    public Page<StockListResponse> findAll(LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable) {
+    public Page<StockListResponse> findAll(LocalDate fromDate, LocalDate toDate, Pageable pageable) {
         DateRangeDto dateRange = resolveDates(fromDate, toDate);
         return stockRepository.findAll(dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable)).map(StockListResponse::new);
     }
@@ -117,7 +117,7 @@ public class StockService {
 
     @PreAuthorize("hasAnyAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue()," +
             "T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
-    public Page<StockItemResponse> findAllItems(LocalDateTime fromDate, LocalDateTime toDate, Long productId, Pageable pageable) {
+    public Page<StockItemResponse> findAllItems(LocalDate fromDate, LocalDate toDate, Long productId, Pageable pageable) {
         DateRangeDto dateRange = resolveDates(fromDate, toDate);
         return stockItemRepository.findAll(dateRange.fromDate(), dateRange.toDate(), productId, getValidPageable(pageable)).map(StockItemResponse::new);
     }

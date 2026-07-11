@@ -1,8 +1,10 @@
 package com.example.demo.common.config;
 
+import com.example.demo.common.dto.ApiResponse;
 import com.example.demo.common.exception.InvalidAccessTokenException;
 import com.example.demo.common.exception.InvalidRefreshTokenException;
 import com.example.demo.common.exception.MultipleValidationException;
+import com.example.demo.common.utils.ResponseUtils;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.NoResultException;
 import jakarta.validation.ValidationException;
@@ -15,8 +17,14 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.example.demo.common.utils.ResponseUtils.error;
+import static com.example.demo.common.utils.ResponseUtils.handlerMethodValidationExceptionError;
 
 @Slf4j
 @RestControllerAdvice
@@ -33,6 +41,13 @@ public class GlobalExceptionHandler {
     private static final String SOMETHING_WENT_WRONG = "Something went wrong";
 
     private static final String OPTIMISTIC_LOCKING_FAILURE = "The record was updated by another session. Please try again.";
+
+    // 400
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<?> handleHandlerMethodValidationException(HandlerMethodValidationException ex) {
+        log.error("request params values are invalid: {}", ex.getMessage());
+        return handlerMethodValidationExceptionError(ex);
+    }
 
     // 401
     @ExceptionHandler(IllegalArgumentException.class)

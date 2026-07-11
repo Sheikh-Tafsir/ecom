@@ -11,6 +11,7 @@ import com.example.demo.review.dto.CreateReviewRequest;
 import com.example.demo.review.dto.ReviewResponse;
 import com.example.demo.review.service.ReviewService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.PastOrPresent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -22,7 +23,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import static com.example.demo.common.utils.Utils.checkErrors;
 
@@ -44,8 +45,8 @@ public class ProductController {
     public ResponseEntity<ApiResponse<Page<ProductListResponse>>> findAll(Pageable pageable,
                                                                           @RequestParam(required = false) String name,
                                                                           @RequestParam(required = false) String category,
-                                                                          @RequestParam(required = false) LocalDateTime fromDate,
-                                                                          @RequestParam(required = false) LocalDateTime toDate,
+                                                                          @RequestParam(required = false) @PastOrPresent LocalDate fromDate,
+                                                                          @RequestParam(required = false) @PastOrPresent LocalDate toDate,
                                                                           @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         Page<ProductListResponse> products = productService.findAll(pageable, name, category, fromDate, toDate, userDetails);

@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -68,6 +69,22 @@ public final class ResponseUtils {
 
     public static ResponseEntity<ApiResponse<Void>> error(Map<String, List<String>> errors, HttpStatusCode statusCode) {
         return new ResponseEntity<>(new ApiResponse<>(errors), statusCode);
+    }
+
+    public static ResponseEntity<ApiResponse<Void>> handlerMethodValidationExceptionError(HandlerMethodValidationException ex) {
+        Map<String, List<String>> errors = new HashMap<>();
+
+        ex.getParameterValidationResults().forEach(result -> {
+            String field = result.getMethodParameter().getParameterName();
+
+            List<String> messages = result.getResolvableErrors().stream()
+                    .map(error -> error.getDefaultMessage())
+                    .toList();
+
+            errors.put(field, messages);
+        });
+
+        return ResponseUtils.error(errors, HttpStatusCode.valueOf(400));
     }
 
     //filter error

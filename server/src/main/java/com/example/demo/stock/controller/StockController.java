@@ -7,6 +7,7 @@ import com.example.demo.stock.dto.*;
 import com.example.demo.stock.service.StockService;
 import com.example.demo.stock.validator.StockValidator;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.PastOrPresent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import static com.example.demo.common.service.IdempotencyService.IDEMPOTENCY_HEADER;
 import static com.example.demo.common.utils.Utils.checkErrors;
@@ -31,8 +32,8 @@ public class StockController {
     private final MessageService messageService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<StockListResponse>>> findAll(@RequestParam(required = false) LocalDateTime fromDate,
-                                                                        @RequestParam(required = false) LocalDateTime toDate,
+    public ResponseEntity<ApiResponse<Page<StockListResponse>>> findAll(@RequestParam(required = false) @PastOrPresent LocalDate fromDate,
+                                                                        @RequestParam(required = false) @PastOrPresent LocalDate toDate,
                                                                         Pageable pageable) {
 
         Page<StockListResponse> stocks = stockService.findAll(fromDate, toDate, pageable);
@@ -40,8 +41,8 @@ public class StockController {
     }
 
     @GetMapping("/items")
-    public ResponseEntity<ApiResponse<Page<StockItemResponse>>> findAllItems(@RequestParam(required = false) LocalDateTime fromDate,
-                                                                             @RequestParam(required = false) LocalDateTime toDate,
+    public ResponseEntity<ApiResponse<Page<StockItemResponse>>> findAllItems(@RequestParam(required = false) @PastOrPresent LocalDate fromDate,
+                                                                             @RequestParam(required = false) @PastOrPresent LocalDate toDate,
                                                                              @RequestParam(required = false) Long productId,
                                                                              Pageable pageable) {
 

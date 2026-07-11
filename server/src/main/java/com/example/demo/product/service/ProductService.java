@@ -27,7 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -53,8 +53,8 @@ public class ProductService {
 
     private final MessageService messageService;
 
-    public Page<ProductListResponse> findAll(Pageable pageable, String name, String category, LocalDateTime fromDate,
-                                             LocalDateTime toDate, CustomUserDetails userDetails) {
+    public Page<ProductListResponse> findAll(Pageable pageable, String name, String category, LocalDate fromDate,
+                                             LocalDate toDate, CustomUserDetails userDetails) {
 
         DateRangeDto dateRange = resolveDates(fromDate, toDate);
 

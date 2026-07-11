@@ -9,6 +9,7 @@ import com.example.demo.order.dto.*;
 import com.example.demo.order.service.OrderService;
 import com.example.demo.order.validator.OrderValidator;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.PastOrPresent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -18,7 +19,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import static com.example.demo.common.service.IdempotencyService.IDEMPOTENCY_HEADER;
 import static com.example.demo.common.utils.Utils.checkErrors;
@@ -36,8 +37,8 @@ public class OrderController {
     private final MessageService messageService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<OrderListResponse>>> findAll(@RequestParam(required = false) LocalDateTime fromDate,
-                                                                        @RequestParam(required = false) LocalDateTime toDate,
+    public ResponseEntity<ApiResponse<Page<OrderListResponse>>> findAll(@RequestParam(required = false) @PastOrPresent LocalDate fromDate,
+                                                                        @RequestParam(required = false) @PastOrPresent LocalDate toDate,
                                                                         @RequestParam(required = false) OrderStatus status,
                                                                         Pageable pageable,
                                                                         @AuthenticationPrincipal CustomUserDetails userDetails) {

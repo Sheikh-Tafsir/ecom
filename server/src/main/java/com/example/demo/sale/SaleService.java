@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -26,7 +27,7 @@ public class SaleService {
     private final SaleRepository saleRepository;
 
     @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
-    public Page<SaleResponse> findAll(LocalDateTime fromDate, LocalDateTime toDate, Long productId, Pageable pageable) {
+    public Page<SaleResponse> findAll(LocalDate fromDate, LocalDate toDate, Long productId, Pageable pageable) {
         DateRangeDto dateRange = resolveDates(fromDate, toDate);
 
         return saleRepository.findAllByMonth(dateRange.fromDate(), dateRange.toDate(), productId, getValidPageable(pageable))

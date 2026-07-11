@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 import static com.example.demo.common.enums.Permission.ADMIN_ACCESS;
@@ -51,7 +51,7 @@ public class OrderService {
 
     private final UserService userService;
 
-    public Page<OrderListResponse> findAll(LocalDateTime fromDate, LocalDateTime toDate, OrderStatus status, CustomUserDetails userDetails, Pageable pageable) {
+    public Page<OrderListResponse> findAll(LocalDate fromDate, LocalDate toDate, OrderStatus status, CustomUserDetails userDetails, Pageable pageable) {
         DateRangeDto dateRange = resolveDates(fromDate, toDate);
 
         if (hasPermission(List.of(SUPER_ADMIN_ACCESS.getValue(), ADMIN_ACCESS.getValue()), userDetails)) {

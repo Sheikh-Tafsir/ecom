@@ -27,7 +27,6 @@ import {Input} from '@/components/ui/input';
 import {Button} from '@/components/ui/button';
 import {APP_MODULE, ORDER_STATUS, PERMISSION, TOAST_TYPE} from '@/utils/enums';
 import InputError from "@/components/common/InputError";
-import StaredLabel from "@/components/common/StaredLabel";
 import {notify} from "@/components/common/notification";
 import {queryClient} from "@/services/queryClient";
 import {useUserStore} from "@/store/useUserStore";
@@ -91,7 +90,7 @@ const Orders = () => {
 
     useEffect(() => {
         if (isError) {
-            console.error(error);
+            console.error("error:", error);
             notify(TOAST_TYPE.ERROR, "Failed to show orders")
         }
     }, [error, isError]);
