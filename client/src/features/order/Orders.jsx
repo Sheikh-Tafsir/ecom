@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useCallback} from "react";
 import {useNavigate, useSearchParams} from "react-router-dom";
 import {useQuery, keepPreviousData} from "@tanstack/react-query";
-import {useForm} from "react-hook-form";
+import {useForm, Controller} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {z} from "zod";
 
@@ -13,11 +13,18 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import {Axios} from '@/services/http/Axios';
 import PaginationButton from '@/components/common/PaginationButton';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay';
 import {formatDateAndTime, GLOBAL_ERROR, handleErrors, hasPermission} from '@/utils';
-import {FIRST_PAGE, getQueryString, normalizeQuery, redirectWhenInvalidPage} from '@/utils/PaginationUtils';
+import {FIRST_PAGE, getQueryString, normalizeQuery, redirectWhenInvalidPage, ALL_SELECTED, getSelectValue} from '@/utils/PaginationUtils';
 import {Label} from '@/components/ui/label';
 import {
     Card,
@@ -47,6 +54,7 @@ const fetchOrders = async ({queryKey}) => {
             productName: params.productName || undefined,
             fromDate: params.fromDate || undefined,
             toDate: params.toDate || undefined,
+            status: params.status == ALL_SELECTED ? undefined : params.status,
         },
     });
 
@@ -57,6 +65,7 @@ const orderFilterSchema = z.object({
     productName: z.string().optional(),
     fromDate: z.string().optional(),
     toDate: z.string().optional(),
+    status: z.string().optional(),
 });
 
 const Orders = () => {
@@ -70,10 +79,11 @@ const Orders = () => {
             productName: queryParams.productName || "",
             fromDate: queryParams.fromDate || "",
             toDate: queryParams.toDate || "",
+            status: queryParams.status || ORDER_STATUS.PENDING,
         }),
         [queryParams]
     );
-    const {page, productName, fromDate, toDate} = filters;
+    const {page, productName, fromDate, toDate, status} = filters;
 
     const {user} = useUserStore();
 
@@ -83,12 +93,14 @@ const Orders = () => {
         reset,
         setError,
         formState: {errors},
+        control,
     } = useForm({
         resolver: zodResolver(orderFilterSchema),
         defaultValues: {
             productName: "",
             fromDate: "",
             toDate: "",
+            status: ORDER_STATUS.PENDING,
         },
     });
 
@@ -123,8 +135,9 @@ const Orders = () => {
             productName,
             fromDate,
             toDate,
+            status,
         });
-    }, [productName, fromDate, toDate, reset]);
+    }, [productName, fromDate, toDate, status, reset]);
 
     const handleFilter = useCallback(
         (data) => {
@@ -134,6 +147,7 @@ const Orders = () => {
                     productName: data.productName || undefined,
                     fromDate: data.fromDate || undefined,
                     toDate: data.toDate || undefined,
+                    status: data.status || undefined,
                     page: FIRST_PAGE,
                 }),
                 {replace: true}
@@ -196,6 +210,34 @@ const Orders = () => {
 
                             <CardContent className="space-y-6 pt-6">
                                 <InputError errors={errors} field={GLOBAL_ERROR}/>
+
+                                {/* Status */}
+                                <div className="space-y-2">
+                                    <Label className="text-base font-semibold uppercase tracking-widest ml-1">Order Status</Label>
+                                    <Controller
+                                        name="status"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Select 
+                                                onValueChange={field.onChange} 
+                                                value={getSelectValue(field.value)}
+                                            >
+                                                <SelectTrigger className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all">
+                                                    <SelectValue placeholder="Select Status" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value={ALL_SELECTED}>All Status</SelectItem>
+                                                    {Object.values(ORDER_STATUS).map((status) => (
+                                                        <SelectItem key={status} value={status}>
+                                                            {status}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        )}
+                                    />
+                                    <InputError errors={errors} field="status"/>
+                                </div>
 
                                 {/* Product Name */}
                                 <div className="space-y-2">

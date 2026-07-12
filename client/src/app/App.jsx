@@ -36,7 +36,7 @@ import Sales from "@/features/sale/Sales";
 
 import Cart from "@/features/order/Cart";
 import Orders from "@/features/order/Orders";
-import OrderView from "@/features/order/OrderView";
+import OrderDetails from "@/features/order/OrderDetails";
 import OrderCreate from "@/features/order/OrderCreate";
 
 import {useUserStore} from "@/store/useUserStore";
@@ -111,7 +111,7 @@ const InnerApp = () => {
 
                     <Route path="/cart" element={<Cart/>}/>
                     <Route path="/orders" element={<Orders/>}/>
-                    <Route path="/orders/:id" element={<OrderView/>}/>
+                    <Route path="/orders/:id" element={<OrderDetails/>}/>
                     <Route path="/orders/create" element={<OrderCreate/>}/>
 
                     <Route path="/chats" element={<Chat/>}/>

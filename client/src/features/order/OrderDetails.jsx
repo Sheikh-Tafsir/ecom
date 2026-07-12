@@ -22,13 +22,14 @@ import {Axios} from "@/services/http/Axios"
 import {TOAST_TYPE} from "@/utils/enums"
 import {notify} from "@/components/common/notification"
 import {useQuery} from "@tanstack/react-query"
+import { BackButton } from "@/components/common/BackButton"
 
 const fetchOrder = async (id) => {
     const response = await Axios.get(`/orders/${id}`);
     return response.data.data;
 }
 
-export default function OrderView() {
+export default function OrderDetails() {
     const {id} = useParams()
     const {user} = useUserStore();
 
@@ -54,8 +55,10 @@ export default function OrderView() {
         <>
             {isPageLoading && <PageLoadingOverlay/>}
 
-            <div className="container pb-8 pt-8">
-                <div className="max-w-4xl mx-auto">
+            <div className="container py-10">
+                <BackButton/>
+
+                <div className="max-w-4xl mx-auto mt-2">
                     <div className="grid gap-8 lg:grid-cols-2">
                         {/* Checkout Form */}
                         <Card>

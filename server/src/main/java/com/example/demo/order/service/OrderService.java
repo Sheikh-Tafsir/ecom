@@ -58,7 +58,7 @@ public class OrderService {
             return orderRepository.findAllByStatus(status, dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable)).map(OrderListResponse::new);
         }
 
-        return orderRepository.findAllByUser_Id(userDetails.getId(), dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable)).map(OrderListResponse::new);
+        return orderRepository.findAllByUser_Id(userDetails.getId(), status, dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable)).map(OrderListResponse::new);
     }
 
     @PostAuthorize("""

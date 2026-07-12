@@ -43,8 +43,8 @@ public class UserService {
 
     @PreAuthorize("hasAnyAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue()," +
             "T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
-    public Page<UserResponse> findAll(Pageable pageable, String name, String role, String status) {
-        return userRepository.findByRoleAndStatus(name, roleService.findByName(role), UserStatus.fromValue(status), getValidPageable(pageable)).map(UserResponse::new);
+    public Page<UserResponse> findAll(Pageable pageable, String name, String role, UserStatus status) {
+        return userRepository.findByRoleAndStatus(name, roleService.findByName(role), status, getValidPageable(pageable)).map(UserResponse::new);
     }
 
     public List<UserSearchResponse> findAllByName(String name, CustomUserDetails userDetails) {

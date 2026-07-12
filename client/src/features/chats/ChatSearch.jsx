@@ -27,7 +27,7 @@ const ChatSearch = ({ setSearchedUser }) => {
     };
 
     const { data: users = [], isLoading } = useQuery({
-        queryKey: ['searchUers', searchTerm],
+        queryKey: ['searchUsers', searchTerm],
         queryFn: fetchUsers,
         enabled: searchTerm.length > 0,
     })

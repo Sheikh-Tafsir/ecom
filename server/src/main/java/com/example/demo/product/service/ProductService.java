@@ -169,6 +169,10 @@ public class ProductService {
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Product", id)));
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "product", key = "#product.id"),
+            @CacheEvict(value = "productEdit", key = "#product.id")
+    })
     public void decreaseForOrder(Product product, int quantity) {
         checkActive(product);
 
@@ -180,6 +184,10 @@ public class ProductService {
         productRepository.save(product);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "product", key = "#itemRequest.productId()"),
+            @CacheEvict(value = "productEdit", key = "#itemRequest.productId()")
+    })
     public Product updateForStock(CreateStockItemRequest itemRequest) {
         Product product = findByIdHelper(itemRequest.productId());
         checkActive(product);
@@ -190,7 +198,17 @@ public class ProductService {
             product.setStatus(ProductStatus.AVAILABLE);
         }
 
+        productRepository.save(product);
         return product;
+    }
+
+    @Caching(evict = {
+            @CacheEvict(value = "product", key = "#product.id"),
+            @CacheEvict(value = "productEdit", key = "#product.id")
+    })
+    public void updateQuantity(Product product, int quantityChange) {
+        product.setQuantity(product.getQuantity() + quantityChange);
+        productRepository.save(product);
     }
 
     private static String getNameFilter(String name) {

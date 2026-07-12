@@ -1,6 +1,7 @@
 package com.example.demo.user.controller;
 
 import com.example.demo.common.dto.CustomUserDetails;
+import com.example.demo.common.enums.UserStatus;
 import com.example.demo.user.dto.UpdateUserRequest;
 import com.example.demo.user.dto.UserResponse;
 import com.example.demo.user.dto.UserSearchResponse;
@@ -33,7 +34,7 @@ public class UserController {
     public ResponseEntity<ApiResponse<Page<UserResponse>>> findAll(Pageable pageable,
                                                            @RequestParam(required = false) String name,
                                                            @RequestParam(required = false) String role,
-                                                           @RequestParam(required = false) String status) {
+                                                           @RequestParam(required = false) UserStatus status) {
 
         log.debug("role: {}, status: {}", role, status);
         Page<UserResponse> users = userService.findAll(pageable, name, role, status);

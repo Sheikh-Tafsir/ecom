@@ -99,7 +99,7 @@ const Stocks = () => {
         isError,
         error
     } = useQuery({
-        queryKey: ["stock", filters],
+        queryKey: ["stocks", filters],
         queryFn: fetchStocks,
         placeholderData: keepPreviousData,
     })

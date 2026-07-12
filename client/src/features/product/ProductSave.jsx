@@ -120,7 +120,7 @@ const ProductSave = () => {
         isError: isProductError,
         error: productError,
     } = useQuery({
-        queryKey: ["product", id],
+        queryKey: ["productEdit", id],
         queryFn: () => fetchProduct(id),
         enabled: !isCreatePage && !!id,
     });

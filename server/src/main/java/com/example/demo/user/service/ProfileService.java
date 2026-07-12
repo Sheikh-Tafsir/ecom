@@ -7,6 +7,7 @@ import com.example.demo.user.dto.ChangePasswordRequest;
 import com.example.demo.user.dto.UpdateProfileRequest;
 import com.example.demo.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,7 @@ public class ProfileService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
+    @CacheEvict(value = "user", key = "#userDetails.id")
     public User update(UpdateProfileRequest updateProfileRequest, CustomUserDetails userDetails) throws IOException {
         User user = userService.findByIdHelper(userDetails.getId());
         user.setName(updateProfileRequest.name());
@@ -46,6 +48,7 @@ public class ProfileService {
     }
 
     @Transactional
+    @CacheEvict(value = "user", key = "#userDetails.id")
     public void updatePassword(ChangePasswordRequest changePasswordRequest, CustomUserDetails userDetails) {
         User user = userService.findByIdHelper(userDetails.getId());
         if (!passwordEncoder.matches(changePasswordRequest.currentPassword(), user.getPassword())) {

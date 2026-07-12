@@ -107,6 +107,8 @@ export function ReportDialog({ module = APP_MODULE.USER, trigger }) {
             link.remove();
             window.URL.revokeObjectURL(url);
 
+            notify(TOAST_TYPE.SUCCESS, "Report ready for download");
+
             reset();
             setOpen(false);
         } catch (error) {

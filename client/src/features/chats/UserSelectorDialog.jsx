@@ -37,7 +37,7 @@ const UserSelectorDialog = ({ isOpen, onClose, preSelecteedUserIds, avoidUserIds
     };
 
     const { data: users = [], isLoading } = useQuery({
-        queryKey: ['searchUers', searchTerm],
+        queryKey: ['searchUsers', searchTerm],
         queryFn: fetchUsers,
         enabled: open,
     })

@@ -201,7 +201,7 @@ public class StockService {
 
     private void addItem(Stock stock, CreateStockItemRequest request) {
         Product product = productService.findByIdHelper(request.productId());
-        product.setQuantity(product.getQuantity() + request.quantity());
+        productService.updateQuantity(product, request.quantity());
         stock.addItem(product, request.quantity(), request.purchasePrice());
     }
 
@@ -210,7 +210,7 @@ public class StockService {
             throw new ValidationException("Product stock is not available for product id: " + product.getId());
         }
 
-        product.setQuantity(product.getQuantity() - quantity);
+        productService.updateQuantity(product, quantity * -1);
     }
 
     private void updateItem(Stock stock, UpdateStockItemRequest request) {
@@ -241,7 +241,7 @@ public class StockService {
         item.setPurchasePrice(request.purchasePrice());
         item.setRemaining(updatedRemaining);
 
-        applyProductQuantityChange(item.getProduct(), quantityChange);
+        productService.updateQuantity(item.getProduct(), quantityChange);
     }
 
     private StockItem getItem(Stock stock, Long itemId) {
@@ -251,16 +251,5 @@ public class StockService {
                 )
                 .findFirst()
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "StockItem", itemId)));
-    }
-
-    private void applyProductQuantityChange(Product product, int quantityChange) {
-        if (quantityChange > 0) {
-            product.setQuantity(product.getQuantity() + quantityChange);
-            return;
-        }
-
-        if (quantityChange < 0) {
-            decreaseProductQuantity(product, quantityChange * -1);
-        }
     }
 }

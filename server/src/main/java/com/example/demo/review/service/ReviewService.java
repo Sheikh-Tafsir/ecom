@@ -13,6 +13,8 @@ import com.example.demo.review.repository.ReviewRepository;
 import com.example.demo.user.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -44,6 +46,10 @@ public class ReviewService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "product", key = "#id"),
+            @CacheEvict(value = "productEdit", key = "#id")
+    })
     public void create(Long id, CreateReviewRequest request, CustomUserDetails userDetails) {
         Product product = productService.findByIdHelper(id);
 
@@ -74,6 +80,10 @@ public class ReviewService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "product", key = "#review.product.id"),
+            @CacheEvict(value = "productEdit", key = "#review.product.id")
+    })
     public void update(Long id, UpdateReviewRequest request, CustomUserDetails userDetails) {
         Review review = findByIdHelper(id);
 
@@ -104,6 +114,10 @@ public class ReviewService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "product", key = "#review.product.id"),
+            @CacheEvict(value = "productEdit", key = "#review.product.id")
+    })
     public void delete(Long id, CustomUserDetails userDetails) {
         Review review = findByIdHelper(id);
         if (!isOwner(review.getUser().getId(), userDetails)

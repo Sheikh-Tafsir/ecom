@@ -23,10 +23,10 @@ import {TOAST_TYPE} from "@/utils/enums"
 import {useQuery} from "@tanstack/react-query"
 import {notify} from "@/components/common/notification"
 import ReviewCreate from "./ReviewCreate";
+import { BackButton } from "@/components/common/BackButton";
 
 const fetchProduct = async (id) => {
     const response = await Axios.get(`/products/${id}`);
-    console.log(response.data.data);
     return response.data.data;
 };
 
@@ -61,7 +61,7 @@ export default function ProductDetails() {
         refetch: reviewsRefetch
     } = useQuery({
         enabled: !!id,
-        queryKey: ["reviews", id],
+        queryKey: ["reviews", id], //product id
         queryFn: () => fetchReviews(id),
     });
 
@@ -118,8 +118,10 @@ export default function ProductDetails() {
         <div className="bg-slate-50 min-h-screen">
             {isProductLoading && <PageLoadingOverlay/>}
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16">
-                <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-start mb-20">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-10">
+                <BackButton />
+                
+                <div className="grid md:grid-cols-2 gap-12 lg:gap-20 items-start mb-20 pt-4">
                     {/* Left: Image Gallery */}
                     <div className="space-y-6 animate-in fade-in slide-in-from-left duration-700">
                         <div

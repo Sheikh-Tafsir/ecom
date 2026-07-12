@@ -36,10 +36,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("""
                 SELECT o FROM Order o
                 WHERE o.user.id = :userId
+                    AND (:status IS NULL OR o.status = :status)
                     AND o.createdAt BETWEEN :fromDate AND :toDate
                 ORDER BY o.createdAt ASC
             """)
     Page<Order> findAllByUser_Id(@Param("userId") Long userId,
+                                 @Param("status") OrderStatus status,
                                  @Param("fromDate") LocalDateTime fromDate,
                                  @Param("toDate") LocalDateTime toDate,
                                  Pageable pageable);

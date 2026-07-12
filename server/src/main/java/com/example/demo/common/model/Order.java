@@ -66,28 +66,6 @@ public class Order extends BaseEntity {
         calculateTotal();
     }
 
-    public void removeItem(Long productId) {
-        items.removeIf(i -> i.getProduct().getId().equals(productId));
-        calculateTotal();
-    }
-
-    public void increaseItem(Long productId, int qty) {
-        OrderItem item = getItem(productId);
-        item.increaseQuantity(qty);
-        calculateTotal();
-    }
-
-    public void decreaseItem(Long productId, int qty) {
-        OrderItem item = getItem(productId);
-        item.decreaseQuantity(qty);
-
-        if (item.getQuantity() <= 0) {
-            removeItem(productId);
-        }
-
-        calculateTotal();
-    }
-
     private OrderItem getItem(Long productId) {
         return items.stream()
                 .filter(i -> i.getProduct().getId().equals(productId))
