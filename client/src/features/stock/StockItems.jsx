@@ -1,7 +1,10 @@
-import {useState, useEffect, useMemo, useCallback} from 'react';
+import {useEffect, useMemo, useCallback} from 'react';
 import {useNavigate, useSearchParams} from 'react-router-dom';
 import {keepPreviousData, useQuery} from "@tanstack/react-query";
-import {Filter, Package, Layers, Info} from "lucide-react";
+import {Filter, Layers} from "lucide-react";
+import {useForm} from "react-hook-form";
+import {zodResolver} from "@hookform/resolvers/zod";
+import {z} from "zod";
 
 import {
     Table,
@@ -28,12 +31,15 @@ import {
     FIRST_PAGE,
     redirectWhenInvalidPage,
     normalizeQuery, formatDate,
-    getQueryString
+    getQueryString,
+    GLOBAL_ERROR,
+    handleErrors
 } from '@/utils/index.js';
 import {TOAST_TYPE} from "@/utils/enums.js";
 import InputError from "@/components/common/InputError";
 import {notify} from '@/components/common/notification';
 import { cn } from "@/lib/utils";
+import { setErrorMap } from 'zod/v3';
 
 const fetchStockItems = async ({queryKey}) => {
     const [, params] = queryKey
@@ -52,6 +58,12 @@ const fetchStockItems = async ({queryKey}) => {
     return response.data.data
 }
 
+const stockItemFilterSchema = z.object({
+    productName: z.string().optional(),
+    fromDate: z.string().optional(),
+    toDate: z.string().optional(),
+});
+
 const StockItems = () => {
     const navigate = useNavigate();
 
@@ -66,10 +78,18 @@ const StockItems = () => {
 
     const {page, productName, fromDate, toDate} = filters;
 
-    const [form, setForm] = useState({
-        productName: "",
-        fromDate: undefined,
-        toDate: undefined,
+    const {
+        register,
+        handleSubmit,
+        reset,
+        formState: {errors},
+    } = useForm({
+        resolver: zodResolver(stockItemFilterSchema),
+        defaultValues: {
+            productName: "",
+            fromDate: "",
+            toDate: "",
+        },
     });
 
     const {
@@ -91,43 +111,33 @@ const StockItems = () => {
     }, [page, totalPages, navigate, queryParams]);
 
     useEffect(() => {
-        setForm({
+        reset({
             productName,
             fromDate,
             toDate,
         });
-    }, [productName, fromDate, toDate]);
-
-    const handleChange = useCallback((e) => {
-        const {name, value} = e.target;
-
-        setForm((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-    }, []);
+    }, [productName, fromDate, toDate, reset]);
 
     const handleFilter = useCallback(
-        (e) => {
-            e.preventDefault();
-
+        (data) => {
             navigate(
                 getQueryString({
                     ...queryParams,
-                    productName: form.productName || undefined,
-                    fromDate: form.fromDate || undefined,
-                    toDate: form.toDate || undefined,
+                    productName: data.productName || undefined,
+                    fromDate: data.fromDate || undefined,
+                    toDate: data.toDate || undefined,
                     page: FIRST_PAGE,
                 }),
                 {replace: true}
             );
         },
-        [navigate, queryParams, form]
+        [navigate, queryParams]
     );
 
     useEffect(() => {
         if (isError) {
             console.error(error);
+            handleErrors(error, setError);
             notify(TOAST_TYPE.ERROR, "Failed to load stock items")
         }
     }, [error, isError]);
@@ -147,7 +157,7 @@ const StockItems = () => {
                 <div className='grid lg:grid-cols-4 gap-10 items-start'>
                     {/* Filter Sidebar */}
                     <Card className='lg:col-span-1 border-slate-100 shadow-xl shadow-slate-200/50 rounded-lg overflow-hidden sticky top-24'>
-                        <form onSubmit={handleFilter}>
+                        <form onSubmit={handleSubmit(handleFilter)}>
                             <CardHeader className="bg-slate-100 border-b border-slate-100 pb-4">
                                 <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                     <span className="p-1.5 bg-blue-600 rounded-lg text-white">
@@ -158,17 +168,17 @@ const StockItems = () => {
                             </CardHeader>
 
                             <CardContent className="space-y-6 pt-6">
+                                <InputError errors={errors} field={GLOBAL_ERROR}/>
+
                                 {/* Product Name */}
                                 <div className="space-y-2">
                                     <Label className="text-base font-semibold uppercase tracking-widest ml-1">Product Name</Label>
                                     <Input
                                         placeholder="Search by product..."
                                         className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all"
-                                        value={form.productName}
-                                        name="productName"
-                                        onChange={handleChange}
+                                        {...register("productName")}
                                     />
-                                    <InputError field="productName"/>
+                                    <InputError errors={errors} field="productName"/>
                                 </div>
 
                                 {/* From Date */}
@@ -177,11 +187,9 @@ const StockItems = () => {
                                     <Input
                                         type="date"
                                         className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all"
-                                        value={form.fromDate}
-                                        name="fromDate"
-                                        onChange={handleChange}
+                                        {...register("fromDate")}
                                     />
-                                    <InputError field="fromDate"/>
+                                    <InputError errors={errors} field="fromDate"/>
                                 </div>
 
                                 {/* To Date */}
@@ -190,16 +198,17 @@ const StockItems = () => {
                                     <Input
                                         type="date"
                                         className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all"
-                                        value={form.toDate}
-                                        name="toDate"
-                                        onChange={handleChange}
+                                        {...register("toDate")}
                                     />
-                                    <InputError field="toDate"/>
+                                    <InputError errors={errors} field="toDate"/>
                                 </div>
                             </CardContent>
 
                             <CardFooter className="pt-2">
-                                <Button className="w-full h-12 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-200 transition-all active:scale-95">
+                                <Button 
+                                    type="submit"
+                                    className="w-full h-12 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-200 transition-all active:scale-95"
+                                >
                                     Apply Filters
                                 </Button>
                             </CardFooter>

@@ -1,6 +1,9 @@
 import {useState, useEffect} from 'react'
 import {Link, useNavigate} from 'react-router-dom';
 import {Plus, Trash2, Search, Minus} from 'lucide-react';
+import {useForm, useFieldArray} from 'react-hook-form';
+import {zodResolver} from '@hookform/resolvers/zod';
+import {z} from 'zod';
 
 import {Button} from '@/components/ui/button.jsx';
 import {
@@ -24,16 +27,46 @@ import {
 } from "@/utils/idempotencyUtil.js";
 import { notify } from '@/components/common/notification';
 
+const StockItemSchema = z.object({
+    productId: z.number(),
+    name: z.string(),
+    image: z.string().optional(),
+    quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
+    purchasePrice: z.coerce.number().min(0, "Purchase price must be positive"),
+});
+
+const StockSchema = z.object({
+    items: z.array(StockItemSchema).min(1, "Please add at least one product"),
+});
+
 const StockCreate = () => {
     const navigate = useNavigate();
 
-    const [items, setItems] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
 
-    const [errors, setErrors] = useState({});
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const {
+        register,
+        control,
+        handleSubmit,
+        watch,
+        setValue,
+        setError,
+        formState: {errors, isSubmitting},
+    } = useForm({
+        resolver: zodResolver(StockSchema),
+        defaultValues: {
+            items: [],
+        },
+    });
+
+    const {fields, append, remove, update} = useFieldArray({
+        control,
+        name: "items",
+    });
+
+    const items = watch("items");
 
     // Debounced search
     useEffect(() => {
@@ -53,7 +86,8 @@ const StockCreate = () => {
 
         try {
             const response = await Axios.get('/products/search', {params: {name}});
-            setSearchResults(response.data.data.content);
+            console.log(response.data.data)
+            setSearchResults(response.data.data);
         } catch (error) {
             console.error("Error searching products", error);
         } finally {
@@ -69,35 +103,26 @@ const StockCreate = () => {
             return;
         }
 
-        setItems([...items, {
+        append({
             productId: product.id,
             name: product.name,
             image: product.image,
             quantity: 1,
             purchasePrice: product.price || 0
-        }]);
+        });
         setSearchTerm('');
         setSearchResults([]);
     };
 
-    const handleSave = async (e) => {
-        e.preventDefault();
-        if (items.length == 0) {
-            notify(TOAST_TYPE.ERROR, "Please add at least one product")
-            return;
-        }
-
-        setIsSubmitting(true)
-        setErrors({});
-
+    const handleSave = async (data) => {
+        const idempotencyKey = getIdempotencyKey();
+        
         try {
-            const idempotencyKey = getIdempotencyKey();
-
             const response = await Axios.post(`/stocks`, {
-                items: items.map(item => ({
-                    productId: parseInt(item.productId),
-                    quantity: parseInt(item.quantity),
-                    purchasePrice: parseFloat(item.purchasePrice)
+                items: data.items.map(item => ({
+                    productId: item.productId,
+                    quantity: item.quantity,
+                    purchasePrice: item.purchasePrice
                 }))
             }, {
                 headers: {
@@ -105,28 +130,22 @@ const StockCreate = () => {
                 },
             });
 
-            setItems([]);
             removeIdempotencyKey()
 
             notify(TOAST_TYPE.SUCCESS, "Successfully created stock")
             setTimeout(() => navigate(`/stocks/${response.data.data}`), 500);
         } catch (error) {
             console.error(error)
-            handleErrors(error, setErrors);
-        } finally {
-            setIsSubmitting(false)
+            handleErrors(error, setError);
         }
     };
 
-    const updateItem = (index, field, value) => {
-        const newItems = [...items];
-        newItems[index][field] = value;
-        setItems(newItems);
+    const calculateTotalItems = () => {
+        return items.reduce((acc, item) => acc + (parseInt(item.quantity) || 0), 0);
     };
 
-    const removeItem = (index) => {
-        const newItems = items.filter((_, i) => i !== index);
-        setItems(newItems);
+    const calculateTotalCost = () => {
+        return items.reduce((acc, item) => acc + (parseFloat(item.quantity || 0) * parseFloat(item.purchasePrice || 0)), 0).toFixed(2);
     };
 
     return (
@@ -197,28 +216,28 @@ const StockCreate = () => {
                         </CardContent>
                     </Card>
 
-                    <form onSubmit={handleSave} className="space-y-6">
+                    <form onSubmit={handleSubmit(handleSave)} className="space-y-6">
                         <Card>
                             <CardHeader className="pb-3">
                                 <CardTitle>Selected Items</CardTitle>
                                 <CardDescription>Adjust quantities and purchase prices for each item</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                {items.length == 0 ? (
+                                {fields.length == 0 ? (
                                     <div className="text-center py-10 text-gray-500 border-2 border-dashed rounded-lg">
                                         No items selected yet. Use the search bar above to add products.
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
-                                        {items.map((item, index) => (
-                                            <div key={item.productId}
+                                        {fields.map((field, index) => (
+                                            <div key={field.id}
                                                  className="flex flex-col md:flex-row md:items-center gap-4 p-4 border rounded-lg bg-gray-50 relative group">
                                                 <div className='w-[15%] mr-4'>
-                                                    <img src={item.image} alt={""}/>
+                                                    <img src={items[index]?.image} alt={""}/>
                                                 </div>
                                                 <div className="flex-grow">
-                                                    <p className="font-semibold text-lg">{item.name}</p>
-                                                    <p className="text-xs text-gray-500">ID: {item.productId}</p>
+                                                    <p className="font-semibold text-lg">{items[index]?.name}</p>
+                                                    <p className="text-xs text-gray-500">ID: {items[index]?.productId}</p>
                                                 </div>
 
                                                 <div className="flex items-center gap-6">
@@ -231,15 +250,17 @@ const StockCreate = () => {
                                                                 variant="ghost"
                                                                 size="sm"
                                                                 className="h-8 w-8 p-0"
-                                                                onClick={() => updateItem(index, 'quantity', Math.max(1, parseInt(item.quantity) - 1))}
+                                                                onClick={() => {
+                                                                    const currentQty = parseInt(items[index].quantity) || 1;
+                                                                    update(index, {...items[index], quantity: Math.max(1, currentQty - 1)});
+                                                                }}
                                                             >
                                                                 <Minus className="h-3 w-3"/>
                                                             </Button>
                                                             <input
                                                                 type="number"
                                                                 className="w-12 text-center text-sm border-none focus:ring-0"
-                                                                value={item.quantity}
-                                                                onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                                                                {...register(`items.${index}.quantity`)}
                                                                 min={1}
                                                                 required
                                                             />
@@ -248,11 +269,15 @@ const StockCreate = () => {
                                                                 variant="ghost"
                                                                 size="sm"
                                                                 className="h-8 w-8 p-0 border-1 border-gray-300"
-                                                                onClick={() => updateItem(index, 'quantity', parseInt(item.quantity) + 1)}
+                                                                onClick={() => {
+                                                                    const currentQty = parseInt(items[index].quantity) || 0;
+                                                                    update(index, {...items[index], quantity: currentQty + 1});
+                                                                }}
                                                             >
                                                                 <Plus className="h-3 w-3"/>
                                                             </Button>
                                                         </div>
+                                                        <InputError errors={errors} field={`items.${index}.quantity`}/>
                                                     </div>
 
                                                     <div className="space-y-1">
@@ -262,18 +287,18 @@ const StockCreate = () => {
                                                             type="number"
                                                             step="0.01"
                                                             className="h-9 w-24 bg-white"
-                                                            value={item.purchasePrice * (80 / 100)}
-                                                            onChange={(e) => updateItem(index, 'purchasePrice', e.target.value)}
+                                                            {...register(`items.${index}.purchasePrice`)}
                                                             min={0}
                                                             required
                                                         />
+                                                        <InputError errors={errors} field={`items.${index}.purchasePrice`}/>
                                                     </div>
 
                                                     <div className="space-y-1 text-right min-w-[80px]">
                                                         <label
                                                             className="text-xs font-medium uppercase text-gray-500">Subtotal</label>
                                                         <p className="font-bold text-blue-600">
-                                                            ${(parseFloat(item.quantity || 0) * parseFloat(item.purchasePrice || 0)).toFixed(2)}
+                                                            ${(parseFloat(items[index].quantity || 0) * parseFloat(items[index].purchasePrice || 0)).toFixed(2)}
                                                         </p>
                                                     </div>
 
@@ -282,7 +307,7 @@ const StockCreate = () => {
                                                         variant="outline"
                                                         size="icon"
                                                         className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                                        onClick={() => removeItem(index)}
+                                                        onClick={() => remove(index)}
                                                     >
                                                         <Trash2 className="h-4 w-4"/>
                                                     </Button>
@@ -293,16 +318,17 @@ const StockCreate = () => {
                                         <div className="mt-6 p-4 border-t flex justify-between">
                                             <p className="text-xl text-gray-600 font-medium">
                                                 Total
-                                                Items: {items.reduce((acc, item) => acc + parseInt(item.quantity || 0), 0)}
+                                                Items: {calculateTotalItems()}
                                             </p>
                                             <p className="text-xl font-bold text-blue-900">
                                                 Total Cost:
-                                                ${items.reduce((acc, item) => acc + (parseFloat(item.quantity || 0)
-                                                * parseFloat(item.purchasePrice || 0)), 0).toFixed(2)}
+                                                ${calculateTotalCost()}
                                             </p>
                                         </div>
                                     </div>
                                 )}
+
+                                <InputError errors={errors} field="items" />
                             </CardContent>
                             <CardFooter className="bg-gray-50 border-t p-6 flex flex-col gap-4">
                                 <InputError errors={errors} field={GLOBAL_ERROR}/>
@@ -312,7 +338,7 @@ const StockCreate = () => {
                                     <Button
                                         type="submit"
                                         className="w-full bg-blue-600 text-lg"
-                                        disabled={items.length == 0}
+                                        disabled={fields.length == 0}
                                     >
                                         Save Stock Purchase
                                     </Button>

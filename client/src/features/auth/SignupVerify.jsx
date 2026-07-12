@@ -22,10 +22,7 @@ import { useUserStore } from '@/store/useUserStore';
 import InputError from '@/components/common/InputError';
 
 const SignupVerifySchema = z.object({
-    email: z
-        .string()
-        .min(1, 'Email is required')
-        .max(31, 'Email must be shorter than 31 characters'),
+    otp: z.string().min(1, 'OTP is required'),
 });
 
 const SignupVerify = () => {
@@ -91,7 +88,7 @@ const SignupVerify = () => {
                          
                             <div className="space-y-1">
                                 <StaredLabel label="otp"/>
-                                <Input type="text" value={otp} {...register("otp")} required/>
+                                <Input type="text" {...register("otp")} required/>
                                 <InputError errors={errors} field={"otp"}/>
                             </div>
                         </CardContent>
@@ -106,7 +103,7 @@ const SignupVerify = () => {
                             {isResendOtpButtonLoading ? 
                                 <ButtonLoading/>
                                 : 
-                                <Button variant="outline" className="w-full" onClick={() => handleResendOTP()}>
+                                <Button variant="outline" className="w-full" onClick={handleResendOTP}>
                                     Resend OTP?
                                 </Button>
                             }
@@ -117,7 +114,7 @@ const SignupVerify = () => {
 
             <div className='lg:w-[50%]'>
                 <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSni4W_ssx3U1KqS7a7wY_Q4NVU2hW3CP-1jA&s'
-                     className='cover h-full w-full' alt={""}/>
+                     className='cover h-full w-full' alt="signup verification visual"/>
             </div>
         </div>
     )

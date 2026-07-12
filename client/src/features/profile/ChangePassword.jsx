@@ -19,7 +19,8 @@ import { AuthAxios } from '@/services/http/Axios.js';
 import InputError from '@/components/common/InputError';
 import StaredLabel from '@/components/common/StaredLabel';
 import { TOAST_TYPE } from '@/utils/enums';
-import { toastInitialState } from '@/utils';
+import { handleErrors } from '@/utils';
+import { notify } from '@/components/common/notification';
 
 const ChangePasswordSchema = z.object({
     currentPassword: z
@@ -36,6 +37,7 @@ const ChangePasswordSchema = z.object({
         .max(15, 'Confirm Password must be shorter than 15 characters'),
 }).refine((data) => data.newPassword == data.confirmPassword, {
     message: 'Passwords do not match',
+    path: ['confirmPassword'],
 });
 
 const ChangePassword = () => {
@@ -45,107 +47,93 @@ const ChangePassword = () => {
         resolver: zodResolver(ChangePasswordSchema)
     });
 
-    const [toastData, setToastData] = useState(toastInitialState);
-
     const handleChangePassword = async (data) => {
         try {
             await AuthAxios.put(`password`, data)
         
-            showToast("Password changed successfully", TOAST_TYPE.SUCCESS);
+            notify(TOAST_TYPE.SUCCESS, "Password changed successfully");
             reset();
 
             setTimeout(() => {
                 navigate("/profile", { replace: true });
             }, 500);
         } catch (error) {
-            console.log(error);
-            handleError(error, setError);
+            console.error(error);
+            handleErrors(error, setError);
         }
     }
 
-    const showToast = (message, type) => {
-        setToastData({message, type, id: Date.now()});
-    };
-
     return (
-        <>
-            <div className='lg:flex h-[100vh]  overflow-hidden'>
-                <div className='flex w-full lg:w-[50%] bg-gray-100 h-full'>
-                    <Card className="mx-auto my-auto w-[420px]">
-                        <form onSubmit={handleSubmit(handleChangePassword)}>
-                            <CardHeader>
-                                <CardTitle>Change Password</CardTitle>
-                                <CardDescription>
-                                    Enter your current password and a new password
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-2">
-                                <div className="space-y-2">
-                                    <StaredLabel label={"Current Password"} field={"currentPassword"}/>
-                                    <Input
-                                        type="password"
-                                        placeholder="8 characters min"
-                                        {...register('currentPassword')}
-                                        required
-                                    />
-                                    <InputError errors={errors} field={"currentPassword"}/>
-                                </div>
+        <div className='lg:flex h-[100vh]  overflow-hidden'>
+            <div className='flex w-full lg:w-[50%] bg-gray-100 h-full'>
+                <Card className="mx-auto my-auto w-[420px]">
+                    <form onSubmit={handleSubmit(handleChangePassword)}>
+                        <CardHeader>
+                            <CardTitle>Change Password</CardTitle>
+                            <CardDescription>
+                                Enter your current password and a new password
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                            <div className="space-y-2">
+                                <StaredLabel label={"Current Password"}/>
+                                <Input
+                                    type="password"
+                                    placeholder="8 characters min"
+                                    {...register('currentPassword')}
+                                    required
+                                />
+                                <InputError errors={errors} field={"currentPassword"}/>
+                            </div>
 
-                                <div className="space-y-2">
-                                    <StaredLabel label={"New Password"} field={"newPassword"}/>
-                                    <Input
-                                        type="password"
-                                        placeholder="8 characters min"
-                                        {...register('newPassword')}
-                                        required
-                                    />
-                                    <InputError errors={errors} field={"newPassword"}/>
-                                </div>
+                            <div className="space-y-2">
+                                <StaredLabel label={"New Password"}/>
+                                <Input
+                                    type="password"
+                                    placeholder="8 characters min"
+                                    {...register('newPassword')}
+                                    required
+                                />
+                                <InputError errors={errors} field={"newPassword"}/>
+                            </div>
 
-                                <div className="space-y-2">
-                                    <StaredLabel label={"Confirm Password"} field={"confirmPassword"}/>
-                                    <Input
-                                        type="password"
-                                        placeholder="8 characters min"
-                                        {...register('confirmPassword')}
-                                        required
-                                    />
-                                    <InputError errors={errors} field={"confirmPassword"}/>
-                                </div>
-                            </CardContent>
+                            <div className="space-y-2">
+                                <StaredLabel label={"Confirm Password"}/>
+                                <Input
+                                    type="password"
+                                    placeholder="8 characters min"
+                                    {...register('confirmPassword')}
+                                    required
+                                />
+                                <InputError errors={errors} field={"confirmPassword"}/>
+                            </div>
+                        </CardContent>
 
-                            <CardFooter className="flex-col gap-2 ">
-                                {isSubmitting ?
-                                    <ButtonLoading />
-                                    :
-                                    <Button type="submit" className="w-full">Save</Button>
-                                }
+                        <CardFooter className="flex-col gap-2 ">
+                            {isSubmitting ?
+                                <ButtonLoading />
+                                :
+                                <Button type="submit" className="w-full">Save</Button>
+                            }
 
-                                {isResendOtpButtonLoading ? 
-                                    <ButtonLoading/>
-                                    : 
-                                    <Button variant="outline" className="w-full" onClick={() => handleResendOTP()}>
-                                        Resend OTP?
-                                    </Button>
-                                }
-                            </CardFooter>
-                        </form>
-                    </Card>
-                </div>
-
-                <div className='lg:w-[50%]'>
-                    <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSni4W_ssx3U1KqS7a7wY_Q4NVU2hW3CP-1jA&s'
-                        className='cover h-full w-full' />
-                </div>
+                            <Button 
+                                type="button" 
+                                variant="outline" 
+                                className="w-full" 
+                                onClick={() => navigate("/profile")}
+                            >
+                                Cancel
+                            </Button>
+                        </CardFooter>
+                    </form>
+                </Card>
             </div>
 
-        
-            <ToastAlert
-                key={toastData.id}
-                message={toastData.message}
-                type={toastData.type}
-            />
-        </>
+            <div className='lg:w-[50%]'>
+                <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSni4W_ssx3U1KqS7a7wY_Q4NVU2hW3CP-1jA&s'
+                    className='cover h-full w-full' alt="change password visual" />
+            </div>
+        </div>
     )
 }
 

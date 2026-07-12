@@ -26,6 +26,7 @@ import ReviewCreate from "./ReviewCreate";
 
 const fetchProduct = async (id) => {
     const response = await Axios.get(`/products/${id}`);
+    console.log(response.data.data);
     return response.data.data;
 };
 
@@ -87,13 +88,6 @@ export default function ProductDetails() {
             setQuantity(quantity - 1)
         }
     }
-
-    const handleError = (error) => {
-        const responseErrors = error.response?.data || {global: error.message};
-        if (responseErrors.product_id && responseErrors.user_id) setErrors({global: "Can add only 1 review"})
-        else setErrors(responseErrors);
-    };
-
 
     useEffect(() => {
         if (!isProductError) return;
@@ -213,6 +207,7 @@ export default function ProductDetails() {
                         <Separator className="mb-10 opacity-50"/>
 
                         <div className="space-y-8">
+                            {product?.quantity}
                             {product?.quantity > 0 ? (
                                 <>
                                     <div className="flex items-center justify-between">

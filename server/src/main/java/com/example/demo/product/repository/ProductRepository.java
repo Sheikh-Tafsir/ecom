@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -39,5 +40,16 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                           @Param("fromDate") LocalDateTime fromDate,
                           @Param("toDate") LocalDateTime toDate,
                           Pageable pageable
+    );
+
+    @EntityGraph(attributePaths = {"categories"})
+    @Query("""
+                SELECT p FROM Product p
+                WHERE (:name IS NULL OR p.name ILIKE CONCAT('%', CAST(:name AS string), '%'))
+                AND (:status IS NULL OR p.status <> :status)
+            """)
+    List<Product> searchByName(@Param("name") String name,
+                               @Param("status") ProductStatus status,
+                               Pageable pageable
     );
 }

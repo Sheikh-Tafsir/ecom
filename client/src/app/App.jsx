@@ -29,7 +29,7 @@ import RoleEdit from "@/features/roles/RoleEdit.jsx";
 
 import Products from "@/features/product/Products.jsx";
 import ProductDetails from "@/features/product/ProductDetails.jsx";
-import ProductCreate from "@/features/product/ProductCreate";
+import ProductSave from "@/features/product/ProductSave";
 import Stocks from "@/features/stock/Stocks.jsx";
 import StockCreate from "@/features/stock/StockCreate.jsx";
 import Sales from "@/features/sale/Sales";
@@ -137,8 +137,8 @@ const InnerApp = () => {
                     <Route path='/roles/create' element={<RoleEdit/>}/>
                     <Route path='/roles/:id/edit' element={<RoleEdit/>}/>
 
-                    <Route path="/products/create" element={<ProductCreate/>}/>
-                    <Route path="/products/:id/edit" element={<ProductCreate/>}/>
+                    <Route path="/products/create" element={<ProductSave/>}/>
+                    <Route path="/products/:id/edit" element={<ProductSave/>}/>
 
                     <Route path="/stocks/create" element={<StockCreate/>}/>
 

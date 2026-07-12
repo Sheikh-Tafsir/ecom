@@ -15,7 +15,6 @@ import {
     CardTitle,
 } from "@/components/ui/card.jsx";
 import {Input} from "@/components/ui/input.jsx";
-import {Label} from "@/components/ui/label.jsx";
 import {Textarea} from "@/components/ui/textarea";
 
 import StaredLabel from "@/components/common/StaredLabel";
@@ -73,7 +72,7 @@ const updateProduct = async (formData, id) => {
     notify(TOAST_TYPE.SUCCESS, "Product updated successfully")
 }
 
-const ProductCreate = () => {
+const ProductSave = () => {
     const {id} = useParams();
 
     const navigate = useNavigate();
@@ -307,4 +306,4 @@ const ProductCreate = () => {
     );
 };
 
-export default ProductCreate;
+export default ProductSave;

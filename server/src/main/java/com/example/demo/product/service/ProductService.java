@@ -64,9 +64,11 @@ public class ProductService {
                 .map(ProductListResponse::new);
     }
 
-    public Page<ProductListResponse> search(String name) {
-        return productRepository.findAll(getNameFilter(name), null, DISCONTINUED, null, null, getValidPageable(PageRequest.of(0, MAX_SEARCH_SIZE)))
-                .map(ProductListResponse::new);
+    public List<ProductListResponse> search(String name) {
+        return productRepository.searchByName(getNameFilter(name), DISCONTINUED, PageRequest.of(0, MAX_SEARCH_SIZE))
+                .stream()
+                .map(ProductListResponse::new)
+                .toList();
     }
 
     @PostAuthorize("returnObject.status != T(com.example.demo.common.enums.ProductStatus).DISCONTINUED || " +

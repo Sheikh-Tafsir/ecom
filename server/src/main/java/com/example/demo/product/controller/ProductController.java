@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.List;
 
 import static com.example.demo.common.utils.Utils.checkErrors;
 
@@ -54,8 +55,8 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<Page<ProductListResponse>>> search(@RequestParam String name) {
-        Page<ProductListResponse> products = productService.search(name);
+    public ResponseEntity<ApiResponse<List<ProductListResponse>>> search(@RequestParam String name) {
+        List<ProductListResponse> products = productService.search(name);
         return ResponseUtils.ok(products, messageService.get("successfully.found", "Product Search"));
     }
 

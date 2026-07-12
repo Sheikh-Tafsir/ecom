@@ -16,7 +16,7 @@ import {useQuery} from "@tanstack/react-query";
 import {TOAST_TYPE} from "@/utils/enums.js";
 import {notify} from '@/components/common/notification';
 
-const fetchStocks = async () => {
+const fetchStocks = async (id) => {
     const response = await Axios.get(`/stocks/${id}`)
     return response.data.data
 }
@@ -31,8 +31,8 @@ const StockDetails = () => {
         error
     } = useQuery({
         enabled: !!id,
-        queryKey: ["stock", id],
-        queryFn: fetchStocks,
+        queryKey: ["stocks", id],
+        queryFn: () => fetchStocks(id),
     });
 
     useEffect(() => {

@@ -87,6 +87,7 @@ public class SecurityConfig {
         config.setAllowedHeaders(List.of(
                 "Content-Type",
                 "Authorization",
+                "Idempotency-Key",
                 "X-XSRF-TOKEN"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));

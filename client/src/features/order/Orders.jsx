@@ -1,6 +1,9 @@
-import React, {useEffect, useMemo, useState, useCallback} from "react";
+import React, {useEffect, useMemo, useCallback} from "react";
 import {useNavigate, useSearchParams} from "react-router-dom";
 import {useQuery, keepPreviousData} from "@tanstack/react-query";
+import {useForm} from "react-hook-form";
+import {zodResolver} from "@hookform/resolvers/zod";
+import {z} from "zod";
 
 import {
     Table,
@@ -13,7 +16,7 @@ import {
 import {Axios} from '@/services/http/Axios';
 import PaginationButton from '@/components/common/PaginationButton';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay';
-import {formatDateAndTime, hasPermission} from '@/utils';
+import {formatDateAndTime, GLOBAL_ERROR, handleErrors, hasPermission} from '@/utils';
 import {FIRST_PAGE, getQueryString, normalizeQuery, redirectWhenInvalidPage} from '@/utils/PaginationUtils';
 import {Label} from '@/components/ui/label';
 import {
@@ -50,6 +53,12 @@ const fetchOrders = async ({queryKey}) => {
     return response.data.data;
 };
 
+const orderFilterSchema = z.object({
+    productName: z.string().optional(),
+    fromDate: z.string().optional(),
+    toDate: z.string().optional(),
+});
+
 const Orders = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -68,10 +77,19 @@ const Orders = () => {
 
     const {user} = useUserStore();
 
-    const [form, setForm] = useState({
-        productName: "",
-        fromDate: "",
-        toDate: "",
+    const {
+        register,
+        handleSubmit,
+        reset,
+        setError,
+        formState: {errors},
+    } = useForm({
+        resolver: zodResolver(orderFilterSchema),
+        defaultValues: {
+            productName: "",
+            fromDate: "",
+            toDate: "",
+        },
     });
 
     const {
@@ -91,6 +109,7 @@ const Orders = () => {
     useEffect(() => {
         if (isError) {
             console.error("error:", error);
+            handleErrors(error, setError);
             notify(TOAST_TYPE.ERROR, "Failed to show orders")
         }
     }, [error, isError]);
@@ -100,38 +119,27 @@ const Orders = () => {
     }, [page, totalPages, navigate, queryParams])
 
     useEffect(() => {
-        setForm({
+        reset({
             productName,
             fromDate,
             toDate,
         });
-    }, [productName, fromDate, toDate]);
-
-    const handleChange = useCallback((e) => {
-        const {name, value} = e.target;
-
-        setForm((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-    }, []);
+    }, [productName, fromDate, toDate, reset]);
 
     const handleFilter = useCallback(
-        (e) => {
-            e.preventDefault();
-
+        (data) => {
             navigate(
                 getQueryString({
                     ...queryParams,
-                    productName: form.productName || undefined,
-                    fromDate: form.fromDate || undefined,
-                    toDate: form.toDate || undefined,
+                    productName: data.productName || undefined,
+                    fromDate: data.fromDate || undefined,
+                    toDate: data.toDate || undefined,
                     page: FIRST_PAGE,
                 }),
                 {replace: true}
             );
         },
-        [navigate, queryParams, form]
+        [navigate, queryParams]
     );
 
     const changeOrderStatus = async (id, status) => {
@@ -176,7 +184,7 @@ const Orders = () => {
                 <div className='grid lg:grid-cols-4 gap-10 items-start'>
                     {/* Filter Sidebar */}
                     <Card className='lg:col-span-1 border-slate-100 shadow-xl shadow-slate-200/50 rounded-lg overflow-hidden sticky top-24'>
-                        <form onSubmit={handleFilter}>
+                        <form onSubmit={handleSubmit(handleFilter)}>
                             <CardHeader className="bg-slate-100 border-b border-slate-100 pb-4">
                                 <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                     <span className="p-1.5 bg-blue-600 rounded-lg text-white">
@@ -187,17 +195,17 @@ const Orders = () => {
                             </CardHeader>
 
                             <CardContent className="space-y-6 pt-6">
+                                <InputError errors={errors} field={GLOBAL_ERROR}/>
+
                                 {/* Product Name */}
                                 <div className="space-y-2">
                                     <Label className="text-base font-semibold uppercase tracking-widest ml-1">Product Name</Label>
                                     <Input
                                         placeholder="Search by name..."
                                         className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all"
-                                        value={form.productName}
-                                        name="productName"
-                                        onChange={handleChange}
+                                        {...register("productName")}
                                     />
-                                    <InputError field="productName"/>
+                                    <InputError errors={errors} field="productName"/>
                                 </div>
 
                                 {/* From Date */}
@@ -206,11 +214,9 @@ const Orders = () => {
                                     <Input
                                         type="date"
                                         className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all"
-                                        value={form.fromDate}
-                                        name="fromDate"
-                                        onChange={handleChange}
+                                        {...register("fromDate")}
                                     />
-                                    <InputError field="fromDate"/>
+                                    <InputError errors={errors} field="fromDate"/>
                                 </div>
 
                                 {/* To Date */}
@@ -219,16 +225,17 @@ const Orders = () => {
                                     <Input
                                         type="date"
                                         className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all"
-                                        value={form.toDate}
-                                        name="toDate"
-                                        onChange={handleChange}
+                                        {...register("toDate")}
                                     />
-                                    <InputError field="toDate"/>
+                                    <InputError errors={errors} field="toDate"/>
                                 </div>
                             </CardContent>
 
                             <CardFooter className="pt-2">
-                                <Button className="w-full h-12 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-200 transition-all active:scale-95">
+                                <Button 
+                                    type="submit"
+                                    className="w-full h-12 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-200 transition-all active:scale-95"
+                                >
                                     Apply Filters
                                 </Button>
                             </CardFooter>
@@ -268,10 +275,10 @@ const Orders = () => {
                                                 <TableCell className="px-6 py-4 text-center">
                                                     <span className={cn(
                                                         "inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
-                                                        item.status === ORDER_STATUS.PENDING && "bg-amber-100 text-amber-700",
-                                                        item.status === ORDER_STATUS.ACCEPTED && "bg-emerald-100 text-emerald-700",
-                                                        item.status === ORDER_STATUS.REJECTED && "bg-red-100 text-red-700",
-                                                        item.status === ORDER_STATUS.CANCELLED && "bg-slate-200 text-slate-600"
+                                                        item.status == ORDER_STATUS.PENDING && "bg-amber-100 text-amber-700",
+                                                        item.status == ORDER_STATUS.ACCEPTED && "bg-emerald-100 text-emerald-700",
+                                                        item.status == ORDER_STATUS.REJECTED && "bg-red-100 text-red-700",
+                                                        item.status == ORDER_STATUS.CANCELLED && "bg-slate-200 text-slate-600"
                                                     )}>
                                                         {item.status}
                                                     </span>
@@ -346,7 +353,7 @@ const Orders = () => {
                 </div>
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default Orders
+export default Orders;

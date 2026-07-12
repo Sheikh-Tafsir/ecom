@@ -19,6 +19,7 @@ import { ButtonLoading } from '@/components/common/ButtonLoading';
 import { AuthAxios } from '@/services/http/Axios.js';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/common/InputError';
+import { handleErrors } from '@/utils';
 
 const ForgetPasswordVerifySchema = z.object({
     otp: z
@@ -35,6 +36,7 @@ const ForgetPasswordVerifySchema = z.object({
         .max(15, 'Confirm Password must be shorter than 15 characters'),
 }).refine((data) => data.password == data.confirmPassword, {
     message: 'Passwords do not match',
+    path: ['confirmPassword'],
 });
 
 const ForgetPasswordVerify = () => {
@@ -58,8 +60,8 @@ const ForgetPasswordVerify = () => {
             reset();
             navigate("/auth/login", { replace: true });
         } catch (error) {
-            console.log(error);
-            handleError(error, setError);
+            console.error(error);
+            handleErrors(error, setError);
         }
     }
 
@@ -142,7 +144,7 @@ const ForgetPasswordVerify = () => {
                             {isResendOtpButtonLoading ? 
                                 <ButtonLoading/>
                                 : 
-                                <Button variant="outline" className="w-full" onClick={() => handleResendOTP()}>
+                                <Button variant="outline" className="w-full" onClick={handleResendOTP}>
                                     Resend OTP?
                                 </Button>
                             }
@@ -153,7 +155,7 @@ const ForgetPasswordVerify = () => {
 
             <div className='lg:w-[50%]'>
                 <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSni4W_ssx3U1KqS7a7wY_Q4NVU2hW3CP-1jA&s'
-                    className='cover h-full w-full' />
+                    className='cover h-full w-full' alt="reset password visual" />
             </div>
         </div>
     )

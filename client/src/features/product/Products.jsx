@@ -1,7 +1,10 @@
-import {useEffect, useState, useMemo, useCallback} from "react"
+import {useEffect, useMemo} from "react"
 import {Search} from "lucide-react"
 import {useQuery, keepPreviousData} from "@tanstack/react-query"
 import {useNavigate, useSearchParams} from "react-router-dom"
+import {useForm, Controller} from "react-hook-form"
+import {zodResolver} from "@hookform/resolvers/zod"
+import {z} from "zod"
 
 import {Input} from "@/components/ui/input"
 import {
@@ -52,6 +55,12 @@ const fetchCategories = async () => {
     return response.data.data
 }
 
+const productFilterSchema = z.object({
+    search: z.string().optional(),
+    category: z.string().optional(),
+    sort: z.string().optional(),
+});
+
 export default function Products() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -67,28 +76,48 @@ export default function Products() {
     );
     const {page, sort, search, category} = filters
 
-    const [searchInput, setSearchInput] = useState(search)
+    const {
+        register,
+        control,
+        watch,
+        setValue,
+        reset,
+    } = useForm({
+        resolver: zodResolver(productFilterSchema),
+        defaultValues: {
+            search: "",
+            category: "__all__",
+            sort: "createdAt,DESC",
+        },
+    });
+
+    const watchedSearch = watch("search");
 
     useEffect(() => {
-        setSearchInput(search)
-    }, [search])
+        reset({
+            search,
+            category: getSelectValue(category),
+            sort,
+        });
+    }, [search, category, sort, reset]);
 
     useEffect(() => {
-        const trimmed = searchInput.trim();
+        const trimmed = watchedSearch.trim();
         if (trimmed == search) return;
 
         const timer = setTimeout(() => {
-            const newQuery = getQueryString({
-                ...queryParams,
-                search: trimmed || undefined,
-                page: FIRST_PAGE,
+            updateQueryWhenParamChange({
+                queryParams,
+                newParams: {
+                    search: trimmed || undefined,
+                    page: FIRST_PAGE,
+                },
+                navigate,
             });
-
-            navigate(newQuery, {replace: true});
         }, 400);
 
         return () => clearTimeout(timer)
-    }, [searchInput, search, queryParams, navigate])
+    }, [watchedSearch, search, queryParams, navigate])
 
 
     const {
@@ -119,16 +148,13 @@ export default function Products() {
         redirectWhenInvalidPage({page, totalPages, navigate, queryParams})
     }, [page, totalPages, navigate, queryParams])
 
-    const updateQuery = useCallback(
-        (newParams) => {
-            updateQueryWhenParamChange({
-                queryParams,
-                newParams,
-                navigate,
-            });
-        },
-        [queryParams, navigate]
-    );
+    const updateQuery = (newParams) => {
+        updateQueryWhenParamChange({
+            queryParams,
+            newParams,
+            navigate,
+        });
+    };
 
     useEffect(() => {
         if (!isCategoriesError) return;
@@ -170,54 +196,71 @@ export default function Products() {
                         </div>
                         <Input
                             placeholder="Search for premium products..."
-                            value={searchInput}
-                            onChange={(e) => setSearchInput(e.target.value)}
+                            {...register("search")}
                             className="h-14 pl-12 rounded-lg bg-white border-slate-100 shadow-sm focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all font-medium"
                         />
                     </div>
 
                     {/* Category */}
-                    <Select
-                        value={getSelectValue(category)}
-                        onValueChange={(val) => updateQuery({category: val})}
-                    >
-                        <SelectTrigger className="h-14 rounded-lg bg-white border-slate-100 shadow-sm focus:ring-4 focus:ring-blue-50 font-bold text-slate-700">
-                            <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cat:</span>
-                                <SelectValue placeholder="All Categories"/>
-                            </div>
-                        </SelectTrigger>
+                    <Controller
+                        name="category"
+                        control={control}
+                        render={({ field }) => (
+                            <Select
+                                value={field.value}
+                                onValueChange={(val) => {
+                                    field.onChange(val);
+                                    updateQuery({category: val});
+                                }}
+                            >
+                                <SelectTrigger className="h-14 rounded-lg bg-white border-slate-100 shadow-sm focus:ring-4 focus:ring-blue-50 font-bold text-slate-700">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cat:</span>
+                                        <SelectValue placeholder="All Categories"/>
+                                    </div>
+                                </SelectTrigger>
 
-                        <SelectContent className="rounded-lg border-slate-100 shadow-xl p-2">
-                            <SelectItem value="__all__" className="rounded-lg py-2.5 font-semibold">All Categories</SelectItem>
-                            {categories.map((c) => (
-                                <SelectItem key={c.id} value={c.name} className="rounded-lg py-2.5">
-                                    {c.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                                <SelectContent className="rounded-lg border-slate-100 shadow-xl p-2">
+                                    <SelectItem value="__all__" className="rounded-lg py-2.5 font-semibold">All Categories</SelectItem>
+                                    {categories.map((c) => (
+                                        <SelectItem key={c.id} value={c.name} className="rounded-lg py-2.5">
+                                            {c.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
+                    />
 
                     {/* Sort */}
-                    <Select
-                        value={sort}
-                        onValueChange={(val) => updateQuery({sort: val})}
-                    >
-                        <SelectTrigger className="h-14 rounded-lg bg-white border-slate-100 shadow-sm focus:ring-4 focus:ring-blue-50 font-bold text-slate-700">
-                            <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sort:</span>
-                                <SelectValue placeholder="Latest"/>
-                            </div>
-                        </SelectTrigger>
+                    <Controller
+                        name="sort"
+                        control={control}
+                        render={({ field }) => (
+                            <Select
+                                value={field.value}
+                                onValueChange={(val) => {
+                                    field.onChange(val);
+                                    updateQuery({sort: val});
+                                }}
+                            >
+                                <SelectTrigger className="h-14 rounded-lg bg-white border-slate-100 shadow-sm focus:ring-4 focus:ring-blue-50 font-bold text-slate-700">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sort:</span>
+                                        <SelectValue placeholder="Latest"/>
+                                    </div>
+                                </SelectTrigger>
 
-                        <SelectContent className="rounded-lg border-slate-100 shadow-xl p-2">
-                            {Object.values(PRODUCT_SORTBY).map((opt) => (
-                                <SelectItem key={opt.value} value={opt.value} className="rounded-lg py-2.5 font-semibold">
-                                    {opt.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                                <SelectContent className="rounded-lg border-slate-100 shadow-xl p-2">
+                                    {Object.values(PRODUCT_SORTBY).map((opt) => (
+                                        <SelectItem key={opt.value} value={opt.value} className="rounded-lg py-2.5 font-semibold">
+                                            {opt.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
+                    />
                 </div>
 
                 {/* Grid */}
@@ -240,13 +283,13 @@ export default function Products() {
                         </div>
                         <h3 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">No products found</h3>
                         <p className="text-slate-500 max-w-[320px] font-medium leading-relaxed mb-8">
-                            We couldn't find anything matching "{searchInput}". Try using more general keywords or clearing your filters.
+                            We couldn't find anything matching "{watchedSearch}". Try using more general keywords or clearing your filters.
                         </p>
                         <Button 
                             variant="outline" 
                             className="rounded-lg h-12 px-6 font-bold text-slate-600 border-slate-200 hover:bg-slate-50"
                             onClick={() => {
-                                setSearchInput("");
+                                setValue("search", "");
                                 updateQuery({category: "__all__", sort: "createdAt,DESC"});
                             }}
                         >
