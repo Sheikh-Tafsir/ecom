@@ -29,6 +29,7 @@ import {GLOBAL_ERROR, handleErrors} from "@/utils";
 import {TOAST_TYPE} from "@/utils/enums";
 import {notify} from "@/components/common/notification";
 import {useQuery} from "@tanstack/react-query";
+import { compressImages } from "@/utils/ImageUtils";
 
 const MAX_IMAGES = 5;
 
@@ -55,7 +56,7 @@ const fetchProduct = async (id) => {
 const createProduct = async (formData) => {
     const response = await Axios.post("/products", formData, {
         headers: {'Content-Type': 'multipart/form-data'},
-        timeout: 15000,
+        timeout: 5000,
     });
 
     notify(TOAST_TYPE.SUCCESS, "Product Successfully created");
@@ -66,7 +67,7 @@ const createProduct = async (formData) => {
 const updateProduct = async (formData, id) => {
     await Axios.put(`/products/${id}`, formData, {
         headers: {'Content-Type': 'multipart/form-data'},
-        timeout: 15000,
+        timeout: 5000,
     });
 
     notify(TOAST_TYPE.SUCCESS, "Product updated successfully")
@@ -152,7 +153,9 @@ const ProductSave = () => {
                 }
             });
 
-            newImages.forEach((file) => {
+            const compressedImages = await compressImages(newImages);
+
+            compressedImages.forEach((file) => {
                 formData.append("images", file);
             });
 

@@ -3,7 +3,6 @@ package com.example.demo.common.service.fileStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,9 +14,8 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-@Primary
 @RequiredArgsConstructor
-public class SupabaseStorageService implements FileStorageService {
+public class SupabaseStorageService extends FileStorageService {
 
     private static final String STORAGE_PATH = "/storage/v1/object/";
 
@@ -81,7 +79,7 @@ public class SupabaseStorageService implements FileStorageService {
                     .toBodilessEntity()
                     .block();
         } catch (Exception e) {
-            log.error("Could not delete image from cloudinary", e);
+            log.error("Could not delete image from supabase", e);
         }
     }
 

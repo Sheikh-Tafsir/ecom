@@ -7,6 +7,7 @@ import com.example.demo.common.model.Product;
 import com.example.demo.common.model.ProductImage;
 import com.example.demo.common.service.fileStorage.FileStorageService;
 import com.example.demo.common.service.MessageService;
+import com.example.demo.common.utils.FileUtils;
 import com.example.demo.product.dto.*;
 import com.example.demo.category.repository.CategoryRepository;
 import com.example.demo.product.repository.ProductRepository;
@@ -14,6 +15,7 @@ import com.example.demo.stock.dto.CreateStockItemRequest;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
@@ -31,16 +33,17 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static com.example.demo.common.enums.Permission.ADMIN_ACCESS;
 import static com.example.demo.common.enums.Permission.SUPER_ADMIN_ACCESS;
 import static com.example.demo.common.enums.ProductStatus.DISCONTINUED;
 import static com.example.demo.common.utils.DateUtils.resolveDates;
-import static com.example.demo.common.utils.FileUtils.fileExists;
 import static com.example.demo.common.utils.SecurityUtil.hasPermission;
 import static com.example.demo.common.utils.Utils.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProductService {
@@ -136,9 +139,13 @@ public class ProductService {
             throw new IllegalArgumentException("Some images do not belong to this product");
         }
 
-        product.getImages().removeIf(
-                image -> !request.getKeptImageIds().contains(image.getId())
-        );
+        Set<ProductImage> removedImages = product.getImages()
+                .stream()
+                .filter(image -> !request.getKeptImageIds().contains(image.getId()))
+                .collect(Collectors.toSet());
+
+        removedImages.forEach(image -> fileStorageService.deleteFileAsync(image.getImage()));
+        product.getImages().removeAll(removedImages);
 
         addImages(product, request.getImages());
 
@@ -215,21 +222,27 @@ public class ProductService {
         return (isNull(name)) ? null : "%" + name + "%";
     }
 
-    private void addImages(Product product, Set<MultipartFile> images) throws IOException {
+    private void addImages(Product product, Set<MultipartFile> images) {
         if (isEmpty(images)) {
             return;
         }
 
-        for (MultipartFile imageFile : images) {
-            if (fileExists(imageFile)) {
-                String imageUrl = fileStorageService.uploadFile(imageFile);
+        List<CompletableFuture<String>> uploadFutures = images.stream()
+                .filter(FileUtils::fileExists)
+                .map(fileStorageService::uploadFileAsync)
+                .toList();
 
+        uploadFutures.forEach(future -> {
+            try {
+                String imageUrl = future.get();
                 ProductImage image = new ProductImage();
                 image.setImage(imageUrl);
-
                 product.addImage(image);
+            } catch (Exception e) {
+                log.error("Failed to retrieve uploaded image URL", e);
+                throw new RuntimeException("Image upload failed", e);
             }
-        }
+        });
     }
 
     private void checkActive(Product product) {

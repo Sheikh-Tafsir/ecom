@@ -20,8 +20,10 @@ const ImageInput = ({
                         error,
                         setError,
                         label = "Image",
-                        isRequired = false
+                        isRequired = false,
+                        disabled = true
                     }) => {
+
     const inputRef = useRef(null);
 
     const [image, setImage] = useState(null);
@@ -69,9 +71,12 @@ const ImageInput = ({
 
     return (
         <div className="space-y-2">
-            {isRequired ?
+            {!image && !existingImage ?
+                isRequired?
                 <StaredLabel label={label}/>
                 : <Label htmlFor="image">{label}</Label>
+                : <></>
+
             }
 
             <Input
@@ -81,15 +86,16 @@ const ImageInput = ({
                 className="hidden"
                 onChange={handleChange}
             />
-
-            <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => inputRef.current?.click()}
-            >
-                Upload Image
-            </Button>
+            {!disabled &&
+                <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => inputRef.current?.click()}
+                >
+                    Upload Image
+                </Button>
+            }
             {!image && existingImage &&
                 <div className="relative">
                     <img
@@ -98,16 +104,18 @@ const ImageInput = ({
                         className="w-[60%] object-cover rounded-md border"
                     />
 
-                    <Button
-                        type="button"
-                        size="icon"
-                        className="absolute -top-2 -right-2 w-5 h-5 rounded-full"
-                        onClick={() =>
-                            onExistingImageChange(null)
-                        }
-                    >
-                        <X size={14}/>
-                    </Button>
+                    {!disabled &&
+                        <Button
+                            type="button"
+                            size="icon"
+                            className="absolute -top-2 -right-2 w-5 h-5 rounded-full"
+                            onClick={() =>
+                                onExistingImageChange(null)
+                            }
+                        >
+                            <X size={14}/>
+                        </Button>
+                    }
                 </div>
             }
 

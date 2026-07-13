@@ -5,6 +5,7 @@ import com.cloudinary.utils.ObjectUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -12,15 +13,17 @@ import java.io.IOException;
 import java.util.Map;
 
 @Slf4j
+@Primary
 @Service
 @RequiredArgsConstructor
-public class CloudinaryService implements FileStorageService {
+public class CloudinaryService extends FileStorageService {
 
     @Value("${cloudinary.folder}")
     private String folder;
 
     private final Cloudinary cloudinary;
 
+    @Override
     public String uploadFile(MultipartFile image) throws IOException {
         Map<?, ?> uploadResult = cloudinary.uploader().upload(image.getBytes(),
                 ObjectUtils.asMap("folder", folder));

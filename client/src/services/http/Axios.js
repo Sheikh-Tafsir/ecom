@@ -9,13 +9,13 @@ const API_PATH = import.meta.env.VITE_API_PATH;
 const AuthAxios = axios.create({
     baseURL: API_PATH,
     withCredentials: true,
-    timeout: 5000,
+    timeout: 3000,
 });
 
 const Axios = axios.create({
     baseURL: API_PATH,
     withCredentials: true,
-    timeout: 5000,
+    timeout: 3000,
 });
 
 Axios.interceptors.request.use(
