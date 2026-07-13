@@ -251,7 +251,7 @@ const Users = () => {
                                                 <TableCell className="px-6 py-4 text-center">
                                                     <span className={cn(
                                                         "inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
-                                                        user.status === USER_STATUS.ACTIVE ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                                                        user.status == USER_STATUS.ACTIVE ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
                                                     )}>
                                                         {user.status}
                                                     </span>

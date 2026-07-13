@@ -47,7 +47,7 @@ export function MultiSelect({
           <div className="flex gap-1 flex-wrap">
             {selected.length > 0 ? (
               selected.map((item) => {
-                const option = options.find((o) => o.value === item);
+                const option = options.find((o) => o.value == item);
                 return (
                   <Badge
                     key={item}
@@ -64,7 +64,7 @@ export function MultiSelect({
                       tabIndex={0}
                       className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                       onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
+                        if (e.key == "Enter" || e.key == " ") {
                           e.preventDefault();
                           handleUnselect(item);
                         }

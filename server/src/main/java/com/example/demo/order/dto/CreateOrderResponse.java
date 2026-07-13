@@ -4,6 +4,6 @@ import java.math.BigDecimal;
 
 public record CreateOrderResponse(
         long id,
-        BigDecimal amount
+        BigDecimal totalPrice
 ) {
 }

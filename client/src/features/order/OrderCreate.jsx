@@ -12,15 +12,13 @@ import {Separator} from "@/components/ui/separator"
 import {useCartStore} from "@/store/useCartStore"
 import {useUserStore} from "@/store/useUserStore"
 import {Axios} from "@/services/http/Axios"
-import {handleErrors} from "@/utils"
+import {GLOBAL_ERROR, handleErrors} from "@/utils"
 import {ButtonLoading} from "@/components/common/ButtonLoading"
 import InputError from "@/components/common/InputError.jsx"
 import {PAYMENT_METHOD, TOAST_TYPE} from "@/utils/enums.js"
 import {getIdempotencyKey, IDEMPOTENCY_HEADER, removeIdempotencyKey} from "@/utils/idempotencyUtil.js"
 import {notify} from "@/components/common/notification"
-import { cn } from "@/lib/utils"
-
-const GLOBAL_ERROR = "global";
+import {cn} from "@/lib/utils"
 
 const checkoutSchema = z.object({
     phone: z.string()
@@ -29,6 +27,41 @@ const checkoutSchema = z.object({
     address: z.string().min(5, 'Address must be at least 5 characters'),
     paymentMethod: z.string().min(1, 'Please select a payment method'),
 })
+
+const createOrder = async (items, name, data, idempotencyKey) => {
+    try {
+        return Axios.post("/orders", {
+                items,
+                name,
+                ...data,
+            },
+            {
+                headers: {
+                    [IDEMPOTENCY_HEADER]: idempotencyKey,
+                },
+            }
+        );
+    } catch (error) {
+        console.error(error);
+        notify(TOAST_TYPE.ERROR, "Order placed Failed!");
+        throw error;
+    }
+};
+
+export const createPayment = async (order, userId) => {
+    try {
+        return await Axios.post("/payment", {
+            userId: userId,
+            orderId: order.id,
+            amount: order.totalPrice,
+            payerReference: order.phone,
+        });
+    } catch (error) {
+        console.error(error);
+        notify(TOAST_TYPE.ERROR, "Payment Failed!");
+        throw error;
+    }
+};
 
 export default function OrderCreate() {
     const navigate = useNavigate();
@@ -53,41 +86,6 @@ export default function OrderCreate() {
         },
     });
 
-    const createOrder = async (data, idempotencyKey) => {
-        try {
-            return Axios.post("/orders", {
-                    items: cart,
-                    name: user?.name,
-                    ...data,
-                },
-                {
-                    headers: {
-                        [IDEMPOTENCY_HEADER]: idempotencyKey,
-                    },
-                }
-            );
-        } catch (error) {
-            console.error(error);
-            notify(TOAST_TYPE.ERROR, "Order placed Failed!");
-            throw error;
-        }
-    };
-
-    const createPayment = async (order, phone) => {
-        try {
-            return await Axios.post("/payment", {
-                userId: user.id,
-                orderId: order.id,
-                amount: order.amount,
-                payerReference: phone,
-            });
-        } catch (error) {
-            console.error(error);
-            notify(TOAST_TYPE.ERROR, "Payment Failed!");
-            throw error;
-        }
-    };
-
     const cleanupAfterOrder = () => {
         clearCart();
         reset();
@@ -98,9 +96,8 @@ export default function OrderCreate() {
         const idempotencyKey = getIdempotencyKey();
 
         try {
-            const orderResponse = await createOrder(data, idempotencyKey);
+            const orderResponse = await createOrder(cart, user?.name, data, idempotencyKey);
             const order = orderResponse.data.data;
-
 
             if (data.paymentMethod == PAYMENT_METHOD.CASH_ON_DELIVERY) {
                 cleanupAfterOrder();
@@ -109,8 +106,7 @@ export default function OrderCreate() {
                 return;
             }
 
-            const paymentResponse = await createPayment(order, data.phone);
-            console.log(paymentResponse.data.data);
+            const paymentResponse = await createPayment(order, user.id, data.phone);
 
             cleanupAfterOrder();
             notify(TOAST_TYPE.SUCCESS, "Order placed and payment completed successfully!");
@@ -118,6 +114,9 @@ export default function OrderCreate() {
         } catch (error) {
             console.error(error);
             handleErrors(error, setError);
+            if (error.response) {
+                removeIdempotencyKey()
+            }
         }
     };
 
@@ -134,15 +133,18 @@ export default function OrderCreate() {
                 <div className="grid lg:grid-cols-5 gap-10 items-start">
                     {/* Main Form Area */}
                     <div className="lg:col-span-3 space-y-8 animate-in fade-in slide-in-from-left duration-700">
-                        <Card className="border-slate-100 shadow-xl shadow-slate-200/50 rounded-lg overflow-hidden bg-white">
+                        <Card
+                            className="border-slate-100 shadow-xl shadow-slate-200/50 rounded-lg overflow-hidden bg-white">
                             <CardHeader className="bg-slate-50/50 border-b border-slate-50 p-8">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-blue-600 rounded-lg text-white">
                                         <Package className="h-5 w-5"/>
                                     </div>
                                     <div>
-                                        <CardTitle className="text-xl font-bold text-slate-800 tracking-tight">Shipping Information</CardTitle>
-                                        <CardDescription className="text-slate-500 font-medium mt-1">Where should we send your items?</CardDescription>
+                                        <CardTitle className="text-xl font-bold text-slate-800 tracking-tight">Shipping
+                                            Information</CardTitle>
+                                        <CardDescription className="text-slate-500 font-medium mt-1">Where should we
+                                            send your items?</CardDescription>
                                     </div>
                                 </div>
                             </CardHeader>
@@ -152,14 +154,19 @@ export default function OrderCreate() {
 
                                     <div className="grid md:grid-cols-2 gap-6">
                                         <div className="space-y-2">
-                                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Full Name</Label>
-                                            <div className="bg-slate-50 px-4 py-3 rounded-lg border border-slate-100 text-slate-900 font-bold text-sm">
+                                            <Label
+                                                className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Full
+                                                Name</Label>
+                                            <div
+                                                className="bg-slate-50 px-4 py-3 rounded-lg border border-slate-100 text-slate-900 font-bold text-sm">
                                                 {user?.name}
                                             </div>
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Phone Number</Label>
+                                            <Label
+                                                className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Phone
+                                                Number</Label>
                                             <Input
                                                 type="tel"
                                                 placeholder="+1 (555) 000-0000"
@@ -171,7 +178,9 @@ export default function OrderCreate() {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Street Address</Label>
+                                        <Label
+                                            className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Street
+                                            Address</Label>
                                         <Input
                                             placeholder="123 Education St, Knowledge City"
                                             className="h-12 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all font-medium"
@@ -181,33 +190,36 @@ export default function OrderCreate() {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Payment Method</Label>
+                                        <Label
+                                            className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Payment
+                                            Method</Label>
                                         <Controller
                                             name="paymentMethod"
                                             control={control}
                                             render={({field}) => (
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     {Object.entries(PAYMENT_METHOD).map(([key, label]) => (
-                                                        <div 
+                                                        <div
                                                             key={key}
                                                             onClick={() => field.onChange(label)}
                                                             className={cn(
                                                                 "relative flex items-center gap-4 p-4 rounded-lg border-2 transition-all cursor-pointer group",
-                                                                field.value === label 
-                                                                    ? "border-blue-600 bg-blue-50/50 shadow-md" 
+                                                                field.value == label
+                                                                    ? "border-blue-600 bg-blue-50/50 shadow-md"
                                                                     : "border-slate-100 bg-white hover:border-slate-200"
                                                             )}
                                                         >
                                                             <div className={cn(
                                                                 "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all",
-                                                                field.value === label ? "border-blue-600 bg-blue-600" : "border-slate-200 group-hover:border-slate-300"
+                                                                field.value == label ? "border-blue-600 bg-blue-600" : "border-slate-200 group-hover:border-slate-300"
                                                             )}>
-                                                                {field.value === label && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                                                {field.value == label && <div
+                                                                    className="w-1.5 h-1.5 rounded-full bg-white"/>}
                                                             </div>
                                                             <div>
                                                                 <p className="text-sm font-bold text-slate-800">{label}</p>
                                                                 <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest">
-                                                                    {label === PAYMENT_METHOD.CASH_ON_DELIVERY ? "Pay when you receive" : "Instant processing"}
+                                                                    {label == PAYMENT_METHOD.CASH_ON_DELIVERY ? "Pay when you receive" : "Instant processing"}
                                                                 </p>
                                                             </div>
                                                         </div>
@@ -224,16 +236,21 @@ export default function OrderCreate() {
 
                     {/* Right: Order Summary Sidebar */}
                     <div className="lg:col-span-2 space-y-8 animate-in fade-in slide-in-from-right duration-700">
-                        <Card className="border-slate-100 shadow-xl shadow-slate-200/50 rounded-lg overflow-hidden bg-white sticky top-24">
+                        <Card
+                            className="border-slate-100 shadow-xl shadow-slate-200/50 rounded-lg overflow-hidden bg-white sticky top-24">
                             <CardHeader className="bg-slate-50/50 border-b border-slate-50 p-8">
-                                <CardTitle className="text-xl font-bold text-slate-800 tracking-tight">Order Summary</CardTitle>
-                                <CardDescription className="text-slate-500 font-medium mt-1">Review your items before placing the order</CardDescription>
+                                <CardTitle className="text-xl font-bold text-slate-800 tracking-tight">Order
+                                    Summary</CardTitle>
+                                <CardDescription className="text-slate-500 font-medium mt-1">Review your items before
+                                    placing the order</CardDescription>
                             </CardHeader>
                             <CardContent className="p-8 space-y-6">
                                 <div className="max-h-[300px] overflow-y-auto pr-2 space-y-4 custom-scrollbar">
                                     {cart?.map((item) => (
-                                        <div key={item.productId} className="flex items-center gap-4 p-3 rounded-lg bg-slate-50 border border-slate-100 group">
-                                            <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-white border border-slate-200 shadow-sm">
+                                        <div key={item.productId}
+                                             className="flex items-center gap-4 p-3 rounded-lg bg-slate-50 border border-slate-100 group">
+                                            <div
+                                                className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-white border border-slate-200 shadow-sm">
                                                 <img
                                                     src={item.image || "/placeholder.svg"}
                                                     alt={item.name}
@@ -251,7 +268,7 @@ export default function OrderCreate() {
                                     ))}
                                 </div>
 
-                                <Separator className="opacity-50" />
+                                <Separator className="opacity-50"/>
 
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center">
@@ -262,38 +279,42 @@ export default function OrderCreate() {
                                         <span className="font-medium text-sm">Shipping</span>
                                         <span className="font-bold text-[10px] uppercase tracking-widest">Free</span>
                                     </div>
-                                    <Separator className="opacity-50" />
+                                    <Separator className="opacity-50"/>
                                     <div className="flex justify-between items-center pt-2">
                                         <span className="text-lg font-bold text-slate-900">Order Total</span>
-                                        <span className="text-3xl font-bold text-blue-600 tracking-tighter">${cartTotal.toFixed(2)}</span>
+                                        <span
+                                            className="text-3xl font-bold text-blue-600 tracking-tighter">${cartTotal.toFixed(2)}</span>
                                     </div>
                                 </div>
 
-                                <div className="p-4 rounded-lg bg-blue-50 border border-blue-100 flex items-center gap-3">
+                                <div
+                                    className="p-4 rounded-lg bg-blue-50 border border-blue-100 flex items-center gap-3">
                                     <div className="p-2 bg-blue-600 rounded-lg text-white">
-                                        <Clock className="h-4 w-4" />
+                                        <Clock className="h-4 w-4"/>
                                     </div>
                                     <div className="space-y-0.5">
-                                        <p className="text-[10px] font-bold text-blue-800 uppercase tracking-widest leading-none">Estimated Delivery</p>
+                                        <p className="text-[10px] font-bold text-blue-800 uppercase tracking-widest leading-none">Estimated
+                                            Delivery</p>
                                         <p className="text-sm font-bold text-blue-900">3-5 Business Days</p>
                                     </div>
                                 </div>
 
                                 {isSubmitting ? (
-                                    <ButtonLoading className="w-full h-16 rounded-lg bg-blue-600" />
+                                    <ButtonLoading className="w-full h-16 rounded-lg bg-blue-600"/>
                                 ) : (
-                                    <Button 
-                                        type="submit" 
+                                    <Button
+                                        type="submit"
                                         form="checkout-form"
                                         className="w-full h-16 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl shadow-xl shadow-blue-600/20 transition-all hover:scale-[1.02] active:scale-95 group"
                                     >
                                         Place Order Now
-                                        <ChevronRight className="h-6 w-6 ml-2 group-hover:translate-x-1 transition-transform" />
+                                        <ChevronRight
+                                            className="h-6 w-6 ml-2 group-hover:translate-x-1 transition-transform"/>
                                     </Button>
                                 )}
 
                                 <div className="flex items-center justify-center gap-2 pt-2">
-                                    <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                                    <ShieldCheck className="h-4 w-4 text-emerald-500"/>
                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Encrypted & Secure Transaction</span>
                                 </div>
                             </CardContent>
@@ -303,4 +324,4 @@ export default function OrderCreate() {
             </div>
         </div>
     )
-    }
+}

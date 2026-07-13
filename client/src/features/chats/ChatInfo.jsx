@@ -21,7 +21,7 @@ const ChatInfo = ({ name, image, type, participants, handleUserSelectorDialogOpe
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 mb-1">{name}</h3>
                 <p className="text-xs font-medium text-slate-500 flex items-center gap-1.5">
-                    {type === CHAT_TYPE.GROUP ? "Group Chat" : "Direct Message"}
+                    {type == CHAT_TYPE.GROUP ? "Group Chat" : "Direct Message"}
                     <span className="w-1 h-1 bg-slate-300 rounded-full" />
                     {connected ? "Active" : "Away"}
                 </p>
@@ -29,7 +29,7 @@ const ChatInfo = ({ name, image, type, participants, handleUserSelectorDialogOpe
 
             <ScrollArea className="flex-1">
                 <div className="p-6">
-                    {type === CHAT_TYPE.GROUP ? (
+                    {type == CHAT_TYPE.GROUP ? (
                         <div className="space-y-6">
                             <div className="flex items-center justify-between">
                                 <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Members ({participants?.length || 0})</h4>
@@ -59,7 +59,7 @@ const ChatInfo = ({ name, image, type, participants, handleUserSelectorDialogOpe
                                         </div>
                                         <Badge className={cn(
                                             "h-5 text-[9px] font-bold px-2 rounded-md shadow-sm border-none",
-                                            participant.role === CHAT_MEMBER_TYPE.ADMIN 
+                                            participant.role == CHAT_MEMBER_TYPE.ADMIN 
                                                 ? "bg-amber-100 text-amber-700" 
                                                 : "bg-blue-100 text-blue-700"
                                         )}>

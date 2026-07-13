@@ -84,4 +84,10 @@ public class OrderController {
         OrderResponse order = orderService.updateStatus(id, request, userDetails);
         return ResponseUtils.ok(order, messageService.get("successfully.updated", "Order"));
     }
+
+    @PatchMapping("/{id}/delivered")
+    public ResponseEntity<ApiResponse<Void>> delivered(@PathVariable Long id) {
+        orderService.delivered(id);
+        return ResponseUtils.ok(messageService.get("successfully.updated", "Order"));
+    }
 }

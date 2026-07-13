@@ -137,6 +137,9 @@ const StockCreate = () => {
         } catch (error) {
             console.error(error)
             handleErrors(error, setError);
+            if (error.response) {
+                removeIdempotencyKey();
+            }
         }
     };
 

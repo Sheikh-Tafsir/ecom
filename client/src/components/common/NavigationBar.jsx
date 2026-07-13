@@ -114,13 +114,13 @@ export default function Navbar() {
                                         to={item.href}
                                         className={cn(
                                             "flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-200",
-                                            activeMenu === index 
+                                            activeMenu == index 
                                                 ? "bg-blue-50 text-blue-700" 
                                                 : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                                         )}
                                     >
                                         {item.name}
-                                        {item.submenu && <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", activeMenu === index && "rotate-180")} />}
+                                        {item.submenu && <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", activeMenu == index && "rotate-180")} />}
                                     </Link>
 
                                     {item.submenu && activeMenu == index && (

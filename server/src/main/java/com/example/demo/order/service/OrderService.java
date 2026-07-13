@@ -152,6 +152,16 @@ public class OrderService {
         return new OrderResponse(orderRepository.save(order));
     }
 
+    @PreAuthorize("hasAnyAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue()," +
+            "T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue()," +
+            "T(com.example.demo.common.enums.Permission).DELIVERY_MAN_ACCESS.getValue())")
+    @Transactional
+    public void delivered(Long id) {
+        Order order = findByIdHelper(id);
+        order.setStatus(OrderStatus.DELIVERED);
+        order.setPaid(true);
+        orderRepository.save(order);
+    }
 
     // -- helpers --
     @Transactional
@@ -165,6 +175,18 @@ public class OrderService {
         Order order = findByIdHelper(id);
         acceptOrder(order);
         order.setStatus(OrderStatus.ACCEPTED);
+        order.setPaid(true);
+        orderRepository.save(order);
+    }
+
+    @Transactional
+    public void revertOrder(long id) {
+        Order order = findByIdHelper(id);
+        order.getItems().forEach(item -> {
+            productService.increaseQuantity(item.getProduct(), item.getQuantity());
+        });
+        order.setStatus(OrderStatus.PENDING);
+        order.setPaid(false);
         orderRepository.save(order);
     }
 

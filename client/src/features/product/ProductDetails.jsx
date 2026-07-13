@@ -119,7 +119,7 @@ export default function ProductDetails() {
             {isProductLoading && <PageLoadingOverlay/>}
 
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-10">
-                <BackButton />
+                <BackButton url="/products"/>
                 
                 <div className="grid md:grid-cols-2 gap-12 lg:gap-20 items-start mb-20 pt-4">
                     {/* Left: Image Gallery */}

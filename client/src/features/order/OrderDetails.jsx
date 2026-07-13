@@ -56,7 +56,7 @@ export default function OrderDetails() {
             {isPageLoading && <PageLoadingOverlay/>}
 
             <div className="container py-10">
-                <BackButton/>
+                <BackButton url="/orders"/>
 
                 <div className="max-w-4xl mx-auto mt-2">
                     <div className="grid gap-8 lg:grid-cols-2">
@@ -90,6 +90,14 @@ export default function OrderDetails() {
                                         <div className="grid gap-2">
                                             <StaredLabel label="Payment Method"/>
                                             <InputReadOnly value={order?.paymentMethod}/>
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label>Status</Label>
+                                            <InputReadOnly value={order?.status}/>
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label>Paid</Label>
+                                            <InputReadOnly value={order?.paid ? 'Yes' : 'No'}/>
                                         </div>
                                     </div>
                                 </div>

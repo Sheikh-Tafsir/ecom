@@ -57,7 +57,7 @@ const StockDetails = () => {
                 {/* Header with Back Button */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
                     <div className="space-y-4">
-                        <BackButton />
+                        <BackButton url="/stocks"/>
 
                         <div>
                             <h1 className="text-4xl font-bold text-slate-900 tracking-tight leading-tight flex items-center gap-4">

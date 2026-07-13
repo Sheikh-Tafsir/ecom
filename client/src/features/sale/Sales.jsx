@@ -350,7 +350,7 @@ export default function Sales() {
                                             />
                                             <Bar dataKey="profit" radius={[8, 8, 0, 0]} barSize={40}>
                                                 {stats.chartData.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={index % 2 === 0 ? "#2563eb" : "#4f46e5"} />
+                                                    <Cell key={`cell-${index}`} fill={index % 2 == 0 ? "#2563eb" : "#4f46e5"} />
                                                 ))}
                                             </Bar>
                                         </BarChart>

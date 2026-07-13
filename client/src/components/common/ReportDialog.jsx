@@ -114,7 +114,7 @@ export function ReportDialog({ module = APP_MODULE.USER, trigger }) {
         } catch (error) {
             console.error("Report download failed:", error);
 
-            if (error.response?.data instanceof Blob && error.response.data.type === "application/json") {
+            if (error.response?.data instanceof Blob && error.response.data.type == "application/json") {
                 const text = await error.response.data.text();
                 const errorData = JSON.parse(text);
                 // Wrap in a fake axios error structure so handleErrors can process it

@@ -206,7 +206,7 @@ public class ProductService {
             @CacheEvict(value = "product", key = "#product.id"),
             @CacheEvict(value = "productEdit", key = "#product.id")
     })
-    public void updateQuantity(Product product, int quantityChange) {
+    public void increaseQuantity(Product product, int quantityChange) {
         product.setQuantity(product.getQuantity() + quantityChange);
         productRepository.save(product);
     }

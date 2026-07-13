@@ -27,6 +27,7 @@ public class OrderResponse {
     String phone;
     Set<OrderItemResponse> items;
     PaymentMethod paymentMethod;
+    boolean paid;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 
@@ -43,6 +44,7 @@ public class OrderResponse {
                 .stream()
                 .map(OrderItemResponse::new).collect(Collectors.toSet());
         paymentMethod = order.getPaymentMethod();
+        paid = order.isPaid();
         createdAt = order.getCreatedAt();
         updatedAt = order.getUpdatedAt();
     }

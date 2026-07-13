@@ -15,7 +15,7 @@ public enum OrderStatus {
     ACCEPTED("Accepted"),
     SHIPPED("Shipped"),     // dispatched
     DELIVERED("Delivered"), // received by customer
-    PAID("Paid"),           // payment successful
+    COMPLETED("Completed"),
     CANCELLED("Cancelled"), // canceled by customer
     REJECTED("Rejected");   // canceled by admin
 
@@ -50,24 +50,15 @@ public enum OrderStatus {
                     || newStatus == REJECTED;
 
             case ACCEPTED -> newStatus == SHIPPED
-                    || newStatus == CANCELLED;
+                    || newStatus == CANCELLED
+                    || newStatus == REJECTED;
 
             case SHIPPED -> newStatus == DELIVERED;
 
-            case DELIVERED -> newStatus == PAID;
+            case DELIVERED -> newStatus == COMPLETED;
 
-            case PAID -> false;
-
-            case CANCELLED, REJECTED -> false;
+            case CANCELLED, REJECTED, COMPLETED -> false;
         };
-    }
-
-    public boolean canBeSetByAdmin() {
-        return EnumSet.of(ACCEPTED, SHIPPED, DELIVERED, PAID, REJECTED).contains(this);
-    }
-
-    public boolean canBeSetByUser() {
-        return EnumSet.of(CANCELLED).contains(this);
     }
 }
 

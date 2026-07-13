@@ -82,7 +82,7 @@ const getTriggerButton = (type, icon, css) => {
 };
 
 const getDescription = (type) => {
-  if (type === ALERT_TYPE.DELETE) {
+  if (type == ALERT_TYPE.DELETE) {
     return "This action cannot be undone. It will permanently delete the item.";
   }
   return "";

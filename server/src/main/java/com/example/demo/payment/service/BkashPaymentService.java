@@ -6,8 +6,13 @@ import com.example.demo.common.model.Payment;
 import com.example.demo.payment.dto.CreatePaymentRequest;
 import com.example.demo.payment.dto.CreatePaymentResponse;
 import com.example.demo.payment.repository.PaymentRepository;
+import com.example.demo.common.model.Order;
+import com.example.demo.common.model.OrderItem;
+import com.example.demo.order.repository.OrderRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -29,6 +34,7 @@ public class BkashPaymentService implements PaymentService {
     private final WebClient bkashWebClient;
     private final ObjectMapper objectMapper;
     private final PaymentRepository paymentRepository;
+    private final OrderRepository orderRepository;
 
     /**
      * Step 1: Create a payment and return the bKash payment URL
@@ -36,13 +42,22 @@ public class BkashPaymentService implements PaymentService {
     @Override
     @Transactional
     public String create(CreatePaymentRequest request) {
+        Order order = orderRepository.findById(request.orderId())
+                .orElseThrow(() -> new EntityNotFoundException("Order not found with id: " + request.orderId()));
+        
+        for (OrderItem item : order.getItems()) {
+            if (item.getProduct().getQuantity() < item.getQuantity()) {
+                throw new ValidationException("Insufficient stock for product: " + item.getProduct().getName());
+            }
+        }
+
         HttpHeaders headers = authHeaders();
 
         String merchantInvoiceNumber = "INV-" + UUID.randomUUID().toString().replace("-", "").substring(0, 11).toUpperCase();
 
         Map<String, Object> body = Map.of(
                 "mode", "0011",          // Checkout URL mode
-                "payerReference", request.payerReference() != null ? request.payerReference() : String.valueOf(request.userId()),
+                "payerReference", "Order_" + request.orderId(),
                 "callbackURL", config.getCallbackUrl(),
                 "amount", request.amount().setScale(2, java.math.RoundingMode.HALF_UP).toString(),
                 "currency", "BDT",
@@ -71,13 +86,14 @@ public class BkashPaymentService implements PaymentService {
             String bkashURL = node.path("bkashURL").asText();
             String paymentID = node.path("paymentID").asText();
 
-            paymentRepository.save(com.example.demo.common.model.Payment.builder()
-                    .orderId(request.orderId())
-                    .paymentIntentId(paymentID)
-                    .merchantInvoiceNumber(merchantInvoiceNumber)
-                    .amount(request.amount())
-                    .status(PaymentStatus.PENDING)
-                    .build());
+            Payment payment = new Payment();
+            payment.setOrderId(request.orderId());
+            payment.setPaymentIntentId(paymentID);
+            payment.setMerchantInvoiceNumber(merchantInvoiceNumber);
+            payment.setAmount(request.amount());
+            payment.setStatus(PaymentStatus.PENDING);
+            
+            paymentRepository.save(payment);
 
             return bkashURL;
         } catch (Exception e) {

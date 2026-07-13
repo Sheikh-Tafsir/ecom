@@ -14,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.Map;
 
 @Slf4j
 @RestController
@@ -33,7 +32,7 @@ public class PaymentController {
      */
     @PostMapping
     public ResponseEntity<ApiResponse<String>> createPayment(@RequestBody CreatePaymentRequest request) {
-        String bkashURL = paymentService.create(request);;
+        String bkashURL = paymentService.create(request);
         return ResponseUtils.ok(bkashURL, "found");
     }
 

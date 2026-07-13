@@ -31,7 +31,7 @@ const Homepage = () => {
             key={idx}
             className={cn(
               "absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out",
-              currentIndex === idx ? "opacity-100 scale-100" : "opacity-0 scale-110"
+              currentIndex == idx ? "opacity-100 scale-100" : "opacity-0 scale-110"
             )}
             style={{ backgroundImage: `url(${img})` }}
           />

@@ -293,6 +293,8 @@ const Orders = () => {
                                         <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4">Total Amount</TableHead>
                                         <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4">Date & Time</TableHead>
                                         <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4 text-center">Status</TableHead>
+                                        <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4 text-center">Payment Method</TableHead>
+                                        <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4 text-center">Paid</TableHead>
                                         <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4 text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -324,6 +326,12 @@ const Orders = () => {
                                                     )}>
                                                         {item.status}
                                                     </span>
+                                                </TableCell>
+                                                 <TableCell className="px-6 py-4">
+                                                    <span className="text-xs font-semibold text-slate-500">{item.paymentMethod}</span>
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4">
+                                                    <span className="text-xs font-semibold text-slate-500">{item.paid ? 'Yes' : 'No'}</span>
                                                 </TableCell>
                                                 <TableCell className="px-6 py-4 text-right">
                                                     <div className="flex justify-end gap-2">

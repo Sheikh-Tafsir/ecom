@@ -49,6 +49,8 @@ public class Order extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod = PaymentMethod.CASH_ON_DELIVERY;
 
+    private boolean paid;
+
     public boolean isCancelledOrRejected() {
         return status == OrderStatus.CANCELLED || status == OrderStatus.REJECTED;
     }

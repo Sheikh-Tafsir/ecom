@@ -201,7 +201,7 @@ public class StockService {
 
     private void addItem(Stock stock, CreateStockItemRequest request) {
         Product product = productService.findByIdHelper(request.productId());
-        productService.updateQuantity(product, request.quantity());
+        productService.increaseQuantity(product, request.quantity());
         stock.addItem(product, request.quantity(), request.purchasePrice());
     }
 
@@ -210,7 +210,7 @@ public class StockService {
             throw new ValidationException("Product stock is not available for product id: " + product.getId());
         }
 
-        productService.updateQuantity(product, quantity * -1);
+        productService.increaseQuantity(product, quantity * -1);
     }
 
     private void updateItem(Stock stock, UpdateStockItemRequest request) {
@@ -241,7 +241,7 @@ public class StockService {
         item.setPurchasePrice(request.purchasePrice());
         item.setRemaining(updatedRemaining);
 
-        productService.updateQuantity(item.getProduct(), quantityChange);
+        productService.increaseQuantity(item.getProduct(), quantityChange);
     }
 
     private StockItem getItem(Stock stock, Long itemId) {
