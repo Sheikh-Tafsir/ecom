@@ -1,8 +1,9 @@
 package com.example.gateway.config;
 
 import com.example.gateway.filter.AuthenticationFilter;
-import com.example.gateway.filter.IpRateLimiterFilter;
 import com.example.gateway.filter.UserRateLimiterFilter;
+import com.example.gateway.service.JwtService;
+import com.example.gateway.service.RateLimiterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -41,15 +42,22 @@ public class SecurityConfig {
     @Value("${cors.allowed.origins}")
     private String allowedOrigins;
 
-    private final com.example.gateway.service.JwtService jwtService;
-    private final com.example.gateway.service.RateLimiterService rateLimiterService;
+    private final JwtService jwtService;
+
+    private final RateLimiterService rateLimiterService;
+
+    @Bean
+    public AuthenticationFilter authenticationFilter() {
+        return new AuthenticationFilter(jwtService);
+    }
+
+    @Bean
+    public UserRateLimiterFilter userRateLimiterFilter() {
+        return new UserRateLimiterFilter(rateLimiterService);
+    }
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
-        AuthenticationFilter authenticationFilter = new AuthenticationFilter(jwtService);
-        IpRateLimiterFilter ipRateLimiterFilter = new IpRateLimiterFilter(rateLimiterService);
-        UserRateLimiterFilter userRateLimiterFilter = new UserRateLimiterFilter(rateLimiterService);
-
         return http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
@@ -61,9 +69,8 @@ public class SecurityConfig {
                             return exchange.getResponse().setComplete();
                         })
                 )
-                .addFilterBefore(ipRateLimiterFilter, SecurityWebFiltersOrder.AUTHENTICATION)
-                .addFilterBefore(authenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
-                .addFilterAfter(userRateLimiterFilter, SecurityWebFiltersOrder.AUTHENTICATION)
+                .addFilterBefore(authenticationFilter(), SecurityWebFiltersOrder.AUTHENTICATION)
+                .addFilterAfter(userRateLimiterFilter(), SecurityWebFiltersOrder.AUTHENTICATION)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers(PUBLIC_URLS.toArray(new String[0])).permitAll()
                         .pathMatchers("/auth/**").permitAll()

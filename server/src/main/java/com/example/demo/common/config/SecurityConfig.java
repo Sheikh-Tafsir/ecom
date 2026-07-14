@@ -1,7 +1,6 @@
 package com.example.demo.common.config;
 
 import com.example.demo.common.filter.AuthenticationFilter;
-import com.example.demo.common.filter.IpRateLimiterFilter;
 import com.example.demo.common.filter.UserRateLimiterFilter;
 import com.example.demo.common.service.CustomUserDetailsService;
 import com.example.demo.common.service.JwtService;
@@ -69,11 +68,6 @@ public class SecurityConfig {
     }
 
     @Bean
-    public IpRateLimiterFilter ipRateLimiterFilter() {
-        return new IpRateLimiterFilter(rateLimiterService);
-    }
-
-    @Bean
     public UserRateLimiterFilter userRateLimiterFilter() {
         return new UserRateLimiterFilter(rateLimiterService);
     }
@@ -97,14 +91,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/categories", "/categories/*").permitAll()
                         .requestMatchers("/payment/callback").permitAll()
                         .anyRequest().authenticated()
-                );
+                )
+                .addFilterAfter(authenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         if (isStandAloneServer) {
-            http.addFilterBefore(ipRateLimiterFilter(), UsernamePasswordAuthenticationFilter.class);
-            http.addFilterAfter(authenticationFilter(), IpRateLimiterFilter.class);
             http.addFilterAfter(userRateLimiterFilter(), AuthenticationFilter.class);
-        } else {
-            http.addFilterBefore(authenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         }
 
         return http.build();

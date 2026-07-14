@@ -17,6 +17,8 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
+import static com.example.gateway.filter.LoggingFilter.MDC_USER_ID_KEY;
+
 @Slf4j
 @RequiredArgsConstructor
 public class AuthenticationFilter implements WebFilter {
@@ -53,8 +55,10 @@ public class AuthenticationFilter implements WebFilter {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
+            exchange.getAttributes().put(MDC_USER_ID_KEY, userDetails.getId());
+
             return chain.filter(exchange)
-                    .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication));
+                    .contextWrite(ctx -> ctx.put(MDC_USER_ID_KEY, userDetails.getId().toString()).putAll(ReactiveSecurityContextHolder.withAuthentication(authentication)));
         } catch (Exception e) {
             log.error("Invalid or expired JWT token", e);
 

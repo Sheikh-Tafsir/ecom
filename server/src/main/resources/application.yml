@@ -16,6 +16,11 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: ${DB_DRIVER_CLASS}
 
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+      connection-timeout: 30000
+
   jpa:
     hibernate:
       ddl-auto: none
@@ -67,7 +72,7 @@ logging:
     org.springframework.security: DEBUG
     org.springframework.web.multipart: DEBUG
 
-  pattern.console: '%d{yyyy-MM-dd HH:mm:ss} - %level - %logger{36} - %msg%n'
+  pattern.console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - [Req: %X{requestId}, IP: %X{clientIp}, UserId: %X{userId}] - %msg%n'
 
 #  structured:
 #    format:

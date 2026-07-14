@@ -1,22 +1,20 @@
 package com.example.gateway.filter;
 
+import com.example.gateway.dto.CustomUserDetails;
 import com.example.gateway.service.RateLimiterService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
-import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 @Slf4j
-@Order(2)
 @RequiredArgsConstructor
 public class UserRateLimiterFilter implements WebFilter {
 
@@ -47,7 +45,8 @@ public class UserRateLimiterFilter implements WebFilter {
                 .map(SecurityContext::getAuthentication)
                 .filter(Authentication::isAuthenticated)
                 .map(Authentication::getPrincipal)
-                .ofType(String.class);
+                .cast(CustomUserDetails.class)
+                .map(CustomUserDetails::getEmail);
     }
 
     private Mono<Void> reject(ServerWebExchange exchange) {

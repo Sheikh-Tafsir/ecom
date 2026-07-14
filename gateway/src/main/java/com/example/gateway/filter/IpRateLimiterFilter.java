@@ -3,6 +3,7 @@ package com.example.gateway.filter;
 import com.example.gateway.service.RateLimiterService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -14,7 +15,8 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 @Slf4j
-@Order(1)
+@Component
+@Order(Ordered.HIGHEST_PRECEDENCE + 1)
 @RequiredArgsConstructor
 public class IpRateLimiterFilter implements WebFilter {
 
@@ -22,7 +24,7 @@ public class IpRateLimiterFilter implements WebFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, @NonNull WebFilterChain chain) {
-        String ip = extractIp(exchange.getRequest());
+        String ip = exchange.getRequest().getRemoteAddress().getAddress().getHostAddress();
         String uri = exchange.getRequest().getPath().pathWithinApplication().value();
 
         if (ip == null || ip.trim().isEmpty()) {
@@ -41,7 +43,7 @@ public class IpRateLimiterFilter implements WebFilter {
                 });
     }
 
-    private String extractIp(ServerHttpRequest request) {
+    public static String extractIp(ServerHttpRequest request) {
         String forwarded = request.getHeaders().getFirst("X-Forwarded-For");
         if (forwarded != null && !forwarded.isBlank()) {
             return forwarded.split(",")[0].trim();

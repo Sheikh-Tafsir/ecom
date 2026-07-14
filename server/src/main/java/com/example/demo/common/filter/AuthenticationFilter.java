@@ -20,6 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+import static com.example.demo.common.filter.LoggingFilter.MDC_USER_ID_KEY;
 import static com.example.demo.common.utils.ResponseUtils.error;
 
 @Slf4j
@@ -28,8 +29,6 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
     public static final String BEARER_PREFIX = "Bearer ";
 
-    public static final String REQUEST_ID_HEADER = "X-Request-Id";
-
     private final JwtService jwtService;
 
     @Override
@@ -37,17 +36,11 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain chain) throws IOException, ServletException {
 
-        MDC.put("requestId", request.getHeader(REQUEST_ID_HEADER));
-        MDC.put("method", request.getMethod());
-        MDC.put("path", request.getRequestURI());
-
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
         if (!StringUtils.hasText(authHeader) || !authHeader.startsWith(BEARER_PREFIX)) {
             log.debug("No auth token found in request headers");
-
             chain.doFilter(request, response);
-            MDC.clear();
             return;
         }
 
@@ -60,7 +53,6 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
                 if (!userDetails.isEnabled()) {
                     log.error("User is not active: {}", userDetails.getEmail());
-
                     error(response, HttpStatus.UNAUTHORIZED, "User is not active");
                     return;
                 }
@@ -70,16 +62,13 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                MDC.put("userId", userDetails.getId().toString());
+                MDC.put(MDC_USER_ID_KEY, userDetails.getId().toString());
             }
 
             chain.doFilter(request, response);
         } catch (Exception e) {
             log.error("Invalid or expired JWT token", e);
-
             error(response, HttpStatus.UNAUTHORIZED, "Invalid or expired JWT token");
-        } finally {
-            MDC.clear();
         }
     }
 }
