@@ -120,21 +120,26 @@ const ImageInput = ({
             }
 
             {image &&
-                <div className="relative">
-                    <img
-                        src={image.previewUrl}
-                        alt=""
-                        className="w-[60%] object-cover rounded-md border"
-                    />
+                <div className="space-y-2">
+                    <div className="relative inline-block">
+                        <img
+                            src={image.previewUrl}
+                            alt=""
+                            className="w-[120px] h-[120px] object-cover rounded-md border"
+                        />
 
-                    <Button
-                        type="button"
-                        size="icon"
-                        className="absolute -top-2 -right-2 w-5 h-5 rounded-full"
-                        onClick={() => removeUploadedImage()}
-                    >
-                        <X size={14}/>
-                    </Button>
+                        <Button
+                            type="button"
+                            size="icon"
+                            className="absolute -top-2 -right-2 w-5 h-5 rounded-full"
+                            onClick={() => removeUploadedImage()}
+                        >
+                            <X size={14}/>
+                        </Button>
+                    </div>
+                    <p className="text-xs text-slate-500 font-medium truncate max-w-[200px]" title={image.file.name}>
+                        {image.file.name}
+                    </p>
                 </div>}
 
             <InputError errors={error} field="image"/>

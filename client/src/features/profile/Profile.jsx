@@ -26,6 +26,9 @@ import {notify} from "@/components/common/notification";
 import { cn } from "@/lib/utils";
 import { compressImage } from "@/utils/ImageUtils";
 
+import { useUploadProgress } from "@/hooks/useUploadProgress";
+import UploadProgress from "@/components/common/UploadProgress";
+
 const ProfileSchema = z.object({
     name: z.string()
         .min(2, "Name is required")
@@ -49,6 +52,8 @@ const Profile = () => {
 
     const [existingImage, setExistingImage] = useState();
     const [newImage, setNewImage] = useState();
+
+    const { progress, onUploadProgress, resetProgress } = useUploadProgress();
 
     const {
         register,
@@ -79,6 +84,7 @@ const Profile = () => {
 
     const saveProfileMutation = useMutation({
         mutationFn: async (data) => {
+            resetProgress();
             const formData = new FormData();
 
             Object.entries(data).forEach(([key, value]) => {
@@ -99,6 +105,7 @@ const Profile = () => {
             const response = await Axios.put("/profile", formData, {
                 headers: {'Content-Type': 'multipart/form-data'},
                 timeout: 5000,
+                onUploadProgress,
             });
 
             const user = response.data.data;
@@ -264,7 +271,9 @@ const Profile = () => {
                             </fieldset>
                         </CardContent>
 
-                        <CardFooter className="bg-slate-50/30 border-t border-slate-50 p-8 md:p-12">
+                        <CardFooter className="bg-slate-50/30 border-t border-slate-50 p-8 md:p-12 flex flex-col gap-6">
+                            <UploadProgress progress={progress} />
+                            
                             <div className="w-full flex flex-col sm:flex-row items-center gap-4">
                                 {isSubmitting ? (
                                     <ButtonLoading className="w-full h-14 rounded-2xl bg-blue-600" />

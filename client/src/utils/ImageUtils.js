@@ -8,9 +8,9 @@ const defaultOptions = {
 
 /**
  * Compresses a single image file.
- * @param {File} file 
- * @param {Object} options 
- * @returns {Promise<File>}
+ * @param {File} file - The image file to compress
+ * @param {Object} options - Compression options
+ * @returns {Promise<File>} - The compressed file
  */
 export const compressImage = async (file, options = {}) => {
     if (!file) return null;
@@ -25,9 +25,9 @@ export const compressImage = async (file, options = {}) => {
 
 /**
  * Compresses an array or Set of image files.
- * @param {File[]|Set<File>} files 
- * @param {Object} options 
- * @returns {Promise<File[]>}
+ * @param {File[]|Set<File>} files - The files to compress
+ * @param {Object} options - Compression options
+ * @returns {Promise<File[]>} - Array of compressed files
  */
 export const compressImages = async (files, options = {}) => {
     if (!files) return [];

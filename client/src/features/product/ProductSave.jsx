@@ -30,6 +30,8 @@ import {TOAST_TYPE} from "@/utils/enums";
 import {notify} from "@/components/common/notification";
 import {useQuery} from "@tanstack/react-query";
 import { compressImages } from "@/utils/ImageUtils";
+import {useUploadProgress} from "@/hooks/useUploadProgress";
+import UploadProgress from "@/components/common/UploadProgress";
 
 const MAX_IMAGES = 5;
 
@@ -53,10 +55,11 @@ const fetchProduct = async (id) => {
     return response.data.data;
 };
 
-const createProduct = async (formData) => {
+const createProduct = async (formData, onUploadProgress) => {
     const response = await Axios.post("/products", formData, {
         headers: {'Content-Type': 'multipart/form-data'},
-        timeout: 5000,
+        timeout: 1000 * 60 * 5, // 5 minutes for large uploads
+        onUploadProgress,
     });
 
     notify(TOAST_TYPE.SUCCESS, "Product Successfully created");
@@ -64,10 +67,11 @@ const createProduct = async (formData) => {
     return response.data.data;
 }
 
-const updateProduct = async (formData, id) => {
+const updateProduct = async (formData, id, onUploadProgress) => {
     await Axios.put(`/products/${id}`, formData, {
         headers: {'Content-Type': 'multipart/form-data'},
-        timeout: 5000,
+        timeout: 1000 * 60 * 5, // 5 minutes for large uploads
+        onUploadProgress,
     });
 
     notify(TOAST_TYPE.SUCCESS, "Product updated successfully")
@@ -85,6 +89,8 @@ const ProductSave = () => {
     const [newImages, setNewImages] = useState([]);
     const [existingImages, setExistingImages] = useState([]);
     const [resetImagesKey, setResetImagesKey] = useState(Date.now());
+
+    const { progress, onUploadProgress, resetProgress } = useUploadProgress();
 
     const {
         register,
@@ -143,6 +149,7 @@ const ProductSave = () => {
 
     const saveProduct = async (data) => {
         try {
+            resetProgress();
             const formData = new FormData();
 
             Object.entries(data).forEach(([key, value]) => {
@@ -160,7 +167,7 @@ const ProductSave = () => {
             });
 
             if (isCreatePage) {
-                const productId = await createProduct(formData);
+                const productId = await createProduct(formData, onUploadProgress);
 
                 reset();
                 setExistingImages([]);
@@ -169,7 +176,7 @@ const ProductSave = () => {
 
                 navigate(`/products/${productId}`, {replace: true});
             } else {
-                await updateProduct(formData, id);
+                await updateProduct(formData, id, onUploadProgress);
                 
                 await Promise.all([
                     queryClient.invalidateQueries({ queryKey: ["product", id] }),
@@ -283,7 +290,9 @@ const ProductSave = () => {
                             </div>
                         </CardContent>
 
-                        <CardFooter className="flex flex-col gap-2">
+                        <CardFooter className="flex flex-col gap-4">
+                            <UploadProgress progress={progress} />
+
                             {isSubmitting ? (
                                 <ButtonLoading/>
                             ) : (

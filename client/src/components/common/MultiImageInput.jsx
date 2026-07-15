@@ -40,32 +40,25 @@ const MultiImageInput = ({
     const handleChange = (e) => {
         const selectedFiles = Array.from(e.target.files || []);
 
-        const totalImages = existingImages.length + selectedFiles.length;
+        const totalImages = existingImages.length + images.length + selectedFiles.length;
 
         if (totalImages > maxImages) {
             handleClientSideError(
                 "images",
-                `Maximum ${maxImages} images allowed`,
+                `Maximum ${maxImages} images allowed. You tried to add ${selectedFiles.length} more.`,
                 setError
             );
             return;
         }
 
         const validImages = [];
+        const skippedFiles = [];
 
-        selectedFiles.forEach((file, index) => {
+        selectedFiles.forEach((file) => {
             if (file.size > MAX_FILE_SIZE) {
-                handleClientSideError(
-                    "images",
-                    `Image no: ${index + 1} is too large. Maximum ${MAX_FILE_SIZE / ONE_MB}MB file is allowed`,
-                    setError
-                );
+                skippedFiles.push({ name: file.name, reason: "too large" });
             } else if (isDuplicate(file)) {
-                handleClientSideError(
-                    "images",
-                    `Image no: ${index + 1} already uploaded`,
-                    setError
-                );
+                skippedFiles.push({ name: file.name, reason: "already added" });
             } else {
                 validImages.push({
                     file,
@@ -73,6 +66,17 @@ const MultiImageInput = ({
                 });
             }
         });
+
+        if (skippedFiles.length > 0) {
+            const errorMsg = skippedFiles
+                .map(f => `"${f.name}" (${f.reason})`)
+                .join(", ");
+            handleClientSideError(
+                "images",
+                `Skipped ${skippedFiles.length} files: ${errorMsg}. Max size is ${MAX_FILE_SIZE / ONE_MB}MB.`,
+                setError
+            );
+        }
 
         const updatedImages = [...images, ...validImages];
 
@@ -159,7 +163,7 @@ const MultiImageInput = ({
                     {images.map((img, index) => (
                         <div
                             key={createKey(img.file)}
-                            className="relative"
+                            className="relative space-y-1"
                         >
                             <img
                                 src={img.previewUrl}
@@ -177,6 +181,10 @@ const MultiImageInput = ({
                             >
                                 <X size={14}/>
                             </Button>
+
+                            <p className="text-[10px] text-slate-500 font-medium truncate w-[120px]" title={img.file.name}>
+                                {img.file.name}
+                            </p>
                         </div>
                     ))}
                 </div>

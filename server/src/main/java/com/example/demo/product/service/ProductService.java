@@ -28,6 +28,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -94,8 +97,10 @@ public class ProductService {
         product.setPrice(request.getPrice());
         product.setCategories(new HashSet<>(categoryRepository.findAllById(request.getCategoryIds())));
 
-        addImages(product, request.getImages());
+        Set<String> uploadedImageUrls = new HashSet<>();
+        registerImageCleanup(uploadedImageUrls);
 
+        addImages(product, request.getImages(), uploadedImageUrls);
         productRepository.save(product);
         return product.getId();
     }
@@ -144,12 +149,20 @@ public class ProductService {
                 .filter(image -> !request.getKeptImageIds().contains(image.getId()))
                 .collect(Collectors.toSet());
 
-        removedImages.forEach(image -> fileStorageService.deleteFileAsync(image.getImage()));
+        Set<String> uploadedImageUrls = new HashSet<>();
+        registerImageCleanup(uploadedImageUrls);
+
+        addImages(product, request.getImages(), uploadedImageUrls);
         product.getImages().removeAll(removedImages);
-
-        addImages(product, request.getImages());
-
         productRepository.save(product);
+
+        // Only delete from storage if DB transaction succeeds
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                removedImages.forEach(image -> fileStorageService.deleteFileAsync(image.getImage()));
+            }
+        });
     }
 
     @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
@@ -218,11 +231,23 @@ public class ProductService {
         productRepository.save(product);
     }
 
+    private void registerImageCleanup(Set<String> uploadedImageUrls) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCompletion(int status) {
+                if (status == STATUS_ROLLED_BACK) {
+                    log.info("Transaction rolled back, cleaning up uploaded images: {}", uploadedImageUrls);
+                    uploadedImageUrls.forEach(fileStorageService::deleteFileAsync);
+                }
+            }
+        });
+    }
+
     private static String getNameFilter(String name) {
         return (isNull(name)) ? null : "%" + name + "%";
     }
 
-    private void addImages(Product product, Set<MultipartFile> images) {
+    private void addImages(Product product, Set<MultipartFile> images, Set<String> uploadedUrls) {
         if (isEmpty(images)) {
             return;
         }
@@ -235,6 +260,7 @@ public class ProductService {
         uploadFutures.forEach(future -> {
             try {
                 String imageUrl = future.get();
+                uploadedUrls.add(imageUrl);
                 ProductImage image = new ProductImage();
                 image.setImage(imageUrl);
                 product.addImage(image);
