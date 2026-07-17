@@ -5,17 +5,18 @@ import {notify} from '@/components/common/notification';
 import {TOAST_TYPE} from '@/utils/enums';
 
 const API_PATH = import.meta.env.VITE_API_PATH;
+const TIMEOUT = 5000;
 
 const AuthAxios = axios.create({
     baseURL: API_PATH,
     withCredentials: true,
-    timeout: 3000,
+    timeout: TIMEOUT,
 });
 
 const Axios = axios.create({
     baseURL: API_PATH,
     withCredentials: true,
-    timeout: 3000,
+    timeout: TIMEOUT,
 });
 
 Axios.interceptors.request.use(

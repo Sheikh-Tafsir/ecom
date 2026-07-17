@@ -104,7 +104,7 @@ const Profile = () => {
 
             const response = await Axios.put("/profile", formData, {
                 headers: {'Content-Type': 'multipart/form-data'},
-                timeout: 5000,
+                timeout: 8000,
                 onUploadProgress,
             });
 

@@ -58,7 +58,7 @@ const fetchProduct = async (id) => {
 const createProduct = async (formData, onUploadProgress) => {
     const response = await Axios.post("/products", formData, {
         headers: {'Content-Type': 'multipart/form-data'},
-        timeout: 1000 * 60 * 5, // 5 minutes for large uploads
+        timeout: 12000,
         onUploadProgress,
     });
 
