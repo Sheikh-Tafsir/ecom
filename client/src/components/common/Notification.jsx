@@ -9,6 +9,10 @@ export function Notification({ notification, onClose }) {
   const [isOpen, setIsOpen] = useState(true);
 
   useEffect(() => {
+    if (notification.type == TOAST_TYPE.ERROR || notification.type == TOAST_TYPE.WARNING) {
+      return;
+    }
+    
     const timer = setTimeout(() => {
       setIsOpen(false);
       onClose();

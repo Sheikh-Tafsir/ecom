@@ -2,10 +2,12 @@ package com.example.demo.order.service;
 
 import com.example.demo.common.dto.CustomUserDetails;
 import com.example.demo.common.dto.DateRangeDto;
+import com.example.demo.common.enums.NotificationType;
 import com.example.demo.common.enums.OrderStatus;
 import com.example.demo.common.model.*;
 import com.example.demo.common.service.IdempotencyService;
 import com.example.demo.common.service.MessageService;
+import com.example.demo.notification.dto.NotificationResponse;
 import com.example.demo.order.dto.*;
 import com.example.demo.order.repository.OrderRepository;
 import com.example.demo.order.dto.CreateOrderResponse;
@@ -34,6 +36,9 @@ import static com.example.demo.common.utils.SecurityUtil.*;
 import static com.example.demo.common.utils.Utils.getValidPageable;
 import static com.example.demo.common.utils.Utils.isNull;
 
+import com.example.demo.notification.service.NotificationService;
+import java.time.LocalDateTime;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -50,6 +55,8 @@ public class OrderService {
     private final IdempotencyService idempotencyService;
 
     private final UserService userService;
+
+    private final NotificationService notificationService;
 
     public Page<OrderListResponse> findAll(LocalDate fromDate, LocalDate toDate, OrderStatus status, CustomUserDetails userDetails, Pageable pageable) {
         DateRangeDto dateRange = resolveDates(fromDate, toDate);
@@ -193,6 +200,27 @@ public class OrderService {
         order.setStatus(OrderStatus.ACCEPTED);
         order.setPaid(true);
         orderRepository.save(order);
+    }
+
+    public void notifyAndRejectPendingOrders() {
+        LocalDateTime oneDayAgo = LocalDateTime.now().minusDays(1);
+        LocalDateTime twoDaysAgo = LocalDateTime.now().minusDays(2);
+
+        // 1. Notify admins about orders > 1 days old via SSE
+        List<Order> ordersToNotify = orderRepository.findAllByStatusAndCreatedAtBefore(OrderStatus.PENDING, oneDayAgo);
+        if (!ordersToNotify.isEmpty()) {
+            String message = "There are " + ordersToNotify.size() + " orders pending for more than 2 days.";
+            notificationService.sendToAdmins(new NotificationResponse(NotificationType.WARNING, message));
+            log.info("Notified connected admins about {} pending orders via SSE", ordersToNotify.size());
+        }
+
+        // 2. Reject orders > 2 days old
+        List<Order> ordersToReject = orderRepository.findAllByStatusAndCreatedAtBefore(OrderStatus.PENDING, twoDaysAgo);
+        ordersToReject.forEach(order -> {
+            log.info("Rejecting order {} due to inactivity (more than 3 days old)", order.getId());
+            order.setStatus(OrderStatus.REJECTED);
+            orderRepository.save(order);
+        });
     }
 
 //    @Transactional

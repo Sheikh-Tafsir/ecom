@@ -11,6 +11,8 @@ let socket = null;
 let connectionPromise = null;
 
 export const connectSocket = async () => {
+    if (!isSocketOn) return
+
     if (socket?.connected) return socket;
     if (connectionPromise) return connectionPromise;
 

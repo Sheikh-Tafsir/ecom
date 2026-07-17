@@ -36,4 +36,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             @Param("toDate") LocalDateTime toDate,
             Pageable pageable
     );
+
+    List<Order> findAllByStatusAndCreatedAtBefore(OrderStatus status, LocalDateTime dateTime);
 }

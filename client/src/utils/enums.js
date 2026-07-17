@@ -38,18 +38,18 @@ export const CONTENT_TYPE = Object.freeze({
 });
 
 export const TOAST_TYPE = Object.freeze({
-    INFO: "info",              // Passive info or message
-    SUCCESS: "success",        // Completed successfully
-    ERROR: "error",            // Something went wrong
-    WARNING: "warning",        // Needs attention, but not fatal
+    INFO: "Info",              // Passive info or message
+    SUCCESS: "Success",        // Completed successfully
+    ERROR: "Error",            // Something went wrong
+    WARNING: "Warning",        // Needs attention, but not fatal
 
-    NEED_ACTION: "need action",         // Requires user decision/input
-    BLOCKING: "blocking",               // Prevents user from continuing
-    CONFIRMATION: "confirmation",       // Asks user to confirm or cancel
-    PROCESSING: "processing",           // In-progress feedback
-    CANCELLED: "cancelled",             // User or system cancelled something
+    NEED_ACTION: "Need action",         // Requires user decision/input
+    BLOCKING: "Blocking",               // Prevents user from continuing
+    CONFIRMATION: "Confirmation",       // Asks user to confirm or cancel
+    PROCESSING: "Processing",           // In-progress feedback
+    CANCELLED: "Cancelled",             // User or system cancelled something
 
-    FIXED: "fixed"
+    FIXED: "Fixed"
 })
 
 export const CHAT_TYPE = Object.freeze({

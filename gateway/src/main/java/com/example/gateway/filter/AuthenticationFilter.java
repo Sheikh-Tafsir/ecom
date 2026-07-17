@@ -27,18 +27,25 @@ public class AuthenticationFilter implements WebFilter {
 
     private final JwtService jwtService;
 
+    private static final String ACCESS_TOKEN = "accessToken";
+
     @Override
     public @NonNull Mono<Void> filter(ServerWebExchange exchange, @NonNull WebFilterChain chain) {
 
         String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+        String token = null;
 
-        if (!StringUtils.hasText(authHeader) || !authHeader.startsWith(BEARER_PREFIX)) {
-            log.debug("No Bearer token found in request headers");
+        if (StringUtils.hasText(authHeader) && authHeader.startsWith(BEARER_PREFIX)) {
+            token = authHeader.substring(BEARER_PREFIX.length());
+        } else {
+            token = exchange.getRequest().getQueryParams().getFirst(ACCESS_TOKEN);
+        }
+
+        if (!StringUtils.hasText(token)) {
+            log.debug("No auth token found in request headers or parameters");
 
             return chain.filter(exchange);
         }
-
-        String token = authHeader.substring(BEARER_PREFIX.length());
 
         try {
             Claims claims = jwtService.parseAccessTokenClaims(token);

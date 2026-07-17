@@ -10,7 +10,7 @@ import PublicRoute from "@/routes/PublicRoute";
 
 import {connectSocket, disconnectSocket, isSocketOn} from '@/services/realtime/socket';
 import {PERMISSION} from "@/utils/enums";
-import NotificationListener from "@/components/common/NotificationListener";
+import NotificationListener from "@/services/realtime/NotificationListener";
 
 import Homepage from '@/features/homepage/Homepage';
 import NotFound from '@/features/NotFound';
@@ -42,7 +42,6 @@ import OrderCreate from "@/features/order/OrderCreate";
 import {useUserStore} from "@/store/useUserStore";
 import StockItems from "@/features/stock/StockItems.jsx";
 import StockDetails from "@/features/stock/StockDetails.jsx";
-import {getAccessToken} from "@/utils/index.js";
 import Chat from "@/features/chats/Chats.jsx";
 import SignupVerify from "@/features/auth/SignupVerify";
 import PaymentSuccess from "@/features/payment/PaymentSuccess";

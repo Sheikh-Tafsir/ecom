@@ -31,20 +31,27 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
 
+    private static final String ACCESS_TOKEN = "accessToken";
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain chain) throws IOException, ServletException {
 
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        String token = null;
 
-        if (!StringUtils.hasText(authHeader) || !authHeader.startsWith(BEARER_PREFIX)) {
-            log.debug("No auth token found in request headers");
+        if (StringUtils.hasText(authHeader) && authHeader.startsWith(BEARER_PREFIX)) {
+            token = authHeader.substring(BEARER_PREFIX.length());
+        } else {
+            token = request.getParameter(ACCESS_TOKEN);
+        }
+
+        if (!StringUtils.hasText(token)) {
+            log.debug("No auth token found in request headers or parameters");
             chain.doFilter(request, response);
             return;
         }
-
-        String token = authHeader.substring(BEARER_PREFIX.length());
 
         try {
             if (SecurityContextHolder.getContext().getAuthentication() == null) {

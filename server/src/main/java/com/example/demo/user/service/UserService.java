@@ -1,6 +1,7 @@
 package com.example.demo.user.service;
 
 import com.example.demo.common.dto.CustomUserDetails;
+import com.example.demo.common.enums.Permission;
 import com.example.demo.common.model.Role;
 import com.example.demo.role.service.RoleService;
 import com.example.demo.user.dto.UpdateUserRequest;
@@ -96,6 +97,11 @@ public class UserService {
     }
 
     // -- helpers --
+
+    public List<User> findAllAdmins() {
+        return userRepository.findActiveUsersWithPermissions(Set.of(Permission.ADMIN_ACCESS, Permission.SUPER_ADMIN_ACCESS));
+    }
+
     public User findByIdHelper(Long id) {
         return userRepository.findById(id).
                 orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "User", id)));

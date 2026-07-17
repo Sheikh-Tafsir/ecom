@@ -341,7 +341,8 @@ const Orders = () => {
                                                         item.status == ORDER_STATUS.CANCELLED && "bg-slate-200 text-slate-600",
                                                         item.status == ORDER_STATUS.SHIPPED && "bg-indigo-100 text-indigo-700",
                                                         item.status == ORDER_STATUS.DELIVERED && "bg-emerald-200 text-emerald-800",
-                                                        item.status == ORDER_STATUS.LOST && "bg-orange-100 text-orange-700"
+                                                        item.status == ORDER_STATUS.LOST && "bg-orange-100 text-orange-700",
+                                                        item.status == ORDER_STATUS.COMPLETED && "bg-blue-100 text-blue-700"
                                                     )}>
                                                         {item.status}
                                                     </span>
@@ -360,7 +361,7 @@ const Orders = () => {
                                                         {/* Admin Actions */}
                                                         {(hasPermission(user, PERMISSION.ADMIN_ACCESS) || hasPermission(user, PERMISSION.SUPER_ADMIN_ACCESS)) ? (
                                                             <>
-                                                                {item.status === ORDER_STATUS.PENDING && (
+                                                                {(item.status === ORDER_STATUS.PENDING || item.status === ORDER_STATUS.ACCEPTED || item.status === ORDER_STATUS.DELIVERED) && (
                                                                     <DropdownMenu>
                                                                         <DropdownMenuTrigger asChild>
                                                                             <Button variant="outline" size="sm" className="h-9 px-4 rounded-lg font-bold text-xs text-slate-600 hover:bg-slate-50">
@@ -368,53 +369,58 @@ const Orders = () => {
                                                                             </Button>
                                                                         </DropdownMenuTrigger>
                                                                         <DropdownMenuContent align="end" className="w-40">
-                                                                            <DropdownMenuItem 
-                                                                                className="font-bold text-xs text-emerald-600 focus:text-emerald-600"
-                                                                                onClick={() => changeOrderStatus(item.id, ORDER_STATUS.ACCEPTED)}
-                                                                            >
-                                                                                Accept
-                                                                            </DropdownMenuItem>
-                                                                            <DropdownMenuItem 
-                                                                                className="font-bold text-xs text-red-600 focus:text-red-600"
-                                                                                onClick={() => changeOrderStatus(item.id, ORDER_STATUS.REJECTED)}
-                                                                            >
-                                                                                Reject
-                                                                            </DropdownMenuItem>
-                                                                        </DropdownMenuContent>
-                                                                    </DropdownMenu>
-                                                                )}
-                                                                {item.status === ORDER_STATUS.ACCEPTED && (
-                                                                    <DropdownMenu>
-                                                                        <DropdownMenuTrigger asChild>
-                                                                            <Button variant="outline" size="sm" className="h-9 px-4 rounded-lg font-bold text-xs text-slate-600 hover:bg-slate-50">
-                                                                                Actions
-                                                                            </Button>
-                                                                        </DropdownMenuTrigger>
-                                                                        <DropdownMenuContent align="end" className="w-40">
-                                                                            <DropdownMenuItem 
-                                                                                className="font-bold text-xs text-red-600 focus:text-red-600"
-                                                                                onClick={() => changeOrderStatus(item.id, ORDER_STATUS.REJECTED)}
-                                                                            >
-                                                                                Reject
-                                                                            </DropdownMenuItem>
-                                                                            <DropdownMenuItem 
-                                                                                className="font-bold text-xs text-indigo-600 focus:text-indigo-600"
-                                                                                onClick={() => changeOrderStatus(item.id, ORDER_STATUS.SHIPPED)}
-                                                                            >
-                                                                                Shipped
-                                                                            </DropdownMenuItem>
-                                                                            <DropdownMenuItem 
-                                                                                className="font-bold text-xs text-emerald-600 focus:text-emerald-600"
-                                                                                onClick={() => changeOrderStatus(item.id, ORDER_STATUS.DELIVERED)}
-                                                                            >
-                                                                                Delivered
-                                                                            </DropdownMenuItem>
-                                                                            <DropdownMenuItem 
-                                                                                className="font-bold text-xs text-orange-600 focus:text-orange-600"
-                                                                                onClick={() => changeOrderStatus(item.id, ORDER_STATUS.LOST)}
-                                                                            >
-                                                                                Lost
-                                                                            </DropdownMenuItem>
+                                                                            {item.status === ORDER_STATUS.PENDING && (
+                                                                                <>
+                                                                                    <DropdownMenuItem 
+                                                                                        className="font-bold text-xs text-emerald-600 focus:text-emerald-600"
+                                                                                        onClick={() => changeOrderStatus(item.id, ORDER_STATUS.ACCEPTED)}
+                                                                                    >
+                                                                                        Accept
+                                                                                    </DropdownMenuItem>
+                                                                                    <DropdownMenuItem 
+                                                                                        className="font-bold text-xs text-red-600 focus:text-red-600"
+                                                                                        onClick={() => changeOrderStatus(item.id, ORDER_STATUS.REJECTED)}
+                                                                                    >
+                                                                                        Reject
+                                                                                    </DropdownMenuItem>
+                                                                                </>
+                                                                            )}
+                                                                            {item.status === ORDER_STATUS.ACCEPTED && (
+                                                                                <>
+                                                                                    <DropdownMenuItem 
+                                                                                        className="font-bold text-xs text-red-600 focus:text-red-600"
+                                                                                        onClick={() => changeOrderStatus(item.id, ORDER_STATUS.REJECTED)}
+                                                                                    >
+                                                                                        Reject
+                                                                                    </DropdownMenuItem>
+                                                                                    <DropdownMenuItem 
+                                                                                        className="font-bold text-xs text-indigo-600 focus:text-indigo-600"
+                                                                                        onClick={() => changeOrderStatus(item.id, ORDER_STATUS.SHIPPED)}
+                                                                                    >
+                                                                                        Shipped
+                                                                                    </DropdownMenuItem>
+                                                                                    <DropdownMenuItem 
+                                                                                        className="font-bold text-xs text-emerald-600 focus:text-emerald-600"
+                                                                                        onClick={() => changeOrderStatus(item.id, ORDER_STATUS.DELIVERED)}
+                                                                                    >
+                                                                                        Delivered
+                                                                                    </DropdownMenuItem>
+                                                                                    <DropdownMenuItem 
+                                                                                        className="font-bold text-xs text-orange-600 focus:text-orange-600"
+                                                                                        onClick={() => changeOrderStatus(item.id, ORDER_STATUS.LOST)}
+                                                                                    >
+                                                                                        Lost
+                                                                                    </DropdownMenuItem>
+                                                                                </>
+                                                                            )}
+                                                                            {item.status === ORDER_STATUS.DELIVERED && (
+                                                                                <DropdownMenuItem 
+                                                                                    className="font-bold text-xs text-blue-600 focus:text-blue-600"
+                                                                                    onClick={() => changeOrderStatus(item.id, ORDER_STATUS.COMPLETED)}
+                                                                                >
+                                                                                    Complete
+                                                                                </DropdownMenuItem>
+                                                                            )}
                                                                         </DropdownMenuContent>
                                                                     </DropdownMenu>
                                                                 )}

@@ -1,5 +1,6 @@
 package com.example.demo.user.repository;
 
+import com.example.demo.common.enums.Permission;
 import com.example.demo.common.enums.UserStatus;
 import com.example.demo.common.model.Role;
 import com.example.demo.common.model.User;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -60,4 +62,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
                   AND u.createdAt <= :cutoff
             """)
     int deleteNotVerifiedBefore(@Param("status") UserStatus status, @Param("cutoff") LocalDateTime cutoff);
+
+    @Query("""
+            SELECT DISTINCT u FROM User u
+            JOIN u.roles r
+            JOIN r.permissions p
+            WHERE p IN :permissions
+              AND u.status = 'ACTIVE'
+            """)
+    List<User> findActiveUsersWithPermissions(@Param("permissions") Set<Permission> permissions);
 }
