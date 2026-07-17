@@ -13,9 +13,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 
+import java.security.SecureRandom;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Random;
 
 public final class Utils {
 
@@ -58,8 +58,8 @@ public final class Utils {
         String firstPart = name.substring(0, 3);
         String lastPart = name.substring(name.length() - 3);
 
-        Random random = new Random();
-        int randomNum = 10 + random.nextInt(90);
+        SecureRandom secureRandom = new SecureRandom();
+        int randomNum = 10 + secureRandom.nextInt(90);
 
         return firstPart + lastPart + randomNum;
     }

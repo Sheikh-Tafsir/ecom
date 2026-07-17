@@ -59,7 +59,7 @@ const setupMessageHandlers = (io, socket) => {
                     data: messageData,
                 })
             );
-            console.info(`Message ${reqBody?.content} sent from ${user.name}:`, messageData);
+            console.info("Message %s sent from %s:", reqBody?.content, user.name, messageData);
 
             const activeUsersInRoom = await getActiveUsersInRoom(io, roomId);
             await MessageService.saveMessageReceipts(activeUsersInRoom, message.id, message.chatId, user.id);
