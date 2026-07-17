@@ -33,6 +33,16 @@ const UserSchema = z.object({
     roleNames: z.array(z.string()).min(1, "At least one role is required"),
 });
 
+const fetchUser = async (id) => {
+    const response = await Axios.get(`/users/${id}`)
+    return response.data.data
+}
+
+const fetchRoles = async () => {
+    const response = await Axios.get(`/roles`)
+    return response.data.data
+}
+
 const UserEdit = () => {
     const {id} = useParams();
     const navigate = useNavigate();
@@ -42,7 +52,13 @@ const UserEdit = () => {
     const canManageRoles = hasPermission(currentUser, PERMISSION.SUPER_ADMIN_ACCESS);
 
     const queryClient = useQueryClient();
-    const {handleSubmit, control, reset, setError, formState: {errors, isSubmitting}} = useForm({
+    const {
+        handleSubmit, 
+        control, 
+        reset, 
+        setError, 
+        formState: {errors, isSubmitting}} 
+    = useForm({
         resolver: zodResolver(UserSchema),
         defaultValues: {
             name: '',
@@ -55,19 +71,13 @@ const UserEdit = () => {
         isFetching: isPageLoading
     } = useQuery({
         queryKey: ["user", id],
-        queryFn: async () => {
-            const res = await Axios.get(`/users/${id}`);
-            return res.data.data;
-        },
+        queryFn: () => fetchUser(id),
         enabled: !!id,
     });
 
     const {data: roles} = useQuery({
         queryKey: ["roles"],
-        queryFn: async () => {
-            const res = await Axios.get("/roles");
-            return res.data.data;
-        },
+        queryFn: fetchRoles,
         enabled: canManageRoles && isEditable,
     });
 
@@ -87,7 +97,7 @@ const UserEdit = () => {
         onSuccess: async () => {
             notify(TOAST_TYPE.SUCCESS, "User successfully updated")
             await queryClient.invalidateQueries({queryKey: ["user", id]});
-            //navigate(`/users/${id}`);
+            navigate(`/users/${id}`);
         },
         onError: (error) => {
             console.error(error);
@@ -101,8 +111,8 @@ const UserEdit = () => {
         onSuccess: async () => {
             notify(TOAST_TYPE.SUCCESS, "User deleted")
             await Promise.all([
-                queryClient.invalidateQueries({ queryKey: ["user", id] }),
-                queryClient.invalidateQueries({ queryKey: ["users"] }),
+                queryClient.invalidateQueries({queryKey: ["user", id]}),
+                queryClient.invalidateQueries({queryKey: ["users"]}),
             ]);
             navigate("/users", {replace: true});
         },
@@ -117,94 +127,91 @@ const UserEdit = () => {
     }
 
     return (
-        <>
+        <div className="min-h-[90vh] flex items-center justify-center">
             {isPageLoading && <PageLoadingOverlay/>}
+            <Card className="mx-auto my-auto w-[450px]">
+                <form onSubmit={handleSubmit((data) => updateUser.mutate(data))}>
+                    <fieldset disabled={!isEditable}>
+                        <CardHeader>
+                            <CardTitle>User Details</CardTitle>
+                        </CardHeader>
 
-            <div className="min-h-[90vh] flex items-center justify-center">
-                <Card className="mx-auto my-auto w-[450px]">
-                    <form onSubmit={handleSubmit((data) => updateUser.mutate(data))}>
-                        <fieldset disabled={!isEditable}>
-                            <CardHeader>
-                                <CardTitle>User Details</CardTitle>
-                            </CardHeader>
+                        <CardContent className="space-y-4">
+                            <InputError errors={errors} field={GLOBAL_ERROR}/>
 
-                            <CardContent className="space-y-4">
-                                <InputError errors={errors} field={GLOBAL_ERROR}/>
+                            <div className="flex justify-center mb-6">
+                                <div className="relative">
+                                    <img
+                                        src={user?.image || "/vite.svg"}
+                                        alt={user?.name || "User"}
+                                        className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                                    />
+                                </div>
+                            </div>
 
-                                <div className="flex justify-center mb-6">
-                                    <div className="relative">
-                                        <img
-                                            src={user?.image || "/vite.svg"}
-                                            alt={user?.name || "User"}
-                                            className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                            <div className="space-y-1">
+                                <Label>Email</Label>
+                                <InputViewMode value={user?.email || "N/A"} isEditable={false}/>
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label>Name</Label>
+                                <InputViewMode value={user?.name || "N/A"} isEditable={false}/>
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label>Roles</Label>
+                                {isEditable && canManageRoles ? (
+                                    <div className="mt-2">
+                                        <Controller
+                                            name="roleNames"
+                                            control={control}
+                                            render={({field}) => (
+                                                <MultiSelect
+                                                    options={roles?.map(role => ({
+                                                        label: role.name?.replace(ROLE_PREFIX, ""),
+                                                        value: role.name
+                                                    })) || []}
+                                                    selected={field.value || []}
+                                                    onChange={field.onChange}
+                                                    placeholder="Select roles..."
+                                                />
+                                            )}
                                         />
                                     </div>
-                                </div>
+                                ) : (
+                                    <InputViewMode
+                                        value={user?.roles?.map(role => role.replace(ROLE_PREFIX, "")).join(", ") ?? ""}
+                                        isEditable={false}
+                                    />
+                                )}
+                            </div>
+                        </CardContent>
+                    </fieldset>
 
-                                <div className="space-y-1">
-                                    <Label>Email</Label>
-                                    <InputViewMode value={user?.email || "N/A"} isEditable={false}/>
-                                </div>
-
-                                <div className="space-y-1">
-                                    <Label>Name</Label>
-                                    <InputViewMode value={user?.name || "N/A"} isEditable={false}/>
-                                </div>
-
-                                <div className="space-y-1">
-                                    <Label>Roles</Label>
-                                    {isEditable && canManageRoles ? (
-                                        <div className="mt-2">
-                                            <Controller
-                                                name="roleNames"
-                                                control={control}
-                                                render={({field}) => (
-                                                    <MultiSelect
-                                                        options={roles?.map(role => ({
-                                                            label: role.name?.replace(ROLE_PREFIX, ""),
-                                                            value: role.name
-                                                        })) || []}
-                                                        selected={field.value || []}
-                                                        onChange={field.onChange}
-                                                        placeholder="Select roles..."
-                                                    />
-                                                )}
-                                            />
-                                        </div>
-                                    ) : (
-                                        <InputViewMode
-                                            value={user?.roles?.join(", ")}
-                                            isEditable={false}
-                                        />
-                                    )}
-                                </div>
-                            </CardContent>
-                        </fieldset>
-
-                        <CardFooter className="flex-col gap-2">
-                            {isSubmitting ? (
-                                <ButtonLoading/>
-                            ) : !isEditable ? (
-                                <div className="w-full flex gap-2">
-                                    {canManageRoles && (
-                                        <Button type="button" className="w-[50%] bg-gray-600 hover:bg-gray-800"
-                                                onClick={handleNavigateToEdit}>
-                                            Edit
-                                        </Button>
-                                    )}
-                                    <AlertAction onConfirm={() => deleteUser.mutate()} type={ALERT_TYPE.DELETE}
-                                                 css={canManageRoles ? "w-[50%]" : "w-full"}/>
-                                </div>
-                            ) : (
-                                <Button type="submit" className="w-full bg-blue-600">
-                                    Save
-                                </Button>
-                            )}
-                        </CardFooter>
-                    </form>
-                </Card>
-            </div>
-        </>
+                    <CardFooter className="flex-col gap-2">
+                        {isSubmitting ? (
+                            <ButtonLoading/>
+                        ) : !isEditable ? (
+                            <div className="w-full flex gap-2">
+                                {canManageRoles && (
+                                    <Button type="button" className="w-[70%] bg-blue-600 hover:bg-blue-700"
+                                            onClick={handleNavigateToEdit}>
+                                        Edit
+                                    </Button>
+                                )}
+                                <AlertAction onConfirm={() => deleteUser.mutate()} type={ALERT_TYPE.DELETE}
+                                             css={canManageRoles ? "w-[30%]" : "w-full"}/>
+                            </div>
+                        ) : (
+                            <Button type="submit" className="w-full bg-blue-600">
+                                Save
+                            </Button>
+                        )}
+                    </CardFooter>
+                </form>
+            </Card>
+        </div>
     );
 };
 

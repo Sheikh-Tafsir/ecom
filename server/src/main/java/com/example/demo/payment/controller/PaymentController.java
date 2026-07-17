@@ -69,7 +69,7 @@ public class PaymentController {
             CreatePaymentResponse result = paymentService.execute(paymentID);
 
             if ("0000".equals(result.getStatusCode())) {
-                orderService.acceptOrder(orderId);
+                orderService.acceptOrderForPrepayment(orderId);
                 paymentService.updatePaymentStatus(paymentID, result, true);
 
                 httpResponse.sendRedirect(config.getFrontendSuccessUrl()

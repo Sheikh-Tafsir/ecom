@@ -30,7 +30,12 @@ const RoleSchema = z.object({
     permissions: z.array(z.string()).min(1, "At least one permission is required"),
 });
 
-const RoleEdit = () => {
+const fetchRole = async (id) => {
+    const response = await Axios.get(`/roles/${id}`)
+    return response.data.data
+};
+
+const RoleSave = () => {
     const {id} = useParams();
     const navigate = useNavigate();
     const location = useLocation();
@@ -48,10 +53,7 @@ const RoleEdit = () => {
 
     const {data: roleFromQuery, isLoading} = useQuery({
         queryKey: ["role", id],
-        queryFn: async () => {
-            const res = await Axios.get(`/roles/${id}`);
-            return res.data.data;
-        },
+        queryFn: () => fetchRole(id),
         enabled: !!id && !roleFromState,
     });
 
@@ -69,7 +71,6 @@ const RoleEdit = () => {
         mutationFn: async (data) => {
             const payload = {
                 ...data,
-                name: `ROLE_${data.name.toUpperCase()}`
             };
             if (id) {
                 await Axios.put(`/roles/${id}`, payload);
@@ -112,10 +113,18 @@ const RoleEdit = () => {
                             </Label>
                             <div className="flex items-center gap-2">
                                 <span className="bg-slate-100 px-3 h-11 flex items-center rounded-lg font-bold text-slate-400 border border-slate-200">ROLE_</span>
-                                <Input 
-                                    {...register("name")} 
-                                    placeholder="e.g. MANAGER"
-                                    className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all font-bold text-slate-700"
+                                <Controller
+                                    name="name"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Input
+                                            {...field}
+                                            placeholder="e.g. MANAGER"
+                                            value={field.value}
+                                            onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                                            className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all font-bold text-slate-700"
+                                        />
+                                    )}
                                 />
                             </div>
                             <InputError errors={errors} field="name"/>
@@ -171,4 +180,4 @@ const RoleEdit = () => {
     );
 };
 
-export default RoleEdit;
+export default RoleSave;

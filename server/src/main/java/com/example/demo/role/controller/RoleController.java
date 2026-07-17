@@ -1,10 +1,10 @@
 package com.example.demo.role.controller;
 
 import com.example.demo.common.dto.ApiResponse;
-import com.example.demo.common.model.Role;
 import com.example.demo.common.service.MessageService;
 import com.example.demo.common.utils.ResponseUtils;
 import com.example.demo.role.dto.RoleRequest;
+import com.example.demo.role.dto.RoleResponse;
 import com.example.demo.role.service.RoleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,26 +23,26 @@ public class RoleController {
     private final MessageService messageService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Role>>> findAll() {
-        List<Role> roles = roleService.findAll();
+    public ResponseEntity<ApiResponse<List<RoleResponse>>> findAll() {
+        List<RoleResponse> roles = roleService.findAll();
         return ResponseUtils.ok(roles, messageService.get("successfully.found", "Role List"));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Role>> findById(@PathVariable Long id) {
-        Role role = roleService.findById(id);
+    public ResponseEntity<ApiResponse<RoleResponse>> findById(@PathVariable Long id) {
+        RoleResponse role = roleService.findById(id);
         return ResponseUtils.ok(role, messageService.get("successfully.found", "Role"));
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Role>> create(@Valid @RequestBody RoleRequest roleRequest) {
-        Role role = roleService.create(roleRequest.name(), roleRequest.permissions());
-        return ResponseUtils.ok(role, messageService.get("successfully.created", "Role"));
+    public ResponseEntity<ApiResponse<Long>> create(@Valid @RequestBody RoleRequest roleRequest) {
+        Long roleId = roleService.create(roleRequest.name(), roleRequest.permissions());
+        return ResponseUtils.ok(roleId, messageService.get("successfully.created", "Role"));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Role>> update(@PathVariable Long id, @Valid @RequestBody RoleRequest roleRequest) {
-        Role role = roleService.update(id, roleRequest.name(), roleRequest.permissions());
+    public ResponseEntity<ApiResponse<RoleResponse>> update(@PathVariable Long id, @Valid @RequestBody RoleRequest roleRequest) {
+        RoleResponse role = roleService.update(id, roleRequest.name(), roleRequest.permissions());
         return ResponseUtils.ok(role, messageService.get("successfully.updated", "Role"));
     }
 

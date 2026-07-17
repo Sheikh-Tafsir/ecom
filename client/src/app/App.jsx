@@ -25,7 +25,7 @@ import Profile from '@/features/profile/Profile.jsx'
 import Users from "@/features/users/Users.jsx";
 import UserEdit from "@/features/users/UserEdit.jsx";
 import Roles from "@/features/roles/Roles.jsx";
-import RoleEdit from "@/features/roles/RoleEdit.jsx";
+import RoleSave from "@/features/roles/RoleSave.jsx";
 
 import Products from "@/features/product/Products.jsx";
 import ProductDetails from "@/features/product/ProductDetails.jsx";
@@ -134,8 +134,8 @@ const InnerApp = () => {
                     <Route path='/users/:id/edit' element={<UserEdit/>}/>
                     
                     <Route path='/roles' element={<Roles/>}/>
-                    <Route path='/roles/create' element={<RoleEdit/>}/>
-                    <Route path='/roles/:id/edit' element={<RoleEdit/>}/>
+                    <Route path='/roles/create' element={<RoleSave/>}/>
+                    <Route path='/roles/:id/edit' element={<RoleSave/>}/>
 
                     <Route path="/products/create" element={<ProductSave/>}/>
                     <Route path="/products/:id/edit" element={<ProductSave/>}/>

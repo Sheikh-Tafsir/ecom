@@ -2,8 +2,10 @@ package com.example.demo.role.service;
 
 import com.example.demo.common.enums.Permission;
 import com.example.demo.common.model.Role;
+import com.example.demo.role.dto.RoleResponse;
 import com.example.demo.role.repository.RoleRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -27,29 +29,33 @@ public class RoleService {
     @PreAuthorize("hasAnyAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue()," +
             "T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Cacheable(value = "roles")
-    public List<Role> findAll() {
-        return roleRepository.findAll();
+    public List<RoleResponse> findAll() {
+        return roleRepository.findAll()
+                .stream()
+                .map(RoleResponse::new)
+                .toList();
     }
 
     @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Cacheable(value = "role", key = "#id")
-    public Role findById(Long id) {
-        return roleRepository.findDetailsById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Role with id: " + id + " not found"));
+    public RoleResponse findById(Long id) {
+        return new RoleResponse(findByIdHelper(id));
     }
 
     @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
     @CacheEvict(value = "roles", allEntries = true)
-    public Role create(String name, Set<Permission> permissions) {
+    public long create(String name, Set<Permission> permissions) {
         if (!name.startsWith(ROLE_PREFIX)) {
             name = ROLE_PREFIX + name;
         }
 
         Role role = new Role();
-        role.setName(name);
+        role.setName(formatName(name));
         role.setPermissions(permissions);
-        return roleRepository.save(role);
+        roleRepository.save(role);
+
+        return role.getId();
     }
 
     @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
@@ -58,14 +64,20 @@ public class RoleService {
             @CacheEvict(value = "role", key = "#id"),
             @CacheEvict(value = "roles", allEntries = true)
     })
-    public Role update(Long id, String name, Set<Permission> permissions) {
+    public RoleResponse update(Long id, String name, Set<Permission> permissions) {
         Role role = findByIdHelper(id);
+        Role roleWithSameName = findByName(name);
+
+        if (roleWithSameName != null) {
+            throw new ValidationException("Role with same name already exists");
+        }
+
         if (!name.startsWith(ROLE_PREFIX)) {
             name = ROLE_PREFIX + name;
         }
-        role.setName(name);
+        role.setName(formatName(name));
         role.setPermissions(permissions);
-        return roleRepository.save(role);
+        return new RoleResponse(roleRepository.save(role));
     }
 
     @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
@@ -95,5 +107,9 @@ public class RoleService {
     private Role findByIdHelper(Long id) {
         return roleRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Role with id: " + id + " not found"));
+    }
+
+    private String formatName(String name) {
+        return name.toUpperCase().replace(" ", "_");
     }
 }

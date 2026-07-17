@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -27,8 +28,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.time.LocalDate;
 import java.util.List;
 
-import static com.example.demo.common.enums.Permission.ADMIN_ACCESS;
-import static com.example.demo.common.enums.Permission.SUPER_ADMIN_ACCESS;
+import static com.example.demo.common.enums.Permission.*;
 import static com.example.demo.common.utils.DateUtils.resolveDates;
 import static com.example.demo.common.utils.SecurityUtil.*;
 import static com.example.demo.common.utils.Utils.getValidPageable;
@@ -54,11 +54,27 @@ public class OrderService {
     public Page<OrderListResponse> findAll(LocalDate fromDate, LocalDate toDate, OrderStatus status, CustomUserDetails userDetails, Pageable pageable) {
         DateRangeDto dateRange = resolveDates(fromDate, toDate);
 
+        List<OrderStatus> statuses = status == null ? null : List.of(status);
+
         if (hasPermission(List.of(SUPER_ADMIN_ACCESS.getValue(), ADMIN_ACCESS.getValue()), userDetails)) {
-            return orderRepository.findAllByStatus(status, dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable)).map(OrderListResponse::new);
+            return orderRepository.findAllByStatus(null, statuses, dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable)).map(OrderListResponse::new);
         }
 
-        return orderRepository.findAllByUser_Id(userDetails.getId(), status, dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable)).map(OrderListResponse::new);
+        if (hasPermission(List.of(DELIVERY_MAN_ACCESS.getValue()), userDetails)) {
+            if (statuses == null) {
+                return orderRepository.findAllByStatus(null,
+                        List.of(OrderStatus.SHIPPED, OrderStatus.DELIVERED, OrderStatus.RETURNED),
+                        dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable)).map(OrderListResponse::new);
+            }
+
+            if (status != OrderStatus.SHIPPED && status != OrderStatus.DELIVERED && status != OrderStatus.RETURNED) {
+               statuses = List.of(OrderStatus.SHIPPED);
+            }
+
+            return orderRepository.findAllByStatus(null, statuses, dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable)).map(OrderListResponse::new);
+        }
+
+        return orderRepository.findAllByStatus(userDetails.getId(), statuses, dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable)).map(OrderListResponse::new);
     }
 
     @PostAuthorize("""
@@ -128,12 +144,13 @@ public class OrderService {
     }
 
     @PreAuthorize("hasAnyAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue()," +
-            "T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
+            "T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue()," +
+            "T(com.example.demo.common.enums.Permission).DELIVERY_MAN_ACCESS.getValue())")
     @Transactional
     public OrderResponse updateStatus(Long id, UpdateOrderStatusRequest request, CustomUserDetails userDetails) {
         Order order = findByIdHelper(id);
         OrderStatus status = request.status();
-        log.info("Updating order status for id: {} from {} to {} by user: {}", id, order.getStatus(), status, userDetails.getEmail());
+        log.info("Update order: {} from {} to {} by user: {}", id, order.getStatus(), status, userDetails.getId());
 
         if (order.isCancelledOrRejected() && !status.isCancellationOrRejection()) {
             throw new IllegalArgumentException("Cancelled/Rejected order cannot be reopened");
@@ -141,6 +158,16 @@ public class OrderService {
 
         if (!order.getStatus().canTransitionTo(status)) {
             throw new IllegalArgumentException("Invalid order status transition");
+        }
+
+        if (hasPermission(List.of(DELIVERY_MAN_ACCESS.getValue()), userDetails)) {
+            if (status != OrderStatus.DELIVERED && status != OrderStatus.RETURNED) {
+                throw new AccessDeniedException("Delivery man " + userDetails + " can't access order: " + id);
+            }
+
+            if (status == OrderStatus.DELIVERED) {
+                order.setPaid(true);
+            }
         }
 
         if (status == OrderStatus.ACCEPTED) {
@@ -152,17 +179,6 @@ public class OrderService {
         return new OrderResponse(orderRepository.save(order));
     }
 
-    @PreAuthorize("hasAnyAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue()," +
-            "T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue()," +
-            "T(com.example.demo.common.enums.Permission).DELIVERY_MAN_ACCESS.getValue())")
-    @Transactional
-    public void delivered(Long id) {
-        Order order = findByIdHelper(id);
-        order.setStatus(OrderStatus.DELIVERED);
-        order.setPaid(true);
-        orderRepository.save(order);
-    }
-
     // -- helpers --
     @Transactional
     public void delete(Long id) {
@@ -171,7 +187,7 @@ public class OrderService {
     }
 
     @Transactional
-    public void acceptOrder(long id) {
+    public void acceptOrderForPrepayment(long id) {
         Order order = findByIdHelper(id);
         acceptOrder(order);
         order.setStatus(OrderStatus.ACCEPTED);
@@ -179,16 +195,14 @@ public class OrderService {
         orderRepository.save(order);
     }
 
-    @Transactional
-    public void revertOrder(long id) {
-        Order order = findByIdHelper(id);
-        order.getItems().forEach(item -> {
-            productService.increaseQuantity(item.getProduct(), item.getQuantity());
-        });
-        order.setStatus(OrderStatus.PENDING);
-        order.setPaid(false);
-        orderRepository.save(order);
-    }
+//    @Transactional
+//    public void revertOrder(long id) {
+//        Order order = findByIdHelper(id);
+//        order.getItems().forEach(item -> productService.increaseQuantity(item.getProduct(), item.getQuantity()));
+//        order.setStatus(OrderStatus.PENDING);
+//        order.setPaid(false);
+//        orderRepository.save(order);
+//    }
 
     private Order findByIdHelper(Long id) {
         return orderRepository.findById(id)

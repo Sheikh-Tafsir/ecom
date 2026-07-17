@@ -46,23 +46,23 @@ public class RedisConfig {
 //        return new LettuceConnectionFactory(config, clientConfig);
 //    }
 
-    @Bean
-    RedisSerializer<Object> redisSerializer() {
-        return new GenericJackson2JsonRedisSerializer();
-    }
-
 //    @Bean
-//    public RedisSerializer<Object> redisSerializer(Jackson2ObjectMapperBuilder builder) {
-//        ObjectMapper objectMapper = builder.createXmlMapper(false).build();
-//
-//        objectMapper.activateDefaultTyping(
-//                LaissezFaireSubTypeValidator.instance,
-//                ObjectMapper.DefaultTyping.EVERYTHING,
-//                JsonTypeInfo.As.PROPERTY
-//        );
-//
-//        return new GenericJackson2JsonRedisSerializer(objectMapper);
+//    RedisSerializer<Object> redisSerializer() {
+//        return new GenericJackson2JsonRedisSerializer();
 //    }
+
+    @Bean
+    public RedisSerializer<Object> redisSerializer(Jackson2ObjectMapperBuilder builder) {
+        ObjectMapper objectMapper = builder.createXmlMapper(false).build();
+
+        objectMapper.activateDefaultTyping(
+                LaissezFaireSubTypeValidator.instance,
+                ObjectMapper.DefaultTyping.EVERYTHING,
+                JsonTypeInfo.As.PROPERTY
+        );
+
+        return new GenericJackson2JsonRedisSerializer(objectMapper);
+    }
 
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory, RedisSerializer<Object> redisSerializer) {

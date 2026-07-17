@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -22,27 +23,17 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @EntityGraph(attributePaths = {"user"})
     @Query("""
-                SELECT o FROM Order o
-                WHERE (:status IS NULL OR o.status = :status)
-                    AND o.createdAt BETWEEN :fromDate AND :toDate
-                ORDER BY o.createdAt ASC
+            SELECT o FROM Order o
+            WHERE (:userId IS NULL OR o.user.id = :userId)
+              AND (:statuses IS NULL OR o.status IN :statuses)
+              AND o.createdAt BETWEEN :fromDate AND :toDate
+            ORDER BY o.createdAt ASC
             """)
-    Page<Order> findAllByStatus(@Param("status") OrderStatus status,
-                                @Param("fromDate") LocalDateTime fromDate,
-                                @Param("toDate") LocalDateTime toDate,
-                                Pageable pageable);
-
-    @EntityGraph(attributePaths = {"user"})
-    @Query("""
-                SELECT o FROM Order o
-                WHERE o.user.id = :userId
-                    AND (:status IS NULL OR o.status = :status)
-                    AND o.createdAt BETWEEN :fromDate AND :toDate
-                ORDER BY o.createdAt DESC
-            """)
-    Page<Order> findAllByUser_Id(@Param("userId") Long userId,
-                                 @Param("status") OrderStatus status,
-                                 @Param("fromDate") LocalDateTime fromDate,
-                                 @Param("toDate") LocalDateTime toDate,
-                                 Pageable pageable);
+    Page<Order> findAllByStatus(
+            @Param("userId") Long userId,
+            @Param("statuses") List<OrderStatus> statuses,
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate,
+            Pageable pageable
+    );
 }

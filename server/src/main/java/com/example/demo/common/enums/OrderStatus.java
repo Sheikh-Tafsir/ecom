@@ -5,19 +5,20 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.util.EnumSet;
-
 @Getter
 @AllArgsConstructor
 public enum OrderStatus {
 
     PENDING("Pending"),
     ACCEPTED("Accepted"),
+    CANCELLED("Cancelled"), // canceled by customer
+    REJECTED("Rejected"),
     SHIPPED("Shipped"),     // dispatched
     DELIVERED("Delivered"), // received by customer
-    COMPLETED("Completed"),
-    CANCELLED("Cancelled"), // canceled by customer
-    REJECTED("Rejected");   // canceled by admin
+    COMPLETED("Completed"),   // canceled by admin
+    LOST("Lost"), // lost while delivery
+    RETURNED("Returned"),
+    REFUNDED("Refunded");
 
     @JsonValue
     private final String value;
@@ -50,14 +51,19 @@ public enum OrderStatus {
                     || newStatus == REJECTED;
 
             case ACCEPTED -> newStatus == SHIPPED
+                    || newStatus == REJECTED
                     || newStatus == CANCELLED
-                    || newStatus == REJECTED;
+                    || newStatus == REFUNDED;
 
-            case SHIPPED -> newStatus == DELIVERED;
+            case SHIPPED -> newStatus == DELIVERED
+                    || newStatus == LOST
+                    || newStatus == RETURNED;
 
             case DELIVERED -> newStatus == COMPLETED;
 
-            case CANCELLED, REJECTED, COMPLETED -> false;
+            case LOST, RETURNED -> newStatus == REFUNDED;
+
+            case CANCELLED, REJECTED, COMPLETED, REFUNDED -> false;
         };
     }
 }

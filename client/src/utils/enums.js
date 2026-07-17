@@ -28,7 +28,8 @@ export const USER_ROLE = Object.freeze({
 
 export const PERMISSION = Object.freeze({
     SUPER_ADMIN_ACCESS: "super_admin:access",
-    ADMIN_ACCESS: "admin:access"
+    ADMIN_ACCESS: "admin:access",
+    DELIVERY_MAN_ACCESS: "delivery_man:access"
 });
 
 export const CONTENT_TYPE = Object.freeze({
@@ -83,11 +84,14 @@ export const PAYMENT_METHOD = Object.freeze({
 export const ORDER_STATUS = Object.freeze({
     PENDING: "Pending",
     ACCEPTED: "Accepted",
+    CANCELLED: "Cancelled",
     REJECTED: "Rejected",
-    PROCESSING: "Processing",
     SHIPPED: "Shipped",
     DELIVERED: "Delivered",
-    CANCELLED: "Cancelled",
+    COMPLETED: "Completed",
+    LOST: "Lost",
+    RETURNED: "Returned",
+    REFUNDED: "Refunded"
 });
 
 export const ALERT_TYPE = {
