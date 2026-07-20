@@ -43,7 +43,7 @@ import {
     normalizeQuery
 } from "@/utils/PaginationUtils.js";
 import {hasPermission} from "@/utils";
-import {notify} from "@/components/common/notification";
+import {toastify} from "@/common/toastify.js";
 import { cn } from "@/lib/utils";
 
 import {ReportDialog} from "@/components/common/ReportDialog";
@@ -108,11 +108,11 @@ const Users = () => {
     const changeUserStatus = async (id, status) => {
         try {
             await Axios.put(`/users/${id}`, {status});
-            notify(TOAST_TYPE.SUCCESS, `User status updated to ${status}`)
+            toastify(TOAST_TYPE.SUCCESS, `User status updated to ${status}`)
             await refetch();
         } catch (error) {
             console.error("Error changing user status:", error);
-            notify(TOAST_TYPE.ERROR, "Failed to change user status")
+            toastify(TOAST_TYPE.ERROR, "Failed to change user status")
         }
     };
 
@@ -133,7 +133,7 @@ const Users = () => {
     useEffect(() => {
         if (isError) {
             console.error(error);
-            notify(TOAST_TYPE.ERROR, "Failed to load users");
+            toastify(TOAST_TYPE.ERROR, "Failed to load users");
         }
     }, [error, isError]);
 

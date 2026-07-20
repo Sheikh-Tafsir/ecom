@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { APP_MODULE, TOAST_TYPE } from "@/utils/enums";
 import { Axios } from "@/services/http/Axios";
-import { notify } from "@/components/common/notification";
+import { toastify } from "@/common/toastify.js";
 import InputError from "./InputError";
 import { GLOBAL_ERROR, handleErrors } from "@/utils";
 import { useForm } from "react-hook-form";
@@ -107,7 +107,7 @@ export function ReportDialog({ module = APP_MODULE.USER, trigger }) {
             link.remove();
             window.URL.revokeObjectURL(url);
 
-            notify(TOAST_TYPE.SUCCESS, "Report ready for download");
+            toastify(TOAST_TYPE.SUCCESS, "Report ready for download");
 
             reset();
             setOpen(false);
@@ -121,7 +121,7 @@ export function ReportDialog({ module = APP_MODULE.USER, trigger }) {
                 handleErrors({ response: { data: errorData } }, setError);
             }
             
-            notify(TOAST_TYPE.ERROR, "Failed to download report");
+            toastify(TOAST_TYPE.ERROR, "Failed to download report");
         }
     };
 

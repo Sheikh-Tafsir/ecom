@@ -21,7 +21,7 @@ import StaredLabel from '@/components/common/StaredLabel';
 import {TOAST_TYPE, PERMISSION} from '@/utils/enums';
 import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils';
 import InputError from "@/components/common/InputError.jsx";
-import {notify} from '@/components/common/notification';
+import {toastify} from '@/common/toastify.js';
 import {Label} from "@/components/ui/label";
 import { MultiSelect } from '@/components/common/MultiSelect';
 
@@ -79,13 +79,13 @@ const RoleSave = () => {
             }
         },
         onSuccess: () => {
-            notify(TOAST_TYPE.SUCCESS, `Role successfully ${id ? 'updated' : 'created'}`);
+            toastify(TOAST_TYPE.SUCCESS, `Role successfully ${id ? 'updated' : 'created'}`);
             queryClient.invalidateQueries({queryKey: ["roles"]});
             navigate('/roles');
         },
         onError: (error) => {
             handleErrors(error, setError);
-            notify(TOAST_TYPE.ERROR, "Failed to save role");
+            toastify(TOAST_TYPE.ERROR, "Failed to save role");
         },
     });
 

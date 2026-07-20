@@ -1,8 +1,8 @@
 import React from 'react'
 import {Outlet} from 'react-router-dom'
 
-import Footer from '@/components/common/Footer'
-import NavigationBar from '@/components/common/NavigationBar'
+import Footer from '@/common/Footer.jsx'
+import NavigationBar from '@/common/NavigationBar.jsx'
 
 const PublicRoute = () => {
     return (

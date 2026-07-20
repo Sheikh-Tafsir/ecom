@@ -1,8 +1,8 @@
 import {Outlet, Navigate, useLocation} from 'react-router-dom'
 
-import NavigationBar from '@/components/common/NavigationBar';
+import NavigationBar from '@/common/NavigationBar.jsx';
 import {useUserStore} from '@/store/useUserStore';
-import Footer from "@/components/common/Footer.jsx";
+import Footer from "@/common/Footer.jsx";
 import {hasPermission} from "@/utils/AuthUtils";
 
 const ProtectedRoute = ({allowedPermissions}) => {

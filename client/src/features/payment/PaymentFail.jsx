@@ -6,7 +6,7 @@ import { useUserStore } from "@/store/useUserStore";
 import { TOAST_TYPE } from "@/utils/enums";
 import { Axios } from "@/services/http/Axios";
 import { createPayment } from "@/features/order/OrderCreate";
-import { notify } from "@/components/common/notification";
+import { toastify } from "@/common/toastify.js";
 import {Card, CardContent, CardHeader, CardTitle, CardDescription} from "@/components/ui/card";
 
 const tryAgain = async (orderId, userId, navigate) => {
@@ -15,19 +15,19 @@ const tryAgain = async (orderId, userId, navigate) => {
     const order = response.data?.data;
 
     // Notify user that payment is being initiated
-    notify(TOAST_TYPE.SUCCESS, "Initiating payment retry...");
+    toastify(TOAST_TYPE.SUCCESS, "Initiating payment retry...");
 
     const paymentResponse = await createPayment(order, userId, order.phone);
 
     if (paymentResponse.data.data) {
         window.location.assign(paymentResponse.data.data);
     } else {
-        notify(TOAST_TYPE.ERROR, "Failed to get payment URL.");
+        toastify(TOAST_TYPE.ERROR, "Failed to get payment URL.");
     }
 
   } catch (error) {
     console.error("Error occurred while trying again:", error);
-    notify(TOAST_TYPE.ERROR, "Failed to initiate payment. Please try again later.");
+    toastify(TOAST_TYPE.ERROR, "Failed to initiate payment. Please try again later.");
   }
 };
 

@@ -20,7 +20,7 @@ import InputReadOnly from "@/components/common/InputReadOnly"
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay"
 import {Axios} from "@/services/http/Axios"
 import {TOAST_TYPE} from "@/utils/enums"
-import {notify} from "@/components/common/notification"
+import {toastify} from "@/common/toastify.js"
 import {useQuery} from "@tanstack/react-query"
 import { BackButton } from "@/components/common/BackButton"
 
@@ -48,7 +48,7 @@ export default function OrderDetails() {
         if (!isError) return;
 
         console.error(error);
-        notify(TOAST_TYPE.ERROR, "Failed to show order");
+        toastify(TOAST_TYPE.ERROR, "Failed to show order");
     }, [isError, error]);
 
     return (

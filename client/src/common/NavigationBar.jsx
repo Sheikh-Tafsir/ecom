@@ -2,18 +2,18 @@ import {useState} from 'react'
 import {Link} from 'react-router-dom'
 import {Menu, X, ChevronDown, ShoppingCart} from "lucide-react"
 
-import {Button} from '@/components/ui/button'
+import {Button} from '@/components/ui/button.jsx'
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {APP_NAME, hasPermission} from '@/utils'
-import {useUserStore} from '@/store/useUserStore'
-import {useCartStore} from '@/store/useCartStore'
-import { PERMISSION } from '@/utils/enums'
-import { cn } from '@/lib/utils'
+} from "@/components/ui/dropdown-menu.jsx"
+import {APP_NAME, hasPermission} from '@/utils/index.js'
+import {useUserStore} from '@/store/useUserStore.js'
+import {useCartStore} from '@/store/useCartStore.js'
+import { PERMISSION } from '@/utils/enums.js'
+import { cn } from '@/lib/utils.js'
 
 const BASE_MENU = [{name: 'Home', href: '/'}]
 const LOGIN_MENU = [{name: 'Login', href: '/auth/login'}]

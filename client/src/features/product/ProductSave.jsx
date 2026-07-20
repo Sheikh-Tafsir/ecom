@@ -27,7 +27,7 @@ import {MultiSelect} from "@/components/common/MultiSelect.jsx";
 import {Axios} from "@/services/http/Axios";
 import {GLOBAL_ERROR, handleErrors} from "@/utils";
 import {TOAST_TYPE} from "@/utils/enums";
-import {notify} from "@/components/common/notification";
+import {toastify} from "@/common/toastify.js";
 import {useQuery} from "@tanstack/react-query";
 import { compressImages } from "@/utils/ImageUtils";
 import {useUploadProgress} from "@/hooks/useUploadProgress";
@@ -62,7 +62,7 @@ const createProduct = async (formData, onUploadProgress) => {
         onUploadProgress,
     });
 
-    notify(TOAST_TYPE.SUCCESS, "Product Successfully created");
+    toastify(TOAST_TYPE.SUCCESS, "Product Successfully created");
 
     return response.data.data;
 }
@@ -74,7 +74,7 @@ const updateProduct = async (formData, id, onUploadProgress) => {
         onUploadProgress,
     });
 
-    notify(TOAST_TYPE.SUCCESS, "Product updated successfully")
+    toastify(TOAST_TYPE.SUCCESS, "Product updated successfully")
 }
 
 const ProductSave = () => {
@@ -194,14 +194,14 @@ const ProductSave = () => {
         if (!isCategoriesError) return;
 
         console.error(categoriesError);
-        notify(TOAST_TYPE.ERROR, "Failed to show categories");
+        toastify(TOAST_TYPE.ERROR, "Failed to show categories");
     }, [isCategoriesError, categoriesError]);
 
     useEffect(() => {
         if (!isProductError) return;
 
         console.error(productError);
-        notify(TOAST_TYPE.ERROR, "Failed to show product");
+        toastify(TOAST_TYPE.ERROR, "Failed to show product");
     }, [isProductError, productError]);
 
     return (

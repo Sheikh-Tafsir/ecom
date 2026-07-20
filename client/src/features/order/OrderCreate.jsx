@@ -17,7 +17,7 @@ import {ButtonLoading} from "@/components/common/ButtonLoading"
 import InputError from "@/components/common/InputError.jsx"
 import {PAYMENT_METHOD, TOAST_TYPE} from "@/utils/enums.js"
 import {getIdempotencyKey, IDEMPOTENCY_HEADER, removeIdempotencyKey} from "@/utils/idempotencyUtil.js"
-import {notify} from "@/components/common/notification"
+import {toastify} from "@/common/toastify.js"
 import {cn} from "@/lib/utils"
 
 const checkoutSchema = z.object({
@@ -43,7 +43,7 @@ const createOrder = async (items, name, data, idempotencyKey) => {
         );
     } catch (error) {
         console.error(error);
-        notify(TOAST_TYPE.ERROR, "Order placed Failed!");
+        toastify(TOAST_TYPE.ERROR, "Order placed Failed!");
         throw error;
     }
 };
@@ -58,7 +58,7 @@ export const createPayment = async (order, userId) => {
         });
     } catch (error) {
         console.error(error);
-        notify(TOAST_TYPE.ERROR, "Payment Failed!");
+        toastify(TOAST_TYPE.ERROR, "Payment Failed!");
         throw error;
     }
 };
@@ -101,7 +101,7 @@ export default function OrderCreate() {
 
             if (data.paymentMethod == PAYMENT_METHOD.CASH_ON_DELIVERY) {
                 cleanupAfterOrder();
-                notify(TOAST_TYPE.SUCCESS, "Order placed successfully!");
+                toastify(TOAST_TYPE.SUCCESS, "Order placed successfully!");
                 navigate(`/orders/${order.id}`);
                 return;
             }
@@ -109,7 +109,7 @@ export default function OrderCreate() {
             const paymentResponse = await createPayment(order, user.id, data.phone);
 
             cleanupAfterOrder();
-            notify(TOAST_TYPE.SUCCESS, "Order placed and payment completed successfully!");
+            toastify(TOAST_TYPE.SUCCESS, "Order placed and payment completed successfully!");
             window.location.assign(paymentResponse.data.data);
         } catch (error) {
             console.error(error);

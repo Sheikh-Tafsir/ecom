@@ -38,7 +38,7 @@ import {
 import {Button} from '@/components/ui/button.jsx';
 import {TOAST_TYPE} from "@/utils/enums.js";
 import InputError from "@/components/common/InputError";
-import {notify} from '@/components/common/notification';
+import {toastify} from '@/common/toastify.js';
 
 const fetchStocks = async ({queryKey}) => {
     const [, params] = queryKey
@@ -139,7 +139,7 @@ const Stocks = () => {
         if (isError) {
             console.error(error);
             handleErrors(error, setError);
-            notify(TOAST_TYPE.ERROR, "Failed to load stocks")
+            toastify(TOAST_TYPE.ERROR, "Failed to load stocks")
         }
     }, [error, isError]);
 

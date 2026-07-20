@@ -22,7 +22,7 @@ import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadi
 import {TOAST_TYPE, ALERT_TYPE, ROLE_PREFIX, PERMISSION} from '@/utils/enums';
 import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils';
 import InputError from "@/components/common/InputError.jsx";
-import {notify} from '@/components/common/notification';
+import {toastify} from '@/common/toastify.js';
 import {hasPermission} from "@/utils/index.js";
 import {useUserStore} from "@/store/useUserStore.js";
 import {MultiSelect} from "@/components/common/MultiSelect.jsx";
@@ -95,21 +95,21 @@ const UserEdit = () => {
             await Axios.put(`/users/${id}`, {roles: data.roleNames});
         },
         onSuccess: async () => {
-            notify(TOAST_TYPE.SUCCESS, "User successfully updated")
+            toastify(TOAST_TYPE.SUCCESS, "User successfully updated")
             await queryClient.invalidateQueries({queryKey: ["user", id]});
             navigate(`/users/${id}`);
         },
         onError: (error) => {
             console.error(error);
             handleErrors(error, setError);
-            notify(TOAST_TYPE.ERROR, "Failed to update user")
+            toastify(TOAST_TYPE.ERROR, "Failed to update user")
         },
     });
 
     const deleteUser = useMutation({
         mutationFn: async () => await Axios.delete(`/users/${id}`),
         onSuccess: async () => {
-            notify(TOAST_TYPE.SUCCESS, "User deleted")
+            toastify(TOAST_TYPE.SUCCESS, "User deleted")
             await Promise.all([
                 queryClient.invalidateQueries({queryKey: ["user", id]}),
                 queryClient.invalidateQueries({queryKey: ["users"]}),
@@ -118,7 +118,7 @@ const UserEdit = () => {
         },
         onError: (error) => {
             console.error(error);
-            notify(TOAST_TYPE.ERROR, "Failed to delete user")
+            toastify(TOAST_TYPE.ERROR, "Failed to delete user")
         },
     })
 

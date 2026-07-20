@@ -19,7 +19,7 @@ import {Label} from "@/components/ui/label";
 import {Textarea} from "@/components/ui/textarea";
 import {Button} from "@/components/ui/button";
 import {ButtonLoading} from "@/components/common/ButtonLoading";
-import {notify} from "@/components/common/notification";
+import {toastify} from "@/common/toastify.js";
 import {TOAST_TYPE} from "@/utils/enums";
 import {handleErrors} from "@/utils";
 
@@ -51,7 +51,7 @@ const ReviewCreate = () => {
         mutationFn: (data) => Axios.post(`/products/${id}/review`, data),
 
         onSuccess: async () => {
-            notify(TOAST_TYPE.SUCCESS, "Review added successfully.");
+            toastify(TOAST_TYPE.SUCCESS, "Review added successfully.");
 
             reset();
             await queryClient.invalidateQueries({queryKey: ["reviews", id]});

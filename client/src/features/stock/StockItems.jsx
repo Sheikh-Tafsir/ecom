@@ -37,7 +37,7 @@ import {
 } from '@/utils/index.js';
 import {TOAST_TYPE} from "@/utils/enums.js";
 import InputError from "@/components/common/InputError";
-import {notify} from '@/components/common/notification';
+import {toastify} from '@/common/toastify.js';
 import { cn } from "@/lib/utils";
 import { setErrorMap } from 'zod/v3';
 
@@ -138,7 +138,7 @@ const StockItems = () => {
         if (isError) {
             console.error(error);
             handleErrors(error, setError);
-            notify(TOAST_TYPE.ERROR, "Failed to load stock items")
+            toastify(TOAST_TYPE.ERROR, "Failed to load stock items")
         }
     }, [error, isError]);
 

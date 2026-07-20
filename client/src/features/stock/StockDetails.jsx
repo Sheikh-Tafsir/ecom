@@ -18,7 +18,7 @@ import {Axios} from '@/services/http/Axios.js';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay.jsx';
 import {formatDateAndTime} from '@/utils/index.js';
 import {TOAST_TYPE} from "@/utils/enums.js";
-import {notify} from '@/components/common/notification';
+import {toastify} from '@/common/toastify.js';
 import { BackButton } from '@/components/common/BackButton';
 
 const fetchStock = async (id) => {
@@ -44,7 +44,7 @@ const StockDetails = () => {
     useEffect(() => {
         if (isError) {
             console.error(error);
-            notify(TOAST_TYPE.ERROR, "Failed to load stock details")
+            toastify(TOAST_TYPE.ERROR, "Failed to load stock details")
         }
     }, [error, isError]);
 

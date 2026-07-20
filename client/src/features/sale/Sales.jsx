@@ -36,7 +36,7 @@ import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
 import InputError from "@/components/common/InputError";
 import {APP_MODULE, TOAST_TYPE} from "@/utils/enums";
-import {notify} from "@/components/common/notification";
+import {toastify} from "@/common/toastify.js";
 import { cn } from "@/lib/utils";
 import {
     ChartContainer,
@@ -145,7 +145,7 @@ export default function Sales() {
         if (isError) {
             console.error(error);
             handleErrors(error, setError);
-            notify(TOAST_TYPE.ERROR, "Failed to show sales")
+            toastify(TOAST_TYPE.ERROR, "Failed to show sales")
         }
     }, [error, isError]);
 

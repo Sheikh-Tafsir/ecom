@@ -25,7 +25,7 @@ import {
     IDEMPOTENCY_HEADER,
     removeIdempotencyKey
 } from "@/utils/idempotencyUtil.js";
-import { notify } from '@/components/common/notification';
+import { toastify } from '@/common/toastify.js';
 
 const StockItemSchema = z.object({
     productId: z.number(),
@@ -97,7 +97,7 @@ const StockCreate = () => {
 
     const addProductToItems = (product) => {
         if (items.some(item => item.productId == product.id)) {
-            notify(TOAST_TYPE.INFO, "Product already added")
+            toastify(TOAST_TYPE.INFO, "Product already added")
             setSearchTerm('');
             setSearchResults([]);
             return;
@@ -132,7 +132,7 @@ const StockCreate = () => {
 
             removeIdempotencyKey()
 
-            notify(TOAST_TYPE.SUCCESS, "Successfully created stock")
+            toastify(TOAST_TYPE.SUCCESS, "Successfully created stock")
             setTimeout(() => navigate(`/stocks/${response.data.data}`), 500);
         } catch (error) {
             console.error(error)

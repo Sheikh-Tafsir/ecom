@@ -26,7 +26,7 @@ A modern React application built with Vite and Tailwind CSS.
 - **Conditional Classes:** Always use the `cn(...)` utility from `lib/utils.js` for merging Tailwind classes.
 
 ### 4. Error Handling
-- **Toasts:** Use the `notify(type, message)` utility from `components/common/notification`.
+- **Toasts:** Use the `toastiify(type, message)` utility from `common/toastiify`.
 - **API Errors:** Use the centralized `handleErrors(error, setError)` utility to map backend validation errors to form fields.
 
 ## Development Workflow

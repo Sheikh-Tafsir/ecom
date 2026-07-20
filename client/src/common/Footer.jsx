@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { Input } from "@/components/ui/input"
+import { Input } from "@/components/ui/input.jsx"
 import { Facebook, Instagram, Twitter, Youtube } from "lucide-react"
 import { Link } from "react-router-dom"
-import { APP_NAME } from '@/utils'
+import { APP_NAME } from '@/utils/index.js'
 
 const Footer = () => {
 

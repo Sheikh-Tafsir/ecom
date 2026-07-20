@@ -20,7 +20,7 @@ import InputError from '@/components/common/InputError';
 import StaredLabel from '@/components/common/StaredLabel';
 import { TOAST_TYPE } from '@/utils/enums';
 import { handleErrors } from '@/utils';
-import { notify } from '@/components/common/notification';
+import { toastify } from '@/common/toastify.js';
 
 const ChangePasswordSchema = z.object({
     currentPassword: z
@@ -51,7 +51,7 @@ const ChangePassword = () => {
         try {
             await AuthAxios.put(`password`, data)
         
-            notify(TOAST_TYPE.SUCCESS, "Password changed successfully");
+            toastify(TOAST_TYPE.SUCCESS, "Password changed successfully");
             reset();
 
             setTimeout(() => {

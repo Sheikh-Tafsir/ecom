@@ -15,7 +15,7 @@ import {useUserStore} from "@/store/useUserStore.js";
 import {useChatData} from './hooks/useChatData';
 import {useChatSync} from './hooks/useChatSync';
 import {useChatActions} from './hooks/useChatActions';
-import { notify } from '@/components/common/notification';
+import { toastify } from '@/common/toastify.js';
 import { cn } from '@/lib/utils';
 
 const Chat = () => {
@@ -92,7 +92,7 @@ const Chat = () => {
 
     const onGroupManagementSuccess = (data) => {
         setIsUserSelectionDrawerOpen(false);
-        notify(TOAST_TYPE.SUCCESS, data.message)
+        toastify(TOAST_TYPE.SUCCESS, data.message)
         if (!id) navigate(`/chats/${data.data}`);
     };
 

@@ -14,7 +14,7 @@ import {Button} from "@/components/ui/button";
 import {Axios} from "@/services/http/Axios";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
 import {ROLE_PREFIX, TOAST_TYPE, ALERT_TYPE} from "@/utils/enums";
-import {notify} from "@/components/common/notification";
+import {toastify} from "@/common/toastify.js";
 import {AlertAction} from "@/components/common/AlertAction";
 import { cn } from "@/lib/utils";
 
@@ -37,11 +37,11 @@ const Roles = () => {
             await Axios.delete(`/roles/${id}`);
         },
         onSuccess: () => {
-            notify(TOAST_TYPE.SUCCESS, "Role deleted successfully");
+            toastify(TOAST_TYPE.SUCCESS, "Role deleted successfully");
             queryClient.invalidateQueries({queryKey: ["roles"]});
         },
         onError: () => {
-            notify(TOAST_TYPE.ERROR, "Failed to delete role");
+            toastify(TOAST_TYPE.ERROR, "Failed to delete role");
         }
     });
 

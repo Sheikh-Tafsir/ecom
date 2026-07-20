@@ -1,7 +1,7 @@
 import {io} from 'socket.io-client';
 import { logout, refreshAccessToken } from '../http/Axios';
 import { getAccessToken } from '@/utils';
-import { notify } from '@/components/common/notification';
+import { toastify } from '@/common/toastify.js';
 import { TOAST_TYPE } from '@/utils/enums';
 
 const API_PATH = import.meta.env.VITE_API_PATH;
@@ -52,7 +52,7 @@ export const connectSocket = async () => {
 
                         socket.connect();
                     } catch {
-                        notify(TOAST_TYPE.INFO, "Session expired. Please log in again.");
+                        toastify(TOAST_TYPE.INFO, "Session expired. Please log in again.");
                         await logout();
                     }
                 }

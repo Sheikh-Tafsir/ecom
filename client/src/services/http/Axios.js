@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 import {getAccessToken, removeAccessToken, removeCart, saveAccessToken} from '@/utils/AuthUtils';
-import {notify} from '@/components/common/notification';
+import {toastify} from '@/common/toastify.js';
 import {TOAST_TYPE} from '@/utils/enums';
 
 const API_PATH = import.meta.env.VITE_API_PATH;
@@ -41,9 +41,9 @@ Axios.interceptors.response.use(
 
         if (!response) {
             if (!navigator.onLine) {
-                notify(TOAST_TYPE.ERROR, "You appear to be offline");
+                toastify(TOAST_TYPE.ERROR, "You appear to be offline");
             } else {
-                notify(TOAST_TYPE.ERROR, "Cannot reach the server. Please try again after some time");
+                toastify(TOAST_TYPE.ERROR, "Cannot reach the server. Please try again after some time");
             }
 
             return Promise.reject(error);
@@ -61,10 +61,10 @@ Axios.interceptors.response.use(
                     console.error(err)
 
                     if (err.response?.status == 401) {
-                        notify(TOAST_TYPE.INFO, "Session expired. Please log in again.");
+                        toastify(TOAST_TYPE.INFO, "Session expired. Please log in again.");
                         await logout();
                     } else {
-                        notify(TOAST_TYPE.ERROR, "An error occurred. Please try again after some time.");
+                        toastify(TOAST_TYPE.ERROR, "An error occurred. Please try again after some time.");
                     }
 
                     return Promise.reject(err);
@@ -78,7 +78,7 @@ Axios.interceptors.response.use(
 
             console.error("Authorization error even after refreshing access token", error);
 
-            notify(TOAST_TYPE.INFO, "Session expired. Please log in again.");
+            toastify(TOAST_TYPE.INFO, "Session expired. Please log in again.");
             await logout();
         }
 

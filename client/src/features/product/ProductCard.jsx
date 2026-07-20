@@ -8,7 +8,7 @@ import {Badge} from "@/components/ui/badge"
 import {useCartStore} from "@/store/useCartStore"
 import {PERMISSION, TOAST_TYPE} from "@/utils/enums"
 import {hasPermission} from "@/utils/index.js";
-import { notify } from "@/components/common/notification"
+import { toastify } from "@/common/toastify.js"
 import { useUserStore } from "@/store/useUserStore"
 
 import { cn } from "@/lib/utils"
@@ -21,7 +21,7 @@ const ProductCard = ({product}) => {
     const handleAddToCart = (e) => {
         e.preventDefault();
         const response = addToCart(product, 1);
-        notify(TOAST_TYPE.SUCCESS, response ? "Added to cart" : "Item increased")
+        toastify(TOAST_TYPE.SUCCESS, response ? "Added to cart" : "Item increased")
     }
 
     const deleteProduct = (e) => {

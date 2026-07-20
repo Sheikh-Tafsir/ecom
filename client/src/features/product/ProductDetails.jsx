@@ -21,7 +21,7 @@ import {ScrollArea} from "@/components/ui/scroll-area"
 import ReviewCard from "./ReviewCard"
 import {TOAST_TYPE} from "@/utils/enums"
 import {useQuery} from "@tanstack/react-query"
-import {notify} from "@/components/common/notification"
+import {toastify} from "@/common/toastify.js"
 import ReviewCreate from "./ReviewCreate";
 import { BackButton } from "@/components/common/BackButton";
 
@@ -74,7 +74,7 @@ export default function ProductDetails() {
     const handleAddToCart = () => {
         addToCart(product, quantity);
         setQuantity(1);
-        notify(TOAST_TYPE.SUCCESS, "Product added")
+        toastify(TOAST_TYPE.SUCCESS, "Product added")
     }
 
     const incrementQuantity = () => {
@@ -93,14 +93,14 @@ export default function ProductDetails() {
         if (!isProductError) return;
 
         console.error(productError);
-        notify(TOAST_TYPE.ERROR, "Failed to show product");
+        toastify(TOAST_TYPE.ERROR, "Failed to show product");
     }, [isProductError, productError]);
 
     useEffect(() => {
         if (!isReviewsError) return;
 
         console.error(reviewsError);
-        notify(TOAST_TYPE.ERROR, "Failed to show reviews");
+        toastify(TOAST_TYPE.ERROR, "Failed to show reviews");
     }, [isReviewsError, reviewsError]);
 
     if (!isProductLoading && !product) {

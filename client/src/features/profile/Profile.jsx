@@ -22,7 +22,7 @@ import {useUserStore} from "@/store/useUserStore";
 import {GLOBAL_ERROR, handleErrors} from "@/utils/ErrorUtils";
 import {TOAST_TYPE, ALERT_TYPE} from "@/utils/enums";
 import InputError from "@/components/common/InputError.jsx";
-import {notify} from "@/components/common/notification";
+import {toastify} from "@/common/toastify.js";
 import { cn } from "@/lib/utils";
 import { compressImage } from "@/utils/ImageUtils";
 
@@ -115,14 +115,14 @@ const Profile = () => {
 
         onSuccess: async () => {
             await queryClient.invalidateQueries({queryKey: ["profile"]});
-            notify(TOAST_TYPE.SUCCESS, "Profile updated successfully")
+            toastify(TOAST_TYPE.SUCCESS, "Profile updated successfully")
 
             navigate("/profile");
         },
 
         onError: (error) => {
             console.error(error);
-            notify(TOAST_TYPE.ERROR, "Failed to update profile")
+            toastify(TOAST_TYPE.ERROR, "Failed to update profile")
             handleErrors(error, setError);
         },
     });
@@ -137,7 +137,7 @@ const Profile = () => {
         },
 
         onSuccess: async () => {
-            notify(TOAST_TYPE.SUCCESS, "Account deleted successfully")
+            toastify(TOAST_TYPE.SUCCESS, "Account deleted successfully")
 
             await logout();
 
@@ -160,7 +160,7 @@ const Profile = () => {
 
     useEffect(() => {
         if (isError) {
-            notify(TOAST_TYPE.ERROR, "Could not load profile")
+            toastify(TOAST_TYPE.ERROR, "Could not load profile")
         }
     }, [isError, errors])
 

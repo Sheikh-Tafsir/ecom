@@ -24,7 +24,7 @@ import {
     updateQueryWhenParamChange
 } from '@/utils/PaginationUtils';
 import {PRODUCT_SORTBY, TOAST_TYPE} from "@/utils/enums"
-import {notify} from "@/components/common/notification"
+import {toastify} from "@/common/toastify.js"
 import { Button } from "@/components/ui/button"
 
 const ALLOWED_SORT_FIELDS = new Set([
@@ -160,14 +160,14 @@ export default function Products() {
         if (!isCategoriesError) return;
 
         console.error(categoriesError);
-        notify(TOAST_TYPE.ERROR, "Failed to show categories");
+        toastify(TOAST_TYPE.ERROR, "Failed to show categories");
     }, [isCategoriesError, categoriesError]);
 
     useEffect(() => {
         if (!isProductsError) return;
 
         console.error(productsError);
-        notify(TOAST_TYPE.ERROR, "Failed to show products");
+        toastify(TOAST_TYPE.ERROR, "Failed to show products");
     }, [isProductsError, productsError]);
 
     return (

@@ -43,7 +43,7 @@ import {Input} from '@/components/ui/input';
 import {Button} from '@/components/ui/button';
 import {APP_MODULE, ORDER_STATUS, PERMISSION, TOAST_TYPE} from '@/utils/enums';
 import InputError from "@/components/common/InputError";
-import {notify} from "@/components/common/notification";
+import {toastify} from "@/common/toastify.js";
 import {queryClient} from "@/services/queryClient";
 import {useUserStore} from "@/store/useUserStore";
 import { cn } from "@/lib/utils";
@@ -130,7 +130,7 @@ const Orders = () => {
         if (isError) {
             console.error("error:", error);
             handleErrors(error, setError);
-            notify(TOAST_TYPE.ERROR, "Failed to show orders")
+            toastify(TOAST_TYPE.ERROR, "Failed to show orders")
         }
     }, [error, isError]);
 
@@ -171,10 +171,10 @@ const Orders = () => {
             });
 
             await queryClient.invalidateQueries({queryKey: ["orders"]});
-            notify(TOAST_TYPE.SUCCESS, `Updated order with ID ${id} status changed to ${status}`)
+            toastify(TOAST_TYPE.SUCCESS, `Updated order with ID ${id} status changed to ${status}`)
         } catch (error) {
             console.error(error);
-            notify(TOAST_TYPE.ERROR, error.response.data.errors.global[0])
+            toastify(TOAST_TYPE.ERROR, error.response.data.errors.global[0])
         }
     }
 
@@ -183,10 +183,10 @@ const Orders = () => {
             await Axios.patch(`/orders/${id}/cancel`);
 
             await queryClient.invalidateQueries({queryKey: ["orders"]});
-            notify(TOAST_TYPE.SUCCESS, `Cancelled order with ID ${id}`)
+            toastify(TOAST_TYPE.SUCCESS, `Cancelled order with ID ${id}`)
         } catch (error) {
             console.error(error);
-            notify(TOAST_TYPE.ERROR, error.response.data.errors.global[0])
+            toastify(TOAST_TYPE.ERROR, error.response.data.errors.global[0])
         }
     }
 
