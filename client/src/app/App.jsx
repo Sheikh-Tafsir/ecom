@@ -9,8 +9,9 @@ import ProtectedRoute from "@/routes/ProtectedRoute";
 import PublicRoute from "@/routes/PublicRoute";
 
 import {connectSocket, disconnectSocket, isSocketOn} from '@/services/realtime/socket';
+import {notificationService, isSseOn} from '@/services/realtime/notificationService.js';
 import {PERMISSION} from "@/utils/enums";
-import NotificationListener from "@/services/realtime/NotificationListener";
+import NotificationWrapper from "@/services/realtime/NotificationWrapper.jsx";
 
 import Homepage from '@/features/homepage/Homepage';
 import NotFound from '@/features/NotFound';
@@ -53,7 +54,7 @@ const App = () => {
         <>
             <BrowserRouter future={{v7_relativeSplatPath: true, v7_startTransition: true}}>
                 <InnerApp/>
-                <NotificationListener/>
+                <NotificationWrapper/>
             </BrowserRouter>
         </>
     )
@@ -69,8 +70,11 @@ const InnerApp = () => {
     }, [initUser]);
 
     useEffect(() => {
-        const isSocketOn = import.meta.env.VITE_WEB_SOCKET_ON;
-        if (!isSocketOn) return;
+        if (!isSocketOn()) {
+            disconnectSocket();
+            setSocket(null);
+            return;
+        }
 
         if (user?.email) {
             connectSocket().then(socket => {
@@ -85,7 +89,24 @@ const InnerApp = () => {
             disconnectSocket();
             setSocket(null);
         };
-    }, [user, isSocketOn, setSocket])
+    }, [user, setSocket])
+
+    useEffect(() => {
+        if (!isSseOn()) {
+            notificationService.stop();
+            return;
+        }
+
+        if (user?.email) {
+            notificationService.start();
+        } else {
+            notificationService.stop();
+        }
+
+        return () => {
+            notificationService.stop();
+        };
+    }, [user])
 
     return (
         <>
