@@ -27,10 +27,10 @@ public class SaleService {
     private final SaleRepository saleRepository;
 
     @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
-    public Page<SaleResponse> findAll(LocalDate fromDate, LocalDate toDate, Long productId, Pageable pageable) {
+    public Page<SaleResponse> findAll(LocalDate fromDate, LocalDate toDate, Long productId, String productName, Pageable pageable) {
         DateRangeDto dateRange = resolveDates(fromDate, toDate);
 
-        return saleRepository.findAllByMonth(dateRange.fromDate(), dateRange.toDate(), productId, getValidPageable(pageable))
+        return saleRepository.findAllByMonth(dateRange.fromDate(), dateRange.toDate(), productId, productName, getValidPageable(pageable))
                 .map(SaleResponse::new);
     }
 

@@ -58,30 +58,35 @@ public class OrderService {
 
     private final NotificationService notificationService;
 
-    public Page<OrderListResponse> findAll(LocalDate fromDate, LocalDate toDate, OrderStatus status, CustomUserDetails userDetails, Pageable pageable) {
+    public Page<OrderListResponse> findAll(LocalDate fromDate, LocalDate toDate, OrderStatus status, String productName,
+                                           CustomUserDetails userDetails, Pageable pageable) {
+
         DateRangeDto dateRange = resolveDates(fromDate, toDate);
 
         List<OrderStatus> statuses = status == null ? null : List.of(status);
 
         if (hasPermission(List.of(SUPER_ADMIN_ACCESS.getValue(), ADMIN_ACCESS.getValue()), userDetails)) {
-            return orderRepository.findAllByStatus(null, statuses, dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable)).map(OrderListResponse::new);
+            return orderRepository.findAllByStatus(null, statuses, dateRange.fromDate(), dateRange.toDate(), productName,
+                    getValidPageable(pageable)).map(OrderListResponse::new);
         }
 
         if (hasPermission(List.of(DELIVERY_MAN_ACCESS.getValue()), userDetails)) {
             if (statuses == null) {
                 return orderRepository.findAllByStatus(null,
                         List.of(OrderStatus.SHIPPED, OrderStatus.DELIVERED, OrderStatus.RETURNED),
-                        dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable)).map(OrderListResponse::new);
+                        dateRange.fromDate(), dateRange.toDate(), productName, getValidPageable(pageable)).map(OrderListResponse::new);
             }
 
             if (status != OrderStatus.SHIPPED && status != OrderStatus.DELIVERED && status != OrderStatus.RETURNED) {
                statuses = List.of(OrderStatus.SHIPPED);
             }
 
-            return orderRepository.findAllByStatus(null, statuses, dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable)).map(OrderListResponse::new);
+            return orderRepository.findAllByStatus(null, statuses, dateRange.fromDate(), dateRange.toDate(), productName,
+                    getValidPageable(pageable)).map(OrderListResponse::new);
         }
 
-        return orderRepository.findAllByStatus(userDetails.getId(), statuses, dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable)).map(OrderListResponse::new);
+        return orderRepository.findAllByStatus(userDetails.getId(), statuses, dateRange.fromDate(), dateRange.toDate(),
+                productName, getValidPageable(pageable)).map(OrderListResponse::new);
     }
 
     @PostAuthorize("""

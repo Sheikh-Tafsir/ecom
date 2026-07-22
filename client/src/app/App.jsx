@@ -47,6 +47,7 @@ import Chat from "@/features/chats/Chats.jsx";
 import SignupVerify from "@/features/auth/SignupVerify";
 import PaymentSuccess from "@/features/payment/PaymentSuccess";
 import PaymentFail from "@/features/payment/PaymentFail";
+import ChangePassword from "@/features/profile/ChangePassword";
 
 const App = () => {
 
@@ -128,6 +129,7 @@ const InnerApp = () => {
                 <Route element={<ProtectedRoute/>}>
                     <Route path='/profile' element={<Profile/>}/>
                     <Route path='/profile/edit' element={<Profile/>}/>
+                     <Route path='/profile/chage-password' element={<ChangePassword/>}/>
 
                     <Route path="/cart" element={<Cart/>}/>
                     <Route path="/orders" element={<Orders/>}/>

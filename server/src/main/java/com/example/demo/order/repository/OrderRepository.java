@@ -24,9 +24,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @EntityGraph(attributePaths = {"user"})
     @Query("""
             SELECT o FROM Order o
+            LEFT JOIN o.items i
+            LEFT JOIN i.product p
             WHERE (:userId IS NULL OR o.user.id = :userId)
               AND (:statuses IS NULL OR o.status IN :statuses)
               AND o.createdAt BETWEEN :fromDate AND :toDate
+              AND (:productName IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :productName, '%')))
             ORDER BY o.createdAt ASC
             """)
     Page<Order> findAllByStatus(
@@ -34,6 +37,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             @Param("statuses") List<OrderStatus> statuses,
             @Param("fromDate") LocalDateTime fromDate,
             @Param("toDate") LocalDateTime toDate,
+            @Param("productName") String productName,
             Pageable pageable
     );
 

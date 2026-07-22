@@ -40,10 +40,11 @@ public class OrderController {
     public ResponseEntity<ApiResponse<Page<OrderListResponse>>> findAll(@RequestParam(required = false) @PastOrPresent LocalDate fromDate,
                                                                         @RequestParam(required = false) @PastOrPresent LocalDate toDate,
                                                                         @RequestParam(required = false) OrderStatus status,
+                                                                        @RequestParam(required = false) String productName,
                                                                         Pageable pageable,
                                                                         @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        Page<OrderListResponse> orders = orderService.findAll(fromDate, toDate, status, userDetails, pageable);
+        Page<OrderListResponse> orders = orderService.findAll(fromDate, toDate, status, productName, userDetails, pageable);
         return ResponseUtils.ok(orders, messageService.get("successfully.found", "Order List"));
     }
 

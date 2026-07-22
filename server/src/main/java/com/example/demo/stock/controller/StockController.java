@@ -34,9 +34,10 @@ public class StockController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<StockListResponse>>> findAll(@RequestParam(required = false) @PastOrPresent LocalDate fromDate,
                                                                         @RequestParam(required = false) @PastOrPresent LocalDate toDate,
+                                                                        @RequestParam(required = false) String productName,
                                                                         Pageable pageable) {
 
-        Page<StockListResponse> stocks = stockService.findAll(fromDate, toDate, pageable);
+        Page<StockListResponse> stocks = stockService.findAll(fromDate, toDate, productName, pageable);
         return ResponseUtils.ok(stocks, messageService.get("successfully.found", "Stock List"));
     }
 
@@ -44,9 +45,10 @@ public class StockController {
     public ResponseEntity<ApiResponse<Page<StockItemResponse>>> findAllItems(@RequestParam(required = false) @PastOrPresent LocalDate fromDate,
                                                                              @RequestParam(required = false) @PastOrPresent LocalDate toDate,
                                                                              @RequestParam(required = false) Long productId,
+                                                                             @RequestParam(required = false) String productName,
                                                                              Pageable pageable) {
 
-        Page<StockItemResponse> stocks = stockService.findAllItems(fromDate, toDate, productId, pageable);
+        Page<StockItemResponse> stocks = stockService.findAllItems(fromDate, toDate, productId, productName, pageable);
         return ResponseUtils.ok(stocks, messageService.get("successfully.found", "Stock Item List"));
     }
 

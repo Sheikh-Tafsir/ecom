@@ -21,11 +21,13 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
                 JOIN s.product p
                 WHERE s.createdAt BETWEEN :fromDate AND :toDate
                   AND (:productId IS NULL OR p.id = :productId)
+                  AND (:productName IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :productName, '%')))
             """)
     Page<Sale> findAllByMonth(
             @Param("fromDate") LocalDateTime fromDate,
             @Param("toDate") LocalDateTime toDate,
             @Param("productId") Long productId,
+            @Param("productName") String productName,
             Pageable pageable
     );
 }

@@ -19,11 +19,15 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
     Optional<Stock> findDetailsById(Long id);
 
     @Query("""
-            SELECT s FROM Stock s
+            SELECT DISTINCT s FROM Stock s
+            LEFT JOIN s.items i
+            LEFT JOIN i.product p
             WHERE s.createdAt BETWEEN :fromDate AND :toDate
+              AND (:productName IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :productName, '%')))
             """)
     Page<Stock> findAll(@Param("fromDate") LocalDateTime fromDate,
                         @Param("toDate") LocalDateTime toDate,
+                        @Param("productName") String productName,
                         Pageable pageable);
 
 }

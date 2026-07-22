@@ -45,9 +45,9 @@ public class StockService {
 
     @PreAuthorize("hasAnyAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue()," +
             "T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
-    public Page<StockListResponse> findAll(LocalDate fromDate, LocalDate toDate, Pageable pageable) {
+    public Page<StockListResponse> findAll(LocalDate fromDate, LocalDate toDate, String productName, Pageable pageable) {
         DateRangeDto dateRange = resolveDates(fromDate, toDate);
-        return stockRepository.findAll(dateRange.fromDate(), dateRange.toDate(), getValidPageable(pageable)).map(StockListResponse::new);
+        return stockRepository.findAll(dateRange.fromDate(), dateRange.toDate(), productName, getValidPageable(pageable)).map(StockListResponse::new);
     }
 
     @PreAuthorize("hasAnyAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue()," +
@@ -117,9 +117,9 @@ public class StockService {
 
     @PreAuthorize("hasAnyAuthority(T(com.example.demo.common.enums.Permission).ADMIN_ACCESS.getValue()," +
             "T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
-    public Page<StockItemResponse> findAllItems(LocalDate fromDate, LocalDate toDate, Long productId, Pageable pageable) {
+    public Page<StockItemResponse> findAllItems(LocalDate fromDate, LocalDate toDate, Long productId, String productName, Pageable pageable) {
         DateRangeDto dateRange = resolveDates(fromDate, toDate);
-        return stockItemRepository.findAll(dateRange.fromDate(), dateRange.toDate(), productId, getValidPageable(pageable)).map(StockItemResponse::new);
+        return stockItemRepository.findAll(dateRange.fromDate(), dateRange.toDate(), productId, productName, getValidPageable(pageable)).map(StockItemResponse::new);
     }
 
     @PreAuthorize("hasAuthority(T(com.example.demo.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")

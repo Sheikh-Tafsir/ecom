@@ -29,9 +29,10 @@ public class SaleController {
     public ResponseEntity<ApiResponse<Page<SaleResponse>>> findAll(@RequestParam(required = false) @PastOrPresent LocalDate fromDate,
                                                                    @RequestParam(required = false) @PastOrPresent LocalDate toDate,
                                                                    @RequestParam(required = false) Long productId,
+                                                                   @RequestParam(required = false) String productName,
                                                                    Pageable pageable) {
 
-        Page<SaleResponse> sales = saleService.findAll(fromDate, toDate, productId, pageable);
+        Page<SaleResponse> sales = saleService.findAll(fromDate, toDate, productId, productName, pageable);
         return ResponseUtils.ok(sales, messageService.get("successfully.found", "Sales"));
     }
 }
