@@ -49,6 +49,14 @@ import PaymentSuccess from "@/features/payment/PaymentSuccess";
 import PaymentFail from "@/features/payment/PaymentFail";
 import ChangePassword from "@/features/profile/ChangePassword";
 
+import Blogs from "@/features/blogs/Blogs";
+import BlogDetails from "@/features/blogs/BlogDetails";
+import AboutUs from "@/features/staticPages/AboutUs";
+import PrivacyPolicy from "@/features/staticPages/PrivacyPolicy";
+import TermsOfService from "@/features/staticPages/TermsOfService";
+import BannerManager from "@/features/banner/BannerManager";
+import FaqManager from "@/features/faq/FaqManager";
+
 const App = () => {
 
     return (
@@ -114,6 +122,13 @@ const InnerApp = () => {
             <Routes>
                 <Route element={<PublicRoute/>}>
                     <Route path="/" element={<Homepage/>}/>
+                    <Route path="/about" element={<AboutUs/>}/>
+                    <Route path="/privacy" element={<PrivacyPolicy/>}/>
+                    <Route path="/terms" element={<TermsOfService/>}/>
+
+                    <Route path="/blogs" element={<Blogs/>}/>
+                    <Route path="/blogs/:title" element={<BlogDetails/>}/>
+
                     <Route path="/products" element={<Products/>}/>
                     <Route path="/products/:id" element={<ProductDetails/>}/>
                 </Route>
@@ -165,6 +180,9 @@ const InnerApp = () => {
                     <Route path="/stocks/create" element={<StockCreate/>}/>
 
                     <Route path="/sales" element={<Sales/>}/>
+                    
+                    <Route path="/banners" element={<BannerManager/>}/>
+                    <Route path="/faqs" element={<FaqManager/>}/>
                 </Route>
 
                 <Route path="/not-found" element={<NotFound/>}/>

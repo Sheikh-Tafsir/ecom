@@ -1,3 +1,45 @@
+-- Banner Table
+CREATE TABLE IF NOT EXISTS banners
+(
+    id            BIGSERIAL PRIMARY KEY,
+    title         VARCHAR(255) NOT NULL,
+    subtitle      VARCHAR(255),
+    image_url     VARCHAR(255) NOT NULL,
+    link_url      VARCHAR(255),
+    display_order INT                   DEFAULT 0,
+    active        BOOLEAN               DEFAULT TRUE,
+    version       INT          NOT NULL DEFAULT 0,
+    created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Blog Posts Table
+CREATE TABLE IF NOT EXISTS blogs
+(
+    id           BIGSERIAL PRIMARY KEY,
+    title        VARCHAR(255) NOT NULL UNIQUE,
+    content      TEXT         NOT NULL,
+    author       VARCHAR(255),
+    image_url    VARCHAR(255),
+    status       VARCHAR(50)           DEFAULT 'DRAFT',
+    published_at TIMESTAMP    NULL,
+    version      INT          NOT NULL DEFAULT 0,
+    created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- FAQs Table
+CREATE TABLE IF NOT EXISTS faqs
+(
+    id            BIGSERIAL PRIMARY KEY,
+    question      VARCHAR(500) NOT NULL,
+    answer        TEXT         NOT NULL,
+    display_order INT                   DEFAULT 0,
+    version       INT          NOT NULL DEFAULT 0,
+    created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE roles
 (
     id   BIGSERIAL PRIMARY KEY,
@@ -39,13 +81,13 @@ CREATE TABLE user_roles
 
 CREATE TABLE user_refresh_tokens
 (
-    id           BIGSERIAL PRIMARY KEY,
-    user_id      BIGINT NOT NULL REFERENCES users (id) ON DELETE RESTRICT,
-    jti          VARCHAR(256)    NOT NULL,
-    status       VARCHAR(8)  NOT NULL DEFAULT 'ACTIVE',
-    version      INT            NOT NULL DEFAULT 0,
-    created_at   TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at   TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id         BIGSERIAL PRIMARY KEY,
+    user_id    BIGINT       NOT NULL REFERENCES users (id) ON DELETE RESTRICT,
+    jti        VARCHAR(256) NOT NULL,
+    status     VARCHAR(8)   NOT NULL DEFAULT 'ACTIVE',
+    version    INT          NOT NULL DEFAULT 0,
+    created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uq_user_refresh_tokens_jti UNIQUE (jti)
 );
 
@@ -113,18 +155,18 @@ CREATE TABLE stock_items
 
 CREATE TABLE orders
 (
-    id              BIGSERIAL PRIMARY KEY,
-    user_id         BIGINT REFERENCES users (id) ON DELETE RESTRICT,
-    total_price     DECIMAL(19, 2) NOT NULL DEFAULT 0.00 CHECK (total_price >= 0),
-    status          VARCHAR(31)    NOT NULL DEFAULT 'PENDING',
-    name            VARCHAR(63)    NOT NULL,
-    phone           VARCHAR(11)    NOT NULL,
-    address         VARCHAR(255)   NOT NULL,
-    payment_method  VARCHAR(20)    NOT NULL DEFAULT 'CASH_ON_DELIVERY',
-    paid            BOOLEAN        NOT NULL DEFAULT FALSE,
-    version         INT            NOT NULL DEFAULT 0,
-    created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id             BIGSERIAL PRIMARY KEY,
+    user_id        BIGINT REFERENCES users (id) ON DELETE RESTRICT,
+    total_price    DECIMAL(19, 2) NOT NULL DEFAULT 0.00 CHECK (total_price >= 0),
+    status         VARCHAR(31)    NOT NULL DEFAULT 'PENDING',
+    name           VARCHAR(63)    NOT NULL,
+    phone          VARCHAR(11)    NOT NULL,
+    address        VARCHAR(255)   NOT NULL,
+    payment_method VARCHAR(20)    NOT NULL DEFAULT 'CASH_ON_DELIVERY',
+    paid           BOOLEAN        NOT NULL DEFAULT FALSE,
+    version        INT            NOT NULL DEFAULT 0,
+    created_at     TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at     TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE order_items

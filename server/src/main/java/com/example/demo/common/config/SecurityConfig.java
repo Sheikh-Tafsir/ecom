@@ -89,6 +89,9 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/products", "/products/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/categories", "/categories/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/banners", "/banners/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/blogs", "/blogs/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/faqs", "/faqs/**").permitAll()
                         .requestMatchers("/payment/callback").permitAll()
                         .anyRequest().authenticated()
                 )
