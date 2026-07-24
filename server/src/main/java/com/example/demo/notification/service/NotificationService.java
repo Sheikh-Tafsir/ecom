@@ -11,7 +11,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -92,10 +91,8 @@ public class NotificationService {
                             .name(eventName)
                             .data(notificationResponse)
             );
-        } catch (IOException ex) {
-            log.warn("Removing broken SSE connection for user {}", userId, ex);
-
-            connection.emitter().complete();
+        } catch (Exception ex) {
+            log.info("Removing broken SSE connection for user {}", userId, ex);
             removeConnection(userId);
         }
     }
