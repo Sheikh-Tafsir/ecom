@@ -45,18 +45,18 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4 text-white">Pages</h3>
             <div className="space-y-2 flex flex-col">
-              <Link href="/" className="hover:text-white">
+              <Link to="/" className="hover:text-white">
                 Home
               </Link>
-              <a href="/#service" className="hover:text-white">
-                Service
-              </a>
-              <a href="/#gallery" className="hover:text-white">
-                Gallery
-              </a>
-              <a href="/#contacts" className="hover:text-white">
-                Contacts
-              </a>
+              <Link to="/about" className="hover:text-white">
+                About Us
+              </Link>
+              <Link to="/privacy" className="hover:text-white">
+                Privacy Policy
+              </Link>
+              <Link to="/terms" className="hover:text-white">
+                Terms & Conditions
+              </Link>
             </div>
           </div>
           <div>
