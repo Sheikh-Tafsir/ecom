@@ -30,8 +30,9 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
             SELECT item
             FROM StockItem item
             WHERE (:productId IS NULL OR item.product.id = :productId)
-                AND (:productName IS NULL OR LOWER(item.product.name) LIKE LOWER(CONCAT('%', :productName, '%')))
-                AND item.createdAt BETWEEN :fromDate AND :toDate
+              AND (:productName IS NULL OR LOWER(CAST(item.product.name AS string)) 
+                LIKE LOWER(CONCAT('%', CAST(:productName AS string), '%')))
+              AND item.createdAt BETWEEN :fromDate AND :toDate
             """)
     Page<StockItem> findAll(@Param("fromDate") LocalDateTime fromDate,
                             @Param("toDate") LocalDateTime toDate,

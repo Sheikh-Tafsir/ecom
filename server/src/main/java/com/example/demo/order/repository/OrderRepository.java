@@ -29,7 +29,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             WHERE (:userId IS NULL OR o.user.id = :userId)
               AND (:statuses IS NULL OR o.status IN :statuses)
               AND o.createdAt BETWEEN :fromDate AND :toDate
-              AND (:productName IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :productName, '%')))
+              AND (:productName IS NULL OR LOWER(CAST(p.name AS string)) LIKE LOWER(CONCAT('%', CAST(:productName AS string), '%')))
             ORDER BY o.createdAt ASC
             """)
     Page<Order> findAllByStatus(

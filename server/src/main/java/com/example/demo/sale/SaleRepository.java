@@ -21,7 +21,7 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
                 JOIN s.product p
                 WHERE s.createdAt BETWEEN :fromDate AND :toDate
                   AND (:productId IS NULL OR p.id = :productId)
-                  AND (:productName IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :productName, '%')))
+                  AND (:productName IS NULL OR LOWER(CAST(p.name AS string)) LIKE LOWER(CONCAT('%', CAST(:productName AS string), '%')))
             """)
     Page<Sale> findAllByMonth(
             @Param("fromDate") LocalDateTime fromDate,

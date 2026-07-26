@@ -37,7 +37,7 @@ const StockDetails = () => {
         error
     } = useQuery({
         enabled: !!id,
-        queryKey: queryKeys.stock.detail(id),
+        queryKey: queryKeys.stocks.detail(id),
         queryFn: () => fetchStock(id),
     });
 

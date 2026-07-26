@@ -24,20 +24,19 @@ export const queryKeys = {
     },
     reviews: {
         all: (productId) => ['reviews', productId],
+    },
     roles: {
         all: ['roles'],
         detail: (id) => ['roles', id],
     },
-    stock: {
+    stocks: {
         all: ['stock'],
         list: (filters) => ['stock', { ...filters }],
-        detail: (id) => ['stock', id],
-    },
         detail: (id) => ['stock', id],
     },
     users: {
         all: ['users'],
         list: (filters) => ['users', { ...filters }],
         detail: (id) => ['users', id],
-    },
+    }
 };

@@ -52,7 +52,7 @@ const RoleSave = () => {
     
     const roleFromState = location.state?.role;
 
-    const {register, handleSubmit, control, reset, setError, formState: {errors}} = useForm({
+    const {handleSubmit, control, reset, setError, formState: {errors}} = useForm({
         resolver: zodResolver(RoleSchema),
         defaultValues: {
             name: '',
@@ -60,7 +60,7 @@ const RoleSave = () => {
         },
     });
 
-    const {data: roleFromQuery, isLoading} = useQuery({
+    const {data: roleFromQuery, isLoading: isPageLoading} = useQuery({
         queryKey: queryKeys.roles.detail(id),
         queryFn: () => fetchRole(id),
         enabled: !!id && !roleFromState,
