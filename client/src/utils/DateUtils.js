@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 
 export const REGULAR_DATE_FORMAT = "dd-MM-yyyy";
 
@@ -70,4 +70,12 @@ export const getLastMessageTime = (timestamp) => {
     }
 
     return format(messageDate, REGULAR_DATE_FORMAT);
+};
+
+export const getTimeAgo = (dateStr) => {
+    if (!dateStr) return "-";
+    const normalized = dateStr.replace(" ", "T").split(".")[0];
+    const date = new Date(normalized);
+    if (isNaN(date.getTime())) return "-";
+    return formatDistanceToNow(date, { addSuffix: true });
 };

@@ -219,7 +219,7 @@ const Login = () => {
                         className='w-full h-auto drop-shadow-2xl rounded-3xl'
                         alt="Login illustration"
                     />
-                    <div className="absolute -bottom-6 -right-6 bg-white p-6 rounded-3xl shadow-xl max-w-[240px] animate-bounce duration-[3000ms]">
+                    <div className="absolute -bottom-6 -right-6 bg-white p-6 rounded-3xl shadow-xl max-w-[240px] animate-bounce duration-&lsqb;3000ms&rsqb;">
                         <p className="text-sm font-bold text-slate-800 leading-tight">
                             "The best investment you can make is in yourself."
                         </p>
