@@ -1,9 +1,9 @@
 import {useEffect, useState} from "react";
-import {Link, useLocation, useNavigate, useParams} from "react-router-dom";
+import {Link, useNavigate, useParams} from "react-router-dom";
 import {useForm, Controller} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useQueryClient } from "@tanstack/react-query";
+import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 
 import {Button} from "@/components/ui/button";
 import {
@@ -28,10 +28,10 @@ import {Axios} from "@/services/http/Axios";
 import {GLOBAL_ERROR, handleErrors} from "@/utils";
 import {TOAST_TYPE} from "@/utils/enums";
 import {toastify} from "@/common/toastify.js";
-import {useQuery} from "@tanstack/react-query";
-import { compressImages } from "@/utils/ImageUtils";
+import {compressImages} from "@/utils/ImageUtils";
 import {useUploadProgress} from "@/hooks/useUploadProgress";
 import UploadProgress from "@/components/common/UploadProgress";
+import {queryKeys} from "@/services/reactQuery/queryKeys";
 
 const MAX_IMAGES = 5;
 
@@ -62,35 +62,31 @@ const createProduct = async (formData, onUploadProgress) => {
         onUploadProgress,
     });
 
-    toastify(TOAST_TYPE.SUCCESS, "Product Successfully created");
-
     return response.data.data;
-}
+};
 
-const updateProduct = async (formData, id, onUploadProgress) => {
-    await Axios.put(`/products/${id}`, formData, {
+const updateProduct = async (id, formData, onUploadProgress) => {
+    const response = await Axios.put(`/products/${id}`, formData, {
         headers: {'Content-Type': 'multipart/form-data'},
-        timeout: 1000 * 60 * 5, // 5 minutes for large uploads
+        timeout: 1000 * 60 * 5,
         onUploadProgress,
     });
 
-    toastify(TOAST_TYPE.SUCCESS, "Product updated successfully")
-}
+    return response.data.data;
+};
 
 const ProductSave = () => {
     const {id} = useParams();
-
     const navigate = useNavigate();
-    const location = useLocation();
     const queryClient = useQueryClient();
 
-    const isCreatePage = location.pathname.includes("/create");
+    const isEditPage = Boolean(id);
 
     const [newImages, setNewImages] = useState([]);
     const [existingImages, setExistingImages] = useState([]);
     const [resetImagesKey, setResetImagesKey] = useState(Date.now());
 
-    const { progress, onUploadProgress, resetProgress } = useUploadProgress();
+    const {progress, onUploadProgress, resetProgress} = useUploadProgress();
 
     const {
         register,
@@ -99,7 +95,7 @@ const ProductSave = () => {
         setValue,
         control,
         setError,
-        formState: {errors, isSubmitting},
+        formState: {errors},
     } = useForm({
         resolver: zodResolver(ProductSchema),
         defaultValues: {
@@ -117,7 +113,7 @@ const ProductSave = () => {
         isError: isCategoriesError,
         error: categoriesError,
     } = useQuery({
-        queryKey: ["categories"],
+        queryKey: queryKeys.categories.all,
         queryFn: fetchCategories,
     })
 
@@ -127,10 +123,67 @@ const ProductSave = () => {
         isError: isProductError,
         error: productError,
     } = useQuery({
-        queryKey: ["productEdit", id],
+        queryKey: queryKeys.products.edit(id),
         queryFn: () => fetchProduct(id),
-        enabled: !isCreatePage && !!id,
+        enabled: isEditPage && !!id,
     });
+
+        const getFormData = async (data) => {
+        const formData = new FormData();
+
+        Object.entries(data).forEach(([key, value]) => {
+            if (Array.isArray(value)) {
+                value.forEach((item) => formData.append(key, item));
+            } else {
+                formData.append(key, value ?? "");
+            }
+        });
+
+        const compressedImages = await compressImages(newImages);
+        compressedImages.forEach((file) => {
+            formData.append("images", file);
+        });
+
+        return formData;
+    }
+    
+    const productMutation = useMutation({
+        mutationFn: async (data) => {
+            resetProgress();
+            const formData = await getFormData(data);
+
+            if (isEditPage) {
+                await updateProduct(id, formData, onUploadProgress);
+                return {id, isNew: false};
+            } else {
+                const productId = await createProduct(formData, onUploadProgress);
+                return {id: productId, isNew: true};
+            }
+        },
+        onSuccess: async (result) => {
+            toastify(TOAST_TYPE.SUCCESS, `Product ${result.isNew ? 'created' : 'updated'} successfully`);
+
+            await queryClient.invalidateQueries({queryKey: queryKeys.products.all});
+            
+            if (result.isNew) {
+                reset();
+                setExistingImages([]);
+                setNewImages([]);
+                setResetImagesKey(Date.now());
+                navigate(`/products/${result.id}`, {replace: true});
+            } else {
+                navigate(`/products/${result.id}`, {replace: true});
+            }
+        },
+        onError: (error) => {
+            console.error(error);
+            handleErrors(error, setError);
+        }
+    });
+
+    const onSubmit = (data) => {
+        productMutation.mutate(data);
+    };
 
     useEffect(() => {
         if (!product) return;
@@ -145,50 +198,6 @@ const ProductSave = () => {
             keptImageIds: product.images?.map(img => img.id) || [],
         });
     }, [product, reset]);
-
-
-    const saveProduct = async (data) => {
-        try {
-            resetProgress();
-            const formData = new FormData();
-
-            Object.entries(data).forEach(([key, value]) => {
-                if (Array.isArray(value)) {
-                    value.forEach((item) => formData.append(key, item));
-                } else {
-                    formData.append(key, value ?? "");
-                }
-            });
-
-            const compressedImages = await compressImages(newImages);
-
-            compressedImages.forEach((file) => {
-                formData.append("images", file);
-            });
-
-            if (isCreatePage) {
-                const productId = await createProduct(formData, onUploadProgress);
-
-                reset();
-                setExistingImages([]);
-                setNewImages([]);
-                setResetImagesKey(Date.now());
-
-                navigate(`/products/${productId}`, {replace: true});
-            } else {
-                await updateProduct(formData, id, onUploadProgress);
-                
-                await Promise.all([
-                    queryClient.invalidateQueries({ queryKey: ["product", id] }),
-                    queryClient.invalidateQueries({ queryKey: ["products"] }),
-                ]);
-                navigate(`/products/${id}`, {replace: true});
-            }
-        } catch (error) {
-            console.error(error);
-            handleErrors(error, setError);
-        }
-    };
 
     useEffect(() => {
         if (!isCategoriesError) return;
@@ -210,14 +219,14 @@ const ProductSave = () => {
 
             <div className="container lg:flex min-h-screen">
                 <Card className="mx-auto my-auto w-[450px] lg:w-[550px]">
-                    <form onSubmit={handleSubmit(saveProduct)}>
+                    <form onSubmit={handleSubmit(onSubmit)}>
                         <CardHeader>
                             <CardTitle>
-                                {isCreatePage ? "Create" : "Edit"} Product
+                                {!isEditPage ? "Create" : "Edit"} Product
                             </CardTitle>
 
                             <CardDescription>
-                                {isCreatePage ? "Add new" : "Edit"} product by filling out the information below
+                                {!isEditPage ? "Add new" : "Edit"} product by filling out the information below
                             </CardDescription>
                         </CardHeader>
 
@@ -291,9 +300,9 @@ const ProductSave = () => {
                         </CardContent>
 
                         <CardFooter className="flex flex-col gap-4">
-                            <UploadProgress progress={progress} />
+                            <UploadProgress progress={progress}/>
 
-                            {isSubmitting ? (
+                            {productMutation.isPending ? (
                                 <ButtonLoading/>
                             ) : (
                                 <Button

@@ -44,7 +44,7 @@ import {Button} from '@/components/ui/button';
 import {APP_MODULE, ORDER_STATUS, PERMISSION, TOAST_TYPE} from '@/utils/enums';
 import InputError from "@/components/common/InputError";
 import {toastify} from "@/common/toastify.js";
-import {queryClient} from "@/services/queryClient";
+import {queryClient} from "@/services/reactQuery/queryClient";
 import {useUserStore} from "@/store/useUserStore";
 import { cn } from "@/lib/utils";
 

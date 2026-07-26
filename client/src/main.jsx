@@ -8,7 +8,7 @@ import {
     QueryClientProvider,
 } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { queryClient } from '@/services/queryClient.js';
+import { queryClient } from '@/services/reactQuery/queryClient.js';
 import ErrorBoundary from './common/ErrorBoundary.jsx';
 
 const GOOGLE_LOGIN_CLIENT_ID = import.meta.env.VITE_GOOGLE_LOGIN_CLIENT_ID;

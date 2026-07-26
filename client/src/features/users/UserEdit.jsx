@@ -26,6 +26,7 @@ import {toastify} from '@/common/toastify.js';
 import {hasPermission} from "@/utils/index.js";
 import {useUserStore} from "@/store/useUserStore.js";
 import {MultiSelect} from "@/components/common/MultiSelect.jsx";
+import {queryKeys} from "@/services/reactQuery/queryKeys";
 
 // Zod schema
 const UserSchema = z.object({
@@ -41,6 +42,14 @@ const fetchUser = async (id) => {
 const fetchRoles = async () => {
     const response = await Axios.get(`/roles`)
     return response.data.data
+}
+
+const updateUserService = async (id, data) => {
+    await Axios.put(`/users/${id}`, {roles: data.roleNames});
+}
+
+const deleteUserService = async (id) => {
+    await Axios.delete(`/users/${id}`);
 }
 
 const UserEdit = () => {
@@ -70,13 +79,13 @@ const UserEdit = () => {
         data: user,
         isFetching: isPageLoading
     } = useQuery({
-        queryKey: ["user", id],
+        queryKey: queryKeys.users.detail(id),
         queryFn: () => fetchUser(id),
         enabled: !!id,
     });
 
     const {data: roles} = useQuery({
-        queryKey: ["roles"],
+        queryKey: queryKeys.roles.all,
         queryFn: fetchRoles,
         enabled: canManageRoles && isEditable,
     });
@@ -91,12 +100,10 @@ const UserEdit = () => {
     }, [reset, user]);
 
     const updateUser = useMutation({
-        mutationFn: async (data) => {
-            await Axios.put(`/users/${id}`, {roles: data.roleNames});
-        },
+        mutationFn: (data) => updateUserService(id, data),
         onSuccess: async () => {
             toastify(TOAST_TYPE.SUCCESS, "User successfully updated")
-            await queryClient.invalidateQueries({queryKey: ["user", id]});
+            await queryClient.invalidateQueries({queryKey: queryKeys.users.detail(id)});
             navigate(`/users/${id}`);
         },
         onError: (error) => {
@@ -107,12 +114,12 @@ const UserEdit = () => {
     });
 
     const deleteUser = useMutation({
-        mutationFn: async () => await Axios.delete(`/users/${id}`),
+        mutationFn: () => deleteUserService(id),
         onSuccess: async () => {
             toastify(TOAST_TYPE.SUCCESS, "User deleted")
             await Promise.all([
-                queryClient.invalidateQueries({queryKey: ["user", id]}),
-                queryClient.invalidateQueries({queryKey: ["users"]}),
+                queryClient.invalidateQueries({queryKey: queryKeys.users.detail(id)}),
+                queryClient.invalidateQueries({queryKey: queryKeys.users.all}),
             ]);
             navigate("/users", {replace: true});
         },
@@ -120,7 +127,11 @@ const UserEdit = () => {
             console.error(error);
             toastify(TOAST_TYPE.ERROR, "Failed to delete user")
         },
-    })
+    });
+
+    const onSubmit = async (data) => {
+        await updateUser.mutateAsync(data);
+    };
 
     const handleNavigateToEdit = () => {
         navigate(`edit`);
@@ -130,7 +141,7 @@ const UserEdit = () => {
         <div className="min-h-[90vh] flex items-center justify-center">
             {isPageLoading && <PageLoadingOverlay/>}
             <Card className="mx-auto my-auto w-[450px]">
-                <form onSubmit={handleSubmit((data) => updateUser.mutate(data))}>
+                <form onSubmit={handleSubmit(onSubmit)}>
                     <fieldset disabled={!isEditable}>
                         <CardHeader>
                             <CardTitle>User Details</CardTitle>
@@ -190,7 +201,7 @@ const UserEdit = () => {
                     </fieldset>
 
                     <CardFooter className="flex-col gap-2">
-                        {isSubmitting ? (
+                        {updateUser.isPending ? (
                             <ButtonLoading/>
                         ) : !isEditable ? (
                             <div className="w-full flex gap-2">

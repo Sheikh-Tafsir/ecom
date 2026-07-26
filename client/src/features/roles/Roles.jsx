@@ -17,10 +17,15 @@ import {ROLE_PREFIX, TOAST_TYPE, ALERT_TYPE} from "@/utils/enums";
 import {toastify} from "@/common/toastify.js";
 import {AlertAction} from "@/components/common/AlertAction";
 import { cn } from "@/lib/utils";
+import {queryKeys} from "@/services/reactQuery/queryKeys";
 
 const fetchRoles = async () => {
     const response = await Axios.get("/roles");
     return response.data.data;
+};
+
+const deleteRoleService = async (id) => {
+    await Axios.delete(`/roles/${id}`);
 };
 
 const Roles = () => {
@@ -28,17 +33,15 @@ const Roles = () => {
     const queryClient = useQueryClient();
 
     const {data: roles, isPending: isLoading} = useQuery({
-        queryKey: ["roles"],
+        queryKey: queryKeys.roles.all,
         queryFn: fetchRoles,
     });
 
     const deleteRole = useMutation({
-        mutationFn: async (id) => {
-            await Axios.delete(`/roles/${id}`);
-        },
+        mutationFn: deleteRoleService,
         onSuccess: () => {
             toastify(TOAST_TYPE.SUCCESS, "Role deleted successfully");
-            queryClient.invalidateQueries({queryKey: ["roles"]});
+            queryClient.invalidateQueries({queryKey: queryKeys.roles.all});
         },
         onError: () => {
             toastify(TOAST_TYPE.ERROR, "Failed to delete role");

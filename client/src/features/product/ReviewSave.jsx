@@ -22,14 +22,22 @@ import {ButtonLoading} from "@/components/common/ButtonLoading";
 import {toastify} from "@/common/toastify.js";
 import {TOAST_TYPE} from "@/utils/enums";
 import {handleErrors} from "@/utils";
+import {queryKeys} from "@/services/reactQuery/queryKeys";
+import { useUserStore } from "@/store/useUserStore";
 
 const ReviewSchema = z.object({
     rating: z.number().int().min(1).max(5),
     comment: z.string().optional(),
 });
 
-const ReviewCreate = () => {
+const saveReview = (id, data) => {
+    const response = Axios.post(`/products/${id}/review`, data);
+    return response.data.data;
+}
+
+const ReviewSave = () => {
     const {id} = useParams();
+    const {user} = useUserStore();
     const queryClient = useQueryClient();
 
     const {
@@ -48,28 +56,49 @@ const ReviewCreate = () => {
     });
 
     const createReviewMutation = useMutation({
-        mutationFn: (data) => Axios.post(`/products/${id}/review`, data),
+        mutationFn: (data) => saveReview(id, data),
 
-        onSuccess: async () => {
-            toastify(TOAST_TYPE.SUCCESS, "Review added successfully.");
+        onMutate: async (newReview) => {
+            await queryClient.cancelQueries({ queryKey: queryKeys.reviews.all(id) });
 
-            reset();
-            await queryClient.invalidateQueries({queryKey: ["reviews", id]});
+            const previousReviews = queryClient.getQueryData(queryKeys.reviews.all(id));
+
+            queryClient.setQueryData(queryKeys.reviews.all(id), (old) => {
+                const optimisticReview = {
+                    id: Date.now(),
+                    ...newReview,
+                    createdAt: new Date().toISOString(),
+                    user: { name: user?.name }
+                };
+                return old ? [...old, optimisticReview] : [optimisticReview];
+            });
+
+            return { previousReviews };
         },
-
-        onError: (error) => {
-            console.error(error);
-            handleErrors(error, setError);
+        onSuccess: () => {
+            toastify(TOAST_TYPE.SUCCESS, "Review added successfully.");
+            reset();
+        },
+        onError: (err, newReview, context) => {
+            if (context?.previousReviews) {
+                queryClient.setQueryData(queryKeys.reviews.all(id), context.previousReviews);
+            }
+            console.error(err);
+            handleErrors(err, setError);
+        },
+        onSettled: () => {
+            // Always refetch after error or success to sync with server
+            queryClient.invalidateQueries({ queryKey: queryKeys.reviews.all(id) });
         },
     });
 
-    const saveReview = (data) => {
+    const onSubmit = (data) => {
         createReviewMutation.mutate(data);
     };
 
     return (
         <Card className="h-fit">
-            <form onSubmit={handleSubmit(saveReview)}>
+            <form onSubmit={handleSubmit(onSubmit)}>
                 <CardHeader>
                     <CardTitle>Add Review</CardTitle>
                 </CardHeader>
@@ -151,4 +180,5 @@ const ReviewCreate = () => {
     );
 };
 
-export default ReviewCreate;
+export default ReviewSave;
+

@@ -24,6 +24,7 @@ import InputError from "@/components/common/InputError.jsx";
 import {toastify} from '@/common/toastify.js';
 import {Label} from "@/components/ui/label";
 import { MultiSelect } from '@/components/common/MultiSelect';
+import {queryKeys} from "@/services/reactQuery/queryKeys";
 
 const RoleSchema = z.object({
     name: z.string().min(2, "Role name is required"),
@@ -35,6 +36,14 @@ const fetchRole = async (id) => {
     return response.data.data
 };
 
+const createRoleService = async (payload) => {
+    await Axios.post('/roles', payload);
+};
+
+const updateRoleService = async (id, payload) => {
+    await Axios.put(`/roles/${id}`, payload);
+};
+
 const RoleSave = () => {
     const {id} = useParams();
     const navigate = useNavigate();
@@ -43,7 +52,7 @@ const RoleSave = () => {
     
     const roleFromState = location.state?.role;
 
-    const {register, handleSubmit, control, reset, setError, formState: {errors, isSubmitting}} = useForm({
+    const {register, handleSubmit, control, reset, setError, formState: {errors}} = useForm({
         resolver: zodResolver(RoleSchema),
         defaultValues: {
             name: '',
@@ -52,7 +61,7 @@ const RoleSave = () => {
     });
 
     const {data: roleFromQuery, isLoading} = useQuery({
-        queryKey: ["role", id],
+        queryKey: queryKeys.roles.detail(id),
         queryFn: () => fetchRole(id),
         enabled: !!id && !roleFromState,
     });
@@ -73,14 +82,14 @@ const RoleSave = () => {
                 ...data,
             };
             if (id) {
-                await Axios.put(`/roles/${id}`, payload);
+                await updateRoleService(id, payload);
             } else {
-                await Axios.post('/roles', payload);
+                await createRoleService(payload);
             }
         },
         onSuccess: () => {
             toastify(TOAST_TYPE.SUCCESS, `Role successfully ${id ? 'updated' : 'created'}`);
-            queryClient.invalidateQueries({queryKey: ["roles"]});
+            queryClient.invalidateQueries({queryKey: queryKeys.roles.all});
             navigate('/roles');
         },
         onError: (error) => {
@@ -89,12 +98,16 @@ const RoleSave = () => {
         },
     });
 
-    if (isLoading) return <PageLoadingOverlay/>;
+    const onSubmit = (data) => {
+        mutation.mutate(data);
+    };
 
     return (
         <div className="min-h-[85vh] flex items-center justify-center">
+            {isPageLoading && <PageLoadingOverlay/>}
+
             <Card className="w-full max-w-lg border-slate-100 shadow-xl shadow-slate-200/50 rounded-lg overflow-hidden">
-                <form onSubmit={handleSubmit((data) => mutation.mutate(data))}>
+                <form onSubmit={handleSubmit(onSubmit)}>
                     <CardHeader className="bg-slate-100 border-b border-slate-100 pb-6">
                         <CardTitle className="text-2xl font-bold text-slate-800 tracking-tight">
                             {id ? 'Edit Role' : 'Create New Role'}
@@ -163,7 +176,7 @@ const RoleSave = () => {
                         >
                             Cancel
                         </Button>
-                        {isSubmitting ? (
+                        {mutation.isPending ? (
                             <ButtonLoading className="h-12 px-8 rounded-lg bg-blue-600 w-[140px]" />
                         ) : (
                             <Button 

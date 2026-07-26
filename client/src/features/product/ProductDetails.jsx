@@ -22,7 +22,7 @@ import ReviewCard from "./ReviewCard"
 import {TOAST_TYPE} from "@/utils/enums"
 import {useQuery} from "@tanstack/react-query"
 import {toastify} from "@/common/toastify.js"
-import ReviewCreate from "./ReviewCreate";
+import ReviewSave from "./ReviewSave";
 import { BackButton } from "@/components/common/BackButton";
 
 const fetchProduct = async (id) => {
@@ -311,7 +311,7 @@ export default function ProductDetails() {
                         </div>
 
                         <div className="lg:col-span-2 space-y-8">
-                            <ReviewCreate/>
+                            <ReviewSave/>
                         </div>
                     </div>
                 </>

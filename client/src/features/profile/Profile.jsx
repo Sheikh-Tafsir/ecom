@@ -28,6 +28,7 @@ import { compressImage } from "@/utils/ImageUtils";
 
 import { useUploadProgress } from "@/hooks/useUploadProgress";
 import UploadProgress from "@/components/common/UploadProgress";
+import {queryKeys} from "@/services/reactQuery/queryKeys";
 
 const ProfileSchema = z.object({
     name: z.string()
@@ -39,6 +40,20 @@ const ProfileSchema = z.object({
 const fetchProfile = async () => {
     const response = await Axios.get("/profile");
     return response.data.data;
+}
+
+const updateProfile = async (formData, onUploadProgress) => {
+    const response = await Axios.put("/profile", formData, {
+        headers: {'Content-Type': 'multipart/form-data'},
+        timeout: 8000,
+        onUploadProgress,
+    });
+
+    return response.data.data;
+}
+
+const deleteProfileAccount = async () => {
+    await Axios.delete("/profile");
 }
 
 const Profile = () => {
@@ -71,7 +86,7 @@ const Profile = () => {
         isFetching: isPageLoading,
         isError
     } = useQuery({
-        queryKey: ["profile"],
+        queryKey: queryKeys.profile.all,
         queryFn: fetchProfile
     });
 
@@ -102,24 +117,16 @@ const Profile = () => {
                 formData.append("image", compressedImage);
             }
 
-            const response = await Axios.put("/profile", formData, {
-                headers: {'Content-Type': 'multipart/form-data'},
-                timeout: 8000,
-                onUploadProgress,
-            });
-
-            const user = response.data.data;
+            return await updateProfile(formData, onUploadProgress);
+        },
+        onSuccess: async (user) => {
             login(user.accessToken);
             reset(user);
-        },
-
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({queryKey: ["profile"]});
+            await queryClient.invalidateQueries({queryKey: queryKeys.profile.all});
             toastify(TOAST_TYPE.SUCCESS, "Profile updated successfully")
 
             navigate("/profile");
         },
-
         onError: (error) => {
             console.error(error);
             toastify(TOAST_TYPE.ERROR, "Failed to update profile")
@@ -127,14 +134,12 @@ const Profile = () => {
         },
     });
 
-    const saveProfile = async (data) => {
+    const onSubmit = async (data) => {
         await saveProfileMutation.mutateAsync(data);
     };
 
     const deleteProfile = useMutation({
-        mutationFn: async () => {
-            await Axios.delete("/profile");
-        },
+        mutationFn: deleteProfileAccount,
 
         onSuccess: async () => {
             toastify(TOAST_TYPE.SUCCESS, "Account deleted successfully")
@@ -175,7 +180,7 @@ const Profile = () => {
                 </div>
 
                 <Card className="border-slate-100 shadow-xl shadow-slate-200/50 rounded-[2.5rem] overflow-hidden bg-white animate-in fade-in slide-in-from-bottom-8 duration-700">
-                    <form onSubmit={handleSubmit(saveProfile)}>
+                    <form onSubmit={handleSubmit(onSubmit)}>
                         <CardHeader className="bg-slate-50/50 border-b border-slate-50 p-8 md:p-120">
                             <div className="flex flex-col md:flex-row items-center gap-8">
                                 <div className="relative group w-[60%]">
@@ -275,7 +280,7 @@ const Profile = () => {
                             <UploadProgress progress={progress} />
                             
                             <div className="w-full flex flex-col sm:flex-row items-center gap-4">
-                                {isSubmitting ? (
+                                {saveProfileMutation.isPending ? (
                                     <ButtonLoading className="w-full h-14 rounded-2xl bg-blue-600" />
                                 ) : !isEditable ? (
                                     <>

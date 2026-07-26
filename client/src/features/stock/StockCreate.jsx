@@ -4,6 +4,7 @@ import {Plus, Trash2, Search, Minus} from 'lucide-react';
 import {useForm, useFieldArray} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {z} from 'zod';
+import {useMutation, useQueryClient} from '@tanstack/react-query';
 
 import {Button} from '@/components/ui/button.jsx';
 import {
@@ -26,6 +27,7 @@ import {
     removeIdempotencyKey
 } from "@/utils/idempotencyUtil.js";
 import { toastify } from '@/common/toastify.js';
+import {queryKeys} from "@/services/reactQuery/queryKeys";
 
 const StockItemSchema = z.object({
     productId: z.number(),
@@ -39,8 +41,29 @@ const StockSchema = z.object({
     items: z.array(StockItemSchema).min(1, "Please add at least one product"),
 });
 
+const searchProductsService = async (name) => {
+    const response = await Axios.get('/products/search', {params: {name}});
+    return response.data.data;
+};
+
+const createStockService = async (items, idempotencyKey) => {
+    const response = await Axios.post(`/stocks`, {
+        items: items.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            purchasePrice: item.purchasePrice
+        }))
+    }, {
+        headers: {
+            [IDEMPOTENCY_HEADER]: idempotencyKey,
+        },
+    });
+    return response.data.data;
+};
+
 const StockCreate = () => {
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
@@ -53,7 +76,7 @@ const StockCreate = () => {
         watch,
         setValue,
         setError,
-        formState: {errors, isSubmitting},
+        formState: {errors},
     } = useForm({
         resolver: zodResolver(StockSchema),
         defaultValues: {
@@ -72,7 +95,7 @@ const StockCreate = () => {
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
             if (searchTerm.trim().length >= 2) {
-                searchProducts(searchTerm);
+                performSearch(searchTerm);
             } else {
                 setSearchResults([]);
             }
@@ -81,13 +104,11 @@ const StockCreate = () => {
         return () => clearTimeout(delayDebounceFn);
     }, [searchTerm]);
 
-    const searchProducts = async (name) => {
+    const performSearch = async (name) => {
         setIsSearching(true);
-
         try {
-            const response = await Axios.get('/products/search', {params: {name}});
-            console.log(response.data.data)
-            setSearchResults(response.data.data);
+            const data = await searchProductsService(name);
+            setSearchResults(data);
         } catch (error) {
             console.error("Error searching products", error);
         } finally {
@@ -114,33 +135,29 @@ const StockCreate = () => {
         setSearchResults([]);
     };
 
-    const handleSave = async (data) => {
-        const idempotencyKey = getIdempotencyKey();
-        
-        try {
-            const response = await Axios.post(`/stocks`, {
-                items: data.items.map(item => ({
-                    productId: item.productId,
-                    quantity: item.quantity,
-                    purchasePrice: item.purchasePrice
-                }))
-            }, {
-                headers: {
-                    [IDEMPOTENCY_HEADER]: idempotencyKey,
-                },
-            });
-
-            removeIdempotencyKey()
-
-            toastify(TOAST_TYPE.SUCCESS, "Successfully created stock")
-            setTimeout(() => navigate(`/stocks/${response.data.data}`), 500);
-        } catch (error) {
-            console.error(error)
+    const stockMutation = useMutation({
+        mutationFn: (data) => {
+            const idempotencyKey = getIdempotencyKey();
+            return createStockService(data.items, idempotencyKey);
+        },
+        onSuccess: (stockId) => {
+            removeIdempotencyKey();
+            toastify(TOAST_TYPE.SUCCESS, "Successfully created stock");
+            queryClient.invalidateQueries({queryKey: queryKeys.stock.all});
+            queryClient.invalidateQueries({queryKey: queryKeys.products.all}); // Stock change affects products
+            setTimeout(() => navigate(`/stocks/${stockId}`), 500);
+        },
+        onError: (error) => {
+            console.error(error);
             handleErrors(error, setError);
             if (error.response) {
                 removeIdempotencyKey();
             }
         }
+    });
+
+    const onSubmit = (data) => {
+        stockMutation.mutate(data);
     };
 
     const calculateTotalItems = () => {
@@ -219,7 +236,7 @@ const StockCreate = () => {
                         </CardContent>
                     </Card>
 
-                    <form onSubmit={handleSubmit(handleSave)} className="space-y-6">
+                    <form onSubmit={handleSubmit(stockMutation.mutate(data))} className="space-y-6">
                         <Card>
                             <CardHeader className="pb-3">
                                 <CardTitle>Selected Items</CardTitle>
@@ -335,7 +352,7 @@ const StockCreate = () => {
                             </CardContent>
                             <CardFooter className="bg-gray-50 border-t p-6 flex flex-col gap-4">
                                 <InputError errors={errors} field={GLOBAL_ERROR}/>
-                                {isSubmitting ? (
+                                {stockMutation.isPending ? (
                                     <ButtonLoading className="w-full"/>
                                 ) : (
                                     <Button

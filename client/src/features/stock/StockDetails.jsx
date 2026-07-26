@@ -1,7 +1,7 @@
 import {useEffect} from 'react';
-import {useParams, useNavigate} from 'react-router-dom';
+import {useParams} from 'react-router-dom';
 import {useQuery} from "@tanstack/react-query";
-import {ArrowLeft, Package, Calendar, DollarSign, Hash, Layers} from "lucide-react";
+import {Package, Calendar, DollarSign, Hash, Layers} from "lucide-react";
 
 import {
     Table,
@@ -20,6 +20,7 @@ import {formatDateAndTime} from '@/utils/index.js';
 import {TOAST_TYPE} from "@/utils/enums.js";
 import {toastify} from '@/common/toastify.js';
 import { BackButton } from '@/components/common/BackButton';
+import {queryKeys} from "@/services/reactQuery/queryKeys";
 
 const fetchStock = async (id) => {
     const response = await Axios.get(`/stocks/${id}`)
@@ -28,7 +29,6 @@ const fetchStock = async (id) => {
 
 const StockDetails = () => {
     const {id} = useParams();
-    const navigate = useNavigate();
 
     const {
         data: stock,
@@ -37,7 +37,7 @@ const StockDetails = () => {
         error
     } = useQuery({
         enabled: !!id,
-        queryKey: ["stock", id],
+        queryKey: queryKeys.stock.detail(id),
         queryFn: () => fetchStock(id),
     });
 

@@ -3,6 +3,7 @@ import {Package, ChevronRight, ShieldCheck, Clock} from "lucide-react"
 import {useForm, Controller} from "react-hook-form"
 import {zodResolver} from "@hookform/resolvers/zod"
 import * as z from "zod"
+import {useMutation, useQueryClient} from "@tanstack/react-query"
 
 import {Button} from "@/components/ui/button"
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card"
@@ -19,6 +20,7 @@ import {PAYMENT_METHOD, TOAST_TYPE} from "@/utils/enums.js"
 import {getIdempotencyKey, IDEMPOTENCY_HEADER, removeIdempotencyKey} from "@/utils/idempotencyUtil.js"
 import {toastify} from "@/common/toastify.js"
 import {cn} from "@/lib/utils"
+import {queryKeys} from "@/services/reactQuery/queryKeys"
 
 const checkoutSchema = z.object({
     phone: z.string()
@@ -30,7 +32,7 @@ const checkoutSchema = z.object({
 
 const createOrder = async (items, name, data, idempotencyKey) => {
     try {
-        return Axios.post("/orders", {
+        const response = await Axios.post("/orders", {
                 items,
                 name,
                 ...data,
@@ -41,6 +43,8 @@ const createOrder = async (items, name, data, idempotencyKey) => {
                 },
             }
         );
+
+        return response.data.data;
     } catch (error) {
         console.error(error);
         toastify(TOAST_TYPE.ERROR, "Order placed Failed!");
@@ -50,12 +54,14 @@ const createOrder = async (items, name, data, idempotencyKey) => {
 
 export const createPayment = async (order, userId) => {
     try {
-        return await Axios.post("/payment", {
+         const response = await Axios.post("/payment", {
             userId: userId,
             orderId: order.id,
             amount: order.totalPrice,
             payerReference: order.phone,
         });
+
+        return response.data.data;
     } catch (error) {
         console.error(error);
         toastify(TOAST_TYPE.ERROR, "Payment Failed!");
@@ -65,6 +71,7 @@ export const createPayment = async (order, userId) => {
 
 export default function OrderCreate() {
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
 
     const {user} = useUserStore();
     const {cart, getCartTotal, clearCart} = useCartStore();
@@ -76,7 +83,7 @@ export default function OrderCreate() {
         setError,
         control,
         reset,
-        formState: {errors, isSubmitting},
+        formState: {errors},
     } = useForm({
         resolver: zodResolver(checkoutSchema),
         defaultValues: {
@@ -92,32 +99,41 @@ export default function OrderCreate() {
         removeIdempotencyKey();
     };
 
-    const saveOrder = async (data) => {
-        const idempotencyKey = getIdempotencyKey();
-
-        try {
-            const orderResponse = await createOrder(cart, user?.name, data, idempotencyKey);
-            const order = orderResponse.data.data;
+    const checkoutMutation = useMutation({
+        mutationFn: async (data) => {
+            const idempotencyKey = getIdempotencyKey();
+            const order = await createOrder(cart, user?.name, data, idempotencyKey)
 
             if (data.paymentMethod == PAYMENT_METHOD.CASH_ON_DELIVERY) {
-                cleanupAfterOrder();
-                toastify(TOAST_TYPE.SUCCESS, "Order placed successfully!");
-                navigate(`/orders/${order.id}`);
-                return;
+                return { order, isCod: true };
             }
 
-            const paymentResponse = await createPayment(order, user.id, data.phone);
-
+            const paymentUrl = await createPayment(order, user.id);
+            return { order, isCod: false, paymentUrl };
+        },
+        onSuccess: async (result) => {
             cleanupAfterOrder();
-            toastify(TOAST_TYPE.SUCCESS, "Order placed and payment completed successfully!");
-            window.location.assign(paymentResponse.data.data);
-        } catch (error) {
+            await queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
+
+            if (result.isCod) {
+                toastify(TOAST_TYPE.SUCCESS, "Order placed successfully!");
+                navigate(`/orders/${result.order.id}`);
+            } else {
+                toastify(TOAST_TYPE.SUCCESS, "Order placed and payment completed successfully!");
+                window.location.assign(result.paymentUrl);
+            }
+        },
+        onError: (error) => {
             console.error(error);
             handleErrors(error, setError);
             if (error.response) {
                 removeIdempotencyKey()
             }
         }
+    });
+
+    const onSubmit = (data) => {
+        checkoutMutation.mutate(data);
     };
 
     return (
@@ -149,7 +165,7 @@ export default function OrderCreate() {
                                 </div>
                             </CardHeader>
                             <CardContent className="p-8">
-                                <form id="checkout-form" className="space-y-8" onSubmit={handleSubmit(saveOrder)}>
+                                <form id="checkout-form" className="space-y-8" onSubmit={handleSubmit(onSubmit)}>
                                     <InputError errors={errors} field={GLOBAL_ERROR}/>
 
                                     <div className="grid md:grid-cols-2 gap-6">
@@ -299,7 +315,7 @@ export default function OrderCreate() {
                                     </div>
                                 </div>
 
-                                {isSubmitting ? (
+                                {checkoutMutation.isPending ? (
                                     <ButtonLoading className="w-full h-16 rounded-lg bg-blue-600"/>
                                 ) : (
                                     <Button

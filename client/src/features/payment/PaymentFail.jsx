@@ -17,7 +17,7 @@ const tryAgain = async (orderId, userId, navigate) => {
     // Notify user that payment is being initiated
     toastify(TOAST_TYPE.SUCCESS, "Initiating payment retry...");
 
-    const paymentResponse = await createPayment(order, userId, order.phone);
+    const paymentResponse = await createPayment(order, userId);
 
     if (paymentResponse.data.data) {
         window.location.assign(paymentResponse.data.data);

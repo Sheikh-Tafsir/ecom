@@ -39,6 +39,7 @@ import {Button} from '@/components/ui/button.jsx';
 import {TOAST_TYPE} from "@/utils/enums.js";
 import InputError from "@/components/common/InputError";
 import {toastify} from '@/common/toastify.js';
+import {queryKeys} from "@/services/reactQuery/queryKeys";
 
 const fetchStocks = async ({queryKey}) => {
     const [, params] = queryKey
@@ -99,7 +100,7 @@ const Stocks = () => {
         isError,
         error
     } = useQuery({
-        queryKey: ["stocks", filters],
+        queryKey: queryKeys.stock.all,
         queryFn: fetchStocks,
         placeholderData: keepPreviousData,
     })

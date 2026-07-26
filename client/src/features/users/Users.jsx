@@ -1,6 +1,6 @@
 import {useEffect, useMemo, useState} from "react";
 import {useNavigate, useSearchParams} from "react-router-dom";
-import {keepPreviousData, useQuery} from "@tanstack/react-query";
+import {keepPreviousData, useQuery, useMutation, useQueryClient} from "@tanstack/react-query";
 import {Pencil, User as UserIcon, Shield, Filter} from "lucide-react";
 
 import {
@@ -48,6 +48,7 @@ import { cn } from "@/lib/utils";
 
 import {ReportDialog} from "@/components/common/ReportDialog";
 import {useUserStore} from "@/store/useUserStore";
+import {queryKeys} from "@/services/reactQuery/queryKeys";
 
 const ALLOWED_SORT_FIELDS = new Set([
     "createdAt",
@@ -71,8 +72,13 @@ const fetchUsers = async ({queryKey}) => {
     return response.data.data
 };
 
+const updateUserStatusService = async (id, status) => {
+    await Axios.put(`/users/${id}`, {status});
+}
+
 const Users = () => {
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const {user: currentUser} = useUserStore();
 
     const [searchParams] = useSearchParams();
@@ -91,9 +97,9 @@ const Users = () => {
     const [selectedUser, setSelectedUser] = useState(null);
 
     const {
-        data, isPending: isPageLoading, isError, error, refetch,
+        data, isPending: isPageLoading, isError, error,
     } = useQuery({
-        queryKey: ["users", filters],
+        queryKey: queryKeys.users.list(filters),
         queryFn: fetchUsers,
         placeholderData: keepPreviousData,
     });
@@ -105,20 +111,21 @@ const Users = () => {
         navigate(`/users/${user.id}`, {state: {user}});
     };
 
-    const changeUserStatus = async (id, status) => {
-        try {
-            await Axios.put(`/users/${id}`, {status});
+    const statusMutation = useMutation({
+        mutationFn: ({id, status}) => updateUserStatusService(id, status),
+        onSuccess: (_, {status}) => {
             toastify(TOAST_TYPE.SUCCESS, `User status updated to ${status}`)
-            await refetch();
-        } catch (error) {
+            queryClient.invalidateQueries({queryKey: queryKeys.users.all});
+        },
+        onError: (error) => {
             console.error("Error changing user status:", error);
             toastify(TOAST_TYPE.ERROR, "Failed to change user status")
         }
-    };
+    });
 
     const deleteUser = async () => {
         if (!selectedUser) return;
-        await changeUserStatus(selectedUser.id, USER_STATUS.SUSPENDED);
+        statusMutation.mutate({id: selectedUser.id, status: USER_STATUS.SUSPENDED});
     };
 
     const updateQuery = (newParams) => {

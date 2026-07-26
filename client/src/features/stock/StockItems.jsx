@@ -39,7 +39,7 @@ import {TOAST_TYPE} from "@/utils/enums.js";
 import InputError from "@/components/common/InputError";
 import {toastify} from '@/common/toastify.js';
 import { cn } from "@/lib/utils";
-import { setErrorMap } from 'zod/v3';
+import {queryKeys} from "@/services/reactQuery/queryKeys";
 
 const fetchStockItems = async ({queryKey}) => {
     const [, params] = queryKey
@@ -82,6 +82,7 @@ const StockItems = () => {
         register,
         handleSubmit,
         reset,
+        setError,
         formState: {errors},
     } = useForm({
         resolver: zodResolver(stockItemFilterSchema),
@@ -98,7 +99,7 @@ const StockItems = () => {
         isError, 
         error
     } = useQuery({
-        queryKey: ["stockItems", filters],
+        queryKey: queryKeys.stock.list(filters),
         queryFn: fetchStockItems,
         placeholderData: keepPreviousData,
     })
