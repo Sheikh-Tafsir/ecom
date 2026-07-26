@@ -219,6 +219,7 @@ const formatChatListDetails = (chat, userId) => {
         image,
         lastMessage: c.lastMessage,
         lastSent: c.lastSent,
+        lastSenderId: c.lastSenderId,
         unreadMessage,
         participants,
         Participants: participants,

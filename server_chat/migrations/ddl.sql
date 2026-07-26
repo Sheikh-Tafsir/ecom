@@ -5,15 +5,16 @@ DROP TABLE IF EXISTS chats CASCADE;
 
 CREATE TABLE chats
 (
-    id           BIGSERIAL PRIMARY KEY,
-    type         VARCHAR(32) NOT NULL,
-    name         VARCHAR(100),
-    image        VARCHAR(511),
-    last_message TEXT,
-    last_sent    TIMESTAMP            DEFAULT CURRENT_TIMESTAMP,
-    created_at   TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at   TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    version      INT                  DEFAULT 0
+    id             BIGSERIAL PRIMARY KEY,
+    type           VARCHAR(32) NOT NULL,
+    name           VARCHAR(100),
+    image          VARCHAR(511),
+    last_message   TEXT,
+    last_sent      TIMESTAMP            DEFAULT CURRENT_TIMESTAMP,
+    last_sender_id BIGINT      REFERENCES users (id) ON UPDATE CASCADE ON DELETE SET NULL,
+    created_at     TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at     TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    version        INT                  DEFAULT 0
 );
 
 CREATE TABLE chat_participants

@@ -31,8 +31,11 @@ export const useChatSync = (id, userId) => {
 
             const updatedChat = {
                 ...currentChat,
+                lastMessage: newMessage.content,
                 lastSent: newMessage.createdAt,
-                unreadMessage: !isOwnSentMessage ? (currentChat.unreadMessage || 0) + 1 : currentChat.unreadMessage,
+                lastSentId: newMessage.id,
+                lastSenderId: newMessage.senderId,
+                unreadMessage: isOwnSentMessage ? 0 : (currentChat.unreadMessage || 0) + 1,
             };
 
             const filteredChats = oldChats.filter(chat => chat?.id != newMessage.chatId);
@@ -40,8 +43,14 @@ export const useChatSync = (id, userId) => {
         });
 
         if (newMessage.chatId == id) {
-            queryClient.setQueryData(['selected_chat', id], (oldChat = {}) => {
-                const messages = oldChat.messages || [];
+            queryClient.setQueryData(['selected_chat', id], (oldData) => {
+                if (!oldData || !oldData.pages || oldData.pages.length === 0) return oldData;
+
+                const pages = [...oldData.pages];
+                const lastPageIndex = pages.length - 1;
+                
+                const firstPage = { ...pages[0] };
+                const messages = firstPage.messages || [];
 
                 let updatedMessages;
                 const isOwnSentMessage = newMessage.senderId == userId && !newMessage?.isTemporary && newMessage.tempId;
@@ -63,9 +72,11 @@ export const useChatSync = (id, userId) => {
                     updatedMessages = [...messages, newMessage];
                 }
 
+                pages[0] = { ...firstPage, messages: updatedMessages };
+
                 return {
-                    ...oldChat,
-                    messages: updatedMessages,
+                    ...oldData,
+                    pages: pages,
                 };
             });
         }

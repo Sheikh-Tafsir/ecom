@@ -32,7 +32,7 @@ const sendMessage = async (senderId, body) => {
         );
 
         await chat.update(
-            {lastSent: new Date(), lastMessage: content},
+            {lastSent: new Date(), lastMessage: content, lastSenderId: senderId},
             {transaction: t}
         );
 

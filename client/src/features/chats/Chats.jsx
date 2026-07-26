@@ -36,7 +36,10 @@ const Chat = () => {
         chatMapByParticipants,
         isChatsLoading,
         isSelectedChatLoading,
-        isSelectedChatError
+        isSelectedChatError,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage
     } = useChatData(id);
 
     const {updateChatOnMessage} = useChatSync(id, user?.id);
@@ -143,6 +146,9 @@ const Chat = () => {
                     chat={newChat || selectedChat || {}}
                     handleUserSelectorDialogOpen={handleUserSelectorDialogOpen}
                     isMobileView={!!(id || newChat)}
+                    fetchNextPage={fetchNextPage}
+                    hasNextPage={hasNextPage}
+                    isFetchingNextPage={isFetchingNextPage}
                 />
             </div>
 

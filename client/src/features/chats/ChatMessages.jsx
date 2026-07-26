@@ -2,27 +2,69 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Send, ChevronLeft } from 'lucide-react'
+import { Send, ChevronLeft, Loader2 } from 'lucide-react'
 import { Link } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import ImageInputInplace from '@/components/common/ImageInputInplace';
 import { CHAT_TYPE, CONTENT_TYPE } from '@/utils/enums';
 import ChatInfo from './ChatInfo';
 import { useUserStore } from '@/store/useUserStore';
+import { useInView } from 'react-intersection-observer';
 
 import { format, isSameDay, isYesterday } from 'date-fns';
 import { cn } from "@/lib/utils";
 
-const ChatMessages = ({ onSendMessage, chat, handleUserSelectorDialogOpen, isMobileView }) => {
+const ChatMessages = ({ 
+  onSendMessage, 
+  chat, 
+  handleUserSelectorDialogOpen, 
+  isMobileView,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage
+}) => {
 
   const { user } = useUserStore();
   const messagesEndRef = useRef(null);
+  const scrollAreaRef = useRef(null);
   const [newMessage, setNewMessage] = useState('');
   const [newImage, setNewImage] = useState(null);
 
+  const { ref: topSentinelRef, inView: isTopVisible } = useInView({
+    threshold: 0,
+  });
+
+  // Infinite scroll trigger
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chat?.messages]);
+    if (isTopVisible && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [isTopVisible, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Scroll to bottom logic
+  const lastMessageId = chat?.messages?.[chat.messages.length - 1]?.id;
+  const prevLastMessageId = useRef(lastMessageId);
+  const isInitialLoad = useRef(true);
+
+  useEffect(() => {
+    if (!chat?.id) {
+        isInitialLoad.current = true;
+        return;
+    }
+
+    const shouldScrollToBottom = 
+        isInitialLoad.current || 
+        (lastMessageId !== prevLastMessageId.current && !isFetchingNextPage);
+
+    if (shouldScrollToBottom) {
+      messagesEndRef.current?.scrollIntoView({ 
+        behavior: isInitialLoad.current ? 'auto' : 'smooth' 
+      });
+      isInitialLoad.current = false;
+    }
+    
+    prevLastMessageId.current = lastMessageId;
+  }, [lastMessageId, isFetchingNextPage, chat?.id]);
 
   const participantsMap = useMemo(() => {
     const map = new Map();
@@ -159,8 +201,17 @@ const ChatMessages = ({ onSendMessage, chat, handleUserSelectorDialogOpen, isMob
             </div>
           </div>
 
-          <ScrollArea className="flex-1 p-6">
+          <ScrollArea className="flex-1 p-6" ref={scrollAreaRef}>
             <div className="flex flex-col">
+              {/* Top Sentinel for Infinite Scroll */}
+              <div ref={topSentinelRef} className="h-1" />
+              
+              {isFetchingNextPage && (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
+                </div>
+              )}
+
               {chat?.messages?.length > 0 ? (
                 chat.messages.map((message, index) => renderMessage(message, index, chat.messages))
               ) : (

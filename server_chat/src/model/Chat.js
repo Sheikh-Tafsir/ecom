@@ -47,6 +47,12 @@ module.exports = (sequelize, DataTypes) => {
                 field: 'last_sent'
             },
 
+            lastSenderId: {
+                type: DataTypes.BIGINT,
+                allowNull: true,
+                field: 'last_sender_id'
+            },
+
             createdAt: {
                 type: DataTypes.DATE,
                 allowNull: false,

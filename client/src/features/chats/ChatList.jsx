@@ -14,11 +14,13 @@ import { EllipsisVertical, Trash2, Users } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getLastMessageTime } from '@/utils';
 import { CHAT_TYPE } from '@/utils/enums';
+import { useUserStore } from '@/store/useUserStore';
 
 const BUTTON_OPTIONS = ["All", "Unread", "Group"];
 
 const ChatList = ({ chats, handleUserSelectorDialogOpen }) => {
   const { id } = useParams();
+  const { user } = useUserStore();
   const [selectedOption, setSelectedOption] = useState(BUTTON_OPTIONS[0]);
 
   const filteredChats = (Array.isArray(chats) ? chats : []).filter(chat => {
@@ -100,10 +102,10 @@ const ChatList = ({ chats, handleUserSelectorDialogOpen }) => {
                           "text-xs truncate flex-1",
                           chat.unreadMessage > 0 ? "text-slate-900 font-medium" : "text-slate-500"
                       )}>
-                        {chat.lastMessage || "No messages yet"}
+                        {chat.lastSenderId == user?.id ? `You: ${chat.lastMessage}` : chat.lastMessage || "No messages yet"}
                       </p>
                       
-                      {chat.unreadMessage > 0 && (
+                      {chat.unreadMessage > 0 && chat.lastSenderId != user?.id && (
                         <span className="flex items-center justify-center bg-blue-600 text-white text-[10px] font-bold h-4 w-4 rounded-full">
                           {chat.unreadMessage}
                         </span>
