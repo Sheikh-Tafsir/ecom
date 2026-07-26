@@ -76,7 +76,7 @@ export default function Cart() {
                     </div>
                     
                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
-                      {item?.category?.name || "Product"}
+                      {item.category?.name || "Product"}
                     </p>
 
                     <div className="flex items-center justify-center sm:justify-start gap-6">

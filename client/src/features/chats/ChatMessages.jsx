@@ -26,7 +26,9 @@ const ChatMessages = ({ onSendMessage, chat, handleUserSelectorDialogOpen, isMob
 
   const participantsMap = useMemo(() => {
     const map = new Map();
-    chat?.participants?.forEach(p => map.set(p.id, p));
+    chat?.participants?.forEach(p => {
+      if (p?.id) map.set(p.id, p);
+    });
     return map;
   }, [chat?.participants]);
 
@@ -58,7 +60,9 @@ const ChatMessages = ({ onSendMessage, chat, handleUserSelectorDialogOpen, isMob
   };
 
   const renderMessage = (message, index, allMessages) => {
-    const isMe = message.senderId == user.id;
+    if (!message) return null;
+    
+    const isMe = message.senderId == user?.id;
     const prevMessage = allMessages[index - 1];
     const isFirstInGroup = !prevMessage || prevMessage.senderId != message.senderId || !isSameDay(new Date(prevMessage.createdAt), new Date(message.createdAt));
     
@@ -66,7 +70,7 @@ const ChatMessages = ({ onSendMessage, chat, handleUserSelectorDialogOpen, isMob
 
     return (
       <div key={message.id || index} className="flex flex-col">
-        {index == 0 || !isSameDay(new Date(allMessages[index-1].createdAt), new Date(message.createdAt)) ? 
+        {index == 0 || (allMessages[index-1] && !isSameDay(new Date(allMessages[index-1].createdAt), new Date(message.createdAt))) ? 
           renderDateSeparator(message.createdAt) : null
         }
         <div className={cn(
@@ -112,7 +116,7 @@ const ChatMessages = ({ onSendMessage, chat, handleUserSelectorDialogOpen, isMob
                 "mt-[-5px] text-[9px] opacity-70 flex justify-end items-center",
                 isMe ? "text-blue-100" : "text-slate-400"
               )}>
-                {format(new Date(message.createdAt), 'HH:mm')}
+                {message.createdAt ? format(new Date(message.createdAt), 'HH:mm') : '-'}
                 {isMe && message.isTemporary && (
                   <span className="w-2 h-2 rounded-full border border-blue-200 border-t-transparent animate-spin" />
                 )}

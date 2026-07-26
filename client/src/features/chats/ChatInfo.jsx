@@ -45,15 +45,15 @@ const ChatInfo = ({ name, image, type, participants, handleUserSelectorDialogOpe
                             </div>
                             
                             <div className="space-y-1">
-                                {participants && participants.map((participant) => (
+                                {participants?.map((participant) => (
                                     <div className="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition-colors group" key={participant.id}>
                                         <div className="flex items-center gap-3">
                                             <Avatar className="h-9 w-9 border border-white shadow-sm">
                                                 <AvatarImage src={participant.image} alt={participant.name} />
-                                                <AvatarFallback className="bg-slate-100 text-slate-600 text-xs font-medium">{participant?.name?.slice(0, 1)}</AvatarFallback>
+                                                <AvatarFallback className="bg-slate-100 text-slate-600 text-xs font-medium">{participant.name?.slice(0, 1)}</AvatarFallback>
                                             </Avatar>
                                             <div className="flex flex-col">
-                                                <span className="text-sm font-semibold text-slate-800">{participant?.name}</span>
+                                                <span className="text-sm font-semibold text-slate-800">{participant.name}</span>
                                                 <span className="text-[10px] text-slate-500">Active now</span>
                                             </div>
                                         </div>

@@ -192,7 +192,7 @@ const UserEdit = () => {
                                     </div>
                                 ) : (
                                     <InputViewMode
-                                        value={user?.roles?.map(role => role.replace(ROLE_PREFIX, "")).join(", ") ?? ""}
+                                        value={user?.roles?.map(role => role?.replace(ROLE_PREFIX, "") || "").join(", ") ?? ""}
                                         isEditable={false}
                                     />
                                 )}

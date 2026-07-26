@@ -21,7 +21,7 @@ const FaqTable = ({ faqs, handleEdit, deleteMutation }) => {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {faqs.map((faq) => (
+                {faqs?.map((faq) => (
                     <TableRow key={faq.id} className="hover:bg-slate-50 transition-colors">
                         <TableCell className="px-6 py-4 text-center">
                             <span className="font-bold text-slate-400">{faq.displayOrder}</span>

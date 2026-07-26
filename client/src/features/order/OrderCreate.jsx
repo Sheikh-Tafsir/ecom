@@ -56,9 +56,9 @@ export const createPayment = async (order, userId) => {
     try {
          const response = await Axios.post("/payment", {
             userId: userId,
-            orderId: order.id,
-            amount: order.totalPrice,
-            payerReference: order.phone,
+            orderId: order?.id,
+            amount: order?.totalPrice,
+            payerReference: order?.phone,
         });
 
         return response.data.data;
@@ -108,7 +108,7 @@ export default function OrderCreate() {
                 return { order, isCod: true };
             }
 
-            const paymentUrl = await createPayment(order, user.id);
+            const paymentUrl = await createPayment(order, user?.id);
             return { order, isCod: false, paymentUrl };
         },
         onSuccess: async (result) => {

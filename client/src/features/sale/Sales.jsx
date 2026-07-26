@@ -379,7 +379,7 @@ export default function Sales() {
                                     </TableHeader>
 
                                     <TableBody>
-                                        {sales.length > 0 ?
+                                        {sales && sales.length > 0 ?
                                             sales.map((item) => (
                                                 <TableRow key={item.id} className="group hover:bg-slate-50/30 border-b border-slate-50/50 transition-colors">
                                                     <TableCell className="px-10 py-6">

@@ -51,7 +51,7 @@ const ChatList = ({ chats, handleUserSelectorDialogOpen }) => {
       </div>
       <ScrollArea className="flex-1">
         <div className="flex flex-col gap-0 px-2 pb-4">
-          {filteredChats.length > 0 ?
+          {filteredChats?.length > 0 ? (
             filteredChats.map((chat) => (
               <div
                 key={chat.id}
@@ -70,9 +70,9 @@ const ChatList = ({ chats, handleUserSelectorDialogOpen }) => {
                 >
                   <div className="relative flex-shrink-0">
                     <Avatar className="h-12 w-12 border-2 border-white shadow-sm">
-                      <AvatarImage src={chat?.image} alt={chat.name} />
+                      <AvatarImage src={chat.image} alt={chat.name} />
                       <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white font-medium">
-                        {chat?.name?.slice(0, 1)}
+                        {chat.name?.slice(0, 1)}
                       </AvatarFallback>
                     </Avatar>
                     {/* Mock online status for now */}
@@ -83,9 +83,9 @@ const ChatList = ({ chats, handleUserSelectorDialogOpen }) => {
                     <div className="flex items-center justify-between mb-0.5">
                       <h3 className={cn(
                           "font-semibold truncate text-sm",
-                          chat?.unreadMessage > 0 ? "text-slate-900" : "text-slate-700"
+                          chat.unreadMessage > 0 ? "text-slate-900" : "text-slate-700"
                       )}>
-                        {chat?.name}
+                        {chat.name}
                       </h3>
                       <span className={cn(
                           "text-[10px] whitespace-nowrap ml-2 font-medium",
@@ -98,12 +98,12 @@ const ChatList = ({ chats, handleUserSelectorDialogOpen }) => {
                     <div className="flex items-center justify-between gap-2">
                       <p className={cn(
                           "text-xs truncate flex-1",
-                          chat?.unreadMessage > 0 ? "text-slate-900 font-medium" : "text-slate-500"
+                          chat.unreadMessage > 0 ? "text-slate-900 font-medium" : "text-slate-500"
                       )}>
-                        {chat?.lastMessage || "No messages yet"}
+                        {chat.lastMessage || "No messages yet"}
                       </p>
                       
-                      {chat?.unreadMessage > 0 && (
+                      {chat.unreadMessage > 0 && (
                         <span className="flex items-center justify-center bg-blue-600 text-white text-[10px] font-bold h-4 w-4 rounded-full">
                           {chat.unreadMessage}
                         </span>
@@ -133,7 +133,7 @@ const ChatList = ({ chats, handleUserSelectorDialogOpen }) => {
                 </DropdownMenu>
               </div>
             ))
-            :
+          ) : (
             <div className='flex flex-col items-center justify-center py-10 px-4 text-center'>
               <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-3">
                 <Users className="h-6 w-6 text-slate-400" />
@@ -141,7 +141,7 @@ const ChatList = ({ chats, handleUserSelectorDialogOpen }) => {
               <p className="text-sm text-slate-500 font-medium">No conversations found</p>
               <p className="text-xs text-slate-400 mt-1">Start a new chat to begin messaging</p>
             </div>
-          }
+          )}
         </div>
       </ScrollArea>
     </div>

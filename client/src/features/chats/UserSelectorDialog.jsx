@@ -43,10 +43,10 @@ const UserSelectorDialog = ({ isOpen, onClose, preSelecteedUserIds, avoidUserIds
     })
 
     useEffect(() => {
-        if (preSelecteedUserIds.length == 0 || users.length == 0) return;
+        if (!preSelecteedUserIds || preSelecteedUserIds.length == 0 || !users || users.length == 0) return;
 
         const usersToPreselect = users.filter((user) =>
-            preSelecteedUserIds.includes(user.id) && !avoidUserIds?.includes(user.id)
+            user?.id && preSelecteedUserIds.includes(user.id) && !avoidUserIds?.includes(user.id)
         );
         setSelectedUsers(usersToPreselect);
     }, [preSelecteedUserIds, users]);
@@ -70,7 +70,7 @@ const UserSelectorDialog = ({ isOpen, onClose, preSelecteedUserIds, avoidUserIds
         }
     }, [isOpen]);
 
-    const filteredUsers = users.filter(
+    const filteredUsers = users?.filter(
         (user) => {
             const matchesSearch =
                 user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -83,6 +83,10 @@ const UserSelectorDialog = ({ isOpen, onClose, preSelecteedUserIds, avoidUserIds
 
     // Handle user selection
     const handleUserToggle = (user) => {
+        if (!user?.id) {
+            return;
+        }
+
         setSelectedUsers((prev) => {
             const isSelected = prev.some((u) => u.id == user.id)
             if (isSelected) {
@@ -105,7 +109,7 @@ const UserSelectorDialog = ({ isOpen, onClose, preSelecteedUserIds, avoidUserIds
 
     // Handle confirm selection
     const handleConfirm = async () => {
-        if (selectedUsers.length + avoidUserIds.length < 2) {
+        if (selectedUsers.length + (avoidUserIds?.length || 0) < 2) {
             setErrorMessage("Atleast choose 2 person");
             return;
         }
@@ -116,7 +120,7 @@ const UserSelectorDialog = ({ isOpen, onClose, preSelecteedUserIds, avoidUserIds
             name: user.name
         }));
 
-        confirmUsersSelection(users, avoidUserIds.length == 0 ? REGULAR_ACTION.CREATE : REGULAR_ACTION.UPDATE);
+        confirmUsersSelection(users, (avoidUserIds?.length || 0) == 0 ? REGULAR_ACTION.CREATE : REGULAR_ACTION.UPDATE);
     }
 
     const handleCancel = () => {
@@ -191,9 +195,8 @@ const UserSelectorDialog = ({ isOpen, onClose, preSelecteedUserIds, avoidUserIds
                                             <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
                                             <AvatarFallback>
                                                 {user.name
-                                                    .split(" ")
-                                                    .map((n) => n[0])
-                                                    .join("")}
+                                                    ? user.name.split(" ").map((n) => n[0]).join("")
+                                                    : "U"}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div className="flex-1 min-w-0">

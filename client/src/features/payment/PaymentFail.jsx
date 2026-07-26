@@ -77,7 +77,7 @@ export default function PaymentFail() {
                         {orderId && (
                             <>
                                 <Button 
-                                    onClick={() => tryAgain(orderId, user.id, navigate)} 
+                                    onClick={() => tryAgain(orderId, user?.id, navigate)} 
                                     className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20 transition-all hover:scale-[1.02] active:scale-95 group"
                                 >
                                     <RefreshCw className="h-4 w-4 mr-2 group-hover:rotate-180 transition-transform duration-500" />

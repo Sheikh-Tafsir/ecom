@@ -34,14 +34,14 @@ const ParticipantDrawer = ({ isOpen, onClose, name, image, type, participants, h
               {type == CHAT_TYPE.GROUP ?
                 <>
                   <p className="text-sm font-medium text-muted-foreground my-auto">Chat Members</p>
-                  {participants && participants.map((participant) => (
+                  {participants?.map((participant) => (
                     <div className="flex py-2 justify-between" key={participant.id}>
                       <div className="flex">
                         <Avatar>
                           <AvatarImage src={participant.image} alt={participant.name} />
-                          <AvatarFallback>{participant?.name?.slice(0, 1)}</AvatarFallback>
+                          <AvatarFallback>{participant.name?.slice(0, 1)}</AvatarFallback>
                         </Avatar>
-                        <p className="my-auto ml-2">{participant?.name}</p>
+                        <p className="my-auto ml-2">{participant.name}</p>
                       </div>
                       <Badge className={participant.role != CHAT_MEMBER_TYPE.ADMIN ? 'bg-blue-500 h-8' : 'bg-red-500 h-8'}>{participant.role}</Badge>
                     </div>

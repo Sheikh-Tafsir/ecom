@@ -23,7 +23,7 @@ const BannerTable = ({ banners, handleEdit, deleteMutation }) => {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {banners.map((banner) => (
+                {banners?.map((banner) => (
                     <TableRow key={banner.id} className="hover:bg-slate-50 transition-colors">
                         <TableCell className="px-6 py-4">
                             <div className="w-24 h-12 rounded-lg overflow-hidden border border-slate-100">
@@ -33,7 +33,7 @@ const BannerTable = ({ banners, handleEdit, deleteMutation }) => {
                         <TableCell className="px-6 py-4">
                             <div className="flex flex-col">
                                 <span className="font-bold text-slate-900">{banner.title}</span>
-                                <span className="text-xs text-slate-500 line-clamp-1">{banner.subtitle}</span>
+                                <span className="text-xs text-slate-500 line-clamp-1">{banner?.subtitle}</span>
                             </div>
                         </TableCell>
                         <TableCell className="px-6 py-4 text-center">

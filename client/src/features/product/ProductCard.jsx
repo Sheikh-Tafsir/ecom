@@ -34,6 +34,8 @@ const ProductCard = ({product}) => {
         navigate(`/products/${product.id}/edit`)
     }
 
+    if (!product) return null;
+
     return (
         <Link to={`/products/${product.id}`} className="group h-full">
             <Card className="h-[500px] bg-white border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50  overflow-hidden transition-all duration-500 cursor-pointer flex flex-col">

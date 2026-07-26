@@ -233,13 +233,13 @@ export default function OrderDetails() {
                                                  className="flex items-center gap-6 p-4 rounded-xl bg-slate-50 border border-slate-100 group">
                                                 <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-white border border-slate-200 shadow-sm">
                                                     <img
-                                                        src={item?.productImage || "/placeholder.svg"}
-                                                        alt={item.name}
+                                                        src={item.productImage || "/placeholder.svg"}
+                                                        alt={item.productName}
                                                         className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500"
                                                     />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <h4 className="text-lg font-bold text-slate-800 truncate">{item?.productName}</h4>
+                                                    <h4 className="text-lg font-bold text-slate-800 truncate">{item.productName}</h4>
                                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Quantity: {item.quantity}</p>
                                                 </div>
                                                 <div className="text-right">

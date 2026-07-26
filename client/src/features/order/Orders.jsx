@@ -309,7 +309,7 @@ const Orders = () => {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {orders.length > 0 ?
+                                    {orders && orders.length > 0 ?
                                         orders.map((item) => (
                                             <TableRow key={item.id} className="group hover:bg-slate-50/50 border-b border-slate-50 transition-colors">
                                                 <TableCell className="px-6 py-4">

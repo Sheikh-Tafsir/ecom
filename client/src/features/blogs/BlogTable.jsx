@@ -24,7 +24,7 @@ const BlogTable = ({ posts, handleEdit, deleteMutation }) => {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {posts.map((post) => (
+                {posts?.map((post) => (
                     <TableRow key={post.id} className="hover:bg-slate-50 transition-colors">
                         <TableCell className="px-6 py-4">
                             <div className="flex flex-col">
