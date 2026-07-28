@@ -2,11 +2,11 @@ import {useState, useEffect, useCallback} from 'react';
 import {useParams, useNavigate} from "react-router-dom";
 import {useQueryClient} from '@tanstack/react-query';
 
-import { Button } from "@/components/ui/button";
+import {Button} from "@/components/ui/button";
 import ChatList from './ChatList';
 import ChatMessages from './ChatMessages';
 import ChatSearch from './ChatSearch';
-import {TOAST_TYPE} from '@/utils/enums';
+import {TOAST_TYPE} from "@/constants/app.constants";
 import UserSelectorDialog from './UserSelectorDialog';
 
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay.jsx";
@@ -15,8 +15,8 @@ import {useUserStore} from "@/store/useUserStore.js";
 import {useChatData} from './hooks/useChatData';
 import {useChatSync} from './hooks/useChatSync';
 import {useChatActions} from './hooks/useChatActions';
-import { toastify } from '@/common/toastify.js';
-import { cn } from '@/lib/utils';
+import {toastify} from '@/common/toastify.js';
+import {cn} from '@/lib/utils';
 
 const Chat = () => {
     const {id} = useParams();
@@ -108,7 +108,8 @@ const Chat = () => {
     };
 
     return (
-        <div className="h-[calc(100vh-120px)] min-h-[600px] flex bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm mx-4 my-2 relative">
+        <div
+            className="h-[calc(100vh-120px)] min-h-[600px] flex bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm mx-4 my-2 relative">
             {(isChatsLoading || isSelectedChatLoading || !user?.id) && <PageLoadingOverlay/>}
 
             {/* Sidebar - Hidden on mobile when a chat is selected */}
@@ -119,9 +120,9 @@ const Chat = () => {
                 <div className="p-6 pb-2">
                     <div className="flex items-center justify-between mb-6">
                         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Messages</h1>
-                        <Button 
-                            variant="ghost" 
-                            size="icon" 
+                        <Button
+                            variant="ghost"
+                            size="icon"
                             className="rounded-full bg-white shadow-sm border border-slate-100 text-blue-600 hover:bg-blue-50"
                             onClick={() => setIsUserSelectionDrawerOpen(true)}
                         >
@@ -141,8 +142,8 @@ const Chat = () => {
                 "flex-1 flex flex-col min-w-0 bg-white transition-all duration-300",
                 !id && !newChat ? "hidden md:flex" : "flex"
             )}>
-                <ChatMessages 
-                    onSendMessage={onSendMessage} 
+                <ChatMessages
+                    onSendMessage={onSendMessage}
                     chat={newChat || selectedChat || {}}
                     handleUserSelectorDialogOpen={handleUserSelectorDialogOpen}
                     isMobileView={!!(id || newChat)}

@@ -23,9 +23,10 @@ import {
     redirectWhenInvalidPage,
     updateQueryWhenParamChange
 } from '@/utils/PaginationUtils';
-import {PRODUCT_SORTBY, TOAST_TYPE} from "@/utils/enums"
+import {PRODUCT_SORTBY} from "@/constants/product.constants";
+import {TOAST_TYPE} from "@/constants/app.constants";
 import {toastify} from "@/common/toastify.js"
-import { Button } from "@/components/ui/button"
+import {Button} from "@/components/ui/button"
 
 const ALLOWED_SORT_FIELDS = new Set([
     "createdAt",
@@ -178,11 +179,14 @@ export default function Products() {
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
                     <div>
                         <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-2">Explore Products</h1>
-                        <p className="text-slate-500 font-medium">Discover premium tools and resources for your journey</p>
+                        <p className="text-slate-500 font-medium">Discover premium tools and resources for your
+                            journey</p>
                     </div>
 
-                    <div className="flex items-center bg-white px-4 py-2 rounded-2xl border border-slate-100 shadow-sm h-fit">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-r border-slate-100 pr-3 mr-3">Results</span>
+                    <div
+                        className="flex items-center bg-white px-4 py-2 rounded-2xl border border-slate-100 shadow-sm h-fit">
+                        <span
+                            className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-r border-slate-100 pr-3 mr-3">Results</span>
                         <span className="text-sm font-black text-blue-600">{productData?.totalElements || 0}</span>
                     </div>
                 </div>
@@ -192,7 +196,8 @@ export default function Products() {
                     {/* Search */}
                     <div className="lg:col-span-2 relative group">
                         <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                            <Search className="h-5 w-5 text-slate-400 group-focus-within:text-blue-500 transition-colors"/>
+                            <Search
+                                className="h-5 w-5 text-slate-400 group-focus-within:text-blue-500 transition-colors"/>
                         </div>
                         <Input
                             placeholder="Search for premium products..."
@@ -205,7 +210,7 @@ export default function Products() {
                     <Controller
                         name="category"
                         control={control}
-                        render={({ field }) => (
+                        render={({field}) => (
                             <Select
                                 value={field.value}
                                 onValueChange={(val) => {
@@ -213,15 +218,18 @@ export default function Products() {
                                     updateQuery({category: val});
                                 }}
                             >
-                                <SelectTrigger className="h-14 rounded-lg bg-white border-slate-100 shadow-sm focus:ring-4 focus:ring-blue-50 font-bold text-slate-700">
+                                <SelectTrigger
+                                    className="h-14 rounded-lg bg-white border-slate-100 shadow-sm focus:ring-4 focus:ring-blue-50 font-bold text-slate-700">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cat:</span>
+                                        <span
+                                            className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cat:</span>
                                         <SelectValue placeholder="All Categories"/>
                                     </div>
                                 </SelectTrigger>
 
                                 <SelectContent className="rounded-lg border-slate-100 shadow-xl p-2">
-                                    <SelectItem value="__all__" className="rounded-lg py-2.5 font-semibold">All Categories</SelectItem>
+                                    <SelectItem value="__all__" className="rounded-lg py-2.5 font-semibold">All
+                                        Categories</SelectItem>
                                     {categories.map((c) => (
                                         <SelectItem key={c.id} value={c.name} className="rounded-lg py-2.5">
                                             {c.name}
@@ -236,7 +244,7 @@ export default function Products() {
                     <Controller
                         name="sort"
                         control={control}
-                        render={({ field }) => (
+                        render={({field}) => (
                             <Select
                                 value={field.value}
                                 onValueChange={(val) => {
@@ -244,16 +252,19 @@ export default function Products() {
                                     updateQuery({sort: val});
                                 }}
                             >
-                                <SelectTrigger className="h-14 rounded-lg bg-white border-slate-100 shadow-sm focus:ring-4 focus:ring-blue-50 font-bold text-slate-700">
+                                <SelectTrigger
+                                    className="h-14 rounded-lg bg-white border-slate-100 shadow-sm focus:ring-4 focus:ring-blue-50 font-bold text-slate-700">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sort:</span>
+                                        <span
+                                            className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sort:</span>
                                         <SelectValue placeholder="Latest"/>
                                     </div>
                                 </SelectTrigger>
 
                                 <SelectContent className="rounded-lg border-slate-100 shadow-xl p-2">
                                     {Object.values(PRODUCT_SORTBY).map((opt) => (
-                                        <SelectItem key={opt.value} value={opt.value} className="rounded-lg py-2.5 font-semibold">
+                                        <SelectItem key={opt.value} value={opt.value}
+                                                    className="rounded-lg py-2.5 font-semibold">
                                             {opt.label}
                                         </SelectItem>
                                     ))}
@@ -265,7 +276,8 @@ export default function Products() {
 
                 {/* Grid */}
                 {products.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mb-16 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                    <div
+                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mb-16 animate-in fade-in slide-in-from-bottom-8 duration-700">
                         {products.map((p) => (
                             <ProductCard
                                 key={p.id}
@@ -274,19 +286,22 @@ export default function Products() {
                         ))}
                     </div>
                 ) : (
-                    <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm py-32 flex flex-col items-center justify-center text-center px-4 animate-in fade-in zoom-in duration-500 mb-16">
+                    <div
+                        className="bg-white rounded-[3rem] border border-slate-100 shadow-sm py-32 flex flex-col items-center justify-center text-center px-4 animate-in fade-in zoom-in duration-500 mb-16">
                         <div className="relative mb-6">
-                            <div className="absolute -inset-4 bg-slate-100/50 rounded-full blur-2xl" />
-                            <div className="relative w-24 h-24 bg-slate-50 rounded-lg rotate-12 flex items-center justify-center border border-slate-100 shadow-sm">
-                                <Search className="h-10 w-10 text-slate-300 transform -rotate-12" />
+                            <div className="absolute -inset-4 bg-slate-100/50 rounded-full blur-2xl"/>
+                            <div
+                                className="relative w-24 h-24 bg-slate-50 rounded-lg rotate-12 flex items-center justify-center border border-slate-100 shadow-sm">
+                                <Search className="h-10 w-10 text-slate-300 transform -rotate-12"/>
                             </div>
                         </div>
                         <h3 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">No products found</h3>
                         <p className="text-slate-500 max-w-[320px] font-medium leading-relaxed mb-8">
-                            We couldn't find anything matching "{watchedSearch}". Try using more general keywords or clearing your filters.
+                            We couldn't find anything matching "{watchedSearch}". Try using more general keywords or
+                            clearing your filters.
                         </p>
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             className="rounded-lg h-12 px-6 font-bold text-slate-600 border-slate-200 hover:bg-slate-50"
                             onClick={() => {
                                 setValue("search", "");
@@ -304,4 +319,4 @@ export default function Products() {
             </div>
         </div>
     )
-    }
+}

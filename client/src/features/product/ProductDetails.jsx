@@ -19,11 +19,11 @@ import {Axios} from "@/services/http/Axios"
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay"
 import {ScrollArea} from "@/components/ui/scroll-area"
 import ReviewCard from "./ReviewCard"
-import {TOAST_TYPE} from "@/utils/enums"
+import {TOAST_TYPE} from "@/constants/app.constants";
 import {useQuery} from "@tanstack/react-query"
 import {toastify} from "@/common/toastify.js"
 import ReviewSave from "./ReviewSave";
-import { BackButton } from "@/components/common/BackButton";
+import {BackButton} from "@/components/common/BackButton";
 
 const fetchProduct = async (id) => {
     const response = await Axios.get(`/products/${id}`);
@@ -120,7 +120,7 @@ export default function ProductDetails() {
 
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-10">
                 <BackButton url="/products"/>
-                
+
                 <div className="grid md:grid-cols-2 gap-12 lg:gap-20 items-start mb-20 pt-4">
                     {/* Left: Image Gallery */}
                     <div className="space-y-6 animate-in fade-in slide-in-from-left duration-700">

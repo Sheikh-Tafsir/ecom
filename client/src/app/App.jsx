@@ -10,7 +10,7 @@ import PublicRoute from "@/routes/PublicRoute";
 
 import {connectSocket, disconnectSocket, isSocketOn} from '@/services/realtime/socket';
 import {notificationService, isSseOn} from '@/services/realtime/notificationService.js';
-import {PERMISSION} from "@/utils/enums";
+import {PERMISSION} from "@/constants/auth.constants";
 import NotificationWrapper from "@/services/realtime/NotificationWrapper.jsx";
 
 import Homepage from '@/features/homepage/Homepage';
@@ -144,7 +144,7 @@ const InnerApp = () => {
                 <Route element={<ProtectedRoute/>}>
                     <Route path='/profile' element={<Profile/>}/>
                     <Route path='/profile/edit' element={<Profile/>}/>
-                     <Route path='/profile/chage-password' element={<ChangePassword/>}/>
+                    <Route path='/profile/chage-password' element={<ChangePassword/>}/>
 
                     <Route path="/cart" element={<Cart/>}/>
                     <Route path="/orders" element={<Orders/>}/>
@@ -158,7 +158,8 @@ const InnerApp = () => {
                     <Route path="/payment/fail" element={<PaymentFail/>}/>
                 </Route>
 
-                <Route element={<ProtectedRoute allowedPermissions={[PERMISSION.ADMIN_ACCESS, PERMISSION.SUPER_ADMIN_ACCESS]}/>}>
+                <Route element={<ProtectedRoute
+                    allowedPermissions={[PERMISSION.ADMIN_ACCESS, PERMISSION.SUPER_ADMIN_ACCESS]}/>}>
                     <Route path='/users' element={<Users/>}/>
                     <Route path='/users/:id' element={<UserEdit/>}/>
 
@@ -169,7 +170,7 @@ const InnerApp = () => {
 
                 <Route element={<ProtectedRoute allowedPermissions={[PERMISSION.SUPER_ADMIN_ACCESS]}/>}>
                     <Route path='/users/:id/edit' element={<UserEdit/>}/>
-                    
+
                     <Route path='/roles' element={<Roles/>}/>
                     <Route path='/roles/create' element={<RoleSave/>}/>
                     <Route path='/roles/:id/edit' element={<RoleSave/>}/>
@@ -180,7 +181,7 @@ const InnerApp = () => {
                     <Route path="/stocks/create" element={<StockCreate/>}/>
 
                     <Route path="/sales" element={<Sales/>}/>
-                    
+
                     <Route path="/banners" element={<BannerManager/>}/>
                     <Route path="/faqs" element={<FaqManager/>}/>
                 </Route>

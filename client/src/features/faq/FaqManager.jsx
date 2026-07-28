@@ -1,21 +1,21 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import React, {useState} from 'react';
+import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
+import {useForm} from 'react-hook-form';
+import {zodResolver} from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Axios } from "@/services/http/Axios";
-import { Button } from "@/components/ui/button";
-import { 
-    Dialog, 
-    DialogContent, 
-    DialogHeader, 
-    DialogTitle, 
+import {Axios} from "@/services/http/Axios";
+import {Button} from "@/components/ui/button";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import { toastify } from '@/common/toastify';
-import { TOAST_TYPE } from '@/utils/enums';
-import { HelpCircle, Plus } from 'lucide-react';
-import { handleErrors } from "@/utils/ErrorUtils";
+import {toastify} from '@/common/toastify';
+import {TOAST_TYPE} from "@/constants/app.constants";
+import {HelpCircle, Plus} from 'lucide-react';
+import {handleErrors} from "@/utils/ErrorUtils";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
 import FaqForm from './FaqForm';
 import FaqTable from './FaqTable';
@@ -51,7 +51,7 @@ const FaqManager = () => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingFaq, setEditingFaq] = useState(null);
 
-    const { register, handleSubmit, reset, setError, formState: { errors } } = useForm({
+    const {register, handleSubmit, reset, setError, formState: {errors}} = useForm({
         resolver: zodResolver(faqSchema),
         defaultValues: {
             question: '',
@@ -60,7 +60,7 @@ const FaqManager = () => {
         }
     });
 
-    const { data: faqs = [], isLoading: isPageLoading } = useQuery({
+    const {data: faqs = [], isLoading: isPageLoading} = useQuery({
         queryKey: ['faqs'],
         queryFn: getAllFaqs
     });
@@ -68,7 +68,7 @@ const FaqManager = () => {
     const createMutation = useMutation({
         mutationFn: createFaq,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['faqs'] });
+            queryClient.invalidateQueries({queryKey: ['faqs']});
             toastify(TOAST_TYPE.SUCCESS, "FAQ created successfully");
             setIsDialogOpen(false);
             reset();
@@ -77,9 +77,9 @@ const FaqManager = () => {
     });
 
     const updateMutation = useMutation({
-        mutationFn: ({ id, data }) => updateFaq(id, data),
+        mutationFn: ({id, data}) => updateFaq(id, data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['faqs'] });
+            queryClient.invalidateQueries({queryKey: ['faqs']});
             toastify(TOAST_TYPE.SUCCESS, "FAQ updated successfully");
             setIsDialogOpen(false);
             setEditingFaq(null);
@@ -91,7 +91,7 @@ const FaqManager = () => {
     const deleteMutation = useMutation({
         mutationFn: deleteFaq,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['faqs'] });
+            queryClient.invalidateQueries({queryKey: ['faqs']});
             toastify(TOAST_TYPE.SUCCESS, "FAQ deleted successfully");
         }
     });
@@ -114,7 +114,7 @@ const FaqManager = () => {
 
     const onSubmit = (data) => {
         if (editingFaq) {
-            updateMutation.mutate({ id: editingFaq.id, data });
+            updateMutation.mutate({id: editingFaq.id, data});
         } else {
             createMutation.mutate(data);
         }
@@ -127,12 +127,12 @@ const FaqManager = () => {
 
     return (
         <div className="container mx-auto py-10 px-4">
-            {isPageLoading && <PageLoadingOverlay />}
+            {isPageLoading && <PageLoadingOverlay/>}
 
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div>
                     <h1 className="text-3xl font-bold text-slate-900 uppercase tracking-tighter flex items-center gap-3">
-                        <HelpCircle className="w-8 h-8 text-indigo-600" />
+                        <HelpCircle className="w-8 h-8 text-indigo-600"/>
                         FAQ Management
                     </h1>
                 </div>
@@ -144,8 +144,9 @@ const FaqManager = () => {
                     }
                 }}>
                     <DialogTrigger asChild>
-                        <Button className="bg-indigo-600 hover:bg-indigo-700 font-bold px-6 py-6 rounded-xl shadow-lg shadow-indigo-200">
-                            <Plus className="w-5 h-5 mr-2" /> Add New FAQ
+                        <Button
+                            className="bg-indigo-600 hover:bg-indigo-700 font-bold px-6 py-6 rounded-xl shadow-lg shadow-indigo-200">
+                            <Plus className="w-5 h-5 mr-2"/> Add New FAQ
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[600px]">
@@ -154,7 +155,7 @@ const FaqManager = () => {
                                 {editingFaq ? 'Edit FAQ' : 'Create New FAQ'}
                             </DialogTitle>
                         </DialogHeader>
-                        <FaqForm 
+                        <FaqForm
                             register={register}
                             errors={errors}
                             isPending={createMutation.isPending || updateMutation.isPending}
@@ -165,11 +166,12 @@ const FaqManager = () => {
                 </Dialog>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-xl shadow-slate-200 border border-slate-100 overflow-hidden relative">
+            <div
+                className="bg-white rounded-2xl shadow-xl shadow-slate-200 border border-slate-100 overflow-hidden relative">
                 {!isPageLoading && faqs.length == 0 ? (
                     <div className="text-center py-10 font-bold text-slate-400">No FAQs found</div>
                 ) : (
-                    <FaqTable 
+                    <FaqTable
                         faqs={faqs}
                         handleEdit={handleEdit}
                         deleteMutation={deleteMutation}

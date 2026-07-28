@@ -20,10 +20,10 @@ import {Textarea} from "@/components/ui/textarea";
 import {Button} from "@/components/ui/button";
 import {ButtonLoading} from "@/components/common/ButtonLoading";
 import {toastify} from "@/common/toastify.js";
-import {TOAST_TYPE} from "@/utils/enums";
+import {TOAST_TYPE} from "@/constants/app.constants";
 import {handleErrors} from "@/utils";
 import {queryKeys} from "@/services/reactQuery/queryKeys";
-import { useUserStore } from "@/store/useUserStore";
+import {useUserStore} from "@/store/useUserStore";
 
 const ReviewSchema = z.object({
     rating: z.number().int().min(1).max(5),
@@ -59,7 +59,7 @@ const ReviewSave = () => {
         mutationFn: (data) => saveReview(id, data),
 
         onMutate: async (newReview) => {
-            await queryClient.cancelQueries({ queryKey: queryKeys.reviews.all(id) });
+            await queryClient.cancelQueries({queryKey: queryKeys.reviews.all(id)});
 
             const previousReviews = queryClient.getQueryData(queryKeys.reviews.all(id));
 
@@ -68,12 +68,12 @@ const ReviewSave = () => {
                     id: Date.now(),
                     ...newReview,
                     createdAt: new Date().toISOString(),
-                    user: { name: user?.name }
+                    user: {name: user?.name}
                 };
                 return old ? [...old, optimisticReview] : [optimisticReview];
             });
 
-            return { previousReviews };
+            return {previousReviews};
         },
         onSuccess: () => {
             toastify(TOAST_TYPE.SUCCESS, "Review added successfully.");
@@ -88,7 +88,7 @@ const ReviewSave = () => {
         },
         onSettled: () => {
             // Always refetch after error or success to sync with server
-            queryClient.invalidateQueries({ queryKey: queryKeys.reviews.all(id) });
+            queryClient.invalidateQueries({queryKey: queryKeys.reviews.all(id)});
         },
     });
 

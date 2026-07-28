@@ -1,7 +1,8 @@
 import {useCallback} from 'react';
 import {useUserStore} from '@/store/useUserStore';
 import {Axios} from "@/services/http/Axios.js";
-import {CONTENT_TYPE, REGULAR_ACTION} from '@/utils/enums';
+import {REGULAR_ACTION} from "@/constants/app.constants";
+import {CONTENT_TYPE} from "@/constants/chat.constants";
 import {
     MESSAGE_SEND_EVENT,
     GROUP_CREATE_REQUEST_EVENT,

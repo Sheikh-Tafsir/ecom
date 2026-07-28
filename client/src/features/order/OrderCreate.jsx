@@ -16,7 +16,8 @@ import {Axios} from "@/services/http/Axios"
 import {GLOBAL_ERROR, handleErrors} from "@/utils"
 import {ButtonLoading} from "@/components/common/ButtonLoading"
 import InputError from "@/components/common/InputError.jsx"
-import {PAYMENT_METHOD, TOAST_TYPE} from "@/utils/enums.js"
+import {PAYMENT_METHOD} from "@/constants/order.constants";
+import {TOAST_TYPE} from "@/constants/app.constants";
 import {getIdempotencyKey, IDEMPOTENCY_HEADER, removeIdempotencyKey} from "@/utils/idempotencyUtil.js"
 import {toastify} from "@/common/toastify.js"
 import {cn} from "@/lib/utils"
@@ -54,7 +55,7 @@ const createOrder = async (items, name, data, idempotencyKey) => {
 
 export const createPayment = async (order, userId) => {
     try {
-         const response = await Axios.post("/payment", {
+        const response = await Axios.post("/payment", {
             userId: userId,
             orderId: order?.id,
             amount: order?.totalPrice,
@@ -105,15 +106,15 @@ export default function OrderCreate() {
             const order = await createOrder(cart, user?.name, data, idempotencyKey)
 
             if (data.paymentMethod == PAYMENT_METHOD.CASH_ON_DELIVERY) {
-                return { order, isCod: true };
+                return {order, isCod: true};
             }
 
             const paymentUrl = await createPayment(order, user?.id);
-            return { order, isCod: false, paymentUrl };
+            return {order, isCod: false, paymentUrl};
         },
         onSuccess: async (result) => {
             cleanupAfterOrder();
-            await queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
+            await queryClient.invalidateQueries({queryKey: queryKeys.orders.all});
 
             if (result.isCod) {
                 toastify(TOAST_TYPE.SUCCESS, "Order placed successfully!");

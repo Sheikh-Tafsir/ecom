@@ -19,7 +19,8 @@ import {AlertAction} from '@/components/common/AlertAction';
 import {ButtonLoading} from "@/components/common/ButtonLoading";
 import InputViewMode from '@/components/common/InputViewMode';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay';
-import {TOAST_TYPE, ALERT_TYPE, ROLE_PREFIX, PERMISSION} from '@/utils/enums';
+import {ROLE_PREFIX, PERMISSION} from "@/constants/auth.constants";
+import {TOAST_TYPE, ALERT_TYPE} from "@/constants/app.constants";
 import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils';
 import InputError from "@/components/common/InputError.jsx";
 import {toastify} from '@/common/toastify.js';
@@ -62,12 +63,13 @@ const UserEdit = () => {
 
     const queryClient = useQueryClient();
     const {
-        handleSubmit, 
-        control, 
-        reset, 
-        setError, 
-        formState: {errors, isSubmitting}} 
-    = useForm({
+        handleSubmit,
+        control,
+        reset,
+        setError,
+        formState: {errors, isSubmitting}
+    }
+        = useForm({
         resolver: zodResolver(UserSchema),
         defaultValues: {
             name: '',

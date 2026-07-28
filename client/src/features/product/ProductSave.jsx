@@ -26,7 +26,7 @@ import {MultiSelect} from "@/components/common/MultiSelect.jsx";
 
 import {Axios} from "@/services/http/Axios";
 import {GLOBAL_ERROR, handleErrors} from "@/utils";
-import {TOAST_TYPE} from "@/utils/enums";
+import {TOAST_TYPE} from "@/constants/app.constants";
 import {toastify} from "@/common/toastify.js";
 import {compressImages} from "@/utils/ImageUtils";
 import {useUploadProgress} from "@/hooks/useUploadProgress";
@@ -128,7 +128,7 @@ const ProductSave = () => {
         enabled: isEditPage && !!id,
     });
 
-        const getFormData = async (data) => {
+    const getFormData = async (data) => {
         const formData = new FormData();
 
         Object.entries(data).forEach(([key, value]) => {
@@ -146,7 +146,7 @@ const ProductSave = () => {
 
         return formData;
     }
-    
+
     const productMutation = useMutation({
         mutationFn: async (data) => {
             resetProgress();
@@ -164,7 +164,7 @@ const ProductSave = () => {
             toastify(TOAST_TYPE.SUCCESS, `Product ${result.isNew ? 'created' : 'updated'} successfully`);
 
             await queryClient.invalidateQueries({queryKey: queryKeys.products.all});
-            
+
             if (result.isNew) {
                 reset();
                 setExistingImages([]);

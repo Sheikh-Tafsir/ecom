@@ -33,7 +33,9 @@ import PaginationButton from "@/components/common/PaginationButton";
 import PaginationSearch from "@/components/common/PaginationSearch";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
 import {formatDate} from "@/utils/DateUtils";
-import {ALERT_TYPE, APP_MODULE, PERMISSION, ROLE_PREFIX, TOAST_TYPE, USER_ROLE, USER_STATUS} from "@/utils/enums";
+import {APP_MODULE, TOAST_TYPE, ALERT_TYPE} from "@/constants/app.constants";
+import {ROLE_PREFIX, USER_ROLE, PERMISSION} from "@/constants/auth.constants";
+import {USER_STATUS} from "@/constants/user.constants";
 import {
     FIRST_PAGE,
     checkAllSelected,
@@ -44,7 +46,7 @@ import {
 } from "@/utils/PaginationUtils.js";
 import {hasPermission} from "@/utils";
 import {toastify} from "@/common/toastify.js";
-import { cn } from "@/lib/utils";
+import {cn} from "@/lib/utils";
 
 import {ReportDialog} from "@/components/common/ReportDialog";
 import {useUserStore} from "@/store/useUserStore";
@@ -152,20 +154,23 @@ const Users = () => {
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
                     <div>
                         <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-2">User Management</h1>
-                        <p className="text-slate-500 font-medium">Oversee and manage system users and their permissions</p>
+                        <p className="text-slate-500 font-medium">Oversee and manage system users and their
+                            permissions</p>
                     </div>
-                    {(hasPermission(currentUser, PERMISSION.ADMIN_ACCESS) || hasPermission(currentUser, PERMISSION.SUPER_ADMIN_ACCESS)) && <ReportDialog module={APP_MODULE.USER} />}
+                    {(hasPermission(currentUser, PERMISSION.ADMIN_ACCESS) || hasPermission(currentUser, PERMISSION.SUPER_ADMIN_ACCESS)) &&
+                        <ReportDialog module={APP_MODULE.USER}/>}
                 </div>
 
-                <PaginationSearch moduleName="Users" />
-                
+                <PaginationSearch moduleName="Users"/>
+
                 <div className='grid lg:grid-cols-4 gap-10 items-start'>
                     {/* Filter Sidebar */}
-                    <Card className='lg:col-span-1 border-slate-100 shadow-xl shadow-slate-200/50 rounded-lg overflow-hidden sticky top-24'>
+                    <Card
+                        className='lg:col-span-1 border-slate-100 shadow-xl shadow-slate-200/50 rounded-lg overflow-hidden sticky top-24'>
                         <CardHeader className="bg-slate-100 border-b border-slate-100 pb-4">
                             <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                 <span className="p-1.5 bg-blue-600 rounded-lg text-white">
-                                    <Filter className="w-4 h-4" />
+                                    <Filter className="w-4 h-4"/>
                                 </span>
                                 Filter Users
                             </CardTitle>
@@ -179,7 +184,8 @@ const Users = () => {
                                     value={getSelectValue(role)}
                                     onValueChange={(val) => updateQuery({role: val})}
                                 >
-                                    <SelectTrigger className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all">
+                                    <SelectTrigger
+                                        className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all">
                                         <SelectValue placeholder="Select Role"/>
                                     </SelectTrigger>
                                     <SelectContent>
@@ -200,7 +206,8 @@ const Users = () => {
                                     value={getSelectValue(status)}
                                     onValueChange={(val) => updateQuery({status: val})}
                                 >
-                                    <SelectTrigger className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all">
+                                    <SelectTrigger
+                                        className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all">
                                         <SelectValue placeholder="Select Status"/>
                                     </SelectTrigger>
                                     <SelectContent>
@@ -220,33 +227,46 @@ const Users = () => {
                         <div className="bg-white rounded-lg border border-slate-100 shadow-sm overflow-hidden">
                             <Table className="bg-white">
                                 <TableHeader>
-                                    <TableRow className="bg-slate-100 border-b border-slate-100 hover:bg-slate-50/50 transition-none">
-                                        <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4">User</TableHead>
-                                        <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4">Roles</TableHead>
-                                        <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4">Joined At</TableHead>
-                                        <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4 text-center">Status</TableHead>
-                                        <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4 text-right">Actions</TableHead>
+                                    <TableRow
+                                        className="bg-slate-100 border-b border-slate-100 hover:bg-slate-50/50 transition-none">
+                                        <TableHead
+                                            className="text-md font-semibold uppercase tracking-widest px-6 py-4">User</TableHead>
+                                        <TableHead
+                                            className="text-md font-semibold uppercase tracking-widest px-6 py-4">Roles</TableHead>
+                                        <TableHead
+                                            className="text-md font-semibold uppercase tracking-widest px-6 py-4">Joined
+                                            At</TableHead>
+                                        <TableHead
+                                            className="text-md font-semibold uppercase tracking-widest px-6 py-4 text-center">Status</TableHead>
+                                        <TableHead
+                                            className="text-md font-semibold uppercase tracking-widest px-6 py-4 text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {users.length > 0 ?
                                         users.map((user) => (
-                                            <TableRow key={user.id} className="group hover:bg-slate-50/50 border-b border-slate-50 transition-colors" onClick={() => setSelectedUser(user)}>
+                                            <TableRow key={user.id}
+                                                      className="group hover:bg-slate-50/50 border-b border-slate-50 transition-colors"
+                                                      onClick={() => setSelectedUser(user)}>
                                                 <TableCell className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-xs font-black text-blue-600">
+                                                        <div
+                                                            className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-xs font-black text-blue-600">
                                                             {user.name?.slice(0, 1)}
                                                         </div>
                                                         <div className="flex flex-col">
-                                                            <span className="font-bold text-slate-700">{user.name}</span>
-                                                            <span className="text-xs text-slate-400 font-medium">{user.email}</span>
+                                                            <span
+                                                                className="font-bold text-slate-700">{user.name}</span>
+                                                            <span
+                                                                className="text-xs text-slate-400 font-medium">{user.email}</span>
                                                         </div>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="px-6 py-4">
                                                     <div className="flex flex-wrap gap-1">
                                                         {user.roles?.map(role => (
-                                                            <span key={role} className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 uppercase tracking-tighter">
+                                                            <span key={role}
+                                                                  className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 uppercase tracking-tighter">
                                                                 {role.replace(ROLE_PREFIX, "")}
                                                             </span>
                                                         ))}
@@ -277,7 +297,8 @@ const Users = () => {
                                                             <Pencil className="h-4 w-4"/>
                                                         </Button>
                                                         <div onClick={(e) => e.stopPropagation()}>
-                                                            <AlertAction onConfirm={deleteUser} type={ALERT_TYPE.DELETE} icon={true}/>
+                                                            <AlertAction onConfirm={deleteUser} type={ALERT_TYPE.DELETE}
+                                                                         icon={true}/>
                                                         </div>
                                                     </div>
                                                 </TableCell>
@@ -287,10 +308,12 @@ const Users = () => {
                                         <TableRow>
                                             <TableCell colSpan={5} className="py-20 text-center">
                                                 <div className="flex flex-col items-center gap-2 opacity-40">
-                                                    <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-2">
-                                                        <UserIcon className="w-6 h-6 text-slate-400" />
+                                                    <div
+                                                        className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-2">
+                                                        <UserIcon className="w-6 h-6 text-slate-400"/>
                                                     </div>
-                                                    <p className="text-sm font-black uppercase tracking-widest">No users found</p>
+                                                    <p className="text-sm font-black uppercase tracking-widest">No users
+                                                        found</p>
                                                     <p className="text-xs font-medium">Try adjusting your filters</p>
                                                 </div>
                                             </TableCell>
@@ -299,7 +322,7 @@ const Users = () => {
                                 </TableBody>
                             </Table>
                         </div>
-                        
+
                         <PaginationButton totalPages={totalPages}/>
                     </div>
                 </div>

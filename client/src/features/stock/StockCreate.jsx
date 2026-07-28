@@ -18,7 +18,7 @@ import {
 import {Input} from '@/components/ui/input.jsx';
 import {Axios} from '@/services/http/Axios.js';
 import {ButtonLoading} from "@/components/common/ButtonLoading.jsx";
-import {TOAST_TYPE} from '@/utils/enums.js';
+import { TOAST_TYPE } from "@/constants/app.constants";
 import {GLOBAL_ERROR, handleErrors} from '@/utils/index.js';
 import InputError from "@/components/common/InputError.jsx";
 import {

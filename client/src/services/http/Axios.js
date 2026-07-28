@@ -2,7 +2,7 @@ import axios from 'axios';
 
 import {getAccessToken, removeAccessToken, removeCart, saveAccessToken} from '@/utils/AuthUtils';
 import {toastify} from '@/common/toastify.js';
-import {TOAST_TYPE} from '@/utils/enums';
+import {TOAST_TYPE} from "@/constants/app.constants";
 
 const API_PATH = import.meta.env.VITE_API_PATH;
 const TIMEOUT = 5000;

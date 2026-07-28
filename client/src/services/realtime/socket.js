@@ -1,8 +1,8 @@
 import {io} from 'socket.io-client';
-import { logout, refreshAccessToken } from '../http/Axios';
-import { getAccessToken } from '@/utils';
-import { toastify } from '@/common/toastify.js';
-import { TOAST_TYPE } from '@/utils/enums';
+import {logout, refreshAccessToken} from '../http/Axios';
+import {getAccessToken} from '@/utils';
+import {toastify} from '@/common/toastify.js';
+import {TOAST_TYPE} from "@/constants/app.constants";
 
 const API_PATH = import.meta.env.VITE_API_PATH;
 const WEB_SOCKET_ON = import.meta.env.VITE_WEB_SOCKET_ON;
@@ -26,7 +26,7 @@ export const connectSocket = async () => {
             }
 
             socket = io(API_PATH, {
-                auth: { token },
+                auth: {token},
                 transports: ['websocket'],
             });
 

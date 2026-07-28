@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react"
-import { Search, X } from "lucide-react"
-import { useQuery } from '@tanstack/react-query';
+import React, {useEffect, useState} from "react"
+import {Search, X} from "lucide-react"
+import {useQuery} from '@tanstack/react-query';
 
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+import {Button} from "@/components/ui/button"
+import {Checkbox} from "@/components/ui/checkbox"
 import {
     Dialog,
     DialogContent,
@@ -12,14 +12,14 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Axios } from "@/services/http/Axios";
-import { ButtonLoading } from "@/components/common/ButtonLoading";
-import { REGULAR_ACTION } from "@/utils/enums";
+import {Input} from "@/components/ui/input"
+import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar"
+import {Badge} from "@/components/ui/badge"
+import {Axios} from "@/services/http/Axios";
+import {ButtonLoading} from "@/components/common/ButtonLoading";
+import {REGULAR_ACTION} from "@/constants/app.constants";
 
-const UserSelectorDialog = ({ isOpen, onClose, preSelecteedUserIds, avoidUserIds, confirmUsersSelection }) => {
+const UserSelectorDialog = ({isOpen, onClose, preSelecteedUserIds, avoidUserIds, confirmUsersSelection}) => {
     const [open, setOpen] = useState(isOpen);
     const [searchTerm, setSearchTerm] = useState("")
     const [selectedUsers, setSelectedUsers] = useState([]);
@@ -36,7 +36,7 @@ const UserSelectorDialog = ({ isOpen, onClose, preSelecteedUserIds, avoidUserIds
         return response.data.data?.content || [];
     };
 
-    const { data: users = [], isLoading } = useQuery({
+    const {data: users = [], isLoading} = useQuery({
         queryKey: ['searchUsers', searchTerm],
         queryFn: fetchUsers,
         enabled: open,
@@ -144,7 +144,8 @@ const UserSelectorDialog = ({ isOpen, onClose, preSelecteedUserIds, avoidUserIds
                 <div className="space-y-4">
                     {/* Search Input */}
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Search
+                            className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground"/>
                         <Input
                             placeholder="Search users..."
                             value={searchTerm}
@@ -159,7 +160,8 @@ const UserSelectorDialog = ({ isOpen, onClose, preSelecteedUserIds, avoidUserIds
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
                                 <span className="text-sm font-medium">Selected ({selectedUsers.length})</span>
-                                <Button variant="ghost" size="sm" onClick={clearAllSelections} className="h-auto p-1 text-xs">
+                                <Button variant="ghost" size="sm" onClick={clearAllSelections}
+                                        className="h-auto p-1 text-xs">
                                     Clear all
                                 </Button>
                             </div>
@@ -190,9 +192,9 @@ const UserSelectorDialog = ({ isOpen, onClose, preSelecteedUserIds, avoidUserIds
                                         className="flex items-center space-x-3 p-2 rounded-lg hover:bg-muted cursor-pointer"
                                         onClick={() => handleUserToggle(user)}
                                     >
-                                        <Checkbox checked={isSelected} onCheckedChange={() => handleUserToggle(user)} />
+                                        <Checkbox checked={isSelected} onCheckedChange={() => handleUserToggle(user)}/>
                                         <Avatar className="h-8 w-8">
-                                            <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
+                                            <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name}/>
                                             <AvatarFallback>
                                                 {user.name
                                                     ? user.name.split(" ").map((n) => n[0]).join("")
@@ -215,7 +217,7 @@ const UserSelectorDialog = ({ isOpen, onClose, preSelecteedUserIds, avoidUserIds
                         Cancel
                     </Button>
                     {isButtonLoading ?
-                        <ButtonLoading />
+                        <ButtonLoading/>
                         :
                         <Button onClick={handleConfirm} disabled={selectedUsers.length == 0}>
                             Confirm ({selectedUsers.length})

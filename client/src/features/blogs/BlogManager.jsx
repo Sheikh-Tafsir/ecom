@@ -1,30 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import React, {useState, useEffect} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
+import {useForm} from 'react-hook-form';
+import {zodResolver} from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Axios } from "@/services/http/Axios";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { 
-    Dialog, 
-    DialogContent, 
-    DialogHeader, 
-    DialogTitle, 
+import {Axios} from "@/services/http/Axios";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import { 
+import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { toastify } from '@/common/toastify';
-import { TOAST_TYPE } from '@/utils/enums';
-import { FileText, Plus, ArrowLeft, SortAsc } from 'lucide-react';
-import { handleErrors } from "@/utils/ErrorUtils";
+import {toastify} from '@/common/toastify';
+import {TOAST_TYPE} from "@/constants/app.constants";
+import {FileText, Plus, ArrowLeft, SortAsc} from 'lucide-react';
+import {handleErrors} from "@/utils/ErrorUtils";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
 import BlogForm from './BlogForm';
 import BlogTable from './BlogTable';
@@ -38,7 +38,7 @@ const blogSchema = z.object({
 });
 
 const getAllBlogs = async (params) => {
-    const response = await Axios.get("/blogs", { params });
+    const response = await Axios.get("/blogs", {params});
     return response.data.data;
 };
 
@@ -58,10 +58,10 @@ const deleteBlog = async (id) => {
 };
 
 const BLOG_SORTBY = [
-    { label: "Newest First", value: "createdAt,DESC" },
-    { label: "Oldest First", value: "createdAt,ASC" },
-    { label: "Title: A-Z", value: "title,ASC" },
-    { label: "Title: Z-A", value: "title,DESC" },
+    {label: "Newest First", value: "createdAt,DESC"},
+    {label: "Oldest First", value: "createdAt,ASC"},
+    {label: "Title: A-Z", value: "title,ASC"},
+    {label: "Title: Z-A", value: "title,DESC"},
 ];
 
 const BlogManager = () => {
@@ -72,7 +72,7 @@ const BlogManager = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState(BLOG_SORTBY[0].value);
 
-    const { register, handleSubmit, reset, control, setError, formState: { errors } } = useForm({
+    const {register, handleSubmit, reset, control, setError, formState: {errors}} = useForm({
         resolver: zodResolver(blogSchema),
         defaultValues: {
             title: '',
@@ -83,12 +83,12 @@ const BlogManager = () => {
         }
     });
 
-    const { data, isLoading: isPageLoading } = useQuery({
+    const {data, isLoading: isPageLoading} = useQuery({
         queryKey: ['blogs', 'all', searchTerm, sortBy],
         queryFn: () => {
             const [sort, direction] = sortBy.split(',');
-            return getAllBlogs({ 
-                size: 100, 
+            return getAllBlogs({
+                size: 100,
                 search: searchTerm,
                 sort: `${sort},${direction}`
             });
@@ -100,7 +100,7 @@ const BlogManager = () => {
     const createMutation = useMutation({
         mutationFn: createBlog,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['blogs'] });
+            queryClient.invalidateQueries({queryKey: ['blogs']});
             toastify(TOAST_TYPE.SUCCESS, "Blog post created successfully");
             setIsDialogOpen(false);
             reset();
@@ -109,9 +109,9 @@ const BlogManager = () => {
     });
 
     const updateMutation = useMutation({
-        mutationFn: ({ id, data }) => updateBlog(id, data),
+        mutationFn: ({id, data}) => updateBlog(id, data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['blogs'] });
+            queryClient.invalidateQueries({queryKey: ['blogs']});
             toastify(TOAST_TYPE.SUCCESS, "Blog post updated successfully");
             setIsDialogOpen(false);
             setEditingPost(null);
@@ -123,7 +123,7 @@ const BlogManager = () => {
     const deleteMutation = useMutation({
         mutationFn: deleteBlog,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['blogs'] });
+            queryClient.invalidateQueries({queryKey: ['blogs']});
             toastify(TOAST_TYPE.SUCCESS, "Blog post deleted successfully");
         }
     });
@@ -150,7 +150,7 @@ const BlogManager = () => {
 
     const onSubmit = (data) => {
         if (editingPost) {
-            updateMutation.mutate({ id: editingPost.id, data });
+            updateMutation.mutate({id: editingPost.id, data});
         } else {
             createMutation.mutate(data);
         }
@@ -163,19 +163,19 @@ const BlogManager = () => {
 
     return (
         <div className="container mx-auto py-10 px-4">
-            {isPageLoading && <PageLoadingOverlay />}
+            {isPageLoading && <PageLoadingOverlay/>}
 
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div>
                     <h1 className="text-3xl font-bold text-slate-900 uppercase tracking-tighter flex items-center gap-3">
-                        <FileText className="w-8 h-8 text-emerald-600" />
+                        <FileText className="w-8 h-8 text-emerald-600"/>
                         Blog Management
                     </h1>
                 </div>
 
                 <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
-                    <Input 
-                        placeholder="Search blogs..." 
+                    <Input
+                        placeholder="Search blogs..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="max-w-sm font-bold"
@@ -184,8 +184,8 @@ const BlogManager = () => {
                     <Select value={sortBy} onValueChange={setSortBy}>
                         <SelectTrigger className="w-full md:w-60 font-semibold">
                             <div className="flex items-center gap-2">
-                                <SortAsc className="w-4 h-4" />
-                                <SelectValue placeholder="Sort By" />
+                                <SortAsc className="w-4 h-4"/>
+                                <SelectValue placeholder="Sort By"/>
                             </div>
                         </SelectTrigger>
                         <SelectContent>
@@ -204,17 +204,19 @@ const BlogManager = () => {
                         }
                     }}>
                         <DialogTrigger asChild>
-                            <Button className="bg-blue-600 hover:bg-blue-700 font-bold px-6 py-6 rounded-xl shadow-lg shadow-blue-200">
-                                <Plus className="w-5 h-5 mr-2" /> Write New Post
+                            <Button
+                                className="bg-blue-600 hover:bg-blue-700 font-bold px-6 py-6 rounded-xl shadow-lg shadow-blue-200">
+                                <Plus className="w-5 h-5 mr-2"/> Write New Post
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-[800px] lg:max-w-[1300px] max-w-[2000px] max-h-[96vh] overflow-y-auto">
+                        <DialogContent
+                            className="sm:max-w-[800px] lg:max-w-[1300px] max-w-[2000px] max-h-[96vh] overflow-y-auto">
                             <DialogHeader>
                                 <DialogTitle className="text-2xl font-bold uppercase tracking-tighter">
                                     {editingPost ? 'Edit Blog Post' : 'Create New Blog Post'}
                                 </DialogTitle>
                             </DialogHeader>
-                            <BlogForm 
+                            <BlogForm
                                 register={register}
                                 control={control}
                                 errors={errors}
@@ -227,11 +229,12 @@ const BlogManager = () => {
                 </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-xl shadow-slate-200 border border-slate-100 overflow-hidden relative">
+            <div
+                className="bg-white rounded-2xl shadow-xl shadow-slate-200 border border-slate-100 overflow-hidden relative">
                 {!isPageLoading && posts.length == 0 ? (
                     <div className="text-center py-10 font-bold text-slate-400">No blog posts found</div>
                 ) : (
-                    <BlogTable 
+                    <BlogTable
                         posts={posts}
                         handleEdit={handleEdit}
                         deleteMutation={deleteMutation}

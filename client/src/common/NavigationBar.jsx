@@ -12,7 +12,7 @@ import {
 import {APP_NAME, hasPermission} from '@/utils/index.js'
 import {useUserStore} from '@/store/useUserStore.js'
 import {useCartStore} from '@/store/useCartStore.js'
-import {PERMISSION} from '@/utils/enums.js'
+import {PERMISSION} from "@/constants/auth.constants";
 import {cn} from '@/lib/utils.js'
 
 const BASE_MENU = [
@@ -27,13 +27,13 @@ const PROFILE_MENU = [
 export default function Navbar() {
     const {user, logout} = useUserStore();
     const cartCount = useCartStore((state) => state.getCartCount());
-    
+
     const isAuthenticated = !!user;
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [activeMenu, setActiveMenu] = useState(null);
 
-    
+
     const getMenuItems = () => {
         return [
             ...BASE_MENU,

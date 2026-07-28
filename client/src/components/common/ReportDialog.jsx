@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Download } from "lucide-react";
+import {useState} from "react";
+import {Download} from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -9,17 +9,17 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { APP_MODULE, TOAST_TYPE } from "@/utils/enums";
-import { Axios } from "@/services/http/Axios";
-import { toastify } from "@/common/toastify.js";
+import {Button} from "@/components/ui/button";
+import {Label} from "@/components/ui/label";
+import {Input} from "@/components/ui/input";
+import {APP_MODULE, TOAST_TYPE} from "@/constants/app.constants";
+import {Axios} from "@/services/http/Axios";
+import {toastify} from "@/common/toastify.js";
 import InputError from "./InputError";
-import { GLOBAL_ERROR, handleErrors } from "@/utils";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import {GLOBAL_ERROR, handleErrors} from "@/utils";
+import {useForm} from "react-hook-form";
+import {z} from "zod";
+import {zodResolver} from "@hookform/resolvers/zod";
 
 const today = new Date();
 today.setHours(23, 59, 59, 999);
@@ -58,7 +58,7 @@ const ReportSchema = z.object({
         }
     );
 
-export function ReportDialog({ module = APP_MODULE.USER, trigger }) {
+export function ReportDialog({module = APP_MODULE.USER, trigger}) {
     const [open, setOpen] = useState(false);
 
     const {
@@ -66,7 +66,7 @@ export function ReportDialog({ module = APP_MODULE.USER, trigger }) {
         handleSubmit,
         setError,
         reset,
-        formState: { errors, isSubmitting },
+        formState: {errors, isSubmitting},
     } = useForm({
         resolver: zodResolver(ReportSchema),
         defaultValues: {
@@ -118,9 +118,9 @@ export function ReportDialog({ module = APP_MODULE.USER, trigger }) {
                 const text = await error.response.data.text();
                 const errorData = JSON.parse(text);
                 // Wrap in a fake axios error structure so handleErrors can process it
-                handleErrors({ response: { data: errorData } }, setError);
+                handleErrors({response: {data: errorData}}, setError);
             }
-            
+
             toastify(TOAST_TYPE.ERROR, "Failed to download report");
         }
     };
@@ -133,7 +133,7 @@ export function ReportDialog({ module = APP_MODULE.USER, trigger }) {
             <DialogTrigger asChild>
                 {trigger || (
                     <Button variant="outline" size="sm" className="gap-2">
-                        <Download className="h-4 w-4" />
+                        <Download className="h-4 w-4"/>
                         Generate Report
                     </Button>
                 )}
@@ -146,7 +146,7 @@ export function ReportDialog({ module = APP_MODULE.USER, trigger }) {
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
-                    <InputError errors={errors} field={GLOBAL_ERROR} />
+                    <InputError errors={errors} field={GLOBAL_ERROR}/>
 
                     <div className="grid gap-2">
                         <Label htmlFor="fromDate">From Date</Label>
@@ -157,7 +157,7 @@ export function ReportDialog({ module = APP_MODULE.USER, trigger }) {
                                 valueAsDate: true,
                             })}
                         />
-                        <InputError errors={errors} field={"fromDate"} />
+                        <InputError errors={errors} field={"fromDate"}/>
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="toDate">To Date</Label>
@@ -168,7 +168,7 @@ export function ReportDialog({ module = APP_MODULE.USER, trigger }) {
                                 valueAsDate: true,
                             })}
                         />
-                        <InputError errors={errors} field={"toDate"} />
+                        <InputError errors={errors} field={"toDate"}/>
                     </div>
                 </div>
                 <DialogFooter>

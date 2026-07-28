@@ -1,10 +1,10 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import {useNavigate} from 'react-router-dom';
+import {useForm} from 'react-hook-form';
 import z from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
+import {zodResolver} from '@hookform/resolvers/zod';
 
-import { Button } from "@/components/ui/button"
+import {Button} from "@/components/ui/button"
 import {
     Card,
     CardContent,
@@ -13,14 +13,14 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { ButtonLoading } from '@/components/common/ButtonLoading';
-import { AuthAxios } from '@/services/http/Axios.js';
+import {Input} from "@/components/ui/input"
+import {ButtonLoading} from '@/components/common/ButtonLoading';
+import {AuthAxios} from '@/services/http/Axios.js';
 import InputError from '@/components/common/InputError';
 import StaredLabel from '@/components/common/StaredLabel';
-import { TOAST_TYPE } from '@/utils/enums';
-import { handleErrors } from '@/utils';
-import { toastify } from '@/common/toastify.js';
+import {TOAST_TYPE} from "@/constants/app.constants";
+import {handleErrors} from '@/utils';
+import {toastify} from '@/common/toastify.js';
 
 const ChangePasswordSchema = z.object({
     currentPassword: z
@@ -50,12 +50,12 @@ const ChangePassword = () => {
     const handleChangePassword = async (data) => {
         try {
             await AuthAxios.put(`password`, data)
-        
+
             toastify(TOAST_TYPE.SUCCESS, "Password changed successfully");
             reset();
 
             setTimeout(() => {
-                navigate("/profile", { replace: true });
+                navigate("/profile", {replace: true});
             }, 500);
         } catch (error) {
             console.error(error);
@@ -111,15 +111,15 @@ const ChangePassword = () => {
 
                         <CardFooter className="flex-col gap-2 ">
                             {isSubmitting ?
-                                <ButtonLoading />
+                                <ButtonLoading/>
                                 :
                                 <Button type="submit" className="w-full">Save</Button>
                             }
 
-                            <Button 
-                                type="button" 
-                                variant="outline" 
-                                className="w-full" 
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full"
                                 onClick={() => navigate("/profile")}
                             >
                                 Cancel
@@ -131,7 +131,7 @@ const ChangePassword = () => {
 
             <div className='lg:w-[50%]'>
                 <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSni4W_ssx3U1KqS7a7wY_Q4NVU2hW3CP-1jA&s'
-                    className='cover h-full w-full' alt="change password visual" />
+                     className='cover h-full w-full' alt="change password visual"/>
             </div>
         </div>
     )

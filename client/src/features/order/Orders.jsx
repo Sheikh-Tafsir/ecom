@@ -30,7 +30,14 @@ import {Axios} from '@/services/http/Axios';
 import PaginationButton from '@/components/common/PaginationButton';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay';
 import {formatDateAndTime, GLOBAL_ERROR, handleErrors, hasPermission} from '@/utils';
-import {FIRST_PAGE, getQueryString, normalizeQuery, redirectWhenInvalidPage, ALL_SELECTED, getSelectValue} from '@/utils/PaginationUtils';
+import {
+    FIRST_PAGE,
+    getQueryString,
+    normalizeQuery,
+    redirectWhenInvalidPage,
+    ALL_SELECTED,
+    getSelectValue
+} from '@/utils/PaginationUtils';
 import {Label} from '@/components/ui/label';
 import {
     Card,
@@ -41,12 +48,15 @@ import {
 } from '@/components/ui/card.jsx';
 import {Input} from '@/components/ui/input';
 import {Button} from '@/components/ui/button';
-import {APP_MODULE, ORDER_STATUS, PERMISSION, TOAST_TYPE} from '@/utils/enums';
+import {APP_MODULE} from "@/constants/app.constants";
+import {PERMISSION} from "@/constants/auth.constants";
+import {ORDER_STATUS} from "@/constants/order.constants";
+import {TOAST_TYPE} from "@/constants/app.constants";
 import InputError from "@/components/common/InputError";
 import {toastify} from "@/common/toastify.js";
 import {queryClient} from "@/services/reactQuery/queryClient";
 import {useUserStore} from "@/store/useUserStore";
-import { cn } from "@/lib/utils";
+import {cn} from "@/lib/utils";
 
 import {ReportDialog} from "@/components/common/ReportDialog";
 
@@ -200,19 +210,21 @@ const Orders = () => {
                         <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-2">My Orders</h1>
                         <p className="text-slate-500 font-medium">Track and manage your recent purchases</p>
                     </div>
-                    {(hasPermission(user, PERMISSION.ADMIN_ACCESS) || hasPermission(user, PERMISSION.SUPER_ADMIN_ACCESS)) 
-                        && <ReportDialog module={APP_MODULE.ORDER} />}
+                    {(hasPermission(user, PERMISSION.ADMIN_ACCESS) || hasPermission(user, PERMISSION.SUPER_ADMIN_ACCESS))
+                        && <ReportDialog module={APP_MODULE.ORDER}/>}
                 </div>
 
                 <div className='grid lg:grid-cols-4 gap-10 items-start'>
                     {/* Filter Sidebar */}
-                    <Card className='lg:col-span-1 border-slate-100 shadow-xl shadow-slate-200/50 rounded-lg overflow-hidden sticky top-24'>
+                    <Card
+                        className='lg:col-span-1 border-slate-100 shadow-xl shadow-slate-200/50 rounded-lg overflow-hidden sticky top-24'>
                         <form onSubmit={handleSubmit(handleFilter)}>
                             <CardHeader className="bg-slate-100 border-b border-slate-100 pb-4">
                                 <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                     <span className="p-1.5 bg-blue-600 rounded-lg text-white">
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3"
+                                                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
                                     </span>
                                     Filter Orders
                                 </CardTitle>
@@ -223,17 +235,19 @@ const Orders = () => {
 
                                 {/* Status */}
                                 <div className="space-y-2">
-                                    <Label className="text-base font-semibold uppercase tracking-widest ml-1">Order Status</Label>
+                                    <Label className="text-base font-semibold uppercase tracking-widest ml-1">Order
+                                        Status</Label>
                                     <Controller
                                         name="status"
                                         control={control}
-                                        render={({ field }) => (
-                                            <Select 
-                                                onValueChange={field.onChange} 
+                                        render={({field}) => (
+                                            <Select
+                                                onValueChange={field.onChange}
                                                 value={getSelectValue(field.value)}
                                             >
-                                                <SelectTrigger className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all">
-                                                    <SelectValue placeholder="Select Status" />
+                                                <SelectTrigger
+                                                    className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all">
+                                                    <SelectValue placeholder="Select Status"/>
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value={ALL_SELECTED}>All Status</SelectItem>
@@ -251,7 +265,8 @@ const Orders = () => {
 
                                 {/* Product Name */}
                                 <div className="space-y-2">
-                                    <Label className="text-base font-semibold uppercase tracking-widest ml-1">Product Name</Label>
+                                    <Label className="text-base font-semibold uppercase tracking-widest ml-1">Product
+                                        Name</Label>
                                     <Input
                                         placeholder="Search by name..."
                                         className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all"
@@ -262,7 +277,8 @@ const Orders = () => {
 
                                 {/* From Date */}
                                 <div className="space-y-2">
-                                    <Label className="text-base font-semibold uppercase tracking-widest ml-1">From Date</Label>
+                                    <Label className="text-base font-semibold uppercase tracking-widest ml-1">From
+                                        Date</Label>
                                     <Input
                                         type="date"
                                         className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all"
@@ -273,7 +289,8 @@ const Orders = () => {
 
                                 {/* To Date */}
                                 <div className="space-y-2">
-                                    <Label className="text-base font-semibold uppercase tracking-widest ml-1">To Date</Label>
+                                    <Label className="text-base font-semibold uppercase tracking-widest ml-1">To
+                                        Date</Label>
                                     <Input
                                         type="date"
                                         className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all"
@@ -284,7 +301,7 @@ const Orders = () => {
                             </CardContent>
 
                             <CardFooter className="pt-2">
-                                <Button 
+                                <Button
                                     type="submit"
                                     className="w-full h-12 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-200 transition-all active:scale-95"
                                 >
@@ -298,39 +315,57 @@ const Orders = () => {
                         <div className="bg-white rounded-lg border border-slate-100 shadow-sm overflow-hidden">
                             <Table className="bg-white">
                                 <TableHeader>
-                                    <TableRow className="bg-slate-100 border-b border-slate-100 hover:bg-slate-50/50 transition-none">
-                                        <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4">Customer</TableHead>
-                                        <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4">Total Amount</TableHead>
-                                        <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4">Date & Time</TableHead>
-                                        <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4 text-center">Payment Method</TableHead>
-                                        <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4 text-center">Paid</TableHead>
-                                        <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4 text-center">Status</TableHead>
-                                        <TableHead className="text-md font-semibold uppercase tracking-widest px-6 py-4 text-right">Actions</TableHead>
+                                    <TableRow
+                                        className="bg-slate-100 border-b border-slate-100 hover:bg-slate-50/50 transition-none">
+                                        <TableHead
+                                            className="text-md font-semibold uppercase tracking-widest px-6 py-4">Customer</TableHead>
+                                        <TableHead
+                                            className="text-md font-semibold uppercase tracking-widest px-6 py-4">Total
+                                            Amount</TableHead>
+                                        <TableHead
+                                            className="text-md font-semibold uppercase tracking-widest px-6 py-4">Date &
+                                            Time</TableHead>
+                                        <TableHead
+                                            className="text-md font-semibold uppercase tracking-widest px-6 py-4 text-center">Payment
+                                            Method</TableHead>
+                                        <TableHead
+                                            className="text-md font-semibold uppercase tracking-widest px-6 py-4 text-center">Paid</TableHead>
+                                        <TableHead
+                                            className="text-md font-semibold uppercase tracking-widest px-6 py-4 text-center">Status</TableHead>
+                                        <TableHead
+                                            className="text-md font-semibold uppercase tracking-widest px-6 py-4 text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {orders && orders.length > 0 ?
                                         orders.map((item) => (
-                                            <TableRow key={item.id} className="group hover:bg-slate-50/50 border-b border-slate-50 transition-colors">
+                                            <TableRow key={item.id}
+                                                      className="group hover:bg-slate-50/50 border-b border-slate-50 transition-colors">
                                                 <TableCell className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-black text-blue-600">
+                                                        <div
+                                                            className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-black text-blue-600">
                                                             {item.userName?.slice(0, 1)}
                                                         </div>
-                                                        <span className="font-bold text-slate-700">{item.userName}</span>
+                                                        <span
+                                                            className="font-bold text-slate-700">{item.userName}</span>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="px-6 py-4">
-                                                    <span className="font-semibold text-slate-900">${item.totalPrice}</span>
+                                                    <span
+                                                        className="font-semibold text-slate-900">${item.totalPrice}</span>
                                                 </TableCell>
                                                 <TableCell className="px-6 py-4">
-                                                    <span className="text-xs font-semibold text-slate-500">{formatDateAndTime(item.createdAt)}</span>
-                                                </TableCell>
-                                                 <TableCell className="px-6 py-4">
-                                                    <span className="text-xs font-semibold text-slate-500">{item.paymentMethod}</span>
+                                                    <span
+                                                        className="text-xs font-semibold text-slate-500">{formatDateAndTime(item.createdAt)}</span>
                                                 </TableCell>
                                                 <TableCell className="px-6 py-4">
-                                                    <span className="text-xs font-semibold text-slate-500">{item.paid ? 'Yes' : 'No'}</span>
+                                                    <span
+                                                        className="text-xs font-semibold text-slate-500">{item.paymentMethod}</span>
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4">
+                                                    <span
+                                                        className="text-xs font-semibold text-slate-500">{item.paid ? 'Yes' : 'No'}</span>
                                                 </TableCell>
                                                 <TableCell className="px-6 py-4 text-center">
                                                     <span className={cn(
@@ -349,11 +384,11 @@ const Orders = () => {
                                                 </TableCell>
                                                 <TableCell className="px-6 py-4 text-right">
                                                     <div className="flex justify-end gap-2">
-                                                        <Button 
+                                                        <Button
                                                             variant="outline"
                                                             size="sm"
                                                             className="h-9 px-4 rounded-lg font-bold text-xs text-blue-600 hover:bg-blue-50"
-                                                            onClick={() => navigate(`/orders/${item.id}`)} 
+                                                            onClick={() => navigate(`/orders/${item.id}`)}
                                                         >
                                                             View
                                                         </Button>
@@ -364,20 +399,22 @@ const Orders = () => {
                                                                 {(item.status === ORDER_STATUS.PENDING || item.status === ORDER_STATUS.ACCEPTED || item.status === ORDER_STATUS.DELIVERED) && (
                                                                     <DropdownMenu>
                                                                         <DropdownMenuTrigger asChild>
-                                                                            <Button variant="outline" size="sm" className="h-9 px-4 rounded-lg font-bold text-xs text-slate-600 hover:bg-slate-50">
+                                                                            <Button variant="outline" size="sm"
+                                                                                    className="h-9 px-4 rounded-lg font-bold text-xs text-slate-600 hover:bg-slate-50">
                                                                                 Actions
                                                                             </Button>
                                                                         </DropdownMenuTrigger>
-                                                                        <DropdownMenuContent align="end" className="w-40">
+                                                                        <DropdownMenuContent align="end"
+                                                                                             className="w-40">
                                                                             {item.status === ORDER_STATUS.PENDING && (
                                                                                 <>
-                                                                                    <DropdownMenuItem 
+                                                                                    <DropdownMenuItem
                                                                                         className="font-bold text-xs text-emerald-600 focus:text-emerald-600"
                                                                                         onClick={() => changeOrderStatus(item.id, ORDER_STATUS.ACCEPTED)}
                                                                                     >
                                                                                         Accept
                                                                                     </DropdownMenuItem>
-                                                                                    <DropdownMenuItem 
+                                                                                    <DropdownMenuItem
                                                                                         className="font-bold text-xs text-red-600 focus:text-red-600"
                                                                                         onClick={() => changeOrderStatus(item.id, ORDER_STATUS.REJECTED)}
                                                                                     >
@@ -387,25 +424,25 @@ const Orders = () => {
                                                                             )}
                                                                             {item.status === ORDER_STATUS.ACCEPTED && (
                                                                                 <>
-                                                                                    <DropdownMenuItem 
+                                                                                    <DropdownMenuItem
                                                                                         className="font-bold text-xs text-red-600 focus:text-red-600"
                                                                                         onClick={() => changeOrderStatus(item.id, ORDER_STATUS.REJECTED)}
                                                                                     >
                                                                                         Reject
                                                                                     </DropdownMenuItem>
-                                                                                    <DropdownMenuItem 
+                                                                                    <DropdownMenuItem
                                                                                         className="font-bold text-xs text-indigo-600 focus:text-indigo-600"
                                                                                         onClick={() => changeOrderStatus(item.id, ORDER_STATUS.SHIPPED)}
                                                                                     >
                                                                                         Shipped
                                                                                     </DropdownMenuItem>
-                                                                                    <DropdownMenuItem 
+                                                                                    <DropdownMenuItem
                                                                                         className="font-bold text-xs text-emerald-600 focus:text-emerald-600"
                                                                                         onClick={() => changeOrderStatus(item.id, ORDER_STATUS.DELIVERED)}
                                                                                     >
                                                                                         Delivered
                                                                                     </DropdownMenuItem>
-                                                                                    <DropdownMenuItem 
+                                                                                    <DropdownMenuItem
                                                                                         className="font-bold text-xs text-orange-600 focus:text-orange-600"
                                                                                         onClick={() => changeOrderStatus(item.id, ORDER_STATUS.LOST)}
                                                                                     >
@@ -414,7 +451,7 @@ const Orders = () => {
                                                                                 </>
                                                                             )}
                                                                             {item.status === ORDER_STATUS.DELIVERED && (
-                                                                                <DropdownMenuItem 
+                                                                                <DropdownMenuItem
                                                                                     className="font-bold text-xs text-blue-600 focus:text-blue-600"
                                                                                     onClick={() => changeOrderStatus(item.id, ORDER_STATUS.COMPLETED)}
                                                                                 >
@@ -458,10 +495,17 @@ const Orders = () => {
                                         <TableRow>
                                             <TableCell colSpan={5} className="py-20 text-center">
                                                 <div className="flex flex-col items-center gap-2 opacity-40">
-                                                    <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-2">
-                                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+                                                    <div
+                                                        className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-2">
+                                                        <svg className="w-6 h-6" fill="none" stroke="currentColor"
+                                                             viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round"
+                                                                  strokeWidth="2"
+                                                                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                                                        </svg>
                                                     </div>
-                                                    <p className="text-sm font-black uppercase tracking-widest">No orders found</p>
+                                                    <p className="text-sm font-black uppercase tracking-widest">No
+                                                        orders found</p>
                                                     <p className="text-xs font-medium">Try adjusting your filters</p>
                                                 </div>
                                             </TableCell>
@@ -470,7 +514,7 @@ const Orders = () => {
                                 </TableBody>
                             </Table>
                         </div>
-                        
+
                         <PaginationButton totalPages={totalPages}/>
                     </div>
                 </div>
