@@ -3,28 +3,36 @@ const pg = require('pg');
 const { isEnvironmentProduction } = require('../utils/Utils');
 require('dotenv').config();
 
-// Load environment variables
-const {
-  POSTGRES_DATABASE,
-  POSTGRES_USER,
-  POSTGRES_PASSWORD,
-  POSTGRES_HOST,
-  POSTGRES_PORT,
-} = process.env;
+// Load environment variables with fallback
+const dbUrl = process.env.DB_URL;
+const database = process.env.DB_NAME;
+const user = process.env.DB_USERNAME;
+const password = process.env.DB_PASSWORD;
+const host = process.env.DB_HOST;
+const port = process.env.DB_PORT;
 
+const sslOption = isEnvironmentProduction()
+  ? { ssl: { require: true, rejectUnauthorized: false } }
+  : {};
 
-const sequelize = new Sequelize(POSTGRES_DATABASE, POSTGRES_USER, POSTGRES_PASSWORD, {
-  host: POSTGRES_HOST,
-  port: POSTGRES_PORT,
-  dialect: 'postgres',
-  dialectModule: pg,
-  dialectOptions: {
-    ssl: {
-      require: true,
-      rejectUnauthorized: isEnvironmentProduction() // Validate SSL in production
-    }
-  }
-});
+let sequelize;
+if (dbUrl && !dbUrl.startsWith('jdbc:')) {
+  sequelize = new Sequelize(dbUrl, {
+    dialect: 'postgres',
+    dialectModule: pg,
+    dialectOptions: sslOption,
+    logging: false
+  });
+} else {
+  sequelize = new Sequelize(database, user, password, {
+    host: host,
+    port: port,
+    dialect: 'postgres',
+    dialectModule: pg,
+    dialectOptions: sslOption,
+    logging: false
+  });
+}
 
 // Test the connection
 async function testConnection() {

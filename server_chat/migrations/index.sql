@@ -5,4 +5,4 @@ CREATE INDEX idx_chat_participants_chat ON chat_participants (chat_id);
 
 CREATE INDEX idx_messages_chat ON messages (chat_id);
 
-CREATE INDEX idx_message_views_message ON message_views (message_id);
+CREATE INDEX idx_message_receipts_message ON message_receipts (message_id);

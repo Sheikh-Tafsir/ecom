@@ -27,26 +27,37 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    implementation 'org.springframework.boot:spring-boot-starter-json'
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'org.springframework.retry:spring-retry'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+    implementation 'commons-codec:commons-codec:1.16.1'
 
     // Bucket4j
     implementation 'com.giffing.bucket4j.spring.boot.starter:bucket4j-spring-boot-starter:0.12.0'
     implementation 'com.bucket4j:bucket4j-redis:8.10.1'
     implementation 'redis.clients:jedis:5.1.0'
 
+    // RabbitMQ
     implementation 'org.springframework.boot:spring-boot-starter-amqp'
-    implementation 'org.springframework.boot:spring-boot-starter-json'
-    implementation 'org.springframework.boot:spring-boot-starter-mail'
-    implementation "org.springframework.boot:spring-boot-starter-webflux"
 
     // Database
     runtimeOnly 'org.postgresql:postgresql'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql'
 
     // Utilities
     implementation 'org.modelmapper:modelmapper:3.1.1'
     implementation 'io.github.cdimascio:dotenv-java:3.0.0'
 
-    // java 9 LocalDateTIme
+    // java 9 Instant support
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+    // JSON Logging
+    implementation 'net.logstash.logback:logstash-logback-encoder:8.0'
 
     // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
@@ -56,6 +67,9 @@ dependencies {
     // File & Media
     implementation 'com.cloudinary:cloudinary-http44:1.39.0'
     implementation 'org.apache.tika:tika-core:3.2.2'
+
+    // HTML Sanitization
+    implementation 'org.jsoup:jsoup:1.17.2'
 
     // OpenAPI / Swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13'
@@ -67,6 +81,7 @@ dependencies {
     implementation 'io.micrometer:micrometer-registry-prometheus'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'com.h2database:h2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 

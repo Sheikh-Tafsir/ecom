@@ -36,7 +36,8 @@ public class SecurityConfig {
             "/webjars/**",
             "/actuator",
             "/actuator/**",
-            "/socket.io/**"
+            "/socket.io/**",
+            "/chats/**"
     );
 
     @Value("${cors.allowed.origins}")
@@ -74,6 +75,7 @@ public class SecurityConfig {
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers(PUBLIC_URLS.toArray(new String[0])).permitAll()
                         .pathMatchers("/auth/**").permitAll()
+                        .pathMatchers("/chats/**").permitAll()
                         .pathMatchers(HttpMethod.GET, "/products", "/products/*").permitAll()
                         .pathMatchers(HttpMethod.GET, "/categories", "/categories/*").permitAll()
                         .pathMatchers(HttpMethod.GET, "/banners", "/banners/**").permitAll()

@@ -3,7 +3,7 @@ const cookieParser = require('cookie-parser');
 const http = require('http');
 
 require("dotenv").config();
-require("./src/config/logger"); 
+const { endStartupPhase } = require("./src/config/logger"); 
 
 // const {CorsMiddleware} = require("./src/middleware/CorsMiddleware");
 const TrimInput = require("./src/middleware/TrimInput");
@@ -42,6 +42,7 @@ SocketHandler(server);
 
 const listener = isEnvironmentProduction() ? app : server;
 
-listener.listen(process.env.PORT, () => {
-    console.info(`Chat server is running ${process.env.SERVER_PATH}.`);
+listener.listen(process.env.CHAT_SERVER_PORT, () => {
+    console.info(`Chat server is running ${process.env.CHAT_SERVICE_URL}.`);
+    endStartupPhase();
 });

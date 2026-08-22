@@ -1,0 +1,57 @@
+package com.example.ecom.common.model;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
+
+@Entity
+@Table(name = "stocks")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class Stock extends BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @OneToMany(mappedBy = "stock", cascade = CascadeType.ALL, orphanRemoval = true)
+    Set<StockItem> items = new HashSet<>();
+
+    @Column(nullable = false)
+    private BigDecimal totalCost = BigDecimal.ZERO;
+
+    public void addItem(Product product, int quantity, BigDecimal purchasePrice) {
+        StockItem item = new StockItem(this, product, quantity, purchasePrice);
+        items.add(item);
+
+        calculateTotal();
+    }
+
+    public void removeItem(StockItem item) {
+        item.setStock(null);
+        items.remove(item);
+
+        calculateTotal();
+    }
+
+    public void calculateTotal() {
+        this.totalCost = items.stream()
+                .map(StockItem::getSubtotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Set<StockItem> getItems() { return items; }
+    public void setItems(Set<StockItem> items) { this.items = items; }
+    public BigDecimal getTotalCost() { return totalCost; }
+    public void setTotalCost(BigDecimal totalCost) { this.totalCost = totalCost; }
+}

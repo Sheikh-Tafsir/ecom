@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <property name="LOG_PATH" value="logs/gateway" />
+
+    <!-- Console Appender (Available in all profiles) -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Production Specific Logging -->
+    <springProfile name="prod">
+        <!-- JSON Console Appender for Production -->
+        <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+        </appender>
+
+        <!-- Startup Log Appender -->
+        <appender name="STARTUP" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_PATH}/server-startup.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_PATH}/server-startup.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+                <maxFileSize>5MB</maxFileSize>
+                <maxHistory>3</maxHistory>
+                <totalSizeCap>20MB</totalSizeCap>
+            </rollingPolicy>
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+        </appender>
+
+        <!-- Application Log Appender -->
+        <appender name="APPLICATION" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_PATH}/server.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_PATH}/server.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+                <maxFileSize>10MB</maxFileSize>
+                <maxHistory>7</maxHistory>
+                <totalSizeCap>100MB</totalSizeCap>
+            </rollingPolicy>
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+        </appender>
+
+        <root level="INFO">
+            <appender-ref ref="JSON_CONSOLE" />
+            <appender-ref ref="APPLICATION" />
+        </root>
+
+        <!-- Capture Startup specific logs -->
+        <logger name="org.springframework.boot.SpringApplication" level="INFO" additivity="false">
+            <appender-ref ref="STARTUP" />
+            <appender-ref ref="JSON_CONSOLE" />
+        </logger>
+        <logger name="org.springframework.boot.context.logging.LoggingApplicationListener" level="INFO" additivity="false">
+            <appender-ref ref="STARTUP" />
+            <appender-ref ref="JSON_CONSOLE" />
+        </logger>
+        <logger name="com.example.gateway.GatewayApplication" level="INFO" additivity="false">
+            <appender-ref ref="STARTUP" />
+            <appender-ref ref="JSON_CONSOLE" />
+        </logger>
+    </springProfile>
+
+    <!-- Development Specific Logging -->
+    <springProfile name="dev">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE" />
+        </root>
+    </springProfile>
+
+    <!-- Default (if no profile matches) -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+    </root>
+
+</configuration>

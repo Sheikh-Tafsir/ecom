@@ -1,0 +1,35 @@
+package com.example.ecom.order.dto;
+
+import com.example.ecom.common.model.OrderItem;
+import com.example.ecom.common.model.ProductImage;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class OrderItemResponse {
+    private Long id;
+    private Long orderId;
+    private Long productId;
+    private String productName;
+    private String productImage;
+    private BigDecimal productPrice;
+    private int quantity;
+    private BigDecimal subtotal;
+
+    public OrderItemResponse(OrderItem item) {
+        id = item.getId();
+        orderId = item.getOrder().getId();
+        productId = item.getProduct().getId();
+        productName = item.getProduct().getName();
+        productImage = item.getProduct().getImages().stream()
+                .findFirst().map(ProductImage::getImage).orElse(null);
+        productPrice = item.getProduct().getPrice();
+        quantity = item.getQuantity();
+        subtotal = item.getSubtotal();
+    }
+}

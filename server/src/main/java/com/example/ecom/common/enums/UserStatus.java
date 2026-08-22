@@ -1,0 +1,38 @@
+package com.example.ecom.common.enums;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
+public enum UserStatus {
+
+    NOT_VERIFIED("Not Verified"),
+    ACTIVE("Active"),
+    SUSPENDED("Suspended"),
+    INACTIVE("Inactive"),
+    DELETED("Deleted"),
+    BANNED("Banned");
+
+    private final String value;
+
+    UserStatus(String value) {
+        this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+        return value;
+    }
+
+    @JsonCreator
+    public static UserStatus fromValue(String value) {
+        if (value == null) return null;
+
+        for (UserStatus status : values()) {
+            if (status.value.equalsIgnoreCase(value) || status.name().equalsIgnoreCase(value)) {
+                return status;
+            }
+        }
+
+        throw new IllegalArgumentException("Invalid User Status: " + value);
+    }
+}

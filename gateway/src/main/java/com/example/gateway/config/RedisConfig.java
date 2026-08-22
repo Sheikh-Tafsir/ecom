@@ -46,4 +46,9 @@ public class RedisConfig {
 
         return new ReactiveRedisTemplate<>(factory, context);
     }
+
+    @Bean
+    public org.springframework.data.redis.core.ReactiveStringRedisTemplate reactiveStringRedisTemplate(ReactiveRedisConnectionFactory factory) {
+        return new org.springframework.data.redis.core.ReactiveStringRedisTemplate(factory);
+    }
 }

@@ -1,0 +1,12 @@
+package com.example.ecom.auth.dto;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+public record OtpRequest(
+        @NotBlank
+        @Size(max = 31)
+        @Email String email
+) {
+}

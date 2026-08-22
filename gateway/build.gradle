@@ -41,9 +41,13 @@ dependencies {
     // Bucket4j
     implementation 'com.giffing.bucket4j.spring.boot.starter:bucket4j-spring-boot-starter:0.12.0'
     implementation 'com.bucket4j:bucket4j-redis:8.10.1'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
 
     implementation "org.springdoc:springdoc-openapi-starter-webflux-ui:2.5.0"
     implementation 'io.micrometer:context-propagation:1.1.2'
+
+    // JSON Logging
+    implementation 'net.logstash.logback:logstash-logback-encoder:8.0'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

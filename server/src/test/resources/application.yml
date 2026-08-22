@@ -1,0 +1,88 @@
+app:
+  cache:
+    strategy: local  # Use Caffeine for tests to avoid needing Redis
+
+spring:
+  profiles:
+    active: test
+
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+
+  flyway:
+    enabled: false  # Speed up tests by using Hibernate ddl-auto for schema
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    mail:
+      queue: mail.queue
+      exchange: mail.exchange
+      routing-key: mail.send
+    service:
+      queue: service.queue
+      exchange: service.exchange
+      routing-key: service.routing.key
+    listener:
+      simple:
+        auto-startup: false
+
+mail:
+  smtp:
+    host: localhost
+    port: 25
+    username: test
+    password: test
+
+jwt:
+  access-token:
+    secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    expiration: 1800
+  refresh-token:
+    secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    expiration: 604800
+  sse-token:
+    expiration: 60
+
+refresh:
+  token:
+    name: refreshToken
+    validity: 604800
+
+cors:
+  allowed:
+    origins: http://localhost:5173
+
+cloudinary:
+  cloud:
+    name: test
+  api:
+    key: test
+    secret: test
+  folder: test
+
+supabase:
+  url: https://test.supabase.co
+  api-key: test
+  bucket: test
+
+frontend:
+  url: http://localhost:5173
+
+bkash:
+  base-url: https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized/checkout
+  app-key: test
+  app-secret: test
+  username: test
+  password: test
+  callback-url: http://localhost:8080/api/payments/bkash/callback
+  frontend-success-url: http://localhost:5173/payment-success
+  frontend-fail-url: http://localhost:5173/payment-failed

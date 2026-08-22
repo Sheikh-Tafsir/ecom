@@ -1,63 +1,222 @@
 services:
   postgres:
     image: postgres:16-alpine
+    restart: always
     environment:
-      POSTGRES_DB: ecom
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ecom"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # db-backup:
+  #   build:
+  #     context: ./scripts/backup-service
+  #   restart: always
+  #   volumes:
+  #     - ./backups:/backups
+  #     - ./scripts/backup-service/config:/config
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   environment:
+  #     - DB_HOST=${BACKUP_DB_HOST}
+  #     - DB_NAME=${BACKUP_DB_NAME}
+  #     - DB_USER=${DB_USERNAME}
+  #     - DB_PASS=${DB_PASSWORD}
+  #     - BACKUP_RETENTION_DAYS=7
+  #     - GDRIVE_SYNC_ENABLED=${GDRIVE_SYNC_ENABLED}
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    restart: always
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: ["sh", "-c", "redis-server --requirepass \"$REDIS_PASSWORD\""]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "sh", "-c", "REDISCLI_AUTH=\"$REDIS_PASSWORD\" redis-cli ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      RABBITMQ_DEFAULT_USER: ${MQ_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${MQ_PASSWORD}
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "5673:5672"
+      - "15674:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   gateway:
-    build: ./gateway
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+      network: host
+    restart: unless-stopped
+    env_file:
+      - .env
     ports:
-      - "8080:8080"
+      - "${GATEWAY_PORT}:8080"
+    volumes:
+      - ./logs/gateway:/app/logs/gateway
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
-      - DB_URL=jdbc:postgresql://postgres:5432/ecom
-      - DB_USERNAME=user
-      - DB_PASSWORD=password
+      - SPRING_PROFILES_ACTIVE=prod
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SERVER_PORT=${GATEWAY_PORT}
+      - MAIN_SERVICE_URL=http://server:${SERVER_PORT}
+      - CHAT_SERVICE_URL=http://chat-server:${CHAT_SERVER_PORT}
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+      - CORS_ALLOWED_ORIGINS=${CLIENT_URL}
     depends_on:
-      - postgres
+      - server
+      - chat-server
       - redis
 
   server:
-    build: ./server
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      network: host
+    restart: unless-stopped
+    env_file:
+      - .env
     ports:
-      - "8081:8081"
+      - "${SERVER_PORT}:8081"
+    volumes:
+      - ./logs/server:/app/logs/server
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
-      - DB_URL=jdbc:postgresql://postgres:5432/ecom
-      - DB_USERNAME=user
-      - DB_PASSWORD=password
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DRIVER_CLASS=${DB_DRIVER_CLASS}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-foobared}
+      - MQ_HOST=${MQ_HOST}
+      - MQ_PORT=${MQ_PORT}
+      - MQ_USERNAME=${MQ_USERNAME}
+      - MQ_PASSWORD=${MQ_PASSWORD}
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
+      - REFRESH_TOKEN_NAME=${REFRESH_TOKEN_NAME}
+      - CORS_ALLOWED_ORIGINS=${CLIENT_URL}
+      - APP_CACHE_STRATEGY=${APP_CACHE_STRATEGY}
+      - MAIL_SMTP_HOST=${MAIL_SMTP_HOST}
+      - MAIL_SMTP_PORT=${MAIL_SMTP_PORT}
+      - MAIL_SMTP_USERNAME=${MAIL_SMTP_USERNAME}
+      - MAIL_SMTP_PASSWORD=${MAIL_SMTP_PASSWORD}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+      - CLOUDINARY_FOLDER=${CLOUDINARY_FOLDER:-ecom_uploads}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_API_KEY=${SUPABASE_API_KEY}
+      - SUPABASE_BUCKET=${SUPABASE_BUCKET}
+      - CLIENT_URL=${CLIENT_URL}
+      - SERVER_URL=${SERVER_URL}
+      - BKASH_BASE_URL=${BKASH_BASE_URL}
+      - BKASH_APP_KEY=${BKASH_APP_KEY}
+      - BKASH_APP_SECRET=${BKASH_APP_SECRET}
+      - BKASH_USERNAME=${BKASH_USERNAME}
+      - BKASH_PASSWORD=${BKASH_PASSWORD}
+      - BKASH_CALLBACK_URL=${SERVER_URL}/api/payments/bkash/callback
+      - BKASH_FRONTEND_SUCCESS_URL=${CLIENT_URL}/payment-success
+      - BKASH_FRONTEND_FAIL_URL=${CLIENT_URL}/payment-failed
     depends_on:
-      - postgres
-      - redis
-      - rabbitmq
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   chat-server:
-    build: ./server_chat
+    build:
+      context: ./server_chat
+      dockerfile: Dockerfile
+      network: host
+    restart: unless-stopped
+    env_file:
+      - .env
     ports:
-      - "3001:3001"
+      - "${CHAT_SERVER_PORT}:3001"
+    volumes:
+      - ./logs/chat-server:/app/logs/chat-server
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
-      - PORT=3001
-      - DB_URL=postgres://user:password@postgres:5432/ecom
+      - PORT=${CHAT_SERVER_PORT}
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DRIVER_CLASS=${DB_DRIVER_CLASS}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   client:
-    build: ./client
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      network: host
+      args:
+        - VITE_API_PATH=${SERVER_URL}
+        - VITE_GOOGLE_LOGIN_CLIENT_ID=${GOOGLE_LOGIN_CLIENT_ID}
+        - VITE_ACCESS_TOKEN=${ACCESS_TOKEN}
+        - VITE_LOCAL_STORAGE_CART_KEY=${LOCAL_STORAGE_CART_KEY}
+        - VITE_WEB_SOCKET_ON=${WEB_SOCKET_ON}
+        - VITE_SSE_ON=${SSE_ON}
+    restart: unless-stopped
+    env_file:
+      - .env
     ports:
-      - "80:80"
+      - "${CLIENT_PORT}:80"
+    volumes:
+      - ./logs/client:/var/log/nginx
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     depends_on:
       - gateway
+
+volumes:
+  postgres_data:
+  redis_data:
