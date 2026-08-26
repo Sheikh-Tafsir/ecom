@@ -51,6 +51,10 @@ public class ReviewService {
 
     @Transactional
     public void create(Long id, CreateReviewRequest request, CustomUserDetails userDetails) {
+        if (reviewRepository.existsByUser_IdAndProduct_Id(userDetails.getId(), id)) {
+            throw new IllegalArgumentException("You have already reviewed this product");
+        }
+
         Product product = productService.findByIdHelper(id);
 
         long oldReviewCount = product.getReviewCount();

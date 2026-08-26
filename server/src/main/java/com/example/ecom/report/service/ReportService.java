@@ -74,7 +74,13 @@ public abstract class ReportService {
     private String formatCsvValue(Object v) {
         if (v == null) return "";
         String s = v.toString();
-        if (s.contains(",") || s.contains("\"") || s.contains("\n")) {
+
+        // Neutralize CSV / Spreadsheet formula injection (=, +, -, @, tabs)
+        if (s.startsWith("=") || s.startsWith("+") || s.startsWith("-") || s.startsWith("@") || s.startsWith("\t")) {
+            s = "\t" + s;
+        }
+
+        if (s.contains(",") || s.contains("\"") || s.contains("\n") || s.contains("\r")) {
             return "\"" + s.replace("\"", "\"\"") + "\"";
         }
         return s;

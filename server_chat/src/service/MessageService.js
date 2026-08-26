@@ -68,11 +68,12 @@ const saveMessageReceipts = async (activeUsers = [], messageId, chatId, senderId
         .map(participant => {
             const isActive = activeSet.has(String(participant.userId));
 
+            const dateNow = new Date(now);
             return {
                 messageId,
                 userId: participant.userId,
-                deliveredAt: now,
-                read_at: isActive ? now : null
+                deliveredAt: dateNow,
+                readAt: isActive ? dateNow : null
             };
         }
     );

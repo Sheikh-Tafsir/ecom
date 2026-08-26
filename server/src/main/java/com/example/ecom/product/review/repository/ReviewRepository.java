@@ -12,4 +12,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     @EntityGraph(attributePaths = {"user"})
     Page<Review> findAllByProduct_Id(Long productId, Pageable pageable);
+
+    boolean existsByUser_IdAndProduct_Id(Long userId, Long productId);
 }
