@@ -37,6 +37,9 @@ class OrderServiceTest {
     @Mock
     private IdempotencyService idempotencyService;
 
+    @Mock
+    private com.example.ecom.order.repository.OrderStatusHistoryRepository orderStatusHistoryRepository;
+
     @InjectMocks
     private OrderService orderService;
 

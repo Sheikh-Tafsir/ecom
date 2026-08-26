@@ -232,8 +232,8 @@ public class ProductService {
             @CacheEvict(value = CACHE_PRODUCTS_EDIT, key = "#product.id")
     })
     public void increaseQuantity(Product product, int quantityChange) {
+        productRepository.increaseStock(product.getId(), quantityChange);
         product.setQuantity(product.getQuantity() + quantityChange);
-        productRepository.save(product);
     }
 
     private void registerImageCleanup(Set<String> uploadedImageUrls) {

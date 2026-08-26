@@ -124,6 +124,16 @@ CREATE TABLE IF NOT EXISTS order_items (
     unit_price NUMERIC(19, 2) NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS order_history (
+    id BIGSERIAL PRIMARY KEY,
+    order_id BIGINT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    from_status VARCHAR(50),
+    to_status VARCHAR(50) NOT NULL,
+    changed_by_user_id BIGINT REFERENCES users(id),
+    comment VARCHAR(500),
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- 6. Payments & Sales
 CREATE TABLE IF NOT EXISTS payments (
     id BIGSERIAL PRIMARY KEY,

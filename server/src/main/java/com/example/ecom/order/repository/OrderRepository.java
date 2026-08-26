@@ -17,7 +17,7 @@ import java.util.Optional;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-    @EntityGraph(attributePaths = {"user", "items", "items.product", "items.product.images"})
+    @EntityGraph(attributePaths = {"user", "items", "items.product", "items.product.images", "statusHistories", "statusHistories.changedBy"})
     @Query("select o from Order o where o.id = :id")
     Optional<Order> findDetailsById(Long id);
 

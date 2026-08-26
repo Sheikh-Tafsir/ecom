@@ -11,6 +11,7 @@ import com.example.ecom.notification.dto.NotificationResponse;
 import com.example.ecom.order.dto.*;
 import com.example.ecom.order.repository.OrderRepository;
 import com.example.ecom.order.dto.CreateOrderResponse;
+import com.example.ecom.order.repository.OrderStatusHistoryRepository;
 import com.example.ecom.product.product.service.ProductService;
 import com.example.ecom.product.stock.service.StockService;
 import com.example.ecom.user.user.service.UserService;
@@ -56,6 +57,8 @@ public class OrderService {
     private final UserService userService;
 
     private final NotificationService notificationService;
+
+    private final OrderStatusHistoryRepository orderStatusHistoryRepository;
 
     public Page<OrderListResponse> findAll(LocalDate fromDate, LocalDate toDate, OrderStatus status, String productName,
                                            CustomUserDetails userDetails, Pageable pageable) {
@@ -122,9 +125,10 @@ public class OrderService {
         order.setUser(user);
         request.items().forEach(itemRequest -> addProduct(order, itemRequest));
 
-        orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+        recordStatusChange(savedOrder, null, OrderStatus.PENDING, user, "Order created");
 
-        CreateOrderResponse response = new CreateOrderResponse(order.getId(), order.getTotalPrice());
+        CreateOrderResponse response = new CreateOrderResponse(savedOrder.getId(), savedOrder.getTotalPrice());
 
         if (idempotencyKey != null) {
             if (TransactionSynchronizationManager.isSynchronizationActive()) {
@@ -156,6 +160,8 @@ public class OrderService {
             throwAccessException(order.getUser().getId(), userDetails.getId(), "Order", order.getId());
         }
 
+        User actor = userDetails != null ? userService.findByIdHelper(userDetails.getId()) : order.getUser();
+        recordStatusChange(order, OrderStatus.PENDING, OrderStatus.CANCELLED, actor, "Order cancelled by customer");
         order.setStatus(OrderStatus.CANCELLED);
 
         return new OrderResponse(orderRepository.save(order));
@@ -168,7 +174,8 @@ public class OrderService {
     public OrderResponse updateStatus(Long id, UpdateOrderStatusRequest request, CustomUserDetails userDetails) {
         Order order = findByIdHelper(id);
         OrderStatus status = request.status();
-        log.info("Update order: {} from {} to {} by user: {}", id, order.getStatus(), status, userDetails.getId());
+        OrderStatus oldStatus = order.getStatus();
+        log.info("Update order: {} from {} to {} by user: {}", id, oldStatus, status, userDetails.getId());
 
         if (order.isCancelledOrRejected() && !status.isCancellationOrRejection()) {
             throw new IllegalArgumentException("Cancelled/Rejected order cannot be reopened");
@@ -188,10 +195,15 @@ public class OrderService {
             }
         }
 
-        if (status == OrderStatus.ACCEPTED) {
+        if (status == OrderStatus.ACCEPTED && order.getStatus() != OrderStatus.ACCEPTED) {
             acceptOrder(order);
+        } else if ((status == OrderStatus.CANCELLED || status == OrderStatus.REJECTED || status == OrderStatus.RETURNED)
+                && (order.getStatus() == OrderStatus.ACCEPTED || order.getStatus() == OrderStatus.SHIPPED)) {
+            restoreOrderStock(order);
         }
 
+        User actor = userDetails != null ? userService.findByIdHelper(userDetails.getId()) : null;
+        recordStatusChange(order, oldStatus, status, actor, "Status updated to " + status.getValue());
         order.setStatus(status);
 
         return new OrderResponse(orderRepository.save(order));
@@ -207,8 +219,12 @@ public class OrderService {
     @Transactional
     public void acceptOrderForPrepayment(long id) {
         Order order = findByIdHelper(id);
-        acceptOrder(order);
-        order.setStatus(OrderStatus.ACCEPTED);
+        OrderStatus oldStatus = order.getStatus();
+        if (order.getStatus() != OrderStatus.ACCEPTED) {
+            acceptOrder(order);
+            order.setStatus(OrderStatus.ACCEPTED);
+            recordStatusChange(order, oldStatus, OrderStatus.ACCEPTED, order.getUser(), "Accepted upon payment confirmation");
+        }
         order.setPaid(true);
         orderRepository.save(order);
     }
@@ -229,19 +245,24 @@ public class OrderService {
         List<Order> ordersToReject = orderRepository.findAllByStatusAndCreatedAtBefore(OrderStatus.PENDING, twoDaysAgo);
         ordersToReject.forEach(order -> {
             log.info("Rejecting order {} due to inactivity (more than 3 days old)", order.getId());
+            recordStatusChange(order, OrderStatus.PENDING, OrderStatus.REJECTED, null, "Auto-rejected due to inactivity (>2 days)");
             order.setStatus(OrderStatus.REJECTED);
             orderRepository.save(order);
         });
     }
 
-//    @Transactional
-//    public void revertOrder(long id) {
-//        Order order = findByIdHelper(id);
-//        order.getItems().forEach(item -> productService.increaseQuantity(item.getProduct(), item.getQuantity()));
-//        order.setStatus(OrderStatus.PENDING);
-//        order.setPaid(false);
-//        orderRepository.save(order);
-//    }
+    private void recordStatusChange(Order order, OrderStatus fromStatus, OrderStatus toStatus, User user, String comment) {
+        com.example.ecom.common.model.OrderStatusHistory history =
+                new com.example.ecom.common.model.OrderStatusHistory(order, fromStatus, toStatus, user, comment);
+        orderStatusHistoryRepository.save(history);
+        if (order.getStatusHistories() != null) {
+            order.getStatusHistories().add(history);
+        }
+    }
+
+    private void restoreOrderStock(Order order) {
+        order.getItems().forEach(item -> productService.increaseQuantity(item.getProduct(), item.getQuantity()));
+    }
 
     private Order findByIdHelper(Long id) {
         return orderRepository.findById(id)
