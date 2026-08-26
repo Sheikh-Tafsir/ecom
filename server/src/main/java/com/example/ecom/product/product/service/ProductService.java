@@ -201,12 +201,12 @@ public class ProductService {
     public void decreaseForOrder(Product product, int quantity) {
         checkActive(product);
 
-        if (product.getQuantity() < quantity) {
-            throw new ValidationException("Product quantity is not available for product id: " + product.getId());
+        int updatedRows = productRepository.decreaseStockIfAvailable(product.getId(), quantity);
+        if (updatedRows == 0) {
+            throw new ValidationException("Product stock is insufficient or unavailable for product id: " + product.getId());
         }
 
         product.setQuantity(product.getQuantity() - quantity);
-        productRepository.save(product);
     }
 
     @Caching(evict = {

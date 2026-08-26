@@ -1,8 +1,21 @@
 CREATE INDEX IF NOT EXISTS idx_products_status ON products(status);
+CREATE INDEX IF NOT EXISTS idx_product_images_product_id ON product_images(product_id);
+CREATE INDEX IF NOT EXISTS idx_product_categories_category_id ON product_categories(category_id);
+
 CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_product_id ON order_items(product_id);
+
+CREATE INDEX IF NOT EXISTS idx_stock_items_stock_id ON stock_items(stock_id);
 CREATE INDEX IF NOT EXISTS idx_stock_items_product_id ON stock_items(product_id);
+
+CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments(order_id);
+CREATE INDEX IF NOT EXISTS idx_payments_transaction_id ON payments(transaction_id);
+
+CREATE INDEX IF NOT EXISTS idx_sales_order_id ON sales(order_id);
+CREATE INDEX IF NOT EXISTS idx_sales_product_id ON sales(product_id);
+
 CREATE INDEX IF NOT EXISTS idx_reviews_product_id ON reviews(product_id);
 CREATE INDEX IF NOT EXISTS idx_blogs_status ON blogs(status);
 

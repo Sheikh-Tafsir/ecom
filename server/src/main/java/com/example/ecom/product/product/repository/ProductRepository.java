@@ -6,11 +6,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,4 +52,23 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                                @Param("status") ProductStatus status,
                                Pageable pageable
     );
+
+    @Modifying
+    @Query("""
+                UPDATE Product p
+                SET p.quantity = p.quantity - :qty
+                WHERE p.id = :id
+                  AND p.quantity >= :qty
+                  AND p.deleted = false
+            """)
+    int decreaseStockIfAvailable(@Param("id") Long id, @Param("qty") int qty);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("""
+                UPDATE Product p
+                SET p.quantity = p.quantity + :qty
+                WHERE p.id = :id
+                  AND p.deleted = false
+            """)
+    int increaseStock(@Param("id") Long id, @Param("qty") int qty);
 }

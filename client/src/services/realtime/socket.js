@@ -11,7 +11,7 @@ let socket = null;
 let connectionPromise = null;
 
 export const connectSocket = async () => {
-    if (!isSocketOn) return
+    if (!isSocketOn()) return null;
 
     if (socket?.connected) return socket;
     if (connectionPromise) return connectionPromise;
@@ -33,21 +33,20 @@ export const connectSocket = async () => {
             let hasRetried = false;
 
             socket.on('connect', () => {
-                //console.log("Connected to socket server");
                 hasRetried = false;
             });
 
-            socket.once("connect_error", async (err) => {
+            socket.on("connect_error", async (err) => {
                 console.error("Socket connection error:", err);
 
-                if (err.message == "Unauthorized" && !hasRetried) {
+                if (err.message === "Unauthorized" && !hasRetried) {
                     hasRetried = true;
 
                     try {
-                        await refreshAccessToken();
+                        const newToken = await refreshAccessToken();
 
                         socket.auth = {
-                            token: getAccessToken(),
+                            token: newToken || getAccessToken(),
                         };
 
                         socket.connect();

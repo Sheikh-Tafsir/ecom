@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
@@ -43,7 +42,6 @@ public class AuthenticationFilter implements WebFilter {
 
         if (!StringUtils.hasText(token)) {
             log.debug("No auth token found in request headers or parameters");
-
             return chain.filter(exchange);
         }
 
@@ -52,22 +50,24 @@ public class AuthenticationFilter implements WebFilter {
             CustomUserDetails userDetails = new CustomUserDetails(claims);
 
             if (!userDetails.isEnabled()) {
-                log.error("User is not active: {}", userDetails.getEmail());
+                log.warn("User is not active: {}", userDetails.getEmail());
 
-                return chain.filter(exchange);
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete();
             }
 
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
             exchange.getAttributes().put(MDC_USER_ID_KEY, userDetails.getId());
 
             return chain.filter(exchange)
-                    .contextWrite(ctx -> ctx.put(MDC_USER_ID_KEY, userDetails.getId().toString()).putAll(ReactiveSecurityContextHolder.withAuthentication(authentication)));
+                    .contextWrite(ctx -> ctx
+                            .put(MDC_USER_ID_KEY, userDetails.getId().toString())
+                            .putAll(ReactiveSecurityContextHolder.withAuthentication(authentication))
+                    );
         } catch (Exception e) {
-            log.error("Invalid or expired JWT token", e);
+            log.error("Invalid or expired JWT token: {}", e.getMessage());
 
             exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
             return exchange.getResponse().setComplete();
