@@ -53,7 +53,7 @@ public class AuthService {
 
     public static final String SIGNUP_MAIL_TEXT = "Your One time password for password for signup is below:\n";
 
-    public static final String GOOGLE_OAUTH_API= "https://www.googleapis.com/oauth2/v1/userinfo?access_token={access_token}";
+    public static final String GOOGLE_OAUTH_API= "https://www.googleapis.com/oauth2/v3/userinfo?access_token={access_token}";
 
     @Value("${spring.profiles.active:dev}")
     private String springProfile;
@@ -172,13 +172,13 @@ public class AuthService {
                         status -> status.is4xxClientError() || status.is5xxServerError(),
                         response -> response.bodyToMono(String.class)
                                 .flatMap(body -> Mono.error(
-                                        new BadCredentialsException("Failed to fetch Google user info")
+                                        new BadCredentialsException("Failed to validate Google token")
                                 ))
                 )
                 .bodyToMono(GoogleUserDto.class)
                 .block();
 
-        if (googleUser == null || !googleUser.isVerified_email()) {
+        if (googleUser == null || !hasText(googleUser.getEmail()) || !googleUser.isEmailVerified()) {
             throw new BadCredentialsException("Google account email not verified");
         }
 
@@ -186,14 +186,14 @@ public class AuthService {
 
         if (isNull(user)) {
             user = new User();
-            user.setName(googleUser.getName());
+            user.setName(hasText(googleUser.getName()) ? googleUser.getName() : googleUser.getEmail());
             user.setEmail(googleUser.getEmail());
             user.setStatus(UserStatus.ACTIVE);
 
             Role role = roleService.findByName(RoleName.USER.getValue());
             user.getRoles().add(role);
 
-            user = save(user, generatePassword(googleUser.getName()));
+            user = save(user, generatePassword(user.getName()));
         }
 
         return getAuthTokens(user);

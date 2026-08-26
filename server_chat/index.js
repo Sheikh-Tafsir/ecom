@@ -40,9 +40,7 @@ app.use(ErrorHandler);
 const server = http.createServer(app);
 SocketHandler(server);
 
-const listener = isEnvironmentProduction() ? app : server;
-
-listener.listen(process.env.CHAT_SERVER_PORT, () => {
+server.listen(process.env.CHAT_SERVER_PORT, () => {
     console.info(`Chat server is running ${process.env.CHAT_SERVICE_URL}.`);
     endStartupPhase();
 });

@@ -37,7 +37,6 @@ import static com.example.ecom.common.utils.Utils.getValidPageable;
 import static com.example.ecom.common.utils.Utils.isNull;
 
 import com.example.ecom.notification.service.NotificationService;
-import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -78,7 +77,7 @@ public class OrderService {
             }
 
             if (status != OrderStatus.SHIPPED && status != OrderStatus.DELIVERED && status != OrderStatus.RETURNED) {
-               statuses = List.of(OrderStatus.SHIPPED);
+                statuses = List.of(OrderStatus.SHIPPED);
             }
 
             return orderRepository.findAllByStatus(null, statuses, dateRange.fromDate(), dateRange.toDate(), productName,
@@ -90,9 +89,10 @@ public class OrderService {
     }
 
     @PostAuthorize("""
-            returnObject.userId == authentication.principal.id ||
+            (returnObject.userId != null && returnObject.userId == authentication.principal.id) ||
             hasAnyAuthority(T(com.example.ecom.common.enums.Permission).ADMIN_ACCESS.getValue(),
-            T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())
+            T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue(),
+            T(com.example.ecom.common.enums.Permission).DELIVERY_MAN_ACCESS.getValue())
             """)
     public OrderResponse findById(Long id) {
         Order order = orderRepository.findDetailsById(id)

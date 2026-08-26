@@ -21,8 +21,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import com.example.ecom.common.dto.CustomUserDetails;
+import com.example.ecom.common.enums.OrderStatus;
+import org.springframework.security.access.AccessDeniedException;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import static com.example.ecom.common.enums.Permission.ADMIN_ACCESS;
+import static com.example.ecom.common.enums.Permission.SUPER_ADMIN_ACCESS;
+import static com.example.ecom.common.utils.SecurityUtil.hasPermission;
+import static com.example.ecom.common.utils.SecurityUtil.isOwner;
+import static com.example.ecom.common.utils.SecurityUtil.throwAccessException;
 
 @Slf4j
 @Service
@@ -41,10 +54,23 @@ public class BkashPaymentService implements PaymentService {
      */
     @Override
     @Transactional
-    public String create(CreatePaymentRequest request) {
+    public String create(CreatePaymentRequest request, CustomUserDetails userDetails) {
         Order order = orderRepository.findById(request.orderId())
                 .orElseThrow(() -> new EntityNotFoundException("Order not found with id: " + request.orderId()));
-        
+
+        if (userDetails != null && !isOwner(order.getUser().getId(), userDetails)
+                && !hasPermission(List.of(SUPER_ADMIN_ACCESS.getValue(), ADMIN_ACCESS.getValue()), userDetails)) {
+            throwAccessException(order.getUser().getId(), userDetails.getId(), "Order", order.getId());
+        }
+
+        if (order.isPaid()) {
+            throw new ValidationException("Order is already paid");
+        }
+
+        if (order.isCancelledOrRejected()) {
+            throw new ValidationException("Cannot pay for cancelled or rejected order");
+        }
+
         for (OrderItem item : order.getItems()) {
             if (item.getProduct().getQuantity() < item.getQuantity()) {
                 throw new ValidationException("Insufficient stock for product: " + item.getProduct().getName());
@@ -54,12 +80,13 @@ public class BkashPaymentService implements PaymentService {
         HttpHeaders headers = authHeaders();
 
         String merchantInvoiceNumber = "INV-" + UUID.randomUUID().toString().replace("-", "").substring(0, 11).toUpperCase();
+        BigDecimal payableAmount = order.getTotalPrice().setScale(2, RoundingMode.HALF_UP);
 
         Map<String, Object> body = Map.of(
                 "mode", "0011",          // Checkout URL mode
                 "payerReference", "Order_" + request.orderId(),
                 "callbackURL", config.getCallbackUrl(),
-                "amount", request.amount().setScale(2, java.math.RoundingMode.HALF_UP).toString(),
+                "amount", payableAmount.toString(),
                 "currency", "BDT",
                 "intent", "sale",
                 "merchantInvoiceNumber", merchantInvoiceNumber
@@ -90,9 +117,9 @@ public class BkashPaymentService implements PaymentService {
             payment.setOrderId(request.orderId());
             payment.setPaymentIntentId(paymentID);
             payment.setMerchantInvoiceNumber(merchantInvoiceNumber);
-            payment.setAmount(request.amount());
+            payment.setAmount(payableAmount);
             payment.setStatus(PaymentStatus.PENDING);
-            
+
             paymentRepository.save(payment);
 
             return bkashURL;

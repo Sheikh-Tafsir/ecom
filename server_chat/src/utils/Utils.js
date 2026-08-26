@@ -13,7 +13,7 @@ const isNotNull = (value) => {
 }
 
 const isEnvironmentProduction = () => {
-    return process.env.NODE_ENV == 'production';
+    return process.env.DEPLOYMENT_ENVIRONMENT == 'prod';
 }
 
 module.exports = {

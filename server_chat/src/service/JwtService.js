@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const randomUUID = require('crypto');
+const { randomUUID } = require('crypto');
 
 const isAccessTokenValid = (token) => {
     return jwt.verify(

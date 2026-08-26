@@ -9,6 +9,7 @@ import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,8 @@ public class CategoryService {
         return categoryRepository.findAll();
     }
 
+    @PreAuthorize("hasAnyAuthority(T(com.example.ecom.common.enums.Permission).ADMIN_ACCESS.getValue()," +
+            "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @CacheEvict(value = CACHE_CATEGORIES, allEntries = true)
     @Transactional
     public Long create(CategorySaveRequest request) {
@@ -40,6 +43,8 @@ public class CategoryService {
         return category.getId();
     }
 
+    @PreAuthorize("hasAnyAuthority(T(com.example.ecom.common.enums.Permission).ADMIN_ACCESS.getValue()," +
+            "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @CacheEvict(value = CACHE_CATEGORIES, allEntries = true)
     @Transactional
     public void update(Long id, CategorySaveRequest request) {
@@ -51,6 +56,8 @@ public class CategoryService {
         categoryRepository.save(category);
     }
 
+    @PreAuthorize("hasAnyAuthority(T(com.example.ecom.common.enums.Permission).ADMIN_ACCESS.getValue()," +
+            "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @CacheEvict(value = CACHE_CATEGORIES, allEntries = true)
     @Transactional
     public void delete(Long id) {

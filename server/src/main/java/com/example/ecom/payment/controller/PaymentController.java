@@ -15,6 +15,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
+import com.example.ecom.common.dto.CustomUserDetails;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+
 @Slf4j
 @RestController
 @RequestMapping("/payment")
@@ -31,8 +35,10 @@ public class PaymentController {
      * Called by React to initiate payment
      */
     @PostMapping
-    public ResponseEntity<ApiResponse<String>> createPayment(@RequestBody CreatePaymentRequest request) {
-        String bkashURL = paymentService.create(request);
+    public ResponseEntity<ApiResponse<String>> createPayment(@RequestBody CreatePaymentRequest request,
+                                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        String bkashURL = paymentService.create(request, userDetails);
         return ResponseUtils.ok(bkashURL, "found");
     }
 
@@ -100,6 +106,8 @@ public class PaymentController {
      * Query payment status
      */
     @GetMapping("/query/{paymentId}")
+    @PreAuthorize("hasAnyAuthority(T(com.example.ecom.common.enums.Permission).ADMIN_ACCESS.getValue()," +
+            "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     public ResponseEntity<?> findById(@PathVariable String paymentId) {
         return ResponseEntity.ok(paymentService.findByPaymentId(paymentId));
     }
@@ -108,6 +116,8 @@ public class PaymentController {
      * Refund endpoint
      */
     @PostMapping("/refund")
+    @PreAuthorize("hasAnyAuthority(T(com.example.ecom.common.enums.Permission).ADMIN_ACCESS.getValue()," +
+            "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     public ResponseEntity<?> refundPayment(@RequestParam String paymentID,
                                            @RequestParam String trxID,
                                            @RequestParam String amount,

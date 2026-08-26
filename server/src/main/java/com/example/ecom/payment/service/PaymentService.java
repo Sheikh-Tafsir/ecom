@@ -1,12 +1,13 @@
 package com.example.ecom.payment.service;
 
+import com.example.ecom.common.dto.CustomUserDetails;
 import com.example.ecom.payment.dto.CreatePaymentRequest;
 import com.example.ecom.payment.dto.CreatePaymentResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 
 public interface PaymentService {
 
-    String create(CreatePaymentRequest request);
+    String create(CreatePaymentRequest request, CustomUserDetails userDetails);
 
     CreatePaymentResponse execute(String paymentID);
 
@@ -18,3 +19,4 @@ public interface PaymentService {
 
     void updatePaymentStatus(String paymentID, com.example.ecom.payment.dto.CreatePaymentResponse result, boolean success);
 }
+
