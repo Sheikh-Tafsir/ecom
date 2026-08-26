@@ -10,6 +10,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
@@ -21,6 +23,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 import static com.example.ecom.common.filter.LoggingFilter.MDC_USER_ID_KEY;
+import static com.example.ecom.common.utils.CacheConstants.CACHE_REVOKED_ACCESS_TOKENS;
 import static com.example.ecom.common.utils.ResponseUtils.error;
 
 @Slf4j
@@ -30,6 +33,8 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     public static final String BEARER_PREFIX = "Bearer ";
 
     private final JwtService jwtService;
+
+    private final CacheManager cacheManager;
 
     private static final String ACCESS_TOKEN = "accessToken";
 
@@ -55,6 +60,18 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         try {
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 Claims claims = jwtService.parseAccessTokenClaims(token);
+
+                String jti = claims.getId();
+                if (StringUtils.hasText(jti) && cacheManager != null) {
+                    Cache revokedTokensCache = cacheManager.getCache(CACHE_REVOKED_ACCESS_TOKENS);
+                    if (revokedTokensCache != null && revokedTokensCache.get(jti) != null) {
+                        log.warn("Access token JTI: {} is revoked/blacklisted", jti);
+                        SecurityContextHolder.clearContext();
+                        error(response, HttpStatus.UNAUTHORIZED, "Access token has been revoked");
+                        return;
+                    }
+                }
+
                 CustomUserDetails userDetails = new CustomUserDetails(claims);
 
                 if (!userDetails.isEnabled()) {

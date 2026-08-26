@@ -2,6 +2,8 @@ package com.example.ecom.auth.controller;
 
 import com.example.ecom.auth.dto.*;
 import com.example.ecom.auth.service.AuthService;
+import com.example.ecom.auth.service.AuthTokenService;
+import com.example.ecom.auth.service.OAuthService;
 import com.example.ecom.auth.validator.AuthValidator;
 import com.example.ecom.common.dto.ApiResponse;
 import com.example.ecom.common.utils.ResponseUtils;
@@ -14,8 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 import static com.example.ecom.common.utils.Utils.checkErrors;
 
 @Slf4j
@@ -27,6 +27,10 @@ public class AuthController {
     private final AuthValidator authValidator;
 
     private final AuthService authService;
+
+    private final AuthTokenService authTokenService;
+
+    private final OAuthService oAuthService;
 
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<Void>> signup(@Valid @RequestBody SignupRequest signupRequest,
@@ -52,7 +56,7 @@ public class AuthController {
                                                                HttpServletResponse response) {
 
         TokenDto tokenDto = authService.verifySignupOtp(verifySignupOtpRequest);
-        authService.addRefreshCookie(response, tokenDto);
+        authTokenService.addRefreshCookie(response, tokenDto);
 
         return ResponseUtils.created(tokenDto.getAccessToken(), "Sign up successful!");
     }
@@ -62,17 +66,17 @@ public class AuthController {
                                                      HttpServletResponse response) {
 
         TokenDto tokenDto = authService.login(loginRequest);
-        authService.addRefreshCookie(response, tokenDto);
+        authTokenService.addRefreshCookie(response, tokenDto);
 
         return ResponseUtils.ok(tokenDto.getAccessToken(), "Login successful!");
     }
 
     @PostMapping("/google-login")
-    public ResponseEntity<ApiResponse<String>> loginWithGoogle(@RequestBody Map<String, String> request,
+    public ResponseEntity<ApiResponse<String>> loginWithGoogle(@Valid @RequestBody GoogleLoginRequest request,
                                                                HttpServletResponse response) {
 
-        TokenDto tokenDto = authService.loginWithGoogle(request);
-        authService.addRefreshCookie(response, tokenDto);
+        TokenDto tokenDto = oAuthService.loginWithGoogle(request);
+        authTokenService.addRefreshCookie(response, tokenDto);
 
         return ResponseUtils.ok(tokenDto.getAccessToken(), "Login with Google successful");
     }
@@ -80,8 +84,8 @@ public class AuthController {
     @PostMapping("/access-token/refresh")
     public ResponseEntity<ApiResponse<String>> refreshAccessToken(HttpServletRequest request,
                                                                  HttpServletResponse response) {
-        TokenDto tokenDto = authService.refreshAccessToken(request);
-        authService.addRefreshCookie(response, tokenDto);
+        TokenDto tokenDto = authTokenService.refreshAccessToken(request);
+        authTokenService.addRefreshCookie(response, tokenDto);
         return ResponseUtils.ok(tokenDto.getAccessToken(), "Access Token refreshed successfully");
     }
 
@@ -110,7 +114,8 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
-        authService.logout(request, response);
+        authTokenService.logout(request, response);
         return ResponseUtils.ok("Logout Successful");
     }
 }
+

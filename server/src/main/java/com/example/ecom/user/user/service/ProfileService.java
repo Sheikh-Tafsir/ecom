@@ -1,5 +1,6 @@
 package com.example.ecom.user.user.service;
 
+import com.example.ecom.auth.service.AuthTokenService;
 import com.example.ecom.common.dto.CustomUserDetails;
 import com.example.ecom.common.model.User;
 import com.example.ecom.common.service.fileStorage.FileStorageService;
@@ -35,6 +36,8 @@ public class ProfileService {
 
     private final PasswordEncoder passwordEncoder;
 
+    private final AuthTokenService authTokenService;
+
     @Cacheable(value = CACHE_PROFILE, key = "#userDetails.id")
     public ProfileResponse getProfile(CustomUserDetails userDetails) {
         User user = userService.findByIdHelper(userDetails.getId());
@@ -63,10 +66,6 @@ public class ProfileService {
     }
 
     @Transactional
-    @Caching(evict = {
-            @CacheEvict(value = CACHE_PROFILE, key = "#userDetails.id"),
-            @CacheEvict(value = CACHE_USER, key = "#userDetails.id")
-    })
     public void updatePassword(ChangePasswordRequest changePasswordRequest, CustomUserDetails userDetails) {
         User user = userService.findByIdHelper(userDetails.getId());
         if (!passwordEncoder.matches(changePasswordRequest.currentPassword(), user.getPassword())) {
@@ -75,6 +74,7 @@ public class ProfileService {
 
         user.setPassword(passwordEncoder.encode(changePasswordRequest.newPassword()));
         userRepository.save(user);
+        authTokenService.revokeAllForUser(user.getId());
     }
 
     @Transactional

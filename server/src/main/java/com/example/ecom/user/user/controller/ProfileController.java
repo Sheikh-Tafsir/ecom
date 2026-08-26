@@ -28,6 +28,8 @@ import java.io.IOException;
 
 import static com.example.ecom.common.utils.Utils.checkErrors;
 
+import com.example.ecom.auth.service.AuthTokenService;
+
 @Slf4j
 @RestController
 @RequestMapping("/profile")
@@ -38,7 +40,7 @@ public class ProfileController {
 
     private final ProfileUpdateRequestValidator profileUpdateRequestValidator;
 
-    private final AuthService authService;
+    private final AuthTokenService authTokenService;
 
     private final ProfileService profileService;
 
@@ -61,8 +63,8 @@ public class ProfileController {
 
         User user = profileService.update(updateProfileRequest, userDetails);
 
-        TokenDto tokenDto = authService.getAuthTokens(user);
-        authService.addRefreshCookie(response, tokenDto);
+        TokenDto tokenDto = authTokenService.getAuthTokens(user);
+        authTokenService.addRefreshCookie(response, tokenDto);
 
         return ResponseUtils.ok(new ProfileResponse(user, tokenDto.getAccessToken()), messageService.get("successfully.updated", "Profile"));
     }
@@ -73,7 +75,7 @@ public class ProfileController {
                                     HttpServletResponse response) {
 
         profileService.delete(userDetails);
-        authService.logout(request, response);
+        authTokenService.logout(request, response);
 
         return ResponseUtils.ok(messageService.get("successfully.deleted", "Profile"));
     }

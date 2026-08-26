@@ -1,25 +1,19 @@
 package com.example.ecom.auth.service;
 
 import com.example.ecom.auth.dto.*;
+import com.example.ecom.auth.enums.OtpType;
 import com.example.ecom.auth.repository.AuthRepository;
 import com.example.ecom.common.dto.CustomUserDetails;
-import com.example.ecom.auth.enums.OtpType;
 import com.example.ecom.common.enums.RoleName;
 import com.example.ecom.common.enums.UserStatus;
-import com.example.ecom.common.exception.InvalidRefreshTokenException;
 import com.example.ecom.common.model.Role;
 import com.example.ecom.common.model.User;
-import com.example.ecom.auth.dto.Otp;
-import com.example.ecom.common.service.JwtService;
 import com.example.ecom.common.service.mail.MailService;
 import com.example.ecom.user.role.service.RoleService;
 import com.example.ecom.user.user.service.UserService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,18 +21,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
-import static com.example.ecom.common.utils.CookieUtils.addCookie;
-import static com.example.ecom.common.utils.CookieUtils.getCookieValue;
-import static com.example.ecom.common.utils.Utils.*;
 import static java.util.Objects.isNull;
-import static org.springframework.util.StringUtils.hasText;
 
 @Slf4j
 @Service
@@ -53,22 +37,9 @@ public class AuthService {
 
     public static final String SIGNUP_MAIL_TEXT = "Your One time password for password for signup is below:\n";
 
-    public static final String GOOGLE_OAUTH_API= "https://www.googleapis.com/oauth2/v3/userinfo?access_token={access_token}";
-
-    @Value("${spring.profiles.active:dev}")
-    private String springProfile;
-
-    @Value("${refresh.token.name}")
-    private String refreshTokenName;
-
-    @Value("${refresh.token.validity:604800}")
-    private long refreshTokenValidity;
-
     private final AuthRepository authRepository;
 
     private final MailService mailService;
-
-    private final JwtService jwtService;
 
     private final OtpService otpService;
 
@@ -76,11 +47,9 @@ public class AuthService {
 
     private final UserService userService;
 
-    private final UserRefreshTokenService userRefreshTokenService;
+    private final AuthTokenService authTokenService;
 
     private final AuthenticationManager authenticationManager;
-
-    private final WebClient webClient;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -98,7 +67,7 @@ public class AuthService {
 
         User user = userService.findByIdHelper(userDetails.getId());
 
-        return getAuthTokens(user);
+        return authTokenService.getAuthTokens(user);
     }
 
     @Transactional
@@ -151,82 +120,7 @@ public class AuthService {
         user.setStatus(UserStatus.ACTIVE);
         user = authRepository.save(user);
 
-        return getAuthTokens(user);
-    }
-
-    @Transactional
-    public TokenDto loginWithGoogle(Map<String, String> request) {
-        String token = request.get("token");
-
-        if (!hasText(token)) {
-            throw new BadCredentialsException("Invalid google login token");
-        }
-
-        Map<String, String> params = new HashMap<>();
-        params.put("access_token", token);
-
-        GoogleUserDto googleUser = webClient.get()
-                .uri(GOOGLE_OAUTH_API, params)
-                .retrieve()
-                .onStatus(
-                        status -> status.is4xxClientError() || status.is5xxServerError(),
-                        response -> response.bodyToMono(String.class)
-                                .flatMap(body -> Mono.error(
-                                        new BadCredentialsException("Failed to validate Google token")
-                                ))
-                )
-                .bodyToMono(GoogleUserDto.class)
-                .block();
-
-        if (googleUser == null || !hasText(googleUser.getEmail()) || !googleUser.isEmailVerified()) {
-            throw new BadCredentialsException("Google account email not verified");
-        }
-
-        User user = findByEmail(googleUser.getEmail());
-
-        if (isNull(user)) {
-            user = new User();
-            user.setName(hasText(googleUser.getName()) ? googleUser.getName() : googleUser.getEmail());
-            user.setEmail(googleUser.getEmail());
-            user.setStatus(UserStatus.ACTIVE);
-
-            Role role = roleService.findByName(RoleName.USER.getValue());
-            user.getRoles().add(role);
-
-            user = save(user, generatePassword(user.getName()));
-        }
-
-        return getAuthTokens(user);
-    }
-
-    public void addRefreshCookie(HttpServletResponse response, TokenDto authResponse) {
-        addCookie(response, refreshTokenName, authResponse.getRefreshToken(), refreshTokenValidity, isProductionEnvironment(springProfile));
-    }
-
-    @Transactional
-    public TokenDto refreshAccessToken(HttpServletRequest request) {
-        String refreshToken = getCookieValue(request, refreshTokenName);
-
-        if (!hasText(refreshToken) || !jwtService.isRefreshTokenValid(refreshToken)) {
-            throw new InvalidRefreshTokenException("Invalid refresh token");
-        }
-
-        User user = userRefreshTokenService.validate(refreshToken);
-
-        Date refreshTokenExpiration = jwtService.getExpirationFromRefreshToken(refreshToken);
-        return getAuthTokens(user, refreshTokenExpiration);
-    }
-
-    @Transactional
-    public void logout(HttpServletRequest request, HttpServletResponse response) {
-        String refreshToken = getCookieValue(request, refreshTokenName);
-
-        if (hasText(refreshToken) && jwtService.isRefreshTokenValid(refreshToken)) {
-            String jti = jwtService.getJtiFromRefreshToken(refreshToken);
-            userRefreshTokenService.revoke(jti);
-        }
-
-        addCookie(response, refreshTokenName, null, 0, isProductionEnvironment(springProfile));
+        return authTokenService.getAuthTokens(user);
     }
 
     public void forgetPassword(OtpRequest request) {
@@ -251,27 +145,7 @@ public class AuthService {
         otpService.verifyOtp(OtpType.FORGET, request.otp(), request.email());
 
         save(user, request.password());
-    }
-
-    @Transactional
-    public TokenDto getAuthTokens(User user) {
-        return getAuthTokens(user, null);
-    }
-
-    @Transactional
-    public TokenDto getAuthTokens(User user, Date refreshTokenExpiration) {
-        if (user.isNotActive()) {
-            throw new ValidationException("User is " + user.getStatus().getValue());
-        }
-
-        String accessToken = jwtService.generateAccessToken(user);
-        String refreshToken = isNull(refreshTokenExpiration)
-                ? jwtService.generateRefreshToken(user)
-                : jwtService.generateRefreshToken(user, refreshTokenExpiration);
-
-        userRefreshTokenService.create(user, refreshToken);
-
-        return TokenDto.builder().accessToken(accessToken).refreshToken(refreshToken).build();
+        authTokenService.revokeAllForUser(user.getId());
     }
 
     private User findByEmail(String email) {
@@ -281,11 +155,5 @@ public class AuthService {
     private User save(User user, String password) {
         user.setPassword(passwordEncoder.encode(password));
         return authRepository.save(user);
-    }
-
-    private void checkActive(User user) {
-        if (user.getDeleted()) {
-            throw new RuntimeException("User is deleted");
-        }
     }
 }

@@ -18,6 +18,9 @@ public interface UserRefreshTokenRepository extends JpaRepository<UserRefreshTok
 
     Optional<UserRefreshToken> findByJti(String jti);
 
+    @Query("SELECT urt FROM UserRefreshToken urt JOIN FETCH urt.user u JOIN FETCH u.roles r LEFT JOIN FETCH r.permissions WHERE urt.jti = :jti")
+    Optional<UserRefreshToken> findDetailsByJti(@Param("jti") String jti);
+
     @Modifying
     @Query("""
                 UPDATE UserRefreshToken urt

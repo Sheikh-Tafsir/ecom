@@ -62,8 +62,8 @@ public class SecurityConfig {
     private final JwtService jwtService;
 
     @Bean
-    public AuthenticationFilter authenticationFilter() {
-        return new AuthenticationFilter(jwtService);
+    public AuthenticationFilter authenticationFilter(org.springframework.cache.CacheManager cacheManager) {
+        return new AuthenticationFilter(jwtService, cacheManager);
     }
 
     @Bean
@@ -73,7 +73,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, Optional<UserTrafficControlFilter> userTrafficControlFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   Optional<UserTrafficControlFilter> userTrafficControlFilter,
+                                                   AuthenticationFilter authenticationFilter) throws Exception {
         http.cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
@@ -95,7 +97,7 @@ public class SecurityConfig {
                         .requestMatchers("/payment/callback").permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterAfter(authenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterAfter(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         userTrafficControlFilter.ifPresent(filter ->
                 http.addFilterAfter(filter, AuthenticationFilter.class));
