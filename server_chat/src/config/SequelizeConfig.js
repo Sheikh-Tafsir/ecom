@@ -11,7 +11,7 @@ const password = process.env.DB_PASSWORD;
 const host = process.env.DB_HOST;
 const port = process.env.DB_PORT;
 
-const sslOption = isEnvironmentProduction()
+const sslOption = (isEnvironmentProduction() && process.env.DB_SSL !== 'false')
   ? { ssl: { require: true, rejectUnauthorized: false } }
   : {};
 

@@ -26,7 +26,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {Axios} from '@/services/http/Axios';
+import {AuthenticatedAxios} from '@/services/http/Axios';
 import PaginationButton from '@/components/common/PaginationButton';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay';
 import {formatDateAndTime, GLOBAL_ERROR, handleErrors, hasPermission} from '@/utils';
@@ -63,7 +63,7 @@ import {ReportDialog} from "@/components/common/ReportDialog";
 const fetchOrders = async ({queryKey}) => {
     const [, params] = queryKey;
 
-    const response = await Axios.get("/orders", {
+    const response = await AuthenticatedAxios.get("/orders", {
         params: {
             page: params.page - 1,
             sort: params.sort,
@@ -176,7 +176,7 @@ const Orders = () => {
 
     const changeOrderStatus = async (id, status) => {
         try {
-            await Axios.patch(`/orders/${id}/status`, {
+            await AuthenticatedAxios.patch(`/orders/${id}/status`, {
                 status
             });
 
@@ -190,7 +190,7 @@ const Orders = () => {
 
     const cancelOrder = async (id) => {
         try {
-            await Axios.patch(`/orders/${id}/cancel`);
+            await AuthenticatedAxios.patch(`/orders/${id}/cancel`);
 
             await queryClient.invalidateQueries({queryKey: ["orders"]});
             toastify(TOAST_TYPE.SUCCESS, `Cancelled order with ID ${id}`)

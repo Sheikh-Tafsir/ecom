@@ -14,7 +14,7 @@ import {
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import {Badge} from "@/components/ui/badge"
 import {Separator} from "@/components/ui/separator"
-import {Axios} from '@/services/http/Axios.js';
+import {AuthenticatedAxios} from '@/services/http/Axios.js';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay.jsx';
 import {formatDateAndTime} from '@/utils/index.js';
 import {TOAST_TYPE} from "@/constants/app.constants";
@@ -23,7 +23,7 @@ import {BackButton} from '@/components/common/BackButton';
 import {queryKeys} from "@/services/reactQuery/queryKeys";
 
 const fetchStock = async (id) => {
-    const response = await Axios.get(`/stocks/${id}`)
+    const response = await AuthenticatedAxios.get(`/stocks/${id}`)
     return response.data.data
 }
 

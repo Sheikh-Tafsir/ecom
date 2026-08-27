@@ -1,4 +1,4 @@
-import { API_PATH, AuthAxios } from "@/services/http/Axios.js";
+import { API_PATH, AuthenticatedAxios } from "@/services/http/Axios.js";
 import { getAccessToken } from "@/utils/AuthUtils";
 import { useNotificationStore } from "@/store/useNotificationStore.js";
 
@@ -7,6 +7,7 @@ export const isSseOn = () => import.meta.env.VITE_SSE_ON === "true";
 class NotificationService {
   constructor() {
     this.eventSource = null;
+    this.isConnecting = false;
   }
 
   start() {
@@ -15,13 +16,19 @@ class NotificationService {
   }
 
   async connect() {
+    if (this.isConnecting) return;
+    this.isConnecting = true;
+
     if (this.eventSource) {
       this.eventSource.close();
+      this.eventSource = null;
     }
 
     try {
-      const response = await AuthAxios.get("/notifications/sse-token");
+      const response = await AuthenticatedAxios.get("/notifications/sse-token");
       const ticket = response.data.data;
+
+      if (!this.isConnecting) return;
 
       this.eventSource = new EventSource(`${API_PATH}/notifications/subscribe?ticket=${ticket}`);
 
@@ -56,10 +63,13 @@ class NotificationService {
           this.connect();
         }
       }, 5000);
+    } finally {
+      this.isConnecting = false;
     }
   }
 
   stop() {
+    this.isConnecting = false;
     if (this.eventSource) {
       this.eventSource.close();
       this.eventSource = null;

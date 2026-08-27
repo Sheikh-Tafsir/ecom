@@ -11,7 +11,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import {Button} from "@/components/ui/button";
-import {Axios} from "@/services/http/Axios";
+import {AuthenticatedAxios} from "@/services/http/Axios";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
 import {ROLE_PREFIX} from "@/constants/auth.constants";
 import {TOAST_TYPE, ALERT_TYPE} from "@/constants/app.constants";
@@ -21,12 +21,12 @@ import {cn} from "@/lib/utils";
 import {queryKeys} from "@/services/reactQuery/queryKeys";
 
 const fetchRoles = async () => {
-    const response = await Axios.get("/roles");
+    const response = await AuthenticatedAxios.get("/roles");
     return response.data.data;
 };
 
 const deleteRoleService = async (id) => {
-    await Axios.delete(`/roles/${id}`);
+    await AuthenticatedAxios.delete(`/roles/${id}`);
 };
 
 const Roles = () => {

@@ -10,14 +10,14 @@ import {
     CommandItem,
     CommandList,
 } from "@/components/ui/command"
-import { Axios } from "@/services/http/Axios";
+import { AuthenticatedAxios } from "@/services/http/Axios";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 const ChatSearch = ({ setSearchedUser }) => {
     const [searchTerm, setSearchTerm] = useState("");
 
     const fetchUsers = async () => {
-        const response = await Axios.get(`/users/search`, {
+        const response = await AuthenticatedAxios.get(`/users/search`, {
             params: {
                 name: searchTerm,
             }

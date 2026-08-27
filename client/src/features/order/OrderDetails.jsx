@@ -18,7 +18,7 @@ import StaredLabel from "@/components/common/StaredLabel"
 import {useUserStore} from "@/store/useUserStore"
 import InputReadOnly from "@/components/common/InputReadOnly"
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay"
-import {Axios} from "@/services/http/Axios"
+import {AuthenticatedAxios} from "@/services/http/Axios"
 import {ORDER_STATUS} from "@/constants/order.constants";
 import {TOAST_TYPE} from "@/constants/app.constants";
 import {toastify} from "@/common/toastify.js"
@@ -28,7 +28,7 @@ import {getTimeAgo} from "@/utils/DateUtils"
 import {cn} from "@/lib/utils"
 
 const fetchOrder = async (id) => {
-    const response = await Axios.get(`/orders/${id}`);
+    const response = await AuthenticatedAxios.get(`/orders/${id}`);
     return response.data.data;
 }
 

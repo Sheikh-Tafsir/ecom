@@ -3,7 +3,7 @@ import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import {Axios} from "@/services/http/Axios";
+import {AuthenticatedAxios} from "@/services/http/Axios";
 import {Button} from "@/components/ui/button";
 import {
     Dialog,
@@ -27,22 +27,22 @@ const faqSchema = z.object({
 });
 
 const getAllFaqs = async () => {
-    const response = await Axios.get("/faqs");
+    const response = await AuthenticatedAxios.get("/faqs");
     return response.data.data;
 };
 
 const createFaq = async (data) => {
-    const response = await Axios.post("/faqs", data);
+    const response = await AuthenticatedAxios.post("/faqs", data);
     return response.data.data;
 };
 
 const updateFaq = async (id, data) => {
-    const response = await Axios.put(`/faqs/${id}`, data);
+    const response = await AuthenticatedAxios.put(`/faqs/${id}`, data);
     return response.data.data;
 };
 
 const deleteFaq = async (id) => {
-    const response = await Axios.delete(`/faqs/${id}`);
+    const response = await AuthenticatedAxios.delete(`/faqs/${id}`);
     return response.data;
 };
 

@@ -131,7 +131,7 @@ CREATE TABLE IF NOT EXISTS order_history (
     to_status VARCHAR(50) NOT NULL,
     changed_by_user_id BIGINT REFERENCES users(id),
     comment VARCHAR(500),
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 6. Payments & Sales

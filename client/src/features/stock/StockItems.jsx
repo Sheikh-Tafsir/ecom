@@ -24,7 +24,7 @@ import {
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {Button} from '@/components/ui/button.jsx';
-import {Axios} from '@/services/http/Axios.js';
+import {AuthenticatedAxios} from '@/services/http/Axios.js';
 import PaginationButton from '@/components/common/PaginationButton.jsx';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay.jsx';
 import {
@@ -44,7 +44,7 @@ import {queryKeys} from "@/services/reactQuery/queryKeys";
 const fetchStockItems = async ({queryKey}) => {
     const [, params] = queryKey
 
-    const response = await Axios.get("/stocks/items", {
+    const response = await AuthenticatedAxios.get("/stocks/items", {
         params: {
             page: params.page - 1,
             sort: params.sort,

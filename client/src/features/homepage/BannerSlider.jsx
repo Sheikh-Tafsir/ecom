@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Axios } from "@/services/http/Axios";
+import { AuthenticatedAxios } from "@/services/http/Axios";
 import {
     Carousel,
     CarouselContent,
@@ -11,7 +11,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 
 const getActiveBanners = async () => {
-    const response = await Axios.get("/banners/active");
+    const response = await AuthenticatedAxios.get("/banners/active");
     return response.data.data;
 };
 

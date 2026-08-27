@@ -12,7 +12,7 @@ import {Label} from "@/components/ui/label"
 import {Separator} from "@/components/ui/separator"
 import {useCartStore} from "@/store/useCartStore"
 import {useUserStore} from "@/store/useUserStore"
-import {Axios} from "@/services/http/Axios"
+import {AuthenticatedAxios} from "@/services/http/Axios"
 import {GLOBAL_ERROR, handleErrors} from "@/utils"
 import {ButtonLoading} from "@/components/common/ButtonLoading"
 import InputError from "@/components/common/InputError.jsx"
@@ -33,7 +33,7 @@ const checkoutSchema = z.object({
 
 const createOrder = async (items, name, data, idempotencyKey) => {
     try {
-        const response = await Axios.post("/orders", {
+        const response = await AuthenticatedAxios.post("/orders", {
                 items,
                 name,
                 ...data,
@@ -55,7 +55,7 @@ const createOrder = async (items, name, data, idempotencyKey) => {
 
 export const createPayment = async (order, userId) => {
     try {
-        const response = await Axios.post("/payment", {
+        const response = await AuthenticatedAxios.post("/payment", {
             userId: userId,
             orderId: order?.id,
             amount: order?.totalPrice,

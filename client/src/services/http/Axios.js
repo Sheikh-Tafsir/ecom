@@ -7,19 +7,19 @@ import {TOAST_TYPE} from "@/constants/app.constants";
 const API_PATH = import.meta.env.VITE_API_PATH;
 const TIMEOUT = 5000;
 
-const AuthAxios = axios.create({
+const PublicAxios = axios.create({
     baseURL: API_PATH,
     withCredentials: true,
     timeout: TIMEOUT,
 });
 
-const Axios = axios.create({
+const AuthenticatedAxios = axios.create({
     baseURL: API_PATH,
     withCredentials: true,
     timeout: TIMEOUT,
 });
 
-Axios.interceptors.request.use(
+AuthenticatedAxios.interceptors.request.use(
     async (config) => {
         const token = getAccessToken();
 
@@ -33,7 +33,7 @@ Axios.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-Axios.interceptors.response.use(
+AuthenticatedAxios.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error?.config;
@@ -47,6 +47,16 @@ Axios.interceptors.response.use(
             }
 
             return Promise.reject(error);
+        }
+
+        if (response.status == 404) {
+            const globalError = response.data?.errors?.global?.[0] || response.data?.errors?.global;
+            if (globalError && typeof globalError === 'string' && globalError.includes("User with id") && globalError.includes("not found")) {
+                console.warn("User session refers to a non-existent user in the database. Logging out.");
+                toastify(TOAST_TYPE.INFO, "Your session is invalid. Please log in again.");
+                await logout();
+                return Promise.reject(error);
+            }
         }
 
         if (response.status == 401) {
@@ -73,7 +83,7 @@ Axios.interceptors.response.use(
                 originalRequest.headers = originalRequest.headers || {};
                 originalRequest.headers.Authorization = `Bearer ${token}`;
 
-                return Axios.request(originalRequest);
+                return AuthenticatedAxios.request(originalRequest);
             }
 
             console.error("Authorization error even after refreshing access token", error);
@@ -122,7 +132,7 @@ const refreshAccessToken = async () => {
     isRefreshing = true;
 
     try {
-        const response = await AuthAxios.post("/auth/access-token/refresh");
+        const response = await PublicAxios.post("/auth/access-token/refresh");
         const token = response.data.data;
 
         saveAccessToken(token);
@@ -150,7 +160,7 @@ const refreshAccessToken = async () => {
 
 const logout = async () => {
     try {
-        await AuthAxios.post("/auth/logout");
+        await PublicAxios.post("/auth/logout");
     } catch (error) {
         console.error("Logout failed:", error);
     } finally {
@@ -164,4 +174,4 @@ const logout = async () => {
     }
 };
 
-export {API_PATH, Axios, AuthAxios, refreshAccessToken, logout};
+export {API_PATH, AuthenticatedAxios, PublicAxios, refreshAccessToken, logout};

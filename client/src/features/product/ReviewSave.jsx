@@ -4,7 +4,7 @@ import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {Controller, useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 
-import {Axios} from "@/services/http/Axios";
+import {AuthenticatedAxios} from "@/services/http/Axios";
 
 import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
 import {
@@ -31,7 +31,7 @@ const ReviewSchema = z.object({
 });
 
 const saveReview = (id, data) => {
-    const response = Axios.post(`/products/${id}/review`, data);
+    const response = AuthenticatedAxios.post(`/products/${id}/review`, data);
     return response.data.data;
 }
 

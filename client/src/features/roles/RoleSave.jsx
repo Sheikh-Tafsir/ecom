@@ -10,7 +10,7 @@ import {
     Card, CardContent, CardFooter, CardHeader, CardTitle,
 } from '@/components/ui/card.jsx';
 import {Input} from '@/components/ui/input.jsx';
-import {Axios} from '@/services/http/Axios';
+import {AuthenticatedAxios} from '@/services/http/Axios';
 import {ButtonLoading} from "@/components/common/ButtonLoading";
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay';
 import StaredLabel from '@/components/common/StaredLabel';
@@ -29,16 +29,16 @@ const RoleSchema = z.object({
 });
 
 const fetchRole = async (id) => {
-    const response = await Axios.get(`/roles/${id}`)
+    const response = await AuthenticatedAxios.get(`/roles/${id}`)
     return response.data.data
 };
 
 const createRoleService = async (payload) => {
-    await Axios.post('/roles', payload);
+    await AuthenticatedAxios.post('/roles', payload);
 };
 
 const updateRoleService = async (id, payload) => {
-    await Axios.put(`/roles/${id}`, payload);
+    await AuthenticatedAxios.put(`/roles/${id}`, payload);
 };
 
 const RoleSave = () => {

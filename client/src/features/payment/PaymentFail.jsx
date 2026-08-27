@@ -4,14 +4,14 @@ import {XCircle, RefreshCw, Eye, AlertCircle, ShoppingCart} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {useUserStore} from "@/store/useUserStore";
 import {TOAST_TYPE} from "@/constants/app.constants";
-import {Axios} from "@/services/http/Axios";
+import {AuthenticatedAxios} from "@/services/http/Axios";
 import {createPayment} from "@/features/order/OrderCreate";
 import {toastify} from "@/common/toastify.js";
 import {Card, CardContent, CardHeader, CardTitle, CardDescription} from "@/components/ui/card";
 
 const tryAgain = async (orderId, userId, navigate) => {
     try {
-        const response = await Axios.get(`/orders/${orderId}`);
+        const response = await AuthenticatedAxios.get(`/orders/${orderId}`);
         const order = response.data?.data;
 
         // Notify user that payment is being initiated

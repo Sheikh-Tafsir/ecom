@@ -4,7 +4,7 @@ import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import {Axios} from "@/services/http/Axios";
+import {AuthenticatedAxios} from "@/services/http/Axios";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {
@@ -38,22 +38,22 @@ const blogSchema = z.object({
 });
 
 const getAllBlogs = async (params) => {
-    const response = await Axios.get("/blogs", {params});
+    const response = await AuthenticatedAxios.get("/blogs", {params});
     return response.data.data;
 };
 
 const createBlog = async (data) => {
-    const response = await Axios.post("/blogs", data);
+    const response = await AuthenticatedAxios.post("/blogs", data);
     return response.data.data;
 };
 
 const updateBlog = async (id, data) => {
-    const response = await Axios.put(`/blogs/${id}`, data);
+    const response = await AuthenticatedAxios.put(`/blogs/${id}`, data);
     return response.data.data;
 };
 
 const deleteBlog = async (id) => {
-    const response = await Axios.delete(`/blogs/${id}`);
+    const response = await AuthenticatedAxios.delete(`/blogs/${id}`);
     return response.data;
 };
 

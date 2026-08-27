@@ -10,7 +10,7 @@ import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components
 import {Input} from "@/components/ui/input.jsx";
 import {Label} from "@/components/ui/label.jsx";
 
-import {Axios} from "@/services/http/Axios";
+import {AuthenticatedAxios} from "@/services/http/Axios";
 import {AlertAction} from "@/components/common/AlertAction";
 import {ButtonLoading} from "@/components/common/ButtonLoading";
 import ImageInput from "@/components/common/ImageInput";
@@ -38,12 +38,12 @@ const ProfileSchema = z.object({
 });
 
 const fetchProfile = async () => {
-    const response = await Axios.get("/profile");
+    const response = await AuthenticatedAxios.get("/profile");
     return response.data.data;
 }
 
 const updateProfile = async (formData, onUploadProgress) => {
-    const response = await Axios.put("/profile", formData, {
+    const response = await AuthenticatedAxios.put("/profile", formData, {
         headers: {'Content-Type': 'multipart/form-data'},
         timeout: 8000,
         onUploadProgress,
@@ -53,7 +53,7 @@ const updateProfile = async (formData, onUploadProgress) => {
 }
 
 const deleteProfileAccount = async () => {
-    await Axios.delete("/profile");
+    await AuthenticatedAxios.delete("/profile");
 }
 
 const Profile = () => {

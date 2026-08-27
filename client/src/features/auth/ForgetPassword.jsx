@@ -13,7 +13,7 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import {Input} from "@/components/ui/input"
-import {AuthAxios} from '@/services/http/Axios.js';
+import {PublicAxios} from '@/services/http/Axios.js';
 import {ButtonLoading} from '@/components/common/ButtonLoading';
 import { handleErrors } from '@/utils';
 import StaredLabel from '@/components/common/StaredLabel';
@@ -36,7 +36,7 @@ const ForgetPassword = () => {
 
     const handleForgetPassword = async (data) => {
         try {
-            await AuthAxios.post(`/auth/forget-password`, data)
+            await PublicAxios.post(`/auth/forget-password`, data)
 
             const email = data.email;
             reset();

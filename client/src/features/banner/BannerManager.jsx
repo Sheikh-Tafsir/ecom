@@ -3,7 +3,7 @@ import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import {Axios} from "@/services/http/Axios";
+import {AuthenticatedAxios} from "@/services/http/Axios";
 import {Button} from "@/components/ui/button";
 import {
     Dialog,
@@ -30,22 +30,22 @@ const bannerSchema = z.object({
 });
 
 const getAllBanners = async () => {
-    const response = await Axios.get("/banners");
+    const response = await AuthenticatedAxios.get("/banners");
     return response.data.data;
 };
 
 const createBanner = async (data) => {
-    const response = await Axios.post("/banners", data);
+    const response = await AuthenticatedAxios.post("/banners", data);
     return response.data.data;
 };
 
 const updateBanner = async (id, data) => {
-    const response = await Axios.put(`/banners/${id}`, data);
+    const response = await AuthenticatedAxios.put(`/banners/${id}`, data);
     return response.data.data;
 };
 
 const deleteBanner = async (id) => {
-    const response = await Axios.delete(`/banners/${id}`);
+    const response = await AuthenticatedAxios.delete(`/banners/${id}`);
     return response.data;
 };
 

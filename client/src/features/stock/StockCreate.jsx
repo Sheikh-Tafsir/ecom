@@ -16,7 +16,7 @@ import {
     CardTitle,
 } from '@/components/ui/card.jsx';
 import {Input} from '@/components/ui/input.jsx';
-import {Axios} from '@/services/http/Axios.js';
+import {AuthenticatedAxios} from '@/services/http/Axios.js';
 import {ButtonLoading} from "@/components/common/ButtonLoading.jsx";
 import { TOAST_TYPE } from "@/constants/app.constants";
 import {GLOBAL_ERROR, handleErrors} from '@/utils/index.js';
@@ -42,12 +42,12 @@ const StockSchema = z.object({
 });
 
 const searchProductsService = async (name) => {
-    const response = await Axios.get('/products/search', {params: {name}});
+    const response = await AuthenticatedAxios.get('/products/search', {params: {name}});
     return response.data.data;
 };
 
 const createStockService = async (items, idempotencyKey) => {
-    const response = await Axios.post(`/stocks`, {
+    const response = await AuthenticatedAxios.post(`/stocks`, {
         items: items.map(item => ({
             productId: item.productId,
             quantity: item.quantity,

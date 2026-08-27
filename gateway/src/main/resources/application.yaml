@@ -17,7 +17,7 @@ spring:
         webflux:
           routes:
             - id: chat-service-ws
-              uri: ${CHAT_SERVICE_URL}
+              uri: ${CHAT_SERVICE_WS_URL:ws://chat-server:3001}
               predicates:
                 - Path=/socket.io/**
 

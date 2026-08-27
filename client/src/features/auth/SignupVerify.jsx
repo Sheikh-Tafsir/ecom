@@ -14,7 +14,7 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import {Input} from "@/components/ui/input"
-import {AuthAxios} from '@/services/http/Axios.js';
+import {PublicAxios} from '@/services/http/Axios.js';
 import {ButtonLoading} from '@/components/common/ButtonLoading';
 import { GLOBAL_ERROR, handleErrors } from '@/utils';
 import StaredLabel from '@/components/common/StaredLabel';
@@ -40,7 +40,7 @@ const SignupVerify = () => {
 
     const handleSignupVerify = async (data) => {
         try {
-            const response = await AuthAxios.post('/auth/signup/verify', {
+            const response = await PublicAxios.post('/auth/signup/verify', {
                 ...data,
                 email
             });
@@ -59,7 +59,7 @@ const SignupVerify = () => {
         setIsResendOtpButtonLoading(true);
 
         try {
-            await AuthAxios.post('/auth/signup/resend',
+            await PublicAxios.post('/auth/signup/resend',
                 {
                     email,
                 }

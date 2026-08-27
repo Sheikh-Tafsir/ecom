@@ -14,7 +14,7 @@ import {
 import ProductCard from "./ProductCard"
 import PaginationButton from "@/components/common/PaginationButton"
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay"
-import {Axios} from "@/services/http/Axios"
+import {AuthenticatedAxios} from "@/services/http/Axios"
 import {getSelectValue} from "@/utils"
 import {
     FIRST_PAGE,
@@ -38,7 +38,7 @@ const ALLOWED_SORT_FIELDS = new Set([
 const fetchProducts = async ({queryKey}) => {
     const [, params] = queryKey;
 
-    const response = await Axios.get("/products", {
+    const response = await AuthenticatedAxios.get("/products", {
         params: {
             page: params.page - 1,
             sort: params.sort,
@@ -52,7 +52,7 @@ const fetchProducts = async ({queryKey}) => {
 }
 
 const fetchCategories = async () => {
-    const response = await Axios.get("/categories")
+    const response = await AuthenticatedAxios.get("/categories")
     return response.data.data
 }
 

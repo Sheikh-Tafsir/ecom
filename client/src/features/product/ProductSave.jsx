@@ -24,7 +24,7 @@ import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadi
 import {ButtonLoading} from "@/components/common/ButtonLoading";
 import {MultiSelect} from "@/components/common/MultiSelect.jsx";
 
-import {Axios} from "@/services/http/Axios";
+import {AuthenticatedAxios} from "@/services/http/Axios";
 import {GLOBAL_ERROR, handleErrors} from "@/utils";
 import {TOAST_TYPE} from "@/constants/app.constants";
 import {toastify} from "@/common/toastify.js";
@@ -46,17 +46,17 @@ const ProductSchema = z.object({
 });
 
 const fetchCategories = async () => {
-    const response = await Axios.get("/categories")
+    const response = await AuthenticatedAxios.get("/categories")
     return response.data.data
 }
 
 const fetchProduct = async (id) => {
-    const response = await Axios.get(`/products/${id}`);
+    const response = await AuthenticatedAxios.get(`/products/${id}`);
     return response.data.data;
 };
 
 const createProduct = async (formData, onUploadProgress) => {
-    const response = await Axios.post("/products", formData, {
+    const response = await AuthenticatedAxios.post("/products", formData, {
         headers: {'Content-Type': 'multipart/form-data'},
         timeout: 12000,
         onUploadProgress,
@@ -66,7 +66,7 @@ const createProduct = async (formData, onUploadProgress) => {
 };
 
 const updateProduct = async (id, formData, onUploadProgress) => {
-    const response = await Axios.put(`/products/${id}`, formData, {
+    const response = await AuthenticatedAxios.put(`/products/${id}`, formData, {
         headers: {'Content-Type': 'multipart/form-data'},
         timeout: 1000 * 60 * 5,
         onUploadProgress,

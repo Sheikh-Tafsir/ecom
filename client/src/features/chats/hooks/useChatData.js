@@ -1,10 +1,10 @@
 import {useMemo} from 'react';
 import {useQuery, useInfiniteQuery} from '@tanstack/react-query';
-import {Axios} from "@/services/http/Axios.js";
+import {AuthenticatedAxios} from "@/services/http/Axios.js";
 
 export const useChatData = (id) => {
     const fetchChatList = async () => {
-        const response = await Axios.get(`/chats`);
+        const response = await AuthenticatedAxios.get(`/chats`);
         return response.data.data?.chats || [];
     };
 
@@ -19,7 +19,7 @@ export const useChatData = (id) => {
             params.cursorCreatedAt = pageParam.createdAt;
             params.cursorId = pageParam.id;
         }
-        const response = await Axios.get(`/chats/${id}`, { params });
+        const response = await AuthenticatedAxios.get(`/chats/${id}`, { params });
         return response.data.data || {};
     };
 

@@ -14,7 +14,7 @@ import {
     CardTitle,
 } from '@/components/ui/card.jsx';
 import {Label} from '@/components/ui/label.jsx';
-import {Axios} from '@/services/http/Axios';
+import {AuthenticatedAxios} from '@/services/http/Axios';
 import {AlertAction} from '@/components/common/AlertAction';
 import {ButtonLoading} from "@/components/common/ButtonLoading";
 import InputViewMode from '@/components/common/InputViewMode';
@@ -36,21 +36,21 @@ const UserSchema = z.object({
 });
 
 const fetchUser = async (id) => {
-    const response = await Axios.get(`/users/${id}`)
+    const response = await AuthenticatedAxios.get(`/users/${id}`)
     return response.data.data
 }
 
 const fetchRoles = async () => {
-    const response = await Axios.get(`/roles`)
+    const response = await AuthenticatedAxios.get(`/roles`)
     return response.data.data
 }
 
 const updateUserService = async (id, data) => {
-    await Axios.put(`/users/${id}`, {roles: data.roleNames});
+    await AuthenticatedAxios.put(`/users/${id}`, {roles: data.roleNames});
 }
 
 const deleteUserService = async (id) => {
-    await Axios.delete(`/users/${id}`);
+    await AuthenticatedAxios.delete(`/users/${id}`);
 }
 
 const UserEdit = () => {

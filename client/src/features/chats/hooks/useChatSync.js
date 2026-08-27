@@ -1,7 +1,7 @@
 import {useEffect, useCallback} from 'react';
 import {useQueryClient} from '@tanstack/react-query';
 import {useUserStore} from '@/store/useUserStore';
-import {Axios} from "@/services/http/Axios.js";
+import {AuthenticatedAxios} from "@/services/http/Axios.js";
 import {
     MESSAGE_RECEIVE_EVENT,
     GROUP_CREATE_RESPONSE_EVENT,
@@ -122,7 +122,7 @@ export const useChatSync = (id, userId) => {
                     );
                 });
 
-                await Axios.post(`/chats/${id}/view`, {
+                await AuthenticatedAxios.post(`/chats/${id}/view`, {
                     lastSeen: new Date().toISOString()
                 });
             } catch (error) {

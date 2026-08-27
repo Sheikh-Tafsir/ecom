@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { Axios } from "@/services/http/Axios";
+import { AuthenticatedAxios } from "@/services/http/Axios";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,7 +20,7 @@ import { Search, SortAsc } from 'lucide-react';
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
 
 const getPublishedBlogs = async (params) => {
-    const response = await Axios.get("/blogs/published", { params });
+    const response = await AuthenticatedAxios.get("/blogs/published", { params });
     return response.data.data;
 };
 

@@ -27,7 +27,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import {Label} from '@/components/ui/label';
-import {Axios} from "@/services/http/Axios";
+import {AuthenticatedAxios} from "@/services/http/Axios";
 import {AlertAction} from "@/components/common/AlertAction";
 import PaginationButton from "@/components/common/PaginationButton";
 import PaginationSearch from "@/components/common/PaginationSearch";
@@ -60,7 +60,7 @@ const ALLOWED_SORT_FIELDS = new Set([
 const fetchUsers = async ({queryKey}) => {
     const [, params] = queryKey
 
-    const response = await Axios.get("/users", {
+    const response = await AuthenticatedAxios.get("/users", {
         params: {
             page: params.page - 1,
             sort: params.sort,
@@ -75,7 +75,7 @@ const fetchUsers = async ({queryKey}) => {
 };
 
 const updateUserStatusService = async (id, status) => {
-    await Axios.put(`/users/${id}`, {status});
+    await AuthenticatedAxios.put(`/users/${id}`, {status});
 }
 
 const Users = () => {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Axios } from "@/services/http/Axios";
+import { AuthenticatedAxios } from "@/services/http/Axios";
 import {
     Accordion,
     AccordionContent,
@@ -10,7 +10,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 
 const getAllFaqs = async () => {
-    const response = await Axios.get("/faqs");
+    const response = await AuthenticatedAxios.get("/faqs");
     return response.data.data;
 };
 

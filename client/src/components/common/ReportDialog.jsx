@@ -13,7 +13,7 @@ import {Button} from "@/components/ui/button";
 import {Label} from "@/components/ui/label";
 import {Input} from "@/components/ui/input";
 import {APP_MODULE, TOAST_TYPE} from "@/constants/app.constants";
-import {Axios} from "@/services/http/Axios";
+import {AuthenticatedAxios} from "@/services/http/Axios";
 import {toastify} from "@/common/toastify.js";
 import InputError from "./InputError";
 import {GLOBAL_ERROR, handleErrors} from "@/utils";
@@ -83,7 +83,7 @@ export function ReportDialog({module = APP_MODULE.USER, trigger}) {
                 toDate: data.toDate ? data.toDate.toISOString().split("T")[0] : null,
             };
 
-            const response = await Axios.post("/reports", payload, {
+            const response = await AuthenticatedAxios.post("/reports", payload, {
                 responseType: "blob",
             });
 

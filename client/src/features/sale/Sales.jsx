@@ -16,7 +16,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
-import {Axios} from "@/services/http/Axios";
+import {AuthenticatedAxios} from "@/services/http/Axios";
 import PaginationButton from "@/components/common/PaginationButton";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
 
@@ -49,7 +49,7 @@ import {ReportDialog} from "@/components/common/ReportDialog";
 const fetchSales = async ({queryKey}) => {
     const [, params] = queryKey;
 
-    const response = await Axios.get("/sales", {
+    const response = await AuthenticatedAxios.get("/sales", {
         params: {
             page: params.page - 1,
             sort: params.sort,

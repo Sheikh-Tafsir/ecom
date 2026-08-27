@@ -19,7 +19,7 @@ import {
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {ButtonLoading} from '@/components/common/ButtonLoading';
-import {AuthAxios} from '@/services/http/Axios';
+import {PublicAxios} from '@/services/http/Axios';
 import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils';
 import {useUserStore} from '@/store/useUserStore.js';
 import InputError from "@/components/common/InputError.jsx";
@@ -60,7 +60,7 @@ const Login = () => {
     // ✅ Handle normal login
     const handleLogin = async (data) => {
         try {
-            const response = await AuthAxios.post(`/auth/login`, data);
+            const response = await PublicAxios.post(`/auth/login`, data);
             login(response.data.data);
 
             navigate(requestedPath, {replace: true});
@@ -76,7 +76,7 @@ const Login = () => {
             setIsGoogleSubmitting(true);
 
             try {
-                const response = await AuthAxios.post('/auth/google-login', {
+                const response = await PublicAxios.post('/auth/google-login', {
                     token: tokenResponse.access_token,
                 });
 

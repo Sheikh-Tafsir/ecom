@@ -15,7 +15,7 @@ import {
 import {Input} from "@/components/ui/input"
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar"
 import {Badge} from "@/components/ui/badge"
-import {Axios} from "@/services/http/Axios";
+import {AuthenticatedAxios} from "@/services/http/Axios";
 import {ButtonLoading} from "@/components/common/ButtonLoading";
 import {REGULAR_ACTION} from "@/constants/app.constants";
 
@@ -27,7 +27,7 @@ const UserSelectorDialog = ({isOpen, onClose, preSelecteedUserIds, avoidUserIds,
     const [isButtonLoading, setIsButtonLoading] = useState(false);
 
     const fetchUsers = async () => {
-        const response = await Axios.get(`/users`, {
+        const response = await AuthenticatedAxios.get(`/users`, {
             params: {
                 name: searchTerm,
                 size: 50

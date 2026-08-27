@@ -1,6 +1,6 @@
 import {useCallback} from 'react';
 import {useUserStore} from '@/store/useUserStore';
-import {Axios} from "@/services/http/Axios.js";
+import {AuthenticatedAxios} from "@/services/http/Axios.js";
 import {REGULAR_ACTION} from "@/constants/app.constants";
 import {CONTENT_TYPE} from "@/constants/chat.constants";
 import {
@@ -17,7 +17,7 @@ export const useChatActions = (id, userId, updateChatOnMessage, onNewChat, showT
             const formData = new FormData();
             formData.append('image', image);
 
-            const response = await Axios.post(`/common/upload-image`, formData, {
+            const response = await AuthenticatedAxios.post(`/common/upload-image`, formData, {
                 headers: {'Content-Type': 'multipart/form-data'},
                 timeout: 15000,
             });
