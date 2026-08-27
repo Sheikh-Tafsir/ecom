@@ -37,7 +37,8 @@ public class SecurityConfig {
             "/actuator",
             "/actuator/**",
             "/socket.io/**",
-            "/chats/**"
+            "/chats/**",
+            "/notifications/subscribe"
     );
 
     @Value("${cors.allowed.origins}")

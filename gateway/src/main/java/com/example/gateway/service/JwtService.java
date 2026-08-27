@@ -21,6 +21,7 @@ public class JwtService {
     public Claims parseAccessTokenClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(accessTokenSecret)
+                .setAllowedClockSkewSeconds(60)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();

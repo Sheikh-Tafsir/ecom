@@ -3,9 +3,15 @@ package com.example.ecom.notification.service;
 import com.example.ecom.common.dto.CustomUserDetails;
 import com.example.ecom.common.enums.NotificationType;
 import com.example.ecom.common.enums.Permission;
+import com.example.ecom.common.model.User;
+import com.example.ecom.common.service.JwtService;
 import com.example.ecom.notification.dto.ClientConnection;
 import com.example.ecom.notification.dto.NotificationResponse;
+import com.example.ecom.user.user.service.UserService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
@@ -14,16 +20,55 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import static com.example.ecom.common.utils.CacheConstants.CACHE_SSE_TICKETS;
+
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class NotificationService {
 
     private static final long SSE_TIMEOUT = Duration.ofMinutes(30).toMillis();
 
     private final Map<Long, ClientConnection> connections = new ConcurrentHashMap<>();
+
+    private final UserService userService;
+
+    private final JwtService jwtService;
+
+    private final CacheManager cacheManager;
+
+    public String generateSseAuthToken(CustomUserDetails userDetails) {
+        User user = userService.findByIdHelper(userDetails.getId());
+        String token = jwtService.generateSseAccessToken(user);
+
+        String ticket = UUID.randomUUID().toString();
+        Cache cache = getCache();
+        if (cache != null) {
+            cache.put(ticket, token);
+        }
+
+        return ticket;
+    }
+
+    public String getAndDeleteTokenByTicket(String ticket) {
+        Cache cache = getCache();
+        if (cache == null || ticket == null) {
+            return null;
+        }
+        String token = cache.get(ticket, String.class);
+        if (token != null) {
+            cache.evict(ticket);
+        }
+        return token;
+    }
+
+    private Cache getCache() {
+        return cacheManager.getCache(CACHE_SSE_TICKETS);
+    }
 
     public SseEmitter subscribe(CustomUserDetails userDetails) {
         Long userId = userDetails.getId();

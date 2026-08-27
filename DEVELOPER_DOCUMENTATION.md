@@ -28,7 +28,12 @@ The system is organized into a scalable, decoupled microservices/service-oriente
 
 ---
 
-## 2. Centralized Logging Architecture
+## 2. Configuration & Environment Guidelines
+* **Strict Environment Property Binding:** Do NOT add default parameter fallbacks in `application.yaml` or `application.yml` files (e.g. use `${REDIS_PORT}`, not `${REDIS_PORT:6379}`). All configuration properties must be explicitly provided via environment variables (`.env`, Docker Compose, or Kubernetes) or supplied directly in test configuration classes (`@SpringBootTest(properties = {...})`).
+
+---
+
+## 3. Centralized Logging Architecture
 
 All services output structured, rotated logs into a unified `logs/` directory mounted on the host machine.
 

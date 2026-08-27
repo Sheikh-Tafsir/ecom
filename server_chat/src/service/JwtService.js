@@ -4,14 +4,16 @@ const { randomUUID } = require('crypto');
 const isAccessTokenValid = (token) => {
     return jwt.verify(
         token,
-        Buffer.from(process.env.ACCESS_TOKEN_SECRET, "utf8")
+        Buffer.from(process.env.ACCESS_TOKEN_SECRET, "utf8"),
+        { algorithms: ['HS256', 'HS384', 'HS512'] }
     );
 }
 
 const isRefreshTokenValid = (token) => {
     return jwt.verify(
         token,
-        Buffer.from(process.env.REFRESH_TOKEN_SECRET, "utf8")
+        Buffer.from(process.env.REFRESH_TOKEN_SECRET, "utf8"),
+        { algorithms: ['HS256', 'HS384', 'HS512'] }
     );
 }
 

@@ -1,5 +1,6 @@
 package com.example.ecom.user.user.service;
 
+import com.example.ecom.auth.service.AuthTokenService;
 import com.example.ecom.common.dto.CustomUserDetails;
 import com.example.ecom.common.enums.Permission;
 import com.example.ecom.common.model.Role;
@@ -42,6 +43,8 @@ public class UserService {
 
     private final MessageService messageService;
 
+    private final AuthTokenService authTokenService;
+
     @PreAuthorize("hasAnyAuthority(T(com.example.ecom.common.enums.Permission).ADMIN_ACCESS.getValue()," +
             "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     public Page<UserResponse> findAll(Pageable pageable, String name, String role, UserStatus status) {
@@ -76,10 +79,15 @@ public class UserService {
                     .map(roleService::findByName)
                     .collect(Collectors.toSet());
             user.setRoles(roles);
+            authTokenService.revokeAllForUser(id);
         }
 
         if (request.status() != null) {
-            user.setStatus(UserStatus.fromValue(request.status()));
+            UserStatus newStatus = UserStatus.fromValue(request.status());
+            user.setStatus(newStatus);
+            if (newStatus != UserStatus.ACTIVE) {
+                authTokenService.revokeAllForUser(id);
+            }
         }
 
         userRepository.save(user);
@@ -119,6 +127,9 @@ public class UserService {
     public void delete(User user, UserStatus status) {
         user.setStatus(status);
         user.setDeleted(true);
+        if (user.getId() != null) {
+            authTokenService.revokeAllForUser(user.getId());
+        }
         userRepository.save(user);
     }
 

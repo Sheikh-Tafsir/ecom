@@ -19,7 +19,7 @@ const AuthenticationMiddleware = (req, res, next) => {
     const token = authHeader?.split(' ')[1];
 
     try {
-        req.user = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        req.user = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, { algorithms: ['HS256', 'HS384', 'HS512'] });
         next();
     } catch (err) {
         console.error("Invalid or expired JWT token", err);

@@ -18,6 +18,7 @@ const socketAuthMiddleware = (socket, next) => {
         }
 
         socket.user = isAccessTokenValid(token);
+        socket.data.user = socket.user;
 
         next();
     } catch (err) {

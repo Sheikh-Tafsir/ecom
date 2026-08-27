@@ -127,6 +127,14 @@ const refreshAccessToken = async () => {
 
         saveAccessToken(token);
 
+        // Dynamically update user store if available
+        try {
+            const { useUserStore } = await import("@/store/useUserStore");
+            useUserStore.getState().init();
+        } catch (e) {
+            // Ignore if store is not yet initialized
+        }
+
         resolveRefreshSubscribers(token);
 
         return token;

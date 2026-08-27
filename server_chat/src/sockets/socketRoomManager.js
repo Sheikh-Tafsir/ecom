@@ -27,8 +27,9 @@ const getActiveUsersInRoom = async (io, roomId) => {
 
     const activeUserIds = new Set();
     for (const socket of sockets) {
-        if (socket?.user?.id) {
-            activeUserIds.add(socket.user.id);
+        const userId = socket.data?.user?.id || socket.user?.id;
+        if (userId) {
+            activeUserIds.add(userId);
         }
     }
 

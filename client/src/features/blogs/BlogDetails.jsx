@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import DOMPurify from 'dompurify';
 import { Axios } from "@/services/http/Axios";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -98,7 +99,7 @@ const BlogDetails = () => {
                 [&_h2]:text-2xl [&_h2]:mt-8 [&_h2]:mb-4
                 [&_h3]:text-xl [&_h3]:mt-6 [&_h3]:mb-3
                 [&_p]:mb-4"
-                dangerouslySetInnerHTML={{ __html: post.content }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }}
             />
         </article>
     );

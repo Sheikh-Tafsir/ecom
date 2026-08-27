@@ -26,8 +26,8 @@ CREATE TABLE IF NOT EXISTS users (
     status VARCHAR(50) DEFAULT 'NOT_VERIFIED',
     deleted BOOLEAN DEFAULT FALSE,
     version INT DEFAULT 0,
-    created_at TIMESTAMP WITHOUT TIME ZONE,
-    updated_at TIMESTAMP WITHOUT TIME ZONE
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS user_roles (
@@ -42,8 +42,8 @@ CREATE TABLE IF NOT EXISTS user_refresh_tokens (
     jti VARCHAR(255) UNIQUE,
     status VARCHAR(50) DEFAULT 'ACTIVE',
     version INT DEFAULT 0,
-    created_at TIMESTAMP WITHOUT TIME ZONE,
-    updated_at TIMESTAMP WITHOUT TIME ZONE
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 3. Categories & Products
@@ -63,8 +63,8 @@ CREATE TABLE IF NOT EXISTS products (
     review_count BIGINT DEFAULT 0,
     deleted BOOLEAN DEFAULT FALSE,
     version INT DEFAULT 0,
-    created_at TIMESTAMP WITHOUT TIME ZONE,
-    updated_at TIMESTAMP WITHOUT TIME ZONE
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS product_images (
@@ -84,8 +84,8 @@ CREATE TABLE IF NOT EXISTS stocks (
     id BIGSERIAL PRIMARY KEY,
     total_cost NUMERIC(19, 2) NOT NULL DEFAULT 0.00,
     version INT DEFAULT 0,
-    created_at TIMESTAMP WITHOUT TIME ZONE,
-    updated_at TIMESTAMP WITHOUT TIME ZONE
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS stock_items (
@@ -96,8 +96,8 @@ CREATE TABLE IF NOT EXISTS stock_items (
     purchase_price NUMERIC(19, 2) NOT NULL DEFAULT 0.00,
     remaining INT NOT NULL,
     version INT DEFAULT 0,
-    created_at TIMESTAMP WITHOUT TIME ZONE,
-    updated_at TIMESTAMP WITHOUT TIME ZONE
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 5. Orders & Order Items
@@ -112,8 +112,8 @@ CREATE TABLE IF NOT EXISTS orders (
     payment_method VARCHAR(50) DEFAULT 'CASH_ON_DELIVERY',
     paid BOOLEAN DEFAULT FALSE,
     version INT DEFAULT 0,
-    created_at TIMESTAMP WITHOUT TIME ZONE,
-    updated_at TIMESTAMP WITHOUT TIME ZONE
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS order_items (
@@ -131,21 +131,21 @@ CREATE TABLE IF NOT EXISTS order_history (
     to_status VARCHAR(50) NOT NULL,
     changed_by_user_id BIGINT REFERENCES users(id),
     comment VARCHAR(500),
-    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 6. Payments & Sales
 CREATE TABLE IF NOT EXISTS payments (
     id BIGSERIAL PRIMARY KEY,
-    order_id BIGINT NOT NULL,
+    order_id BIGINT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
     payment_intent_id VARCHAR(255),
     transaction_id VARCHAR(255),
     merchant_invoice_number VARCHAR(255),
     amount NUMERIC(19, 2) NOT NULL,
     status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
     version INT DEFAULT 0,
-    created_at TIMESTAMP WITHOUT TIME ZONE,
-    updated_at TIMESTAMP WITHOUT TIME ZONE
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS sales (
@@ -154,7 +154,7 @@ CREATE TABLE IF NOT EXISTS sales (
     order_id BIGINT REFERENCES orders(id),
     quantity INT NOT NULL,
     profit NUMERIC(19, 2),
-    created_at TIMESTAMP WITHOUT TIME ZONE
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 7. Reviews & Feedback
@@ -165,8 +165,8 @@ CREATE TABLE IF NOT EXISTS reviews (
     rating INT,
     comment TEXT,
     version INT DEFAULT 0,
-    created_at TIMESTAMP WITHOUT TIME ZONE,
-    updated_at TIMESTAMP WITHOUT TIME ZONE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uk_reviews_user_product UNIQUE (user_id, product_id)
 );
 
@@ -180,8 +180,8 @@ CREATE TABLE IF NOT EXISTS banners (
     display_order INT DEFAULT 0,
     active BOOLEAN DEFAULT TRUE,
     version INT DEFAULT 0,
-    created_at TIMESTAMP WITHOUT TIME ZONE,
-    updated_at TIMESTAMP WITHOUT TIME ZONE
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS faqs (
@@ -190,8 +190,8 @@ CREATE TABLE IF NOT EXISTS faqs (
     answer TEXT NOT NULL,
     display_order INT DEFAULT 0,
     version INT DEFAULT 0,
-    created_at TIMESTAMP WITHOUT TIME ZONE,
-    updated_at TIMESTAMP WITHOUT TIME ZONE
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS blogs (
@@ -201,10 +201,10 @@ CREATE TABLE IF NOT EXISTS blogs (
     author VARCHAR(255),
     image_url VARCHAR(500),
     status VARCHAR(50) DEFAULT 'DRAFT',
-    published_at TIMESTAMP WITHOUT TIME ZONE,
+    published_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     version INT DEFAULT 0,
-    created_at TIMESTAMP WITHOUT TIME ZONE,
-    updated_at TIMESTAMP WITHOUT TIME ZONE
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -256,12 +256,3 @@ CREATE TABLE IF NOT EXISTS message_receipts (
     version      INT                DEFAULT 0,
     CONSTRAINT uq_message_receipts_message_user UNIQUE (message_id, user_id)
 );
-
--- Indexes for Query Performance
-CREATE INDEX IF NOT EXISTS idx_products_status ON products(status);
-CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
-CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
-CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
-CREATE INDEX IF NOT EXISTS idx_stock_items_product_id ON stock_items(product_id);
-CREATE INDEX IF NOT EXISTS idx_reviews_product_id ON reviews(product_id);
-CREATE INDEX IF NOT EXISTS idx_blogs_status ON blogs(status);
