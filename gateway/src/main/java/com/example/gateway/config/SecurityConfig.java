@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
@@ -44,13 +45,18 @@ public class SecurityConfig {
     @Value("${cors.allowed.origins}")
     private String allowedOrigins;
 
+    @Value("${app.cache.revoked-tokens-prefix}")
+    private String revokedTokensPrefix;
+
     private final JwtService jwtService;
 
     private final RateLimiterService rateLimiterService;
 
+    private final ReactiveStringRedisTemplate reactiveStringRedisTemplate;
+
     @Bean
     public AuthenticationFilter authenticationFilter() {
-        return new AuthenticationFilter(jwtService);
+        return new AuthenticationFilter(jwtService, reactiveStringRedisTemplate, revokedTokensPrefix);
     }
 
     @Bean

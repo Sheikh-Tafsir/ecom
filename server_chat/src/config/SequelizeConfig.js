@@ -16,12 +16,20 @@ const sslOption = isEnvironmentProduction()
   : {};
 
 let sequelize;
+const poolConfig = {
+  max: parseInt(process.env.DB_POOL_MAX || '10', 10),
+  min: parseInt(process.env.DB_POOL_MIN || '0', 10),
+  acquire: parseInt(process.env.DB_POOL_ACQUIRE || '30000', 10),
+  idle: parseInt(process.env.DB_POOL_IDLE || '10000', 10)
+};
+
 if (dbUrl && !dbUrl.startsWith('jdbc:')) {
   sequelize = new Sequelize(dbUrl, {
     dialect: 'postgres',
     dialectModule: pg,
     dialectOptions: sslOption,
-    logging: false
+    logging: false,
+    pool: poolConfig
   });
 } else {
   sequelize = new Sequelize(database, user, password, {
@@ -30,7 +38,8 @@ if (dbUrl && !dbUrl.startsWith('jdbc:')) {
     dialect: 'postgres',
     dialectModule: pg,
     dialectOptions: sslOption,
-    logging: false
+    logging: false,
+    pool: poolConfig
   });
 }
 

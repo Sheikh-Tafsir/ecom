@@ -1,8 +1,8 @@
 const {ACCESS_TOKEN_REQUIRED, ACCESS_TOKEN_INVALID} = require("../utils/Messages");
 const {isAccessTokenValid} = require("../service/JwtService");
-const {buildErrorResponse} = require("../utils/ResponseUtils"); // Assuming this is needed for error responses
+const RedisConfig = require("../config/RedisConfig");
 
-const socketAuthMiddleware = (socket, next) => {
+const socketAuthMiddleware = async (socket, next) => {
     try {
         const token = socket.handshake.auth?.token;
         if (!token) {
@@ -17,7 +17,41 @@ const socketAuthMiddleware = (socket, next) => {
             return next(error);
         }
 
-        socket.user = isAccessTokenValid(token);
+        const user = isAccessTokenValid(token);
+        const jti = user.jti;
+
+        // Enforce mandatory JTI claim presence for defense-in-depth security
+        if (!jti) {
+            console.warn("Access token lacks a mandatory JTI claim for socket connection");
+            const error = new Error(ACCESS_TOKEN_INVALID);
+            error.data = {
+                status: 401,
+                error: ACCESS_TOKEN_INVALID
+            };
+            return next(error);
+        }
+
+        // Check if token JTI is blacklisted/revoked in Redis
+        const revokedTokensPrefix = process.env.REVOKED_TOKENS_PREFIX || 'v1:revokedAccessTokens::';
+        const cacheKey = `${revokedTokensPrefix}${jti}`;
+
+        try {
+            const isBlacklisted = await RedisConfig.get(cacheKey);
+            if (isBlacklisted) {
+                console.warn(`Access token JTI: ${jti} is revoked/blacklisted for socket connection`);
+                const error = new Error(ACCESS_TOKEN_INVALID);
+                error.data = {
+                    status: 401,
+                    error: ACCESS_TOKEN_INVALID
+                };
+                return next(error);
+            }
+        } catch (redisErr) {
+            // Robust resiliency fallback: log the Redis connection error and allow connection to proceed
+            console.error(`Redis error checking revoked tokens blacklist for JTI ${jti} (socket):`, redisErr.message);
+        }
+
+        socket.user = user;
         socket.data.user = socket.user;
 
         next();

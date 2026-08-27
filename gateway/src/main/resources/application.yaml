@@ -69,8 +69,16 @@ logging:
 springdoc:
   swagger-ui:
     enabled: true
-    url: /v3/api-docs
     path: /swagger-ui.html
     operationsSorter: method
+    urls:
+      - name: Core Service
+        url: /v3/api-docs
+      - name: Chat Service
+        url: /chats/v3/api-docs
   api-docs:
     enabled: true
+
+app:
+  cache:
+    revoked-tokens-prefix: ${REVOKED_TOKENS_PREFIX:v1:revokedAccessTokens::}

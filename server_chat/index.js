@@ -33,6 +33,11 @@ app.get(["/", "/health"], (req, res) => {
     });
 });
 
+app.get('/chats/v3/api-docs', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(specs);
+});
+
 app.use("/chats", ChatController);
 
 app.use(ErrorHandler);
