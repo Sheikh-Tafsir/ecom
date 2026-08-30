@@ -84,7 +84,7 @@ cors:
     origins: ${CORS_ALLOWED_ORIGINS}
 
 server:
-  port: ${SERVER_PORT}
+  port: ${MAIN_SERVER_PORT}
 
 logging:
   level:

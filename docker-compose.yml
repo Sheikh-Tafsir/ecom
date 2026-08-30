@@ -83,8 +83,8 @@ services:
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - SERVER_PORT=${GATEWAY_PORT}
-      - MAIN_SERVICE_URL=http://server:${SERVER_PORT}
+      - MAIN_SERVER_PORT=${MAIN_SERVER_PORT}
+      - MAIN_SERVICE_URL=http://server:${MAIN_SERVER_PORT}
       - CHAT_SERVICE_URL=http://chat-server:${CHAT_SERVER_PORT}
       - CHAT_SERVICE_WS_URL=ws://chat-server:${CHAT_SERVER_PORT}
       - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
@@ -164,8 +164,6 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    expose:
-      - "3001"
     volumes:
       - ./logs/chat-server:/app/logs/chat-server
     logging:
