@@ -1,14 +1,32 @@
 import {create} from "zustand";
 import {
-    getAccessUser,
-    saveAccessToken
+    hasSessionHint,
+    saveAccessToken,
+    removeAccessToken
 } from "@/utils/AuthUtils";
-import { logout} from "@/services/http/Axios.js";
+import {logout, refreshAccessToken} from "@/services/http/Axios.js";
 
 export const useUserStore = create((set, get) => ({
-    user: getAccessUser(),
+    user: null,
+    isLoading: true,
 
-    init: () => set({user: getAccessUser()}),
+    init: async () => {
+        if (!hasSessionHint()) {
+            set({user: null, isLoading: false});
+            return;
+        }
+
+        try {
+            const token = await refreshAccessToken();
+            set({user: saveAccessToken(token), isLoading: false});
+        } catch (err) {
+            console.error("Initial token refresh failed:", err);
+            if (err.response?.status === 401 || err.response?.status === 403) {
+                removeAccessToken();
+            }
+            set({user: null, isLoading: false});
+        }
+    },
 
     socket: null,
 
@@ -24,9 +42,8 @@ export const useUserStore = create((set, get) => ({
             socket.disconnect();
             setSocket(null);
         }
-        
+
         await logout()
         set({user: null});
-        window.location.replace("/");
     },
 }));

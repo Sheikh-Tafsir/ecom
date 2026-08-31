@@ -1,20 +1,23 @@
 import {jwtDecode} from 'jwt-decode';
 
-export const ACCESS_TOKEN = import.meta.env.VITE_ACCESS_TOKEN;
-export const LOCAL_STORAGE_CART = import.meta.env.VITE_LOCAL_STORAGE_CART;
+let accessToken = null;
+
+const SESSION_HINT = "ecom_has_session";
 
 export const saveAccessToken = (token) => {
-    localStorage.setItem(ACCESS_TOKEN, token);
-    return jwtDecode(token);
+    accessToken = token;
+    if (token) {
+        localStorage.setItem(SESSION_HINT, "true");
+    }
+    return token ? jwtDecode(token) : null;
+}
+
+export const hasSessionHint = () => {
+    return localStorage.getItem(SESSION_HINT) == "true";
 }
 
 export const getAccessToken = () => {
-    try {
-        return localStorage.getItem(ACCESS_TOKEN);
-    } catch (err) {
-        console.error('Invalid user data in localStorage:', err);
-        return null;
-    }
+    return accessToken;
 }
 
 export const getAccessUser = (token) => {
@@ -31,17 +34,13 @@ export const getAccessUser = (token) => {
     }
 };
 
-export const isAccessTokenExpired = (token) => {
-    const user = getAccessUser(token);
-    return !user || Date.now() >= user.exp * 1000;
-}
-
 export const removeAccessToken = () => {
-    localStorage.removeItem(ACCESS_TOKEN);
+    accessToken = null;
+    localStorage.removeItem(SESSION_HINT);
 }
 
 export const removeCart = () => {
-    localStorage.removeItem(LOCAL_STORAGE_CART);
+    localStorage.removeItem(import.meta.env.VITE_LOCAL_STORAGE_CART_KEY);
 }
 
 export const getUserPermissions = (user) => {

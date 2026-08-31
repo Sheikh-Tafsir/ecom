@@ -4,7 +4,12 @@ import {useUserStore} from '@/store/useUserStore';
 
 const AuthRoute = () => {
     const user = useUserStore(state => state.user);
+    const isLoading = useUserStore(state => state.isLoading);
     const isAuthenticated = !!user;
+
+    if (isLoading) {
+        return null;
+    }
 
     return (
         !isAuthenticated ?

@@ -8,6 +8,11 @@ import {hasPermission} from "@/utils/AuthUtils";
 const ProtectedRoute = ({allowedPermissions}) => {
     const location = useLocation();
     const user = useUserStore(state => state.user);
+    const isLoading = useUserStore(state => state.isLoading);
+
+    if (isLoading) {
+        return null;
+    }
     
     if (!user) {
          return (

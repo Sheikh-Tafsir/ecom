@@ -72,6 +72,7 @@ const App = () => {
 const InnerApp = () => {
     const initUser = useUserStore((state) => state.init);
     const user = useUserStore((state) => state.user);
+    const isLoading = useUserStore((state) => state.isLoading);
     const setSocket = useUserStore((state) => state.setSocket);
 
     useEffect(() => {
@@ -79,7 +80,7 @@ const InnerApp = () => {
     }, [initUser]);
 
     useEffect(() => {
-        if (!isSocketOn()) {
+        if (!isSocketOn() || isLoading) {
             disconnectSocket();
             setSocket(null);
             return;
@@ -98,10 +99,10 @@ const InnerApp = () => {
             disconnectSocket();
             setSocket(null);
         };
-    }, [user, setSocket])
+    }, [user, setSocket, isLoading])
 
     useEffect(() => {
-        if (!isSseOn()) {
+        if (!isSseOn() || isLoading) {
             notificationService.stop();
             return;
         }
@@ -115,7 +116,11 @@ const InnerApp = () => {
         return () => {
             notificationService.stop();
         };
-    }, [user])
+    }, [user, isLoading])
+
+    if (isLoading) {
+        return null;
+    }
 
     return (
         <>
