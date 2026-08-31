@@ -6,6 +6,8 @@ const {addSocketToRoom, getRoom, getActiveUsersInRoom} = require('./socketRoomMa
 const {SENT, RECEIVED} = require("../utils/Messages");
 const {buildErrorResponse} = require("../utils/ResponseUtils");
 
+const MAX_MESSAGE_LENGTH = 5000;
+
 const setupMessageHandlers = (io, socket) => {
     const user = socket.user;
     
@@ -30,6 +32,10 @@ const setupMessageHandlers = (io, socket) => {
             if (!reqBody?.content) {
                 ack(buildErrorResponse("Message is required"))
                 return;
+            }
+
+            if (reqBody.content.length > MAX_MESSAGE_LENGTH) {
+                return ack(buildErrorResponse(`Message too long (max ${MAX_MESSAGE_LENGTH} characters)`));
             }
 
             const message = await MessageService.sendMessage(user.id, reqBody);
@@ -59,7 +65,7 @@ const setupMessageHandlers = (io, socket) => {
                     data: messageData,
                 })
             );
-            console.info("Message %s sent from %s:", reqBody?.content, user.name, messageData);
+            // console.info("Message %s sent from %s:", reqBody?.content, user.name, messageData);
 
             const activeUsersInRoom = await getActiveUsersInRoom(io, roomId);
             await MessageService.saveMessageReceipts(activeUsersInRoom, message.id, message.chatId, user.id);

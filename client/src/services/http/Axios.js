@@ -5,7 +5,7 @@ import {toastify} from '@/common/toastify.js';
 import {TOAST_TYPE} from "@/constants/app.constants";
 
 const API_PATH = import.meta.env.VITE_API_PATH;
-const TIMEOUT = 5000;
+const TIMEOUT = 15000;
 
 const PublicAxios = axios.create({
     baseURL: API_PATH,

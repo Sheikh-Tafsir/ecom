@@ -8,6 +8,14 @@ const socketMessageHandlers = require('./socketMessageHandlers');
 const socketGroupHandlers = require('./socketGroupHandlers');
 
 module.exports = (server) => {
+    // CORS only needed when running independently (not behind the gateway)
+    // const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS;
+    // const socketOptions = allowedOrigins
+    //     ? {cors: {origin: allowedOrigins.split(',').map(o => o.trim()), credentials: true}}
+    //     : {};
+    //
+    // const io = socketIO(server, socketOptions);
+
     const io = socketIO(server);
 
     // Setup Redis Adapter for horizontal scaling

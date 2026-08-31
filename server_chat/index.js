@@ -25,12 +25,34 @@ app.use(
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
-app.get(["/", "/health"], (req, res) => {
-    res.status(200).json({
-        status: "UP", 
+app.get(["/", "/health"], async (req, res) => {
+    const health = {
+        status: "UP",
         timestamp: new Date(),
-        uptime: process.uptime()
-    });
+        uptime: process.uptime(),
+        dependencies: {}
+    };
+
+    try {
+        const sequelize = require('./src/config/SequelizeConfig');
+        await sequelize.authenticate();
+        health.dependencies.database = "UP";
+    } catch {
+        health.status = "DEGRADED";
+        health.dependencies.database = "DOWN";
+    }
+
+    try {
+        const redis = require('./src/config/RedisConfig');
+        await redis.ping();
+        health.dependencies.redis = "UP";
+    } catch {
+        health.status = "DEGRADED";
+        health.dependencies.redis = "DOWN";
+    }
+
+    const statusCode = health.status === "UP" ? 200 : 503;
+    res.status(statusCode).json(health);
 });
 
 app.get('/chats/v3/api-docs', (req, res) => {

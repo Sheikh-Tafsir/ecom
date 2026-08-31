@@ -51,7 +51,6 @@ export const useChatSync = (id, userId) => {
                 if (!oldData || !oldData.pages || oldData.pages.length === 0) return oldData;
 
                 const pages = [...oldData.pages];
-                const lastPageIndex = pages.length - 1;
                 
                 const firstPage = { ...pages[0] };
                 const messages = firstPage.messages || [];
