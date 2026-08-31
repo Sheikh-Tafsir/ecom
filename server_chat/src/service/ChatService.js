@@ -234,9 +234,34 @@ const findDetailsChatById = async (id, filters = {}, userId) => {
     const {
         cursorCreatedAt,
         cursorId,
+        afterId,
     } = filters;
 
     const limit = CHAT_MESSAGE_DEFAULT_SIZE;
+
+    // Build message query conditions
+    // afterId: forward pagination — fetch messages NEWER than this ID (for reconnect sync)
+    // cursorCreatedAt+cursorId: backward pagination — fetch OLDER messages (for infinite scroll up)
+    const messageWhere = {chatId: id};
+    const isForwardPagination = !!afterId;
+
+    if (afterId) {
+        messageWhere.id = {[Op.gt]: afterId};
+    } else if (cursorCreatedAt && cursorId) {
+        messageWhere[Op.or] = [
+            {
+                createdAt: {
+                    [Op.lt]: cursorCreatedAt,
+                },
+            },
+            {
+                createdAt: cursorCreatedAt,
+                id: {
+                    [Op.lt]: cursorId,
+                },
+            },
+        ];
+    }
 
     const [chat, messages] = await Promise.all([
         Chat.findByPk(id, {
@@ -257,28 +282,12 @@ const findDetailsChatById = async (id, filters = {}, userId) => {
         }),
 
         Message.findAll({
-            where: {
-                chatId: id,
-                ...(cursorCreatedAt && cursorId && {
-                    [Op.or]: [
-                        {
-                            createdAt: {
-                                [Op.lt]: cursorCreatedAt,
-                            },
-                        },
-                        {
-                            createdAt: cursorCreatedAt,
-                            id: {
-                                [Op.lt]: cursorId,
-                            },
-                        },
-                    ],
-                }),
-            },
-            order: [
-                ["createdAt", "DESC"],
-                ["id", "DESC"],
-            ],
+            where: messageWhere,
+            // Forward: oldest-first (ASC) so messages arrive in chronological order
+            // Backward: newest-first (DESC), then reversed below for chronological display
+            order: isForwardPagination
+                ? [["id", "ASC"]]
+                : [["createdAt", "DESC"], ["id", "DESC"]],
             limit: limit + 1,
         })
     ]);
@@ -301,7 +310,9 @@ const findDetailsChatById = async (id, filters = {}, userId) => {
     return {
         ...formatChatDetails(chat, userId),
 
-        messages: pageMessages.reverse(),
+        // Forward pagination already returns chronological order
+        // Backward pagination needs reverse (was fetched DESC)
+        messages: isForwardPagination ? pageMessages : pageMessages.reverse(),
 
         pagination: {
             hasMore,

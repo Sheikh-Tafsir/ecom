@@ -157,6 +157,11 @@ router.get("", AuthenticationMiddleware, AsyncHandler(async (req, res) => {
  *         schema:
  *           type: integer
  *         description: Pagination cursor (id of the last message in previous page)
+ *       - in: query
+ *         name: afterId
+ *         schema:
+ *           type: integer
+ *         description: Forward pagination cursor — returns messages with id greater than this value (used for fetching missed messages after reconnect)
  *     responses:
  *       200:
  *         description: Chat details and messages
