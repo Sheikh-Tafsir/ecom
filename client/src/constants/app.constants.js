@@ -11,18 +11,18 @@ export const REGULAR_ACTION = Object.freeze({
 });
 
 export const TOAST_TYPE = Object.freeze({
-    INFO: "Info",              // Passive info or message
-    SUCCESS: "Success",        // Completed successfully
-    ERROR: "Error",            // Something went wrong
-    WARNING: "Warning",        // Needs attention, but not fatal
+    INFO: "info",
+    SUCCESS: "success",
+    ERROR: "error",
+    WARNING: "warn",
 
-    NEED_ACTION: "Need action",         // Requires user decision/input
-    BLOCKING: "Blocking",               // Prevents user from continuing
-    CONFIRMATION: "Confirmation",       // Asks user to confirm or cancel
-    PROCESSING: "Processing",           // In-progress feedback
-    CANCELLED: "Cancelled",             // User or system cancelled something
+    NEED_ACTION: "info",
+    BLOCKING: "error",
+    CONFIRMATION: "info",
+    PROCESSING: "info",
+    CANCELLED: "warn",
 
-    FIXED: "Fixed"
+    FIXED: "success"
 })
 
 export const ALERT_TYPE = {

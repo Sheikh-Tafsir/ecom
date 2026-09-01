@@ -13,6 +13,16 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
 
   # db-backup:
   #   build:
@@ -31,6 +41,9 @@ services:
   #     - DB_PASS=${DB_PASSWORD}
   #     - BACKUP_RETENTION_DAYS=7
   #     - GDRIVE_SYNC_ENABLED=${GDRIVE_SYNC_ENABLED}
+  #   networks:
+  #     - data
+
   redis:
     image: redis:7-alpine
     restart: always
@@ -44,6 +57,16 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - data
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
@@ -61,6 +84,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - data
 
   gateway:
     build:
@@ -89,10 +114,30 @@ services:
       - CHAT_SERVICE_WS_URL=ws://chat-server:${CHAT_SERVER_PORT}
       - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
       - CORS_ALLOWED_ORIGINS=${CLIENT_URL}
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     depends_on:
-      - server
-      - chat-server
-      - redis
+      server:
+        condition: service_healthy
+      chat-server:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - frontend
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
 
   server:
     build:
@@ -149,6 +194,12 @@ services:
       - BKASH_CALLBACK_URL=${SERVER_URL}/api/payments/bkash/callback
       - BKASH_FRONTEND_SUCCESS_URL=${CLIENT_URL}/payment-success
       - BKASH_FRONTEND_FAIL_URL=${CLIENT_URL}/payment-failed
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8081/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     depends_on:
       postgres:
         condition: service_healthy
@@ -156,6 +207,17 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    networks:
+      - backend
+      - data
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: '1.5'
+        reservations:
+          memory: 384M
+          cpus: '0.5'
 
   chat-server:
     build:
@@ -184,11 +246,28 @@ services:
       - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
       - CORS_ALLOWED_ORIGINS=${CLIENT_URL}
       - DB_SSL=false
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3001/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    networks:
+      - backend
+      - data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
 
   client:
     build:
@@ -213,9 +292,33 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     depends_on:
-      - gateway
+      gateway:
+        condition: service_healthy
+    networks:
+      - frontend
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
 
 volumes:
   postgres_data:
   redis_data:
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+  data:
+    driver: bridge

@@ -41,9 +41,14 @@ public class RedisConfig {
         // Register Mixin for PageImpl
         objectMapper.addMixIn(PageImpl.class, PageImplJacksonSerializer.class);
 
-        // Principal Engineering Practice: Secure polymorphic type validator
+        // Restrict deserialization to known safe types only
         PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder()
-                .allowIfBaseType(Object.class)
+                .allowIfBaseType("com.example.ecom")
+                .allowIfBaseType("java.util")
+                .allowIfBaseType("java.lang")
+                .allowIfBaseType("java.time")
+                .allowIfBaseType("java.math")
+                .allowIfBaseType("org.springframework.data.domain")
                 .build();
 
         objectMapper.activateDefaultTyping(

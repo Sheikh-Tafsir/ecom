@@ -1,5 +1,5 @@
 import {Routes, Route, BrowserRouter} from "react-router-dom";
-import {useEffect} from 'react';
+import {useEffect, lazy, Suspense} from 'react';
 import './App.css'
 import {Bounce, ToastContainer} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -13,49 +13,50 @@ import {notificationService, isSseOn} from '@/services/realtime/notificationServ
 import {PERMISSION} from "@/constants/auth.constants";
 import NotificationWrapper from "@/services/realtime/NotificationWrapper.jsx";
 
-import Homepage from '@/features/homepage/Homepage';
-import NotFound from '@/features/NotFound';
+const Homepage = lazy(() => import('@/features/homepage/Homepage'));
+const NotFound = lazy(() => import('@/features/NotFound'));
 
-import Login from "@/features/auth/Login.jsx";
-import Signup from "@/features/auth/Signup.jsx";
-import ForgetPassword from "@/features/auth/ForgetPassword";
-import ForgetPasswordVerify from "@/features/auth/ForgetPasswordVerify";
+const Login = lazy(() => import("@/features/auth/Login.jsx"));
+const Signup = lazy(() => import("@/features/auth/Signup.jsx"));
+const ForgetPassword = lazy(() => import("@/features/auth/ForgetPassword"));
+const ForgetPasswordVerify = lazy(() => import("@/features/auth/ForgetPasswordVerify"));
+const SignupVerify = lazy(() => import("@/features/auth/SignupVerify"));
 
-import Profile from '@/features/profile/Profile.jsx'
+const Profile = lazy(() => import('@/features/profile/Profile.jsx'));
+const ChangePassword = lazy(() => import("@/features/profile/ChangePassword"));
 
-import Users from "@/features/users/Users.jsx";
-import UserEdit from "@/features/users/UserEdit.jsx";
-import Roles from "@/features/roles/Roles.jsx";
-import RoleSave from "@/features/roles/RoleSave.jsx";
+const Users = lazy(() => import("@/features/users/Users.jsx"));
+const UserEdit = lazy(() => import("@/features/users/UserEdit.jsx"));
+const Roles = lazy(() => import("@/features/roles/Roles.jsx"));
+const RoleSave = lazy(() => import("@/features/roles/RoleSave.jsx"));
 
-import Products from "@/features/product/Products.jsx";
-import ProductDetails from "@/features/product/ProductDetails.jsx";
-import ProductSave from "@/features/product/ProductSave";
-import Stocks from "@/features/stock/Stocks.jsx";
-import StockCreate from "@/features/stock/StockCreate.jsx";
-import Sales from "@/features/sale/Sales";
+const Products = lazy(() => import("@/features/product/Products.jsx"));
+const ProductDetails = lazy(() => import("@/features/product/ProductDetails.jsx"));
+const ProductSave = lazy(() => import("@/features/product/ProductSave"));
+const Stocks = lazy(() => import("@/features/stock/Stocks.jsx"));
+const StockCreate = lazy(() => import("@/features/stock/StockCreate.jsx"));
+const StockItems = lazy(() => import("@/features/stock/StockItems.jsx"));
+const StockDetails = lazy(() => import("@/features/stock/StockDetails.jsx"));
+const Sales = lazy(() => import("@/features/sale/Sales"));
 
-import Cart from "@/features/order/Cart";
-import Orders from "@/features/order/Orders";
-import OrderDetails from "@/features/order/OrderDetails";
-import OrderCreate from "@/features/order/OrderCreate";
+const Cart = lazy(() => import("@/features/order/Cart"));
+const Orders = lazy(() => import("@/features/order/Orders"));
+const OrderDetails = lazy(() => import("@/features/order/OrderDetails"));
+const OrderCreate = lazy(() => import("@/features/order/OrderCreate"));
+
+const Chat = lazy(() => import("@/features/chats/Chats.jsx"));
+const PaymentSuccess = lazy(() => import("@/features/payment/PaymentSuccess"));
+const PaymentFail = lazy(() => import("@/features/payment/PaymentFail"));
+
+const Blogs = lazy(() => import("@/features/blogs/Blogs"));
+const BlogDetails = lazy(() => import("@/features/blogs/BlogDetails"));
+const AboutUs = lazy(() => import("@/features/staticPages/AboutUs"));
+const PrivacyPolicy = lazy(() => import("@/features/staticPages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("@/features/staticPages/TermsOfService"));
+const BannerManager = lazy(() => import("@/features/banner/BannerManager"));
+const FaqManager = lazy(() => import("@/features/faq/FaqManager"));
 
 import {useUserStore} from "@/store/useUserStore";
-import StockItems from "@/features/stock/StockItems.jsx";
-import StockDetails from "@/features/stock/StockDetails.jsx";
-import Chat from "@/features/chats/Chats.jsx";
-import SignupVerify from "@/features/auth/SignupVerify";
-import PaymentSuccess from "@/features/payment/PaymentSuccess";
-import PaymentFail from "@/features/payment/PaymentFail";
-import ChangePassword from "@/features/profile/ChangePassword";
-
-import Blogs from "@/features/blogs/Blogs";
-import BlogDetails from "@/features/blogs/BlogDetails";
-import AboutUs from "@/features/staticPages/AboutUs";
-import PrivacyPolicy from "@/features/staticPages/PrivacyPolicy";
-import TermsOfService from "@/features/staticPages/TermsOfService";
-import BannerManager from "@/features/banner/BannerManager";
-import FaqManager from "@/features/faq/FaqManager";
 
 const App = () => {
 
@@ -124,6 +125,7 @@ const InnerApp = () => {
 
     return (
         <>
+            <Suspense fallback={<div style={{display:'flex',justifyContent:'center',alignItems:'center',height:'100vh'}}>Loading...</div>}>
             <Routes>
                 <Route element={<PublicRoute/>}>
                     <Route path="/" element={<Homepage/>}/>
@@ -149,7 +151,7 @@ const InnerApp = () => {
                 <Route element={<ProtectedRoute/>}>
                     <Route path='/profile' element={<Profile/>}/>
                     <Route path='/profile/edit' element={<Profile/>}/>
-                    <Route path='/profile/chage-password' element={<ChangePassword/>}/>
+                    <Route path='/profile/change-password' element={<ChangePassword/>}/>
 
                     <Route path="/cart" element={<Cart/>}/>
                     <Route path="/orders" element={<Orders/>}/>
@@ -194,6 +196,7 @@ const InnerApp = () => {
                 <Route path="/not-found" element={<NotFound/>}/>
                 <Route path="*" element={<NotFound/>}/>
             </Routes>
+            </Suspense>
 
             <ToastContainer
                 position="bottom-right"

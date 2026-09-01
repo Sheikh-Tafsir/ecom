@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 import com.example.ecom.common.dto.CustomUserDetails;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -74,15 +76,15 @@ public class PaymentController {
         try {
             CreatePaymentResponse result = paymentService.execute(paymentID);
 
-            if ("0000".equals(result.getStatusCode())) {
+            if ("0000".equals(result.getStatusCode()) && "Completed".equals(result.getTransactionStatus())) {
                 orderService.acceptOrderForPrepayment(orderId);
                 paymentService.updatePaymentStatus(paymentID, result, true);
 
                 httpResponse.sendRedirect(config.getFrontendSuccessUrl()
                         + "?orderId=" + orderId
-                        + "&paymentID=" + result.getPaymentID()
-                        + "&trxID=" + result.getTrxID()
-                        + "&amount=" + result.getAmount()
+                        + "&paymentID=" + URLEncoder.encode(result.getPaymentID(), StandardCharsets.UTF_8)
+                        + "&trxID=" + URLEncoder.encode(result.getTrxID(), StandardCharsets.UTF_8)
+                        + "&amount=" + URLEncoder.encode(result.getAmount(), StandardCharsets.UTF_8)
                         + "&status=success");
             } else {
                 paymentService.updatePaymentStatus(paymentID, result, false);
@@ -90,7 +92,7 @@ public class PaymentController {
                 httpResponse.sendRedirect(config.getFrontendFailUrl()
                         + "?orderId=" + orderId
                         + "&status=failure"
-                        + "&reason=" + result.getStatusMessage());
+                        + "&reason=" + URLEncoder.encode(result.getStatusMessage(), StandardCharsets.UTF_8));
             }
         } catch (Exception e) {
             log.error("Execute payment error", e);

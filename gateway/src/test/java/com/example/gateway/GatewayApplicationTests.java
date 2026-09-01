@@ -8,6 +8,7 @@ import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 
 @SpringBootTest(properties = {
+    "GATEWAY_PORT=8080",
     "CORS_ALLOWED_ORIGINS=http://localhost:8080",
     "ACCESS_TOKEN_SECRET=test-secret-key-at-least-32-characters-long-for-hmac-sha-256",
     "REDIS_HOST=localhost",

@@ -1,0 +1,16 @@
+# ================================================
+# Production Profile Overrides
+# Activated via SPRING_PROFILES_ACTIVE=prod
+# ================================================
+
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false
+
+logging:
+  level:
+    root: WARN
+    org.springframework.security: WARN
+    org.springframework.cloud.gateway: INFO

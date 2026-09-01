@@ -30,8 +30,8 @@ const ReviewSchema = z.object({
     comment: z.string().optional(),
 });
 
-const saveReview = (id, data) => {
-    const response = AuthenticatedAxios.post(`/products/${id}/review`, data);
+const saveReview = async (id, data) => {
+    const response = await AuthenticatedAxios.post(`/products/${id}/review`, data);
     return response.data.data;
 }
 

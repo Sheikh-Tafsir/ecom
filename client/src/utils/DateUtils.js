@@ -58,9 +58,8 @@ export const isYesterday = (date, today) => {
 
 export const getLastMessageTime = (timestamp) => {
     if (!timestamp) return "-";
-    
-    // Add 6 hours to the original timestamp
-    const messageDate = new Date(new Date(timestamp).getTime() + 6 * 60 * 60 * 1000);
+
+    const messageDate = new Date(timestamp);
     const now = new Date();
 
     if (isNaN(messageDate.getTime())) return "-";

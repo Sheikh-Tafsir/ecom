@@ -1,0 +1,26 @@
+# ================================================
+# Production Profile Overrides
+# Activated via SPRING_PROFILES_ACTIVE=prod
+# ================================================
+
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+logging:
+  level:
+    root: WARN
+    com.example.ecom: INFO
+    org.springframework.security: WARN
+    org.springframework.web.multipart: WARN

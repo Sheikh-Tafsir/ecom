@@ -13,6 +13,9 @@ spring:
 
   cloud:
     gateway:
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 10s
       server:
         webflux:
           routes:
@@ -82,3 +85,16 @@ springdoc:
 app:
   cache:
     revoked-tokens-prefix: ${REVOKED_TOKENS_PREFIX:v1:revokedAccessTokens::}
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 10s

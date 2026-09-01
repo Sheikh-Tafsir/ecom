@@ -79,7 +79,7 @@ export default function Navbar() {
                         href: "#",
                         submenu: [
                             {name: "Blogs", href: "/blogs"},
-                            {name: "Baners", href: "/banners"},
+                            {name: "Banners", href: "/banners"},
                             {name: "FAQ", href: "/faqs"},
                         ],
                     },
