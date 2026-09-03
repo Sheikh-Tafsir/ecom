@@ -40,8 +40,10 @@ const AuthenticationMiddleware = async (req, res, next) => {
                 return next(new RuntimeError(401, ACCESS_TOKEN_INVALID));
             }
         } catch (redisErr) {
-            // Robust resiliency fallback: log the Redis connection error and allow request to proceed downstream
+            // Fail closed: deny access when we cannot verify token revocation status.
+            // Allowing a potentially revoked token through is a security risk.
             console.error(`Redis error checking revoked tokens blacklist for JTI ${jti}:`, redisErr.message);
+            return next(new RuntimeError(503, 'Service temporarily unavailable — unable to verify token status'));
         }
 
         req.user = decoded;

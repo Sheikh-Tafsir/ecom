@@ -12,6 +12,7 @@ import com.example.ecom.product.product.dto.*;
 import com.example.ecom.product.category.repository.CategoryRepository;
 import com.example.ecom.product.product.repository.ProductRepository;
 import com.example.ecom.product.stock.dto.CreateStockItemRequest;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
@@ -59,6 +60,8 @@ public class ProductService {
     private final FileStorageService fileStorageService;
 
     private final MessageService messageService;
+
+    private final EntityManager entityManager;
 
     public Page<ProductListResponse> findAll(Pageable pageable, String name, String category, LocalDate fromDate,
                                              LocalDate toDate, CustomUserDetails userDetails) {
@@ -206,7 +209,9 @@ public class ProductService {
             throw new ValidationException("Product stock is insufficient or unavailable for product id: " + product.getId());
         }
 
-        product.setQuantity(product.getQuantity() - quantity);
+        // Refresh from DB to sync entity with the atomic update — do NOT manually set the quantity,
+        // as that would cause JPA dirty-checking to fire a second UPDATE with a stale value.
+        entityManager.refresh(product);
     }
 
     @Caching(evict = {
@@ -233,7 +238,7 @@ public class ProductService {
     })
     public void increaseQuantity(Product product, int quantityChange) {
         productRepository.increaseStock(product.getId(), quantityChange);
-        product.setQuantity(product.getQuantity() + quantityChange);
+        entityManager.refresh(product);
     }
 
     private void registerImageCleanup(Set<String> uploadedImageUrls) {

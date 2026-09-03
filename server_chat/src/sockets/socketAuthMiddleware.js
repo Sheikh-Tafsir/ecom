@@ -47,8 +47,17 @@ const socketAuthMiddleware = async (socket, next) => {
                 return next(error);
             }
         } catch (redisErr) {
-            // Robust resiliency fallback: log the Redis connection error and allow connection to proceed
+            // Fail closed: deny socket connection when we cannot verify token revocation status.
+            // Allowing a potentially revoked token through is a security risk.
             console.error(`Redis error checking revoked tokens blacklist for JTI ${jti} (socket):`, redisErr.message);
+
+            const error = new Error('Service temporarily unavailable — unable to verify token status');
+            error.data = {
+                status: 503,
+                error: 'Service temporarily unavailable'
+            };
+
+            return next(error);
         }
 
         socket.user = user;

@@ -59,8 +59,13 @@ public class IpRateLimiterFilter implements WebFilter {
                                     return exchange.getResponse().setComplete();
                                 }
 
-                                return chain.filter(exchange)
-                                        .doFinally(signalType -> rateLimiterService.releaseIpConcurrency(ip, isAuthPath).subscribe());
+                                return Mono.usingWhen(
+                                        Mono.just(true),
+                                        acquired -> chain.filter(exchange),
+                                        acquired -> rateLimiterService.releaseIpConcurrency(ip, isAuthPath),
+                                        (acquired, err) -> rateLimiterService.releaseIpConcurrency(ip, isAuthPath),
+                                        acquired -> rateLimiterService.releaseIpConcurrency(ip, isAuthPath)
+                                );
                             });
                 });
     }

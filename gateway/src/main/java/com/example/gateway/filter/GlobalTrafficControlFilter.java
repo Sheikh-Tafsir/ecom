@@ -35,7 +35,7 @@ public class GlobalTrafficControlFilter implements WebFilter {
                         return exchange.getResponse().setComplete();
                     }
 
-                    // 2. Concurrency Throttle (Bulkhead)
+                    // 2. Concurrency Throttle (Bulkhead) — use Mono.usingWhen for proper lifecycle
                     return rateLimiterService.acquireGlobalConcurrency()
                             .flatMap(concurrencyAllowed -> {
                                 if (!concurrencyAllowed) {
@@ -44,8 +44,13 @@ public class GlobalTrafficControlFilter implements WebFilter {
                                     return exchange.getResponse().setComplete();
                                 }
 
-                                return chain.filter(exchange)
-                                        .doFinally(signalType -> rateLimiterService.releaseGlobalConcurrency().subscribe());
+                                return Mono.usingWhen(
+                                        Mono.just(true),
+                                        acquired -> chain.filter(exchange),
+                                        acquired -> rateLimiterService.releaseGlobalConcurrency(),
+                                        (acquired, err) -> rateLimiterService.releaseGlobalConcurrency(),
+                                        acquired -> rateLimiterService.releaseGlobalConcurrency()
+                                );
                             });
                 });
     }
