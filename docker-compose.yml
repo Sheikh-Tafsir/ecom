@@ -24,25 +24,25 @@ services:
           memory: 256M
           cpus: '0.25'
 
-  # db-backup:
-  #   build:
-  #     context: ./scripts/backup-service
-  #   restart: always
-  #   volumes:
-  #     - ./backups:/backups
-  #     - ./scripts/backup-service/config:/config
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #   environment:
-  #     - DB_HOST=${BACKUP_DB_HOST}
-  #     - DB_NAME=${BACKUP_DB_NAME}
-  #     - DB_USER=${DB_USERNAME}
-  #     - DB_PASS=${DB_PASSWORD}
-  #     - BACKUP_RETENTION_DAYS=7
-  #     - GDRIVE_SYNC_ENABLED=${GDRIVE_SYNC_ENABLED}
-  #   networks:
-  #     - data
+  db-backup:
+    build:
+      context: ./scripts/backup-service
+    restart: always
+    volumes:
+      - ./backups:/backups
+      - ./scripts/backup-service/config:/config
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DB_HOST=${BACKUP_DB_HOST}
+      - DB_NAME=${BACKUP_DB_NAME}
+      - DB_USER=${DB_USERNAME}
+      - DB_PASS=${DB_PASSWORD}
+      - BACKUP_RETENTION_DAYS=7
+      - GDRIVE_SYNC_ENABLED=${GDRIVE_SYNC_ENABLED}
+    networks:
+      - data
 
   redis:
     image: redis:7-alpine
