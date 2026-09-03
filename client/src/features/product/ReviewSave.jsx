@@ -68,9 +68,18 @@ const ReviewSave = () => {
                     id: Date.now(),
                     ...newReview,
                     createdAt: new Date().toISOString(),
-                    user: {name: user?.name}
+                    userName: user?.name,
+                    userImage: user?.image || null,
                 };
-                return old ? [...old, optimisticReview] : [optimisticReview];
+                if (!old) {
+                    return { content: [optimisticReview], totalElements: 1 };
+                }
+
+                return {
+                    ...old,
+                    content: [optimisticReview, ...(old.content || [])],
+                    totalElements: (old.totalElements || 0) + 1,
+                };
             });
 
             return {previousReviews};
@@ -87,8 +96,9 @@ const ReviewSave = () => {
             handleErrors(err, setError);
         },
         onSettled: () => {
-            // Always refetch after error or success to sync with server
+            // Always refetch reviews and product details after error or success to sync with server
             queryClient.invalidateQueries({queryKey: queryKeys.reviews.all(id)});
+            queryClient.invalidateQueries({queryKey: queryKeys.products.detail(id)});
         },
     });
 

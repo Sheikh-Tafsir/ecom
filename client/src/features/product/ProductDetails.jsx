@@ -49,7 +49,7 @@ export default function ProductDetails() {
         error: productError,
     } = useQuery({
         enabled: !!id,
-        queryKey: ["product", id],
+        queryKey: queryKeys.products.detail(id),
         queryFn: () => fetchProduct(id),
     });
 
@@ -61,7 +61,7 @@ export default function ProductDetails() {
         refetch: reviewsRefetch
     } = useQuery({
         enabled: !!id,
-        queryKey: ["reviews", id], //product id
+        queryKey: queryKeys.reviews.all(id),
         queryFn: () => fetchReviews(id),
     });
 
