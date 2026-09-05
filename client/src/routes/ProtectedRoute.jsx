@@ -4,6 +4,7 @@ import NavigationBar from '@/common/NavigationBar.jsx';
 import {useUserStore} from '@/store/useUserStore';
 import Footer from "@/common/Footer.jsx";
 import {hasPermission} from "@/utils/AuthUtils";
+import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay.jsx";
 
 const ProtectedRoute = ({allowedPermissions}) => {
     const location = useLocation();
@@ -11,7 +12,7 @@ const ProtectedRoute = ({allowedPermissions}) => {
     const isLoading = useUserStore(state => state.isLoading);
 
     if (isLoading) {
-        return null;
+        return <PageLoadingOverlay />;
     }
     
     if (!user) {

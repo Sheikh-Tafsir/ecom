@@ -1,6 +1,7 @@
 package com.example.gateway.filter;
 
 import com.example.gateway.service.RateLimiterService;
+import com.example.gateway.util.ResponseUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
@@ -31,8 +32,7 @@ public class GlobalTrafficControlFilter implements WebFilter {
                 .flatMap(rateAllowed -> {
                     if (!rateAllowed) {
                         log.error("Too many global requests");
-                        exchange.getResponse().setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
-                        return exchange.getResponse().setComplete();
+                        return ResponseUtils.error(exchange, HttpStatus.TOO_MANY_REQUESTS, "Too many global requests, please try again later");
                     }
 
                     // 2. Concurrency Throttle (Bulkhead) — use Mono.usingWhen for proper lifecycle
@@ -40,8 +40,7 @@ public class GlobalTrafficControlFilter implements WebFilter {
                             .flatMap(concurrencyAllowed -> {
                                 if (!concurrencyAllowed) {
                                     log.error("Global concurrency limit exceeded");
-                                    exchange.getResponse().setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
-                                    return exchange.getResponse().setComplete();
+                                    return ResponseUtils.error(exchange, HttpStatus.SERVICE_UNAVAILABLE, "Global concurrency limit exceeded, please try again later");
                                 }
 
                                 return Mono.usingWhen(

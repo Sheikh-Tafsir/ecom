@@ -40,7 +40,7 @@ public class GlobalExceptionHandler {
         return handlerMethodValidationExceptionError(ex);
     }
 
-    // 401
+    // 400
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException ex) {
         log.error("Input values are invalid: {}", ex.getMessage());
@@ -115,7 +115,7 @@ public class GlobalExceptionHandler {
     // 500
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<?> handleRuntimeException(RuntimeException ex) {
-        log.error("Runtime exception caught: {}", ex.getMessage(), ex);
+        log.error("Runtime exception caught [{}]: {}", ex.getClass().getSimpleName(), ex.getMessage(), ex);
         return error(SOMETHING_WENT_WRONG, HttpStatusCode.valueOf(500));
     }
 

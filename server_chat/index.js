@@ -1,6 +1,7 @@
 const express = require("express");
 const cookieParser = require('cookie-parser');
 const http = require('http');
+const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 
 require("dotenv").config();
@@ -16,6 +17,8 @@ const ChatController = require("./src/controller/ChatController");
 const { specs, swaggerUi } = require("./src/config/swagger");
 
 const app = express();
+
+app.use(helmet());
 
 const apiLimiter = rateLimit({
     windowMs: 60 * 1000,

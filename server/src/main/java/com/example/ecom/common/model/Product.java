@@ -32,7 +32,7 @@ public class Product extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String name;
 
-    @Column
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @Column(nullable = false)
@@ -75,31 +75,4 @@ public class Product extends BaseEntity {
     public boolean isNotActive() {
         return getDeleted() || getStatus() == DISCONTINUED;
     }
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-    public BigDecimal getPrice() { return price; }
-    public void setPrice(BigDecimal price) { this.price = price; }
-    public int getQuantity() { return quantity; }
-    public void setQuantity(int quantity) { this.quantity = quantity; }
-    public ProductStatus getStatus() { return status; }
-    public void setStatus(ProductStatus status) { this.status = status; }
-    public BigDecimal getRating() { return rating; }
-    public void setRating(BigDecimal rating) { this.rating = rating; }
-    public long getReviewCount() { return reviewCount; }
-    public void setReviewCount(long reviewCount) { this.reviewCount = reviewCount; }
-    public Set<ProductImage> getImages() { return images; }
-    public void setImages(Set<ProductImage> images) { this.images = images; }
-    public String getFirstImage() { return firstImage; }
-    public void setFirstImage(String firstImage) { this.firstImage = firstImage; }
-    public Set<Category> getCategories() { return categories; }
-    public void setCategories(Set<Category> categories) { this.categories = categories; }
-    public Set<Review> getReviews() { return reviews; }
-    public void setReviews(Set<Review> reviews) { this.reviews = reviews; }
-    public Boolean getDeleted() { return deleted; }
-    public void setDeleted(Boolean deleted) { this.deleted = deleted; }
 }

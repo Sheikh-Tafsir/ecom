@@ -2,6 +2,7 @@ package com.example.gateway.filter;
 
 import com.example.gateway.dto.CustomUserDetails;
 import com.example.gateway.service.JwtService;
+import com.example.gateway.util.ResponseUtils;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.Expiry;
@@ -20,6 +21,7 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static com.example.gateway.filter.LoggingFilter.MDC_USER_ID_KEY;
@@ -41,6 +43,9 @@ public class AuthenticationFilter implements WebFilter {
     // Local cache to reduce Redis traffic:
     // Blacklisted JTIs (true) are cached for 10 minutes.
     // Non-blacklisted JTIs (false) are cached for 15 seconds.
+    // SECURITY NOTE: The 15-second cache for non-blacklisted tokens means a freshly revoked token
+    // can still pass through for up to 15 seconds until the cache entry expires.
+    // This is an accepted trade-off for performance (reduces Redis round-trips).
     private final Cache<String, Boolean> blacklistStatusCache = Caffeine.newBuilder()
             .expireAfter(new Expiry<String, Boolean>() {
                 @Override
@@ -89,8 +94,7 @@ public class AuthenticationFilter implements WebFilter {
             // Enforce JTI claim presence for defense-in-depth security
             if (!StringUtils.hasText(jti)) {
                 log.warn("Access token lacks a mandatory JTI (JWT ID) claim");
-                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-                return exchange.getResponse().setComplete();
+                return ResponseUtils.error(exchange, HttpStatus.UNAUTHORIZED, "Access token lacks mandatory JTI claim");
             }
 
             // 1. Check local cache first to avoid Redis traffic
@@ -98,8 +102,7 @@ public class AuthenticationFilter implements WebFilter {
             if (cachedStatus != null) {
                 if (Boolean.TRUE.equals(cachedStatus)) {
                     log.warn("Access token JTI: {} is revoked/blacklisted (local cache hit)", jti);
-                    exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-                    return exchange.getResponse().setComplete();
+                    return ResponseUtils.error(exchange, HttpStatus.UNAUTHORIZED, "Access token has been revoked");
                 }
                 return proceedWithAuthentication(exchange, chain, claims);
             }
@@ -107,26 +110,32 @@ public class AuthenticationFilter implements WebFilter {
             // 2. Query Redis if not in local cache
             String cacheKey = revokedTokensPrefix + jti;
             return reactiveStringRedisTemplate.hasKey(cacheKey)
+                    .map(Optional::of)
                     .onErrorResume(e -> {
+                        // Fail closed: deny access when we cannot verify token revocation status.
+                        // Allowing a potentially revoked token through is a security risk.
                         log.error("Redis error checking revoked tokens blacklist for JTI {}: {}", jti, e.getMessage());
-                        return Mono.just(false);
+                        return Mono.just(Optional.<Boolean>empty());
                     })
-                    .flatMap(isBlacklisted -> {
-                        // Populate local cache
+                    .flatMap(optBlacklisted -> {
+                        if (optBlacklisted.isEmpty()) {
+                            return ResponseUtils.error(exchange, HttpStatus.SERVICE_UNAVAILABLE,
+                                    "Service temporarily unavailable — unable to verify token status");
+                        }
+
+                        boolean isBlacklisted = optBlacklisted.get();
+                        // Populate local cache only on successful Redis check
                         blacklistStatusCache.put(jti, isBlacklisted);
 
-                        if (Boolean.TRUE.equals(isBlacklisted)) {
+                        if (isBlacklisted) {
                             log.warn("Access token JTI: {} is revoked/blacklisted", jti);
-                            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-                            return exchange.getResponse().setComplete();
+                            return ResponseUtils.error(exchange, HttpStatus.UNAUTHORIZED, "Access token has been revoked");
                         }
                         return proceedWithAuthentication(exchange, chain, claims);
                     });
         } catch (Exception e) {
             log.error("Invalid or expired JWT token: {}", e.getMessage());
-
-            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-            return exchange.getResponse().setComplete();
+            return ResponseUtils.error(exchange, HttpStatus.UNAUTHORIZED, "Invalid or expired access token");
         }
     }
 
@@ -135,9 +144,7 @@ public class AuthenticationFilter implements WebFilter {
 
         if (!userDetails.isEnabled()) {
             log.warn("User is not active: {}", userDetails.getEmail());
-
-            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-            return exchange.getResponse().setComplete();
+            return ResponseUtils.error(exchange, HttpStatus.UNAUTHORIZED, "User account is inactive");
         }
 
         UsernamePasswordAuthenticationToken authentication =

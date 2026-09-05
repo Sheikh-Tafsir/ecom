@@ -53,7 +53,7 @@ const setupMessageHandlers = (io, socket) => {
             const roomId = getRoom(message.chatId);
             addSocketToRoom(socket, roomId);
 
-            // Securely join all participants of this chat to the room
+            // Join all participants of this chat to the room so they receive the message
             const participants = await ChatService.findChatParticipantsByChatId(message.chatId);
             participants.forEach(p => {
                 io.in(`user_${p.userId}`).socketsJoin(roomId);

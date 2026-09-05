@@ -51,3 +51,9 @@ out/
 HELP.md
 .stk
 /backups/**
+
+# Backup service credentials
+scripts/backup-service/config/rclone.conf
+
+# Code review artifacts
+code-review.md

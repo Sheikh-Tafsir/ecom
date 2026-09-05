@@ -125,6 +125,9 @@ public class OrderService {
         order.setUser(user);
         request.items().forEach(itemRequest -> addProduct(order, itemRequest));
 
+        // Reserve stock at checkout
+        order.getItems().forEach(item -> productService.decreaseForOrder(item.getProduct(), item.getQuantity()));
+
         Order savedOrder = orderRepository.save(order);
         recordStatusChange(savedOrder, null, OrderStatus.PENDING, user, "Order created");
 
@@ -159,6 +162,8 @@ public class OrderService {
         if (!isOwner(order.getUser().getId(), userDetails)) {
             throwAccessException(order.getUser().getId(), userDetails.getId(), "Order", order.getId());
         }
+
+        restoreOrderStock(order);
 
         User actor = userDetails != null ? userService.findByIdHelper(userDetails.getId()) : order.getUser();
         recordStatusChange(order, OrderStatus.PENDING, OrderStatus.CANCELLED, actor, "Order cancelled by customer");
@@ -196,9 +201,9 @@ public class OrderService {
         }
 
         if (status == OrderStatus.ACCEPTED && order.getStatus() != OrderStatus.ACCEPTED) {
-            acceptOrder(order);
+            consumeStockForAcceptedOrder(order);
         } else if ((status == OrderStatus.CANCELLED || status == OrderStatus.REJECTED || status == OrderStatus.RETURNED)
-                && (order.getStatus() == OrderStatus.ACCEPTED || order.getStatus() == OrderStatus.SHIPPED)) {
+                && (order.getStatus() == OrderStatus.PENDING || order.getStatus() == OrderStatus.ACCEPTED || order.getStatus() == OrderStatus.SHIPPED)) {
             restoreOrderStock(order);
         }
 
@@ -221,7 +226,7 @@ public class OrderService {
         Order order = findByIdHelper(id);
         OrderStatus oldStatus = order.getStatus();
         if (order.getStatus() != OrderStatus.ACCEPTED) {
-            acceptOrder(order);
+            consumeStockForAcceptedOrder(order);
             order.setStatus(OrderStatus.ACCEPTED);
             recordStatusChange(order, oldStatus, OrderStatus.ACCEPTED, order.getUser(), "Accepted upon payment confirmation");
         }
@@ -236,7 +241,7 @@ public class OrderService {
         // 1. Notify admins about orders > 1 days old via SSE
         List<Order> ordersToNotify = orderRepository.findAllByStatusAndCreatedAtBefore(OrderStatus.PENDING, oneDayAgo);
         if (!ordersToNotify.isEmpty()) {
-            String message = "There are " + ordersToNotify.size() + " orders pending for more than 2 days.";
+            String message = "There are " + ordersToNotify.size() + " orders pending for more than 1 day.";
             notificationService.sendToAdmins(new NotificationResponse(NotificationType.WARNING, message));
             log.info("Notified connected admins about {} pending orders via SSE", ordersToNotify.size());
         }
@@ -244,7 +249,8 @@ public class OrderService {
         // 2. Reject orders > 2 days old
         List<Order> ordersToReject = orderRepository.findAllByStatusAndCreatedAtBefore(OrderStatus.PENDING, twoDaysAgo);
         ordersToReject.forEach(order -> {
-            log.info("Rejecting order {} due to inactivity (more than 3 days old)", order.getId());
+            log.info("Rejecting order {} due to inactivity (more than 2 days old)", order.getId());
+            restoreOrderStock(order);
             recordStatusChange(order, OrderStatus.PENDING, OrderStatus.REJECTED, null, "Auto-rejected due to inactivity (>2 days)");
             order.setStatus(OrderStatus.REJECTED);
             orderRepository.save(order);
@@ -274,15 +280,7 @@ public class OrderService {
         order.addItem(product, request.quantity());
     }
 
-    private void acceptOrder(Order order) {
-        order.getItems().forEach(this::consumeProductAndStock);
-    }
-
-    private void consumeProductAndStock(OrderItem orderItem) {
-        Product product = orderItem.getProduct();
-        int quantityToConsume = orderItem.getQuantity();
-
-        productService.decreaseForOrder(product, quantityToConsume);
-        stockService.consume(product, quantityToConsume, orderItem.getOrder());
+    private void consumeStockForAcceptedOrder(Order order) {
+        order.getItems().forEach(item -> stockService.consume(item.getProduct(), item.getQuantity(), item.getOrder()));
     }
 }

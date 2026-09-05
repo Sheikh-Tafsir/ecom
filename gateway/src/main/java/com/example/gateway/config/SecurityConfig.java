@@ -4,17 +4,21 @@ import com.example.gateway.filter.AuthenticationFilter;
 import com.example.gateway.filter.UserRateLimiterFilter;
 import com.example.gateway.service.JwtService;
 import com.example.gateway.service.RateLimiterService;
+import com.example.gateway.util.ResponseUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.header.XFrameOptionsServerHttpHeadersWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
@@ -70,11 +74,15 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+                .headers(headers -> headers
+                        .frameOptions(frameOptions -> frameOptions.mode(XFrameOptionsServerHttpHeadersWriter.Mode.DENY))
+                        .contentTypeOptions(Customizer.withDefaults())
+                        .xssProtection(Customizer.withDefaults())
+                )
                 .exceptionHandling(exceptionHandling -> exceptionHandling
-                        .authenticationEntryPoint((exchange, e) -> {
-                            exchange.getResponse().setStatusCode(org.springframework.http.HttpStatus.UNAUTHORIZED);
-                            return exchange.getResponse().setComplete();
-                        })
+                        .authenticationEntryPoint((exchange, e) ->
+                                ResponseUtils.error(exchange, HttpStatus.UNAUTHORIZED, "Full authentication is required to access this resource")
+                        )
                 )
                 .addFilterBefore(authenticationFilter(), SecurityWebFiltersOrder.AUTHENTICATION)
                 .addFilterAfter(userRateLimiterFilter(), SecurityWebFiltersOrder.AUTHENTICATION)

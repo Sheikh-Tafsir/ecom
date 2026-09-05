@@ -2,6 +2,7 @@ package com.example.gateway.filter;
 
 import com.example.gateway.dto.CustomUserDetails;
 import com.example.gateway.service.RateLimiterService;
+import com.example.gateway.util.ResponseUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -38,8 +39,7 @@ public class UserRateLimiterFilter implements WebFilter {
                             .flatMap(rateAllowed -> {
                                 if (!rateAllowed) {
                                     log.error("Too many requests from user: {}", email);
-                                    exchange.getResponse().setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
-                                    return exchange.getResponse().setComplete();
+                                    return ResponseUtils.error(exchange, HttpStatus.TOO_MANY_REQUESTS, "Too many requests for your user account, please try again later");
                                 }
 
                                 // 2. User Concurrency Throttle
@@ -47,8 +47,7 @@ public class UserRateLimiterFilter implements WebFilter {
                                         .flatMap(concurrencyAllowed -> {
                                             if (!concurrencyAllowed) {
                                                 log.error("Too many simultaneous requests for user: {}", email);
-                                                exchange.getResponse().setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
-                                                return exchange.getResponse().setComplete();
+                                                return ResponseUtils.error(exchange, HttpStatus.TOO_MANY_REQUESTS, "Too many simultaneous requests for your user account");
                                             }
 
                                             return Mono.usingWhen(

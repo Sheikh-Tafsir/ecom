@@ -70,8 +70,10 @@
     </springProfile>
 
     <!-- Default (if no profile matches) -->
-    <root level="INFO">
-        <appender-ref ref="CONSOLE" />
-    </root>
+    <springProfile name="!prod,!dev">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE" />
+        </root>
+    </springProfile>
 
 </configuration>

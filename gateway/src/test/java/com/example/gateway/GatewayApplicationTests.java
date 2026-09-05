@@ -3,7 +3,7 @@ package com.example.gateway;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 
@@ -19,13 +19,13 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 })
 class GatewayApplicationTests {
 
-    @MockBean
+    @MockitoBean
     private ReactiveRedisConnectionFactory reactiveRedisConnectionFactory;
 
-    @MockBean
+    @MockitoBean
     private RedisConnectionFactory redisConnectionFactory;
 
-    @MockBean
+    @MockitoBean
     private ProxyManager<byte[]> proxyManager;
 
     @Test

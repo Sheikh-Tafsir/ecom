@@ -28,6 +28,7 @@
     "express-async-handler": "^1.2.0",
     "express-rate-limit": "^7.5.0",
     "express-slow-down": "^2.1.0",
+    "helmet": "^8.3.0",
     "ioredis": "^5.6.1",
     "jsonwebtoken": "^9.0.1",
     "multer": "^2.2.0",

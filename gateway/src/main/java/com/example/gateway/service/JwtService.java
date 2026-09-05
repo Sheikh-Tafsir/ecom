@@ -6,24 +6,24 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.security.Key;
 
 @Service
 public class JwtService {
 
-    private final Key accessTokenSecret;
+    private final SecretKey accessTokenSecret;
 
     public JwtService(@Value("${access.token.value}") String accessTokenSecret) {
         this.accessTokenSecret = Keys.hmacShaKeyFor(accessTokenSecret.getBytes(StandardCharsets.UTF_8));
     }
 
     public Claims parseAccessTokenClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(accessTokenSecret)
-                .setAllowedClockSkewSeconds(60)
+        return Jwts.parser()
+                .verifyWith(accessTokenSecret)
+                .clockSkewSeconds(60)
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }

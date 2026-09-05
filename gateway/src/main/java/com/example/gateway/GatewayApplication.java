@@ -8,13 +8,16 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class GatewayApplication {
 
     public static void main(String[] args) {
+        loadDotenvAsSystemProperties();
+
+        SpringApplication.run(GatewayApplication.class, args);
+    }
+
+    private static void loadDotenvAsSystemProperties() {
         Dotenv dotenv = Dotenv.configure()
                 .ignoreIfMissing()
                 .load();
 
         dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
-
-        SpringApplication.run(GatewayApplication.class, args);
     }
-
 }

@@ -57,6 +57,7 @@ const BannerManager = lazy(() => import("@/features/banner/BannerManager"));
 const FaqManager = lazy(() => import("@/features/faq/FaqManager"));
 
 import {useUserStore} from "@/store/useUserStore";
+import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay.jsx";
 
 const App = () => {
 
@@ -120,7 +121,7 @@ const InnerApp = () => {
     }, [user, isLoading])
 
     if (isLoading) {
-        return null;
+        return <PageLoadingOverlay />;
     }
 
     return (

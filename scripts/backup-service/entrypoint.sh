@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/bash
+set -eo pipefail
 
 # Configuration from environment variables
 # DB_HOST, DB_NAME, DB_USER, DB_PASS
@@ -12,17 +13,25 @@ LOG_FILE="/var/log/backup.log"
 
 echo "[$(date)] --- Starting Daily Backup ---" >> "$LOG_FILE"
 
-# 1. Perform PostgreSQL Backup
-PGPASSWORD="$DB_PASS" pg_dump -h "$DB_HOST" -U "$DB_USER" "$DB_NAME" | gzip > "$BACKUP_FILE"
+# 1. Set up .pgpass for secure credential handling (avoids exposing password via env/proc)
+PGPASS_FILE="$HOME/.pgpass"
+echo "$DB_HOST:5432:$DB_NAME:$DB_USER:$DB_PASS" > "$PGPASS_FILE"
+chmod 0600 "$PGPASS_FILE"
 
-if [ $? -eq 0 ]; then
-    echo "[$(date)] Backup successful: $BACKUP_FILE" >> "$LOG_FILE"
+# 2. Perform PostgreSQL Backup with pipefail
+if pg_dump -h "$DB_HOST" -U "$DB_USER" "$DB_NAME" | gzip > "$BACKUP_FILE"; then
+    # Validate backup is not empty (pg_dump can succeed with empty output on error)
+    if [ ! -s "$BACKUP_FILE" ]; then
+        echo "[$(date)] Backup FAILED: output file is empty" >> "$LOG_FILE"
+        rm -f "$BACKUP_FILE"
+        exit 1
+    fi
+    echo "[$(date)] Backup successful: $BACKUP_FILE ($(du -h "$BACKUP_FILE" | cut -f1))" >> "$LOG_FILE"
     
-    # 2. Optional Google Drive Sync
+    # 3. Optional Google Drive Sync
     if [ "$GDRIVE_SYNC_ENABLED" = "true" ]; then
         echo "[$(date)] Google Drive sync enabled. Uploading..." >> "$LOG_FILE"
-        rclone copy "$BACKUP_FILE" gdrive:ecom-backups --config /config/rclone.conf
-        if [ $? -eq 0 ]; then
+        if rclone copy "$BACKUP_FILE" gdrive:ecom-backups --config /config/rclone.conf; then
             echo "[$(date)] Upload to Google Drive successful." >> "$LOG_FILE"
         else
             echo "[$(date)] Upload to Google Drive FAILED." >> "$LOG_FILE"
@@ -30,18 +39,13 @@ if [ $? -eq 0 ]; then
     fi
 else
     echo "[$(date)] Backup FAILED." >> "$LOG_FILE"
+    rm -f "$BACKUP_FILE"
     exit 1
 fi
 
-# 3. Weekly Cleanup (Only on Fridays)
-DAY_OF_WEEK=$(date +%u) # 1=Mon, 5=Fri, 7=Sun
-if [ "$DAY_OF_WEEK" -eq 5 ]; then
-    echo "[$(date)] Friday detected. Running cleanup..." >> "$LOG_FILE"
-    # Delete local files older than retention period
-    find "$BACKUP_DIR" -type f -name "db_backup_*.sql.gz" -mtime +"${BACKUP_RETENTION_DAYS:-30}" -delete
-    echo "[$(date)] Cleanup complete." >> "$LOG_FILE"
-else
-    echo "[$(date)] Today is not Friday (Day $DAY_OF_WEEK). Skipping cleanup." >> "$LOG_FILE"
-fi
+# 4. Cleanup old backups according to retention policy
+echo "[$(date)] Running retention cleanup..." >> "$LOG_FILE"
+find "$BACKUP_DIR" -type f -name "db_backup_*.sql.gz" -mtime +"${BACKUP_RETENTION_DAYS:-30}" -delete
+echo "[$(date)] Cleanup complete." >> "$LOG_FILE"
 
 echo "[$(date)] --- Backup Process Finished ---" >> "$LOG_FILE"

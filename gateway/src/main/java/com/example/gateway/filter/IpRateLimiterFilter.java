@@ -1,8 +1,9 @@
 package com.example.gateway.filter;
 
 import com.example.gateway.service.RateLimiterService;
-import lombok.RequiredArgsConstructor;
+import com.example.gateway.util.ResponseUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -14,15 +15,37 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
+import java.net.InetAddress;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 @Slf4j
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 2)
-@RequiredArgsConstructor
 public class IpRateLimiterFilter implements WebFilter {
 
     private static final String AUTH_PATH = "/auth";
 
     private final RateLimiterService rateLimiterService;
+
+    private final Set<String> trustedProxies;
+
+    public IpRateLimiterFilter(
+            RateLimiterService rateLimiterService,
+            @Value("${rate-limit.trusted-proxies:}") String trustedProxiesConfig
+    ) {
+        this.rateLimiterService = rateLimiterService;
+        if (trustedProxiesConfig != null && !trustedProxiesConfig.isBlank()) {
+            this.trustedProxies = Arrays.stream(trustedProxiesConfig.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.toUnmodifiableSet());
+        } else {
+            this.trustedProxies = Set.of();
+        }
+        log.info("Trusted proxies configured: {}", this.trustedProxies);
+    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, @NonNull WebFilterChain chain) {
@@ -34,8 +57,7 @@ public class IpRateLimiterFilter implements WebFilter {
 
         if (ip == null || ip.isBlank()) {
             log.warn("Missing client IP");
-            exchange.getResponse().setStatusCode(HttpStatus.BAD_REQUEST);
-            return exchange.getResponse().setComplete();
+            return ResponseUtils.error(exchange, HttpStatus.BAD_REQUEST, "Missing client IP address");
         }
 
         String path = exchange.getRequest().getPath().pathWithinApplication().value();
@@ -46,8 +68,7 @@ public class IpRateLimiterFilter implements WebFilter {
                 .flatMap(rateAllowed -> {
                     if (!rateAllowed) {
                         log.error("Too many requests from IP: {}", ip);
-                        exchange.getResponse().setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
-                        return exchange.getResponse().setComplete();
+                        return ResponseUtils.error(exchange, HttpStatus.TOO_MANY_REQUESTS, "Too many requests from your IP, please try again later");
                     }
 
                     // 2. IP Concurrency Throttle
@@ -55,8 +76,7 @@ public class IpRateLimiterFilter implements WebFilter {
                             .flatMap(concurrencyAllowed -> {
                                 if (!concurrencyAllowed) {
                                     log.error("Too many simultaneous connections from IP: {}", ip);
-                                    exchange.getResponse().setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
-                                    return exchange.getResponse().setComplete();
+                                    return ResponseUtils.error(exchange, HttpStatus.TOO_MANY_REQUESTS, "Too many simultaneous connections from your IP");
                                 }
 
                                 return Mono.usingWhen(
@@ -70,16 +90,37 @@ public class IpRateLimiterFilter implements WebFilter {
                 });
     }
 
-    public static String extractIp(ServerHttpRequest request) {
+    public String extractIp(ServerHttpRequest request) {
+        // Only trust X-Forwarded-For when coming from an explicitly configured trusted proxy
+        if (request.getRemoteAddress() != null && request.getRemoteAddress().getAddress() != null) {
+            InetAddress remoteAddress = request.getRemoteAddress().getAddress();
+            if (isTrustedProxy(remoteAddress)) {
+                String forwarded = request.getHeaders().getFirst("X-Forwarded-For");
+                if (forwarded != null && !forwarded.isBlank()) {
+                    return forwarded.split(",")[0].trim();
+                }
+
+                String realIp = request.getHeaders().getFirst("X-Real-IP");
+                if (realIp != null && !realIp.isBlank()) {
+                    return realIp.trim();
+                }
+            }
+            return remoteAddress.getHostAddress();
+        }
+
         String forwarded = request.getHeaders().getFirst("X-Forwarded-For");
         if (forwarded != null && !forwarded.isBlank()) {
             return forwarded.split(",")[0].trim();
         }
 
-        if (request.getRemoteAddress() != null && request.getRemoteAddress().getAddress() != null) {
-            return request.getRemoteAddress().getAddress().getHostAddress();
-        }
-
         return null;
+    }
+
+    private boolean isTrustedProxy(InetAddress address) {
+        if (address == null) return false;
+        // Always trust loopback (127.0.0.1, ::1)
+        if (address.isLoopbackAddress()) return true;
+        // Only trust explicitly configured proxy IPs — not the entire private address space
+        return trustedProxies.contains(address.getHostAddress());
     }
 }

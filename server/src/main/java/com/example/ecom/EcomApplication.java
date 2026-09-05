@@ -10,14 +10,16 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 public class EcomApplication {
 
     public static void main(String[] args) {
-        Dotenv dotenv = Dotenv.configure()
-                .ignoreIfMissing()
-                .load();
-
-        dotenv.entries().forEach(entry ->
-                System.setProperty(entry.getKey(), entry.getValue()));
+        loadDotenvAsSystemProperties();
 
         SpringApplication.run(EcomApplication.class, args);
     }
 
+    private static void loadDotenvAsSystemProperties() {
+        Dotenv dotenv = Dotenv.configure()
+                .ignoreIfMissing()
+                .load();
+
+        dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
+    }
 }

@@ -11,13 +11,17 @@ spring:
       port: ${REDIS_PORT}
       password: ${REDIS_PASSWORD}
 
+  http:
+    codecs:
+      max-in-memory-size: 2MB
+
   cloud:
     gateway:
-      httpclient:
-        connect-timeout: 5000
-        response-timeout: 10s
       server:
         webflux:
+          httpclient:
+            connect-timeout: 5000
+            response-timeout: 10s
           routes:
             - id: chat-service-ws
               uri: ${CHAT_SERVICE_WS_URL:ws://chat-server:3001}
@@ -33,6 +37,15 @@ spring:
               uri: ${MAIN_SERVICE_URL}
               predicates:
                 - Path=/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: mainServiceCB
+                - name: Retry
+                  args:
+                    retries: 2
+                    methods: GET
+                    statuses: SERVICE_UNAVAILABLE
 
 server:
   port: ${GATEWAY_PORT}
@@ -55,6 +68,7 @@ rate-limit:
     rate: 300
     concurrency: 15
   window-seconds: 60
+  trusted-proxies: ${TRUSTED_PROXY_IPS:}
 
 access:
   token:
@@ -63,9 +77,9 @@ access:
 logging:
   level:
     root: INFO
-    org.springframework.security: DEBUG
-    org.springframework.cloud.gateway: DEBUG
-    org.springframework.security.oauth2: DEBUG
+    org.springframework.security: WARN
+    org.springframework.cloud.gateway: INFO
+    org.springframework.security.oauth2: WARN
   pattern:
     console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - [Req: %X{requestId}, IP: %X{clientIp}, UserId: %X{userId}] - %msg%n'
 

@@ -108,7 +108,7 @@ public class RateLimiterService {
 
     private Mono<Boolean> isRateAllowed(String key, int limit) {
         BucketConfiguration config = configCache.computeIfAbsent(limit, l -> BucketConfiguration.builder()
-                .addLimit(Bandwidth.classic(l, Refill.intervally(l, Duration.ofSeconds(windowSeconds))))
+                .addLimit(Bandwidth.builder().capacity(l).refillIntervally(l, Duration.ofSeconds(windowSeconds)).build())
                 .build());
 
         if (proxyManager.isPresent()) {
@@ -164,10 +164,8 @@ public class RateLimiterService {
                         if (current > limit) {
                             return redisTemplate.opsForValue().decrement(key).thenReturn(false);
                         }
-                        if (current == 1) {
-                            return redisTemplate.expire(key, Duration.ofMinutes(5)).thenReturn(true);
-                        }
-                        return Mono.just(true);
+                        // Always refresh TTL as a safety net against counter leaks from crashes
+                        return redisTemplate.expire(key, Duration.ofMinutes(5)).thenReturn(true);
                     })
                     .onErrorResume(e -> {
                         log.warn("Redis concurrency acquire error for key {}, falling back to local: {}", key, e.getMessage());
