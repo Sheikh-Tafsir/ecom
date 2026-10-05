@@ -72,7 +72,10 @@ public class LoggingFilter implements WebFilter {
         String method = request.getMethod().name();
         String path = request.getURI().getPath();
         String query = request.getURI().getQuery();
-        String fullPath = query != null ? path + "?" + query : path;
+        String redactedQuery = (query != null)
+                ? query.replaceAll("(?i)(accessToken|ticket|token|secret|password|key)=[^&]+", "$1=REDACTED")
+                : null;
+        String fullPath = redactedQuery != null ? path + "?" + redactedQuery : path;
 
         long startTime = System.nanoTime();
 
