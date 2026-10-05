@@ -8,6 +8,7 @@ import com.example.ecom.payment.dto.CreatePaymentRequest;
 import com.example.ecom.payment.dto.CreatePaymentResponse;
 import com.example.ecom.payment.service.BkashPaymentService;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -37,7 +38,7 @@ public class PaymentController {
      * Called by React to initiate payment
      */
     @PostMapping
-    public ResponseEntity<ApiResponse<String>> createPayment(@RequestBody CreatePaymentRequest request,
+    public ResponseEntity<ApiResponse<String>> createPayment(@Valid @RequestBody CreatePaymentRequest request,
                                                             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         String bkashURL = paymentService.create(request, userDetails);
