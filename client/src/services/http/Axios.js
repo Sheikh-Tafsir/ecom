@@ -49,7 +49,7 @@ AuthenticatedAxios.interceptors.response.use(
             return Promise.reject(error);
         }
 
-        if (response.status == 404) {
+        if (response.status === 404) {
             const globalError = response.data?.errors?.global?.[0] || response.data?.errors?.global;
             if (globalError && typeof globalError === 'string' && globalError.includes("User with id") && globalError.includes("not found")) {
                 console.warn("User session refers to a non-existent user in the database. Logging out.");
@@ -152,7 +152,10 @@ const refreshAccessToken = async () => {
 
 const logout = async () => {
     try {
-        await PublicAxios.post("/auth/logout");
+        const token = getAccessToken();
+        const headers = token ? {Authorization: `Bearer ${token}`} : {};
+
+        await PublicAxios.post("/auth/logout", {}, {headers});
     } catch (error) {
         console.error("Logout failed:", error);
     } finally {

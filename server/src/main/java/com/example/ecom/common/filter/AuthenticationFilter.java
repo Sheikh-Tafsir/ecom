@@ -64,6 +64,12 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                     if (revokedTokensCache != null && revokedTokensCache.get(jti) != null) {
                         log.warn("Access token JTI: {} is revoked/blacklisted", jti);
                         SecurityContextHolder.clearContext();
+
+                        if (isLogoutRequest(request)) {
+                            chain.doFilter(request, response);
+                            return;
+                        }
+
                         error(response, HttpStatus.UNAUTHORIZED, "Access token has been revoked");
                         return;
                     }
@@ -90,8 +96,19 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         } catch (Exception e) {
             log.warn("Invalid or expired JWT token: {}", e.getMessage());
             SecurityContextHolder.clearContext();
+
+            if (isLogoutRequest(request)) {
+                chain.doFilter(request, response);
+                return;
+            }
+
             error(response, HttpStatus.UNAUTHORIZED, "Invalid or expired JWT token");
         }
+    }
+
+    private boolean isLogoutRequest(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        return uri != null && uri.contains("/logout");
     }
 
     private String getAccessToken(HttpServletRequest request, String authHeader) {
