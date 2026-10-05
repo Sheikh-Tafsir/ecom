@@ -45,6 +45,9 @@ const ChartContainer = React.forwardRef(({ id, className, children, config, ...p
 })
 ChartContainer.displayName = "Chart"
 
+// Allowlist pattern for safe CSS color values
+const CSS_COLOR_PATTERN = /^(#[0-9a-fA-F]{3,8}|rgb\(|rgba\(|hsl\(|hsla\(|[a-z]+)$/;
+
 const ChartStyle = ({
   id,
   config
@@ -55,13 +58,23 @@ const ChartStyle = ({
     return null
   }
 
+  // Filter out entries with color values that don't match a safe CSS color pattern
+  const safeColorConfig = colorConfig.filter(([, itemConfig]) => {
+    const colorLight = itemConfig?.theme?.["light"];
+    const colorDark = itemConfig?.theme?.["dark"];
+    const colorPlain = itemConfig?.color;
+    // Accept entry only if all present color values pass the allowlist pattern
+    const values = [colorLight, colorDark, colorPlain].filter(Boolean);
+    return values.length === 0 || values.every(c => CSS_COLOR_PATTERN.test(c.trim()));
+  });
+
   return (
     <style
       dangerouslySetInnerHTML={{
         __html: Object.entries(THEMES)
           .map(([theme, prefix]) => `
 ${prefix} [data-chart=${id}] {
-${colorConfig
+${safeColorConfig
 .map(([key, itemConfig]) => {
 const color =
   itemConfig.theme?.[theme] ||
