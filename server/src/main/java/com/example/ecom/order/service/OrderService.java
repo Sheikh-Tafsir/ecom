@@ -5,7 +5,6 @@ import com.example.ecom.common.dto.DateRangeDto;
 import com.example.ecom.common.enums.NotificationType;
 import com.example.ecom.common.enums.OrderStatus;
 import com.example.ecom.common.model.*;
-import com.example.ecom.common.service.IdempotencyService;
 import com.example.ecom.common.service.MessageService;
 import com.example.ecom.notification.dto.NotificationResponse;
 import com.example.ecom.order.dto.*;
@@ -25,8 +24,6 @@ import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -51,8 +48,6 @@ public class OrderService {
     private final OrderRepository orderRepository;
 
     private final StockService stockService;
-
-    private final IdempotencyService idempotencyService;
 
     private final UserService userService;
 
@@ -106,11 +101,6 @@ public class OrderService {
 
     @Transactional
     public CreateOrderResponse create(CreateOrderRequest request, String idempotencyKey, CustomUserDetails userDetails) {
-        Object cachedResponse = idempotencyService.getCachedResponse(idempotencyKey, request);
-        if (cachedResponse != null) {
-            return (CreateOrderResponse) cachedResponse;
-        }
-
         Order order = new Order();
         order.setName(request.name());
         order.setPhone(request.phone());
@@ -132,21 +122,6 @@ public class OrderService {
         recordStatusChange(savedOrder, null, OrderStatus.PENDING, user, "Order created");
 
         CreateOrderResponse response = new CreateOrderResponse(savedOrder.getId(), savedOrder.getTotalPrice());
-
-        if (idempotencyKey != null) {
-            if (TransactionSynchronizationManager.isSynchronizationActive()) {
-                TransactionSynchronizationManager.registerSynchronization(
-                        new TransactionSynchronization() {
-                            @Override
-                            public void afterCommit() {
-                                idempotencyService.save(idempotencyKey, request, response);
-                            }
-                        }
-                );
-            } else {
-                idempotencyService.save(idempotencyKey, request, response);
-            }
-        }
 
         return response;
     }
