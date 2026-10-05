@@ -93,7 +93,7 @@ jobs:
           BACKUP_DB_HOST=postgres
           BACKUP_DB_NAME=ecom
           GDRIVE_SYNC_ENABLED=false
-          DEPLOYMENT_ENVIRONMENT=dev
+          DEPLOYMENT_ENVIRONMENT=prod
           ACCESS_TOKEN=dummy
           LOCAL_STORAGE_CART_KEY=cart
           WEB_SOCKET_ON=true

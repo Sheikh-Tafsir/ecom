@@ -27,4 +27,23 @@ class UtilsTest {
         // Ensure 100% uniqueness across 100 generations
         assertEquals(iterations, passwords.size(), "Every generated password should be completely unique");
     }
+
+    @Test
+    void isProductionEnvironment_whenProd_returnsTrue() {
+        assertTrue(Utils.isProductionEnvironment("prod"));
+        assertTrue(Utils.isProductionEnvironment("PROD"));
+        assertTrue(Utils.isProductionEnvironment(" prod "));
+    }
+
+    @Test
+    void isProductionEnvironment_whenNotProd_returnsFalse() {
+        assertFalse(Utils.isProductionEnvironment("production"));
+        assertFalse(Utils.isProductionEnvironment("dev"));
+        assertFalse(Utils.isProductionEnvironment("test"));
+        assertFalse(Utils.isProductionEnvironment("local"));
+        assertFalse(Utils.isProductionEnvironment("staging"));
+        assertFalse(Utils.isProductionEnvironment(""));
+        assertFalse(Utils.isProductionEnvironment("   "));
+        assertFalse(Utils.isProductionEnvironment(null));
+    }
 }

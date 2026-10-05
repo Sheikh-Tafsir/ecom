@@ -14,6 +14,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
@@ -24,7 +25,7 @@ public final class Utils {
 
     public static final int MAX_SEARCH_SIZE = 5;
 
-    public static final String PRODUCTION_ENVIRONMENT = "production";
+    public static final String PRODUCTION_ENVIRONMENT = "prod";
 
     public static final ObjectMapper OBJECT_MAPPER;
 
@@ -119,6 +120,10 @@ public final class Utils {
     }
 
     public static boolean isProductionEnvironment(String environment) {
-        return PRODUCTION_ENVIRONMENT.equals(environment);
+        if (environment == null || environment.isBlank()) {
+            return false;
+        }
+
+        return PRODUCTION_ENVIRONMENT.equalsIgnoreCase(environment.trim());
     }
 }
