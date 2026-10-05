@@ -12,13 +12,13 @@ export const useCartStore = create(
                 const cart = get().cart;
 
                 const existingItem = cart.find(
-                    item => item.productId == product.id
+                    item => item.productId === product.id
                 );
 
                 if (existingItem) {
                     set({
                         cart: cart.map(item =>
-                            item.productId == product.id
+                            item.productId === product.id
                                 ? {
                                     ...item,
                                     quantity: item.quantity + quantity,
@@ -52,7 +52,7 @@ export const useCartStore = create(
             removeFromCart: (productId) => {
                 set({
                     cart: get().cart.filter(
-                        item => item.productId != productId
+                        item => item.productId !== productId
                     ),
                 });
             },
@@ -65,7 +65,7 @@ export const useCartStore = create(
 
                 set({
                     cart: get().cart.map(item =>
-                        item.productId == productId
+                        item.productId === productId
                             ? { ...item, quantity }
                             : item
                     ),

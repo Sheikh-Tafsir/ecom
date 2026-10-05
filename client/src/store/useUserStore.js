@@ -5,6 +5,7 @@ import {
     removeAccessToken
 } from "@/utils/AuthUtils";
 import {logout, refreshAccessToken} from "@/services/http/Axios.js";
+import {useCartStore} from "@/store/useCartStore.js";
 
 export const useUserStore = create((set, get) => ({
     user: null,
@@ -44,6 +45,9 @@ export const useUserStore = create((set, get) => ({
         }
 
         await logout()
+        removeAccessToken();
+        useCartStore.getState().clearCart();
         set({user: null});
     },
 }));
+
