@@ -47,8 +47,7 @@ public class SecurityConfig {
             "/swagger-ui.html",
             "/swagger-resources/**",
             "/webjars/**",
-            "/actuator",
-            "/actuator/**"
+            "/actuator/health"
     );
 
     @Value("${app.standalone:true}")
