@@ -105,6 +105,10 @@ jwt:
   sse-token:
     expiration: 60 # 1 minute
 
+oauth:
+  google:
+    client-id: ${GOOGLE_LOGIN_CLIENT_ID}
+
 access:
   token:
     value: ${ACCESS_TOKEN_SECRET}

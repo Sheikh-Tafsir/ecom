@@ -52,6 +52,10 @@ jwt:
   sse-token:
     expiration: 60
 
+oauth:
+  google:
+    client-id: test-client-id.apps.googleusercontent.com
+
 refresh:
   token:
     name: refreshToken
