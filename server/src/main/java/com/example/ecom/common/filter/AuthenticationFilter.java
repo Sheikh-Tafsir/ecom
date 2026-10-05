@@ -47,8 +47,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain chain) throws IOException, ServletException {
 
-        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-        String token = getAccessToken(request, authHeader);
+        String token = getAccessToken(request);
 
         if (!StringUtils.hasText(token)) {
             chain.doFilter(request, response);
@@ -56,84 +55,111 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         }
 
         try {
-            if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                Claims claims = jwtService.parseAccessTokenClaims(token);
-
-                if (cacheManager != null) {
-                    Cache revokedTokensCache = cacheManager.getCache(CACHE_REVOKED_ACCESS_TOKENS);
-
-                    if (revokedTokensCache != null) {
-                        String jti = claims.getId();
-
-                        if (StringUtils.hasText(jti) && revokedTokensCache.get(jti) != null) {
-                            log.warn("Access token JTI: {} is revoked/blacklisted", jti);
-                            SecurityContextHolder.clearContext();
-
-                            if (isLogoutRequest(request)) {
-                                chain.doFilter(request, response);
-                                return;
-                            }
-
-                            error(response, HttpStatus.UNAUTHORIZED, "Access token has been revoked");
-                            return;
-                        }
-
-                        String userId = claims.getSubject();
-
-                        if (StringUtils.hasText(userId)) {
-                            Cache.ValueWrapper userRevocation = revokedTokensCache.get("user:" + userId);
-                            Long revokedAtMilli = userRevocation != null ? parseRevocationTimestamp(userRevocation.get()) : null;
-
-                            if (revokedAtMilli != null) {
-                                Date issuedAt = claims.getIssuedAt();
-
-                                if (issuedAt == null || issuedAt.getTime() <= revokedAtMilli) {
-                                    log.warn("Access token for user {} issued at {} is revoked by user revocation timestamp {}",
-                                            userId, issuedAt, revokedAtMilli);
-                                    SecurityContextHolder.clearContext();
-
-                                    if (isLogoutRequest(request)) {
-                                        chain.doFilter(request, response);
-                                        return;
-                                    }
-
-                                    error(response, HttpStatus.UNAUTHORIZED, "Session has been revoked");
-                                    return;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                CustomUserDetails userDetails = new CustomUserDetails(claims);
-
-                if (!userDetails.isEnabled()) {
-                    log.warn("User is not active: {}", userDetails.getEmail());
-                    SecurityContextHolder.clearContext();
-                    error(response, HttpStatus.UNAUTHORIZED, "User is not active");
-                    return;
-                }
-
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-
-                MDC.put(MDC_USER_ID_KEY, userDetails.getId().toString());
-            }
-
-            chain.doFilter(request, response);
-        } catch (Exception e) {
-            log.warn("Invalid or expired JWT token: {}", e.getMessage());
-            SecurityContextHolder.clearContext();
-
-            if (isLogoutRequest(request)) {
+            if (SecurityContextHolder.getContext().getAuthentication() != null) {
                 chain.doFilter(request, response);
                 return;
             }
 
-            error(response, HttpStatus.UNAUTHORIZED, "Invalid or expired JWT token");
+            Claims claims = jwtService.parseAccessTokenClaims(token);
+
+            if (isJtiRevoked(claims, request, response, chain)) return;
+            if (isUserSessionRevoked(claims, request, response, chain)) return;
+
+            CustomUserDetails userDetails = new CustomUserDetails(claims);
+
+            if (!userDetails.isEnabled()) {
+                log.warn("User is not active: {}", userDetails.getEmail());
+                SecurityContextHolder.clearContext();
+                error(response, HttpStatus.UNAUTHORIZED, "User is not active");
+                return;
+            }
+
+            SecurityContextHolder.getContext().setAuthentication(
+                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities())
+            );
+            MDC.put(MDC_USER_ID_KEY, userDetails.getId().toString());
+
+            chain.doFilter(request, response);
+
+        } catch (Exception e) {
+            log.warn("Invalid or expired JWT token: {}", e.getMessage());
+            SecurityContextHolder.clearContext();
+            passOrReject(request, response, chain, "Invalid or expired JWT token");
         }
+    }
+
+    /**
+     * Checks whether the token's JTI (JWT ID) has been individually blacklisted
+     * (e.g. after an explicit logout).
+     *
+     * @return true if the request was handled (revoked or passed through for logout), false to continue
+     */
+    private boolean isJtiRevoked(Claims claims,
+                                  HttpServletRequest request,
+                                  HttpServletResponse response,
+                                  FilterChain chain) throws IOException, ServletException {
+        Cache cache = getRevocationCache();
+        if (cache == null) return false;
+
+        String jti = claims.getId();
+        if (!StringUtils.hasText(jti) || cache.get(jti) == null) return false;
+
+        log.warn("Access token JTI: {} is revoked/blacklisted", jti);
+        SecurityContextHolder.clearContext();
+        passOrReject(request, response, chain, "Access token has been revoked");
+        return true;
+    }
+
+    /**
+     * Checks whether the token was issued before a global user-level revocation
+     * timestamp (set on ban, role change, or password reset).
+     *
+     * @return true if the request was handled (revoked or passed through for logout), false to continue
+     */
+    private boolean isUserSessionRevoked(Claims claims,
+                                          HttpServletRequest request,
+                                          HttpServletResponse response,
+                                          FilterChain chain) throws IOException, ServletException {
+        Cache cache = getRevocationCache();
+        if (cache == null) return false;
+
+        String userId = claims.getSubject();
+        if (!StringUtils.hasText(userId)) return false;
+
+        Cache.ValueWrapper wrapper = cache.get("user:" + userId);
+        if (wrapper == null) return false;
+
+        Long revokedAtMilli = parseRevocationTimestamp(wrapper.get());
+        if (revokedAtMilli == null) return false;
+
+        Date issuedAt = claims.getIssuedAt();
+        if (issuedAt != null && issuedAt.getTime() > revokedAtMilli) return false;
+
+        log.warn("Access token for user {} (issuedAt={}) predates revocation timestamp {}",
+                userId, issuedAt, revokedAtMilli);
+        SecurityContextHolder.clearContext();
+        passOrReject(request, response, chain, "Session has been revoked");
+        return true;
+    }
+
+    /**
+     * For logout requests, allows the filter chain to continue even when the token is revoked
+     * so the server can still revoke the refresh token. For all other requests, writes a 401.
+     */
+    private void passOrReject(HttpServletRequest request,
+                               HttpServletResponse response,
+                               FilterChain chain,
+                               String message) throws IOException, ServletException {
+        if (isLogoutRequest(request)) {
+            chain.doFilter(request, response);
+        } else {
+            error(response, HttpStatus.UNAUTHORIZED, message);
+        }
+    }
+
+    private Cache getRevocationCache() {
+        if (cacheManager == null) return null;
+        return cacheManager.getCache(CACHE_REVOKED_ACCESS_TOKENS);
     }
 
     private boolean isLogoutRequest(HttpServletRequest request) {
@@ -142,10 +168,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     }
 
     private Long parseRevocationTimestamp(Object val) {
-        if (val instanceof Number num) {
-            return num.longValue();
-        }
-
+        if (val instanceof Number num) return num.longValue();
         if (val instanceof String str) {
             try {
                 return Long.parseLong(str.trim());
@@ -153,11 +176,12 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                 return null;
             }
         }
-
         return null;
     }
 
-    private String getAccessToken(HttpServletRequest request, String authHeader) {
+    private String getAccessToken(HttpServletRequest request) {
+        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+
         if (StringUtils.hasText(authHeader) && authHeader.startsWith(BEARER_PREFIX)) {
             return authHeader.substring(BEARER_PREFIX.length());
         }
