@@ -437,6 +437,15 @@ const updateGroup = async (body, user) => {
     try {
         await checkChatParticipant(chatId, user.id, t);
 
+        const adminMembership = await ChatParticipant.findOne({
+            where: { chatId, userId: user.id, role: CHAT_MEMBER_TYPE.ADMIN },
+            transaction: t,
+        });
+
+        if (!adminMembership) {
+            throw new RuntimeError(403, 'Only group administrators can add new participants');
+        }
+
         await ChatParticipant.bulkCreate(
             users.map(u => ({
                 chatId: Number(chatId),
