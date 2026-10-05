@@ -59,22 +59,23 @@ const sendMessage = async (senderId, body) => {
 };
 
 const saveMessageReceipts = async (activeUsers = [], messageId, chatId, senderId) => {
+    // activeUsers is kept for backward compatibility but is intentionally unused here.
+    // Read receipts (readAt) must only be set when the user explicitly views the chat
+    // via a 'mark-as-read' event. Being connected via socket does not imply the user
+    // is actively viewing this specific chat window.
     const now = Date.now();
 
     const allParticipants = await findChatParticipantsByChatId(chatId);
-    const activeSet = new Set(activeUsers.map(String));
 
     const receipts = allParticipants
         .filter(participant => participant.userId != senderId)
         .map(participant => {
-            const isActive = activeSet.has(String(participant.userId));
-
             const dateNow = new Date(now);
             return {
                 messageId,
                 userId: participant.userId,
                 deliveredAt: dateNow,
-                readAt: isActive ? dateNow : null
+                readAt: null
             };
         }
     );
