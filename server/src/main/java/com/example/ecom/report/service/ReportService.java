@@ -60,6 +60,9 @@ public abstract class ReportService {
 
         List<Object> params = addFilters(fromDate, toDate, sql);
 
+        // Set fetchSize to enable cursor-based streaming in PostgreSQL.
+        // Without this, the JDBC driver buffers the entire result set in JVM memory.
+        jdbcTemplate.setFetchSize(500);
         jdbcTemplate.query(
                 sql.toString(),
                 params.toArray(),
