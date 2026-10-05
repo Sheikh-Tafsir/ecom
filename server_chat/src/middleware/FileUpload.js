@@ -1,5 +1,6 @@
 const multer = require('multer');
 const { allowedImageTypes } = require('../utils/ImageUtils');
+const RuntimeError = require('../common/RuntimeError');
 const MAX_SIZE = 5 * 1024 * 1024;
 
 const FileUpload = multer({
