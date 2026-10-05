@@ -89,8 +89,7 @@ public class OrderService {
     @PostAuthorize("""
             (returnObject.userId != null && returnObject.userId == authentication.principal.id) ||
             hasAnyAuthority(T(com.example.ecom.common.enums.Permission).ADMIN_ACCESS.getValue(),
-            T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue(),
-            T(com.example.ecom.common.enums.Permission).DELIVERY_MAN_ACCESS.getValue())
+            T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())
             """)
     public OrderResponse findById(Long id) {
         Order order = orderRepository.findDetailsById(id)
