@@ -12,6 +12,7 @@ import {connectSocket, disconnectSocket, isSocketOn} from '@/services/realtime/s
 import {notificationService, isSseOn} from '@/services/realtime/notificationService.js';
 import {PERMISSION} from "@/constants/auth.constants";
 import NotificationWrapper from "@/services/realtime/NotificationWrapper.jsx";
+import ErrorBoundary from "@/common/ErrorBoundary";
 
 const Homepage = lazy(() => import('@/features/homepage/Homepage'));
 const NotFound = lazy(() => import('@/features/NotFound'));
@@ -121,85 +122,90 @@ const InnerApp = () => {
     }, [user, isLoading])
 
     if (isLoading) {
-        return <PageLoadingOverlay />;
+        return <PageLoadingOverlay/>;
     }
 
     return (
-        <>
-            <Suspense fallback={<div style={{display:'flex',justifyContent:'center',alignItems:'center',height:'100vh'}}>Loading...</div>}>
-            <Routes>
-                <Route element={<PublicRoute/>}>
-                    <Route path="/" element={<Homepage/>}/>
-                    <Route path="/about" element={<AboutUs/>}/>
-                    <Route path="/privacy" element={<PrivacyPolicy/>}/>
-                    <Route path="/terms" element={<TermsOfService/>}/>
+        <ErrorBoundary>
+            <Suspense fallback={<div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100vh'
+            }}>Loading...</div>}>
+                <Routes>
+                    <Route element={<PublicRoute/>}>
+                        <Route path="/" element={<Homepage/>}/>
+                        <Route path="/about" element={<AboutUs/>}/>
+                        <Route path="/privacy" element={<PrivacyPolicy/>}/>
+                        <Route path="/terms" element={<TermsOfService/>}/>
 
-                    <Route path="/blogs" element={<Blogs/>}/>
-                    <Route path="/blogs/:title" element={<BlogDetails/>}/>
+                        <Route path="/blogs" element={<Blogs/>}/>
+                        <Route path="/blogs/:title" element={<BlogDetails/>}/>
 
-                    <Route path="/products" element={<Products/>}/>
-                    <Route path="/products/:id" element={<ProductDetails/>}/>
-                </Route>
+                        <Route path="/products" element={<Products/>}/>
+                        <Route path="/products/:id" element={<ProductDetails/>}/>
+                    </Route>
 
-                <Route element={<AuthRoute/>}>
-                    <Route path="/auth/signup" element={<Signup/>}/>
-                    <Route path="/auth/signup/verify" element={<SignupVerify/>}/>
-                    <Route path="/auth/login" element={<Login/>}/>
-                    <Route path="/auth/forget-password" element={<ForgetPassword/>}/>
-                    <Route path="/auth/forget-password/verify" element={<ForgetPasswordVerify/>}/>
-                </Route>
+                    <Route element={<AuthRoute/>}>
+                        <Route path="/auth/signup" element={<Signup/>}/>
+                        <Route path="/auth/signup/verify" element={<SignupVerify/>}/>
+                        <Route path="/auth/login" element={<Login/>}/>
+                        <Route path="/auth/forget-password" element={<ForgetPassword/>}/>
+                        <Route path="/auth/forget-password/verify" element={<ForgetPasswordVerify/>}/>
+                    </Route>
 
-                <Route element={<ProtectedRoute/>}>
-                    <Route path='/profile' element={<Profile/>}/>
-                    <Route path='/profile/edit' element={<Profile/>}/>
-                    <Route path='/profile/change-password' element={<ChangePassword/>}/>
+                    <Route element={<ProtectedRoute/>}>
+                        <Route path='/profile' element={<Profile/>}/>
+                        <Route path='/profile/edit' element={<Profile/>}/>
+                        <Route path='/profile/change-password' element={<ChangePassword/>}/>
 
-                    <Route path="/cart" element={<Cart/>}/>
-                    <Route path="/orders" element={<Orders/>}/>
-                    <Route path="/orders/:id" element={<OrderDetails/>}/>
-                    <Route path="/orders/create" element={<OrderCreate/>}/>
+                        <Route path="/cart" element={<Cart/>}/>
+                        <Route path="/orders" element={<Orders/>}/>
+                        <Route path="/orders/:id" element={<OrderDetails/>}/>
+                        <Route path="/orders/create" element={<OrderCreate/>}/>
 
-                    <Route path="/chats" element={<Chat/>}/>
-                    <Route path="/chats/:id" element={<Chat/>}/>
+                        <Route path="/chats" element={<Chat/>}/>
+                        <Route path="/chats/:id" element={<Chat/>}/>
 
-                    <Route path="/payment/success" element={<PaymentSuccess/>}/>
-                    <Route path="/payment/fail" element={<PaymentFail/>}/>
-                    {/* Alias routes matching backend redirect URLs (application.yml frontend-success-url / frontend-fail-url) */}
-                    <Route path="/payment-success" element={<PaymentSuccess/>}/>
-                    <Route path="/payment-failed" element={<PaymentFail/>}/>
-                </Route>
+                        <Route path="/payment/success" element={<PaymentSuccess/>}/>
+                        <Route path="/payment/fail" element={<PaymentFail/>}/>
+                        {/* Alias routes matching backend redirect URLs (application.yml frontend-success-url / frontend-fail-url) */}
+                        <Route path="/payment-success" element={<PaymentSuccess/>}/>
+                        <Route path="/payment-failed" element={<PaymentFail/>}/>
+                    </Route>
 
-                <Route element={<ProtectedRoute
-                    allowedPermissions={[PERMISSION.ADMIN_ACCESS, PERMISSION.SUPER_ADMIN_ACCESS]}/>}>
-                    <Route path='/users' element={<Users/>}/>
-                    <Route path='/users/:id' element={<UserEdit/>}/>
+                    <Route element={<ProtectedRoute
+                        allowedPermissions={[PERMISSION.ADMIN_ACCESS, PERMISSION.SUPER_ADMIN_ACCESS]}/>}>
+                        <Route path='/users' element={<Users/>}/>
+                        <Route path='/users/:id' element={<UserEdit/>}/>
 
-                    <Route path="/stocks" element={<Stocks/>}/>
-                    <Route path="/stocks/items" element={<StockItems/>}/>
-                    <Route path="/stocks/:id" element={<StockDetails/>}/>
-                </Route>
+                        <Route path="/stocks" element={<Stocks/>}/>
+                        <Route path="/stocks/items" element={<StockItems/>}/>
+                        <Route path="/stocks/:id" element={<StockDetails/>}/>
+                    </Route>
 
-                <Route element={<ProtectedRoute allowedPermissions={[PERMISSION.SUPER_ADMIN_ACCESS]}/>}>
-                    <Route path='/users/:id/edit' element={<UserEdit/>}/>
+                    <Route element={<ProtectedRoute allowedPermissions={[PERMISSION.SUPER_ADMIN_ACCESS]}/>}>
+                        <Route path='/users/:id/edit' element={<UserEdit/>}/>
 
-                    <Route path='/roles' element={<Roles/>}/>
-                    <Route path='/roles/create' element={<RoleSave/>}/>
-                    <Route path='/roles/:id/edit' element={<RoleSave/>}/>
+                        <Route path='/roles' element={<Roles/>}/>
+                        <Route path='/roles/create' element={<RoleSave/>}/>
+                        <Route path='/roles/:id/edit' element={<RoleSave/>}/>
 
-                    <Route path="/products/create" element={<ProductSave/>}/>
-                    <Route path="/products/:id/edit" element={<ProductSave/>}/>
+                        <Route path="/products/create" element={<ProductSave/>}/>
+                        <Route path="/products/:id/edit" element={<ProductSave/>}/>
 
-                    <Route path="/stocks/create" element={<StockCreate/>}/>
+                        <Route path="/stocks/create" element={<StockCreate/>}/>
 
-                    <Route path="/sales" element={<Sales/>}/>
+                        <Route path="/sales" element={<Sales/>}/>
 
-                    <Route path="/banners" element={<BannerManager/>}/>
-                    <Route path="/faqs" element={<FaqManager/>}/>
-                </Route>
+                        <Route path="/banners" element={<BannerManager/>}/>
+                        <Route path="/faqs" element={<FaqManager/>}/>
+                    </Route>
 
-                <Route path="/not-found" element={<NotFound/>}/>
-                <Route path="*" element={<NotFound/>}/>
-            </Routes>
+                    <Route path="/not-found" element={<NotFound/>}/>
+                    <Route path="*" element={<NotFound/>}/>
+                </Routes>
             </Suspense>
 
             <ToastContainer
@@ -215,7 +221,8 @@ const InnerApp = () => {
                 theme="light"
                 transition={Bounce}
             />
-        </>
+
+        </ErrorBoundary>
     );
 };
 
