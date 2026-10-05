@@ -7,9 +7,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.Duration;
 
 import static com.example.ecom.common.service.IdempotencyService.IDEMPOTENCY_HEADER;
 import static com.example.ecom.common.utils.Utils.isNull;
@@ -21,6 +27,9 @@ import static com.example.ecom.common.utils.Utils.isNull;
 public class IdempotencyAspect {
 
     private final IdempotencyService idempotencyService;
+
+    @Autowired(required = false)
+    private StringRedisTemplate stringRedisTemplate;
 
     @Around("@annotation(com.example.ecom.common.annotation.Idempotent)")
     public Object enforceIdempotency(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -58,6 +67,33 @@ public class IdempotencyAspect {
             return cachedResponse;
         }
 
+        // Atomic Redis SET NX lock to prevent duplicate concurrent processing
+        if (stringRedisTemplate != null) {
+            String lockKey = "lock:idempotency:" + idempotencyKey;
+            Boolean acquired = stringRedisTemplate.opsForValue()
+                    .setIfAbsent(lockKey, "LOCKED", Duration.ofSeconds(30));
+
+            if (Boolean.FALSE.equals(acquired)) {
+                // Another request with same key is in-flight; return cached result or conflict
+                Object cached = idempotencyService.getCachedResponse(idempotencyKey, requestPayload);
+                if (cached != null) return cached;
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Request is currently being processed.");
+            }
+
+            try {
+                Object result = joinPoint.proceed();
+                try {
+                    idempotencyService.save(idempotencyKey, requestPayload, result);
+                } catch (Exception e) {
+                    log.error("Failed to save response to idempotency cache", e);
+                }
+                return result;
+            } finally {
+                stringRedisTemplate.delete(lockKey);
+            }
+        }
+
+        // Fallback path (no Redis): proceed without distributed lock
         Object result = joinPoint.proceed();
 
         try {
