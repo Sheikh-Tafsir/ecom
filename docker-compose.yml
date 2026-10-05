@@ -282,6 +282,9 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      - SERVER_URL=${SERVER_URL}
+      - CHAT_SERVER_URL=${CHAT_SERVICE_URL}
     ports:
       - "${CLIENT_PORT}:80"
     volumes:
