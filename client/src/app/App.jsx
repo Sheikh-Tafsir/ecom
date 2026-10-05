@@ -164,6 +164,9 @@ const InnerApp = () => {
 
                     <Route path="/payment/success" element={<PaymentSuccess/>}/>
                     <Route path="/payment/fail" element={<PaymentFail/>}/>
+                    {/* Alias routes matching backend redirect URLs (application.yml frontend-success-url / frontend-fail-url) */}
+                    <Route path="/payment-success" element={<PaymentSuccess/>}/>
+                    <Route path="/payment-failed" element={<PaymentFail/>}/>
                 </Route>
 
                 <Route element={<ProtectedRoute
