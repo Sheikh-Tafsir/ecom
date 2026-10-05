@@ -141,6 +141,15 @@ public class AuthTokenService {
         if (userId != null) {
             userRefreshTokenRepository.revokeAllForUser(userId, UserRefreshTokenStatus.REVOKED);
             log.info("Revoked all active refresh tokens for user: {}", userId);
+
+            if (cacheManager != null) {
+                Cache revokedTokensCache = cacheManager.getCache(CACHE_REVOKED_ACCESS_TOKENS);
+
+                if (revokedTokensCache != null) {
+                    revokedTokensCache.put("user:" + userId, System.currentTimeMillis());
+                    log.info("Blacklisted active access tokens for user: {}", userId);
+                }
+            }
         }
     }
 

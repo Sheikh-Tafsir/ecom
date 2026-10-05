@@ -105,4 +105,15 @@ class AuthTokenServiceTest {
         assertTrue(setCookieHeader.contains("refreshToken="));
         assertTrue(setCookieHeader.contains("Max-Age=0"));
     }
+
+    @Test
+    @DisplayName("Should revoke all refresh tokens in DB and blacklist user active access tokens in cache")
+    void revokeAllForUser_revokesDbRecordsAndCachesUserRevocationTimestamp() {
+        when(cacheManager.getCache(CACHE_REVOKED_ACCESS_TOKENS)).thenReturn(revokedAccessTokensCache);
+
+        authTokenService.revokeAllForUser(42L);
+
+        verify(userRefreshTokenRepository).revokeAllForUser(42L, UserRefreshTokenStatus.REVOKED);
+        verify(revokedAccessTokensCache).put(eq("user:42"), any(Long.class));
+    }
 }

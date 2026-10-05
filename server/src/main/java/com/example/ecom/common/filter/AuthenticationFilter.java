@@ -22,6 +22,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Date;
 
 import static com.example.ecom.common.filter.LoggingFilter.MDC_USER_ID_KEY;
 import static com.example.ecom.common.utils.CacheConstants.CACHE_REVOKED_ACCESS_TOKENS;
@@ -58,20 +59,49 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 Claims claims = jwtService.parseAccessTokenClaims(token);
 
-                String jti = claims.getId();
-                if (StringUtils.hasText(jti) && cacheManager != null) {
+                if (cacheManager != null) {
                     Cache revokedTokensCache = cacheManager.getCache(CACHE_REVOKED_ACCESS_TOKENS);
-                    if (revokedTokensCache != null && revokedTokensCache.get(jti) != null) {
-                        log.warn("Access token JTI: {} is revoked/blacklisted", jti);
-                        SecurityContextHolder.clearContext();
 
-                        if (isLogoutRequest(request)) {
-                            chain.doFilter(request, response);
+                    if (revokedTokensCache != null) {
+                        String jti = claims.getId();
+
+                        if (StringUtils.hasText(jti) && revokedTokensCache.get(jti) != null) {
+                            log.warn("Access token JTI: {} is revoked/blacklisted", jti);
+                            SecurityContextHolder.clearContext();
+
+                            if (isLogoutRequest(request)) {
+                                chain.doFilter(request, response);
+                                return;
+                            }
+
+                            error(response, HttpStatus.UNAUTHORIZED, "Access token has been revoked");
                             return;
                         }
 
-                        error(response, HttpStatus.UNAUTHORIZED, "Access token has been revoked");
-                        return;
+                        String userId = claims.getSubject();
+
+                        if (StringUtils.hasText(userId)) {
+                            Cache.ValueWrapper userRevocation = revokedTokensCache.get("user:" + userId);
+                            Long revokedAtMilli = userRevocation != null ? parseRevocationTimestamp(userRevocation.get()) : null;
+
+                            if (revokedAtMilli != null) {
+                                Date issuedAt = claims.getIssuedAt();
+
+                                if (issuedAt == null || issuedAt.getTime() <= revokedAtMilli) {
+                                    log.warn("Access token for user {} issued at {} is revoked by user revocation timestamp {}",
+                                            userId, issuedAt, revokedAtMilli);
+                                    SecurityContextHolder.clearContext();
+
+                                    if (isLogoutRequest(request)) {
+                                        chain.doFilter(request, response);
+                                        return;
+                                    }
+
+                                    error(response, HttpStatus.UNAUTHORIZED, "Session has been revoked");
+                                    return;
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -109,6 +139,22 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     private boolean isLogoutRequest(HttpServletRequest request) {
         String uri = request.getRequestURI();
         return uri != null && uri.contains("/logout");
+    }
+
+    private Long parseRevocationTimestamp(Object val) {
+        if (val instanceof Number num) {
+            return num.longValue();
+        }
+
+        if (val instanceof String str) {
+            try {
+                return Long.parseLong(str.trim());
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+
+        return null;
     }
 
     private String getAccessToken(HttpServletRequest request, String authHeader) {
