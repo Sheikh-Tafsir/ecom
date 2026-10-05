@@ -31,8 +31,9 @@ const sendMessage = async (senderId, body) => {
             {transaction: t}
         );
 
+        // Store sanitized preview to prevent stored XSS in chat list previews
         await chat.update(
-            {lastSent: new Date(), lastMessage: content, lastSenderId: senderId},
+            {lastSent: new Date(), lastMessage: sanitizedContent, lastSenderId: senderId},
             {transaction: t}
         );
 
