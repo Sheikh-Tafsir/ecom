@@ -1,7 +1,12 @@
-DROP TABLE IF EXISTS message_receipts CASCADE;
-DROP TABLE IF EXISTS messages CASCADE;
-DROP TABLE IF EXISTS chat_participants CASCADE;
-DROP TABLE IF EXISTS chats CASCADE;
+-- ⚠️  WARNING: This file is for REFERENCE ONLY.
+-- The DROP statements below are INTENTIONALLY COMMENTED OUT.
+-- Schema is managed by Flyway (server/) via V1__init_schema.sql.
+-- Running this file will DESTROY ALL DATA.
+--
+-- DROP TABLE IF EXISTS message_receipts CASCADE; -- DISABLED
+-- DROP TABLE IF EXISTS messages CASCADE;          -- DISABLED
+-- DROP TABLE IF EXISTS chat_participants CASCADE; -- DISABLED
+-- DROP TABLE IF EXISTS chats CASCADE;             -- DISABLED
 
 CREATE TABLE chats
 (
