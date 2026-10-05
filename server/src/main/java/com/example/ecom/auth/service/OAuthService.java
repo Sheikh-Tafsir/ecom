@@ -21,7 +21,7 @@ import reactor.core.publisher.Mono;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.example.ecom.common.utils.Utils.generatePassword;
+import static com.example.ecom.common.utils.Utils.generateSecureRandomPassword;
 import static java.util.Objects.isNull;
 import static org.springframework.util.StringUtils.hasText;
 
@@ -80,7 +80,7 @@ public class OAuthService {
             user.setName(name);
             user.setEmail(googleUser.getEmail());
             user.setStatus(UserStatus.ACTIVE);
-            user.setPassword(passwordEncoder.encode(generatePassword(name)));
+            user.setPassword(passwordEncoder.encode(generateSecureRandomPassword()));
 
             Role role = roleService.findByName(RoleName.USER.getValue());
             user.getRoles().add(role);

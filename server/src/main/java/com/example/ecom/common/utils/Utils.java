@@ -14,6 +14,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 
 import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -60,17 +61,11 @@ public final class Utils {
         return s == null || s.trim().isEmpty();
     }
 
-    public static String generatePassword(String name) {
-        if (name == null || name.isBlank()) {
-            name = "User";
-        }
-        String firstPart = name.length() >= 3 ? name.substring(0, 3) : name;
-        String lastPart = name.length() >= 3 ? name.substring(name.length() - 3) : name;
-
+    public static String generateSecureRandomPassword() {
         SecureRandom secureRandom = new SecureRandom();
-        int randomNum = 10 + secureRandom.nextInt(90);
-
-        return firstPart + lastPart + randomNum;
+        byte[] randomBytes = new byte[32];
+        secureRandom.nextBytes(randomBytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
     }
 
     public static <T extends Enum<T>> T getEnumRequired(Class<T> enumClass, String value, String enumName) {
