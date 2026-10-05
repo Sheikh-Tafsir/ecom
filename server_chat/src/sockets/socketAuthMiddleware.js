@@ -8,7 +8,8 @@ const socketAuthMiddleware = async (socket, next) => {
         if (!token) {
             console.error("Access token is required for socket connection.");
 
-            const error = new Error(ACCESS_TOKEN_REQUIRED);
+            // Use "Unauthorized" so client connect_error handler triggers token refresh retry
+            const error = new Error("Unauthorized");
             error.data = {
                 status: 401,
                 error: ACCESS_TOKEN_REQUIRED
@@ -23,7 +24,8 @@ const socketAuthMiddleware = async (socket, next) => {
         // Enforce mandatory JTI claim presence for defense-in-depth security
         if (!jti) {
             console.warn("Access token lacks a mandatory JTI claim for socket connection");
-            const error = new Error(ACCESS_TOKEN_INVALID);
+            // Use "Unauthorized" so client connect_error handler triggers token refresh retry
+            const error = new Error("Unauthorized");
             error.data = {
                 status: 401,
                 error: ACCESS_TOKEN_INVALID
@@ -39,7 +41,8 @@ const socketAuthMiddleware = async (socket, next) => {
             const isBlacklisted = await RedisConfig.get(cacheKey);
             if (isBlacklisted) {
                 console.warn(`Access token JTI: ${jti} is revoked/blacklisted for socket connection`);
-                const error = new Error(ACCESS_TOKEN_INVALID);
+                // Use "Unauthorized" so client connect_error handler triggers token refresh retry
+                const error = new Error("Unauthorized");
                 error.data = {
                     status: 401,
                     error: ACCESS_TOKEN_INVALID
@@ -67,7 +70,8 @@ const socketAuthMiddleware = async (socket, next) => {
     } catch (err) {
         console.error("Invalid access token:", err.message);
 
-        const error = new Error(ACCESS_TOKEN_INVALID);
+        // Use "Unauthorized" so client connect_error handler triggers token refresh retry
+        const error = new Error("Unauthorized");
         error.data = {
             status: 401,
             error: ACCESS_TOKEN_INVALID
