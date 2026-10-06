@@ -17,4 +17,4 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 80
-CMD ["/bin/sh", "-c", "envsubst '$SERVER_URL $CHAT_SERVER_URL' < /etc/nginx/conf.d/default.conf > /tmp/nginx-default.conf && cp /tmp/nginx-default.conf /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+CMD ["nginx", "-g", "daemon off;"]

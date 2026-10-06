@@ -280,6 +280,8 @@ services:
         - VITE_LOCAL_STORAGE_CART_KEY=${LOCAL_STORAGE_CART_KEY}
         - VITE_WEB_SOCKET_ON=${WEB_SOCKET_ON}
         - VITE_SSE_ON=${SSE_ON}
+        - SERVER_URL=${SERVER_URL}
+        - CHAT_SERVER_URL=${CHAT_SERVICE_URL}
     restart: unless-stopped
     env_file:
       - .env
