@@ -5,6 +5,7 @@ import com.example.ecom.common.dto.CustomUserDetails;
 import com.example.ecom.common.utils.ResponseUtils;
 import com.example.ecom.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,7 +28,11 @@ public class NotificationController {
     }
 
     @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter subscribe(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        return notificationService.subscribe(userDetails);
+    public ResponseEntity<SseEmitter> subscribe(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return ResponseEntity.ok(notificationService.subscribe(userDetails));
     }
 }

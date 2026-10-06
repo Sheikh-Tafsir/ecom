@@ -6,17 +6,24 @@ import com.example.ecom.common.enums.Permission;
 import com.example.ecom.common.model.User;
 import com.example.ecom.common.service.JwtService;
 import com.example.ecom.notification.dto.ClientConnection;
+import com.example.ecom.notification.dto.NotificationEvent;
 import com.example.ecom.notification.dto.NotificationResponse;
 import com.example.ecom.user.user.service.UserService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.data.redis.connection.Message;
+import org.springframework.data.redis.connection.MessageListener;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Set;
@@ -29,7 +36,9 @@ import static com.example.ecom.common.utils.CacheConstants.CACHE_SSE_TICKETS;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class NotificationService {
+public class NotificationService implements MessageListener {
+
+    public static final String NOTIFICATION_CHANNEL = "ecom:sse:notifications";
 
     private static final long SSE_TIMEOUT = Duration.ofMinutes(30).toMillis();
 
@@ -40,6 +49,11 @@ public class NotificationService {
     private final JwtService jwtService;
 
     private final CacheManager cacheManager;
+
+    private final ObjectMapper objectMapper;
+
+    @Autowired(required = false)
+    private StringRedisTemplate stringRedisTemplate;
 
     public String generateSseAuthToken(CustomUserDetails userDetails) {
         User user = userService.findByIdHelper(userDetails.getId());
@@ -97,12 +111,80 @@ public class NotificationService {
 
         sendEvent(userId, "init", new NotificationResponse(NotificationType.SUCCESS, "Connected"));
 
-        log.info("User {} subscribed with permissions {}", userId, permissions);
+        log.info("User {} subscribed to SSE with permissions {}", userId, permissions);
 
         return emitter;
     }
 
     public void sendToUser(Long userId, NotificationResponse notificationResponse) {
+        if (userId == null || notificationResponse == null) {
+            return;
+        }
+
+        boolean published = publishToRedis(new NotificationEvent(
+                "USER",
+                userId,
+                notificationResponse.type(),
+                notificationResponse.message()
+        ));
+
+        if (!published) {
+            sendToUserLocally(userId, notificationResponse);
+        }
+    }
+
+    public void sendToAdmins(NotificationResponse notificationResponse) {
+        if (notificationResponse == null) {
+            return;
+        }
+
+        boolean published = publishToRedis(new NotificationEvent(
+                "ADMIN",
+                null,
+                notificationResponse.type(),
+                notificationResponse.message()
+        ));
+
+        if (!published) {
+            sendToAdminsLocally(notificationResponse);
+        }
+    }
+
+    @Override
+    public void onMessage(Message message, byte[] pattern) {
+        try {
+            String body = new String(message.getBody(), StandardCharsets.UTF_8);
+            NotificationEvent event = objectMapper.readValue(body, NotificationEvent.class);
+
+            NotificationResponse response = new NotificationResponse(event.type(), event.message());
+
+            if ("ADMIN".equalsIgnoreCase(event.recipientType())) {
+                sendToAdminsLocally(response);
+            } else if ("USER".equalsIgnoreCase(event.recipientType()) && event.recipientId() != null) {
+                sendToUserLocally(event.recipientId(), response);
+            }
+        } catch (Exception e) {
+            log.error("Failed to deserialize notification event from Redis: {}", e.getMessage(), e);
+        }
+    }
+
+    private boolean publishToRedis(NotificationEvent event) {
+        if (stringRedisTemplate == null) {
+            return false;
+        }
+
+        try {
+            String payload = objectMapper.writeValueAsString(event);
+            stringRedisTemplate.convertAndSend(NOTIFICATION_CHANNEL, payload);
+            return true;
+        } catch (Exception e) {
+            log.warn("Failed to publish notification to Redis channel {}, falling back to local delivery: {}",
+                    NOTIFICATION_CHANNEL, e.getMessage());
+            return false;
+        }
+    }
+
+    private void sendToUserLocally(Long userId, NotificationResponse notificationResponse) {
         ClientConnection connection = connections.get(userId);
 
         if (connection != null) {
@@ -110,7 +192,7 @@ public class NotificationService {
         }
     }
 
-    public void sendToAdmins(NotificationResponse notificationResponse) {
+    private void sendToAdminsLocally(NotificationResponse notificationResponse) {
         connections.forEach((userId, connection) -> {
             if (connection.permissions().contains(Permission.ADMIN_ACCESS)
                     || connection.permissions().contains(Permission.SUPER_ADMIN_ACCESS)) {
