@@ -20,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,14 +85,17 @@ public class OrderService {
                 productName, getValidPageable(pageable)).map(OrderListResponse::new);
     }
 
-    @PostAuthorize("""
-            (returnObject.userId != null && returnObject.userId == authentication.principal.id) ||
-            hasAnyAuthority(T(com.example.ecom.common.enums.Permission).ADMIN_ACCESS.getValue(),
-            T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())
-            """)
-    public OrderResponse findById(Long id) {
+    public OrderResponse findById(Long id, CustomUserDetails userDetails) {
         Order order = orderRepository.findDetailsById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Order", id)));
+
+        boolean isOwner = userDetails != null && order.getUser().getId().equals(userDetails.getId());
+        boolean isAdmin = userDetails != null && hasPermission(
+                List.of(ADMIN_ACCESS.getValue(), SUPER_ADMIN_ACCESS.getValue()), userDetails);
+
+        if (!isOwner && !isAdmin) {
+            throw new AccessDeniedException("Access denied");
+        }
 
         return new OrderResponse(order);
     }
