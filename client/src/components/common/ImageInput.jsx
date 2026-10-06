@@ -1,4 +1,5 @@
 import React, {useEffect, useRef, useState} from "react";
+import DOMPurify from 'dompurify';
 import {X} from "lucide-react";
 
 import {Button} from "@/components/ui/button";
@@ -99,7 +100,7 @@ const ImageInput = ({
             {!image && existingImage &&
                 <div className="relative">
                     <img
-                        src={existingImage}
+                        src={DOMPurify.sanitize(existingImage)}
                         alt=""
                         className="w-[60%] object-cover rounded-md border"
                     />
