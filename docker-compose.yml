@@ -46,7 +46,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    restart: always
+    restart: unless-stopped
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
     command: ["sh", "-c", "redis-server --requirepass \"$REDIS_PASSWORD\""]
@@ -275,7 +275,7 @@ services:
       args:
         - VITE_API_PATH=${SERVER_URL}
         - VITE_GOOGLE_LOGIN_CLIENT_ID=${GOOGLE_LOGIN_CLIENT_ID}
-        - VITE_ACCESS_TOKEN=${ACCESS_TOKEN}
+        - VITE_SESSION_HINT_KEY=${SESSION_HINT_KEY}
         - VITE_LOCAL_STORAGE_CART_KEY=${LOCAL_STORAGE_CART_KEY}
         - VITE_WEB_SOCKET_ON=${WEB_SOCKET_ON}
         - VITE_SSE_ON=${SSE_ON}
