@@ -4,9 +4,11 @@ import com.example.ecom.common.enums.AppModule;
 import com.example.ecom.report.dto.ReportCreateRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.ResultSetExtractor;
 
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -59,17 +61,28 @@ public abstract class ReportService {
         StringBuilder sql = new StringBuilder(getBaseSql());
 
         List<Object> params = addFilters(fromDate, toDate, sql);
+        String finalSql = sql.toString();
 
-        // Set fetchSize to enable cursor-based streaming in PostgreSQL.
-        // Without this, the JDBC driver buffers the entire result set in JVM memory.
-        jdbcTemplate.setFetchSize(500);
+        // Use PreparedStatementCreator to set fetchSize per-query without mutating
+        // the shared JdbcTemplate bean (which would affect all other queries globally).
         jdbcTemplate.query(
-                sql.toString(),
-                params.toArray(),
-                rs -> {
+                conn -> {
+                    PreparedStatement ps = conn.prepareStatement(
+                            finalSql,
+                            ResultSet.TYPE_FORWARD_ONLY,
+                            ResultSet.CONCUR_READ_ONLY
+                    );
+                    ps.setFetchSize(500);
+                    for (int i = 0; i < params.size(); i++) {
+                        ps.setObject(i + 1, params.get(i));
+                    }
+                    return ps;
+                },
+                (ResultSetExtractor<Void>) rs -> {
                     while (rs.next()) {
                         mapRow(rs, consumer);
                     }
+                    return null;
                 }
         );
     }
