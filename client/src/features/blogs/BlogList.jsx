@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import DOMPurify from 'dompurify';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { AuthenticatedAxios } from "@/services/http/Axios";
@@ -127,7 +128,7 @@ const BlogList = () => {
                                 </CardHeader>
                                 <CardContent className="flex-grow">
                                     <p className="text-slate-600 line-clamp-3 font-medium text-sm leading-relaxed">
-                                        {post.content.replace(/<[^>]*>/g, '')}
+                                        {DOMPurify.sanitize(post.content, { ALLOWED_TAGS: [] })}
                                     </p>
                                 </CardContent>
                                 <CardFooter className="mt-auto pt-0">
