@@ -114,10 +114,12 @@ Database schema evolutions are managed versioned migrations under:
 `server/src/main/resources/db/migration/`
 
 - `V1__init_schema.sql`: Full DDL creation for all tables, relational foreign keys, constraints, and indexes.
-- `V2__initial_data.sql`: Seed data for administrative roles and system permissions.
+- `V2__index.sql`: Database indexes for performance-critical queries.
+- `V3__initial_data.sql`: Seed data for administrative roles and system permissions.
+- `V4__add_stock_remaining_check_constraint.sql`: Check constraint on stock remaining field.
 
 ### Migration Naming Convention
-- `V<Version>__<Description>.sql` (e.g., `V3__add_discount_coupons.sql`)
+- `V<Version>__<Description>.sql` (e.g., `V5__add_discount_coupons.sql`)
 - Always make migration scripts idempotent and avoid destructive schema updates on active production tables.
 
 ---
