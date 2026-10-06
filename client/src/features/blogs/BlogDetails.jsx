@@ -99,7 +99,11 @@ const BlogDetails = () => {
                 [&_h2]:text-2xl [&_h2]:mt-8 [&_h2]:mb-4
                 [&_h3]:text-xl [&_h3]:mt-6 [&_h3]:mb-3
                 [&_p]:mb-4"
-                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content, {
+                    FORCE_BODY: true,          // always parse in body context; prevents fragment edge-cases
+                    RETURN_DOM_FRAGMENT: false, // return a plain string for dangerouslySetInnerHTML
+                    USE_PROFILES: { html: true } // explicit safe-list: standard HTML elements only
+                }) }}
             />
         </article>
     );

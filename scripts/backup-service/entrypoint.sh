@@ -3,23 +3,35 @@ set -eo pipefail
 
 # Configuration from environment variables
 # DB_HOST, DB_NAME, DB_USER, DB_PASS
+# BACKUP_ENCRYPTION_KEY  — AES-256 passphrase for encrypted backup files (required)
 # GDRIVE_SYNC_ENABLED (true/false)
 # BACKUP_RETENTION_DAYS (e.g. 30)
 
 BACKUP_DIR="/backups"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-BACKUP_FILE="$BACKUP_DIR/db_backup_$TIMESTAMP.sql.gz"
+# Backups are AES-256-CBC encrypted. To restore:
+#   openssl enc -d -aes-256-cbc -pbkdf2 -k "$BACKUP_ENCRYPTION_KEY" \
+#     -in db_backup_<TS>.sql.gz.enc | gunzip | psql -h <host> -U <user> <db>
+BACKUP_FILE="$BACKUP_DIR/db_backup_$TIMESTAMP.sql.gz.enc"
 LOG_FILE="/var/log/backup.log"
 
 echo "[$(date)] --- Starting Daily Backup ---" >> "$LOG_FILE"
+
+if [ -z "$BACKUP_ENCRYPTION_KEY" ]; then
+    echo "[$(date)] ERROR: BACKUP_ENCRYPTION_KEY is not set. Aborting." >> "$LOG_FILE"
+    exit 1
+fi
 
 # 1. Set up .pgpass for secure credential handling (avoids exposing password via env/proc)
 PGPASS_FILE="$HOME/.pgpass"
 echo "$DB_HOST:5432:$DB_NAME:$DB_USER:$DB_PASS" > "$PGPASS_FILE"
 chmod 0600 "$PGPASS_FILE"
 
-# 2. Perform PostgreSQL Backup with pipefail
-if pg_dump -h "$DB_HOST" -U "$DB_USER" "$DB_NAME" | gzip > "$BACKUP_FILE"; then
+# 2. Perform PostgreSQL Backup → gzip → AES-256-CBC encrypt
+if pg_dump -h "$DB_HOST" -U "$DB_USER" "$DB_NAME" \
+    | gzip \
+    | openssl enc -aes-256-cbc -pbkdf2 -k "$BACKUP_ENCRYPTION_KEY" \
+    > "$BACKUP_FILE"; then
     # Validate backup is not empty (pg_dump can succeed with empty output on error)
     if [ ! -s "$BACKUP_FILE" ]; then
         echo "[$(date)] Backup FAILED: output file is empty" >> "$LOG_FILE"
@@ -45,7 +57,8 @@ fi
 
 # 4. Cleanup old backups according to retention policy
 echo "[$(date)] Running retention cleanup..." >> "$LOG_FILE"
-find "$BACKUP_DIR" -type f -name "db_backup_*.sql.gz" -mtime +"${BACKUP_RETENTION_DAYS:-30}" -delete
+find "$BACKUP_DIR" -type f -name "db_backup_*.sql.gz.enc" -mtime +"${BACKUP_RETENTION_DAYS:-30}" -delete
 echo "[$(date)] Cleanup complete." >> "$LOG_FILE"
 
 echo "[$(date)] --- Backup Process Finished ---" >> "$LOG_FILE"
+

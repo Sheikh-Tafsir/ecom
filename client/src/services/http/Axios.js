@@ -96,6 +96,9 @@ AuthenticatedAxios.interceptors.response.use(
     }
 );
 
+// Module-scoped: one refresh call shared across all concurrent 401s.
+// Resets on page reload (acceptable — server tolerates duplicate refresh attempts
+// via a short reuse window on the refresh token).
 let isRefreshing = false;
 let refreshSubscribers = [];
 

@@ -41,6 +41,7 @@ services:
       - DB_PASS=${DB_PASSWORD}
       - BACKUP_RETENTION_DAYS=7
       - GDRIVE_SYNC_ENABLED=${GDRIVE_SYNC_ENABLED}
+      - BACKUP_ENCRYPTION_KEY=${BACKUP_ENCRYPTION_KEY}
     networks:
       - data
 

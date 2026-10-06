@@ -2,6 +2,8 @@ import {jwtDecode} from 'jwt-decode';
 
 let accessToken = null;
 
+// UX-only flag: signals a likely valid session so we attempt a silent token
+// refresh on load. Not a security control — the real token is in-memory only.
 const SESSION_HINT = "ecom_has_session";
 
 export const saveAccessToken = (token) => {

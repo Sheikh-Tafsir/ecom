@@ -21,7 +21,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("select o from Order o where o.id = :id")
     Optional<Order> findDetailsById(Long id);
 
-    @EntityGraph(attributePaths = {"user"})
+    @EntityGraph(attributePaths = {"user", "items", "items.product"})
     @Query("""
             SELECT o FROM Order o
             LEFT JOIN o.items i
