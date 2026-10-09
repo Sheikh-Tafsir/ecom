@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 import static com.example.ecom.common.utils.Utils.checkErrors;
 
@@ -61,30 +62,30 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ProductResponse>> findById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<ProductResponse>> findById(@PathVariable UUID id) {
         ProductResponse product = productService.findById(id);
         return ResponseUtils.ok(product, messageService.get("successfully.found", "Product"));
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<Long>> create(@Valid @ModelAttribute CreateProductRequest productRequest,
+    public ResponseEntity<ApiResponse<UUID>> create(@Valid @ModelAttribute CreateProductRequest productRequest,
                                                                    BindingResult bindingResult) throws IOException {
 
         productValidator.validateCreate(productRequest, bindingResult);
         checkErrors(bindingResult);
 
-        long id = productService.create(productRequest);
+        UUID id = productService.create(productRequest);
         return ResponseUtils.created(id, messageService.get("entity.creating", "Product"));
     }
 
     @GetMapping("/{id}/edit")
-    public ResponseEntity<ApiResponse<ProductEditResponse>> findEditById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<ProductEditResponse>> findEditById(@PathVariable UUID id) {
         ProductEditResponse product = productService.findEditById(id);
         return ResponseUtils.ok(product, messageService.get("successfully.found", "Product"));
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<ProductEditResponse>> update(@PathVariable Long id,
+    public ResponseEntity<ApiResponse<ProductEditResponse>> update(@PathVariable UUID id,
                                                                    @Valid @ModelAttribute UpdateProductRequest productRequest,
                                                                    BindingResult bindingResult) throws IOException {
 
@@ -96,20 +97,20 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID id) {
         productService.delete(id);
         return ResponseUtils.ok(messageService.get("successfully.deleted", "Product"));
     }
 
     @GetMapping("/{id}/reviews")
-    public ResponseEntity<ApiResponse<Page<ReviewResponse>>> getReviews(@PathVariable Long id,
+    public ResponseEntity<ApiResponse<Page<ReviewResponse>>> getReviews(@PathVariable UUID id,
                                                                         Pageable pageable) {
 
         Page<ReviewResponse> reviews = reviewService.findAllByProduct(id, pageable);
         return ResponseUtils.ok(reviews, messageService.get("successfully.found", "Reviews"));
     }
     @PostMapping("/{id}/review")
-    public ResponseEntity<ApiResponse<Void>> addReview(@PathVariable Long id,
+    public ResponseEntity<ApiResponse<Void>> addReview(@PathVariable UUID id,
                                                        @Valid @RequestBody CreateReviewRequest request,
                                                        @AuthenticationPrincipal CustomUserDetails userDetails) {
 

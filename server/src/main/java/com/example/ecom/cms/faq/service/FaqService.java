@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.example.ecom.common.utils.CacheConstants.CACHE_FAQS;
@@ -53,7 +54,7 @@ public class FaqService {
             "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
     @CacheEvict(value = CACHE_FAQS, allEntries = true)
-    public FaqResponse update(Long id, FaqRequest request) {
+    public FaqResponse update(UUID id, FaqRequest request) {
         Faq faq = findByIdHelper(id);
         updateFaqFromRequest(faq, request);
         return new FaqResponse(faqRepository.save(faq));
@@ -63,12 +64,12 @@ public class FaqService {
             "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
     @CacheEvict(value = CACHE_FAQS, allEntries = true)
-    public void delete(Long id) {
+    public void delete(UUID id) {
         Faq faq = findByIdHelper(id);
         faqRepository.delete(faq);
     }
 
-    private Faq findByIdHelper(Long id) {
+    private Faq findByIdHelper(UUID id) {
         return faqRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Faq", id)));
     }

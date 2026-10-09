@@ -8,19 +8,22 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface BlogRepository extends JpaRepository<Blogs, Long> {
+public interface BlogRepository extends JpaRepository<Blogs, UUID> {
+
     Optional<Blogs> findByTitle(String title);
 
-    Page<Blogs> findAllByStatus(BlogPostStatus status, Pageable pageable);
+    boolean existsByTitle(String title);
 
-    Page<Blogs> findAllByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(String title, String content, Pageable pageable);
+    boolean existsByTitleAndIdNot(String title, UUID id);
+
+    Page<Blogs> findAllByStatus(BlogPostStatus status, Pageable pageable);
 
     Page<Blogs> findAllByStatusAndTitleContainingIgnoreCaseOrStatusAndContentContainingIgnoreCase(
             BlogPostStatus status1, String title, BlogPostStatus status2, String content, Pageable pageable);
 
-    boolean existsByTitle(String title);
-
-    boolean existsByTitleAndIdNot(String title, Long id);
+    Page<Blogs> findAllByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(
+            String title, String content, Pageable pageable);
 }

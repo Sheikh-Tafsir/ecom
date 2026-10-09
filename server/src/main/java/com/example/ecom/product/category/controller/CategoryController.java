@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/categories")
@@ -29,19 +30,19 @@ public class CategoryController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Long>> create(@Valid CategorySaveRequest request) {
-        Long id = categoryService.create(request);
+    public ResponseEntity<ApiResponse<UUID>> create(@Valid CategorySaveRequest request) {
+        UUID id = categoryService.create(request);
         return ResponseUtils.created(id, messageService.get("successfully.created", "Category"));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> update(@PathVariable Long id, @Valid CategorySaveRequest request) {
+    public ResponseEntity<ApiResponse<Void>> update(@PathVariable UUID id, @Valid CategorySaveRequest request) {
         categoryService.update(id, request);
         return ResponseUtils.ok(messageService.get("successfully.updated", "Category"));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID id) {
         categoryService.delete(id);
         return ResponseUtils.ok(messageService.get("successfully.deleted", "Category"));
     }

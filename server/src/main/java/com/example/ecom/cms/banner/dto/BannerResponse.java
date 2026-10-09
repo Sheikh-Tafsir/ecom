@@ -1,32 +1,27 @@
 package com.example.ecom.cms.banner.dto;
 
 import com.example.ecom.common.model.Banner;
-import lombok.Data;
 
-@Data
-public class BannerResponse {
+import java.util.UUID;
 
-    private Long id;
-
-    private String title;
-
-    private String subtitle;
-
-    private String imageUrl;
-
-    private String linkUrl;
-
-    private int displayOrder;
-
-    private boolean active;
-
+public record BannerResponse(
+        UUID id,
+        String title,
+        String subtitle,
+        String imageUrl,
+        String linkUrl,
+        int displayOrder,
+        boolean active
+) {
     public BannerResponse(Banner banner) {
-        this.id = banner.getId();
-        this.title = banner.getTitle();
-        this.subtitle = banner.getSubtitle();
-        this.imageUrl = banner.getImageUrl();
-        this.linkUrl = banner.getLinkUrl();
-        this.displayOrder = banner.getDisplayOrder();
-        this.active = banner.isActive();
+        this(
+                banner.getId(),
+                banner.getTitle(),
+                banner.getSubtitle(),
+                banner.getImageUrl(),
+                banner.getLinkUrl(),
+                banner.getDisplayOrder(),
+                banner.isActive()
+        );
     }
 }

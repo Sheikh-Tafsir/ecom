@@ -7,13 +7,14 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class StockListResponse {
 
-    private Long id;
+    private UUID id;
     private BigDecimal totalCost;
     private Instant createdAt;
     private Instant updatedAt;
@@ -25,12 +26,4 @@ public class StockListResponse {
         updatedAt = stock.getUpdatedAt();
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public BigDecimal getTotalCost() { return totalCost; }
-    public void setTotalCost(BigDecimal totalCost) { this.totalCost = totalCost; }
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
-    public Instant getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 }

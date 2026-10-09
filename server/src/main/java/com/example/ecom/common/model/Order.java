@@ -9,10 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Table(name = "orders")
@@ -20,11 +17,7 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Order extends BaseEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Order extends AuditableEntity {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -74,7 +67,7 @@ public class Order extends BaseEntity {
         calculateTotal();
     }
 
-    private OrderItem getItem(Long productId) {
+    private OrderItem getItem(UUID productId) {
         return items.stream()
                 .filter(i -> i.getProduct().getId().equals(productId))
                 .findFirst()

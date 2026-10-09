@@ -18,6 +18,8 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.UUID;
+
 import static com.example.ecom.common.utils.CacheConstants.CACHE_REVOKED_ACCESS_TOKENS;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -111,9 +113,10 @@ class AuthTokenServiceTest {
     void revokeAllForUser_revokesDbRecordsAndCachesUserRevocationTimestamp() {
         when(cacheManager.getCache(CACHE_REVOKED_ACCESS_TOKENS)).thenReturn(revokedAccessTokensCache);
 
-        authTokenService.revokeAllForUser(42L);
+        UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000042");
+        authTokenService.revokeAllForUser(userId);
 
-        verify(userRefreshTokenRepository).revokeAllForUser(42L, UserRefreshTokenStatus.REVOKED);
-        verify(revokedAccessTokensCache).put(eq("user:42"), any(Long.class));
+        verify(userRefreshTokenRepository).revokeAllForUser(userId, UserRefreshTokenStatus.REVOKED);
+        verify(revokedAccessTokensCache).put(eq("user:" + userId), any(Long.class));
     }
 }

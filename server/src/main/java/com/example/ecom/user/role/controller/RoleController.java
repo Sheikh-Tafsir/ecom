@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/roles")
@@ -34,25 +35,25 @@ public class RoleController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<RoleResponse>> findById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<RoleResponse>> findById(@PathVariable UUID id) {
         RoleResponse role = roleService.findById(id);
         return ResponseUtils.ok(role, messageService.get("successfully.found", "Role"));
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Long>> create(@Valid @RequestBody RoleRequest roleRequest) {
-        Long roleId = roleService.create(roleRequest.name(), roleRequest.permissions());
+    public ResponseEntity<ApiResponse<UUID>> create(@Valid @RequestBody RoleRequest roleRequest) {
+        UUID roleId = roleService.create(roleRequest.name(), roleRequest.permissions());
         return ResponseUtils.ok(roleId, messageService.get("successfully.created", "Role"));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<RoleResponse>> update(@PathVariable Long id, @Valid @RequestBody RoleRequest roleRequest) {
+    public ResponseEntity<ApiResponse<RoleResponse>> update(@PathVariable UUID id, @Valid @RequestBody RoleRequest roleRequest) {
         RoleResponse role = roleService.update(id, roleRequest.name(), roleRequest.permissions());
         return ResponseUtils.ok(role, messageService.get("successfully.updated", "Role"));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID id) {
         roleService.delete(id);
         return ResponseUtils.ok(messageService.get("successfully.deleted", "Role"));
     }

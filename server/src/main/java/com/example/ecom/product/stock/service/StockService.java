@@ -23,6 +23,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static com.example.ecom.common.utils.DateUtils.resolveDates;
 import static com.example.ecom.common.utils.Utils.getValidPageable;
@@ -52,7 +53,7 @@ public class StockService {
 
     @PreAuthorize("hasAnyAuthority(T(com.example.ecom.common.enums.Permission).ADMIN_ACCESS.getValue()," +
             "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
-    public StockResponse findById(Long id) {
+    public StockResponse findById(UUID id) {
         Stock stock = stockRepository.findDetailsById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Stock", id)));
         return new StockResponse(stock);
@@ -60,10 +61,10 @@ public class StockService {
 
     @PreAuthorize("hasAuthority(T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
-    public long create(CreateStockRequest request, String idempotencyKey) {
+    public UUID create(CreateStockRequest request, String idempotencyKey) {
         Object cachedResponse = idempotencyService.getCachedResponse(idempotencyKey, request);
         if (cachedResponse != null) {
-            return (Long) cachedResponse;
+            return (UUID) cachedResponse;
         }
 
         Stock stock = new Stock();
@@ -96,7 +97,7 @@ public class StockService {
 
     @PreAuthorize("hasAuthority(T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
-    public StockResponse update(Long id, UpdateStockRequest request) {
+    public StockResponse update(UUID id, UpdateStockRequest request) {
         Stock stock = findByIdHelper(id);
 
         List<StockItem> removedItems = stock.getItems().stream()
@@ -123,14 +124,14 @@ public class StockService {
 
     @PreAuthorize("hasAnyAuthority(T(com.example.ecom.common.enums.Permission).ADMIN_ACCESS.getValue()," +
             "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
-    public Page<StockItemResponse> findAllItems(LocalDate fromDate, LocalDate toDate, Long productId, String productName, Pageable pageable) {
+    public Page<StockItemResponse> findAllItems(LocalDate fromDate, LocalDate toDate, UUID productId, String productName, Pageable pageable) {
         DateRangeDto dateRange = resolveDates(fromDate, toDate);
         return stockItemRepository.findAll(dateRange.fromDate(), dateRange.toDate(), productId, productName, getValidPageable(pageable)).map(StockItemResponse::new);
     }
 
     @PreAuthorize("hasAuthority(T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
-    public StockResponse addItem(Long stockId, CreateStockItemRequest request) {
+    public StockResponse addItem(UUID stockId, CreateStockItemRequest request) {
         Stock stock = findByIdHelper(stockId);
         ensureProductDoesNotExist(stock, request.productId());
         addItem(stock, request);
@@ -140,7 +141,7 @@ public class StockService {
 
     @PreAuthorize("hasAuthority(T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
-    public StockResponse updateItem(Long stockId, Long itemId, UpdateStockItemRequest request) {
+    public StockResponse updateItem(UUID stockId, UUID itemId, UpdateStockItemRequest request) {
         Stock stock = findByIdHelper(stockId);
         updateItem(stock, itemId, request);
         stock.calculateTotal();
@@ -150,7 +151,7 @@ public class StockService {
 
     @PreAuthorize("hasAuthority(T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
-    public StockResponse removeItem(Long stockId, Long itemId) {
+    public StockResponse removeItem(UUID stockId, UUID itemId) {
         Stock stock = findByIdHelper(stockId);
         StockItem item = getItem(stock, itemId);
         decreaseProductQuantity(item.getProduct(), item.getRemaining());
@@ -161,7 +162,7 @@ public class StockService {
 
     @PreAuthorize("hasAuthority(T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
-    public void delete(Long id) {
+    public void delete(UUID id) {
         Stock stock = findByIdHelper(id);
         stock.getItems().forEach(item ->
                 decreaseProductQuantity(item.getProduct(), item.getRemaining())
@@ -200,7 +201,7 @@ public class StockService {
         }
     }
 
-    private Stock findByIdHelper(Long id) {
+    private Stock findByIdHelper(UUID id) {
         return stockRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Stock", id)));
     }
@@ -223,7 +224,7 @@ public class StockService {
         updateItem(stock, request.id(), request);
     }
 
-    private void ensureProductDoesNotExist(Stock stock, Long productId) {
+    private void ensureProductDoesNotExist(Stock stock, UUID productId) {
         boolean exists = stock.getItems().stream()
                 .anyMatch(item ->
                         item.getProduct().getId().equals(productId)
@@ -234,7 +235,7 @@ public class StockService {
         }
     }
 
-    private void updateItem(Stock stock, Long itemId, UpdateStockItemRequest request) {
+    private void updateItem(Stock stock, UUID itemId, UpdateStockItemRequest request) {
         StockItem item = getItem(stock, itemId);
         int quantityChange = request.quantity() - item.getQuantity();
         int updatedRemaining = item.getRemaining() + quantityChange;
@@ -250,7 +251,7 @@ public class StockService {
         productService.increaseQuantity(item.getProduct(), quantityChange);
     }
 
-    private StockItem getItem(Stock stock, Long itemId) {
+    private StockItem getItem(Stock stock, UUID itemId) {
         return stock.getItems().stream()
                 .filter(item ->
                         item.getId().equals(itemId)

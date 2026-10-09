@@ -1,16 +1,22 @@
 const { IS_REQUIRED} = require('../utils/Messages');
 const { CONTENT_TYPE } = require('../utils/Enum');
+const { generateUuidV7 } = require('../utils/UuidUtils');
 
 module.exports = (sequelize, DataTypes) => {
     const Message = sequelize.define('Message',
         {
+            id: {
+                type: DataTypes.UUID,
+                primaryKey: true,
+                defaultValue: () => generateUuidV7(),
+            },
+
             chatId: {
-                type: DataTypes.INTEGER,
+                type: DataTypes.UUID,
                 allowNull: false,
                 field: 'chat_id',
                 validate: {
                     notNull: { msg: IS_REQUIRED },
-                    isInt: true,
                 },
             },
 
@@ -33,12 +39,11 @@ module.exports = (sequelize, DataTypes) => {
             },
 
             senderId: {
-                type: DataTypes.INTEGER,
+                type: DataTypes.UUID,
                 allowNull: false,
                 field: 'sender_id',
                 validate: {
                     notNull: { msg: IS_REQUIRED },
-                    isInt: true,
                 },
             },
 

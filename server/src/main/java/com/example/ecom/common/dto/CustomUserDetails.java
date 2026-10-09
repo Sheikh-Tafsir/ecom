@@ -10,17 +10,21 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 public class CustomUserDetails implements UserDetails {
 
-    private final Long id;
+    private final UUID id;
+
     private final String email;
+
     private final UserStatus status;
+
     private final Collection<? extends GrantedAuthority> authorities;
 
     public CustomUserDetails(Claims claims) {
-        this.id = Long.valueOf(claims.getSubject());
+        this.id = UUID.fromString(claims.getSubject());
         this.email = claims.get("email", String.class);
         this.status = UserStatus.fromValue(claims.get("status", String.class));
 
@@ -40,10 +44,6 @@ public class CustomUserDetails implements UserDetails {
                 .map(SimpleGrantedAuthority::new)
                 .toList();
     }
-
-    public Long getId() { return id; }
-    public String getEmail() { return email; }
-    public UserStatus getStatus() { return status; }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

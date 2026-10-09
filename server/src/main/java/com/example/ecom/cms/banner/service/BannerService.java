@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.example.ecom.common.utils.CacheConstants.CACHE_BANNERS;
@@ -62,7 +63,7 @@ public class BannerService {
             "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
     @CacheEvict(value = CACHE_BANNERS, allEntries = true)
-    public BannerResponse update(Long id, BannerRequest request) {
+    public BannerResponse update(UUID id, BannerRequest request) {
         Banner banner = findByIdHelper(id);
         setBannerFromRequest(banner, request);
         return new BannerResponse(bannerRepository.save(banner));
@@ -72,12 +73,12 @@ public class BannerService {
             "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
     @CacheEvict(value = CACHE_BANNERS, allEntries = true)
-    public void delete(Long id) {
+    public void delete(UUID id) {
         Banner banner = findByIdHelper(id);
         bannerRepository.delete(banner);
     }
 
-    private Banner findByIdHelper(Long id) {
+    private Banner findByIdHelper(UUID id) {
         return bannerRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Banner", id)));
     }

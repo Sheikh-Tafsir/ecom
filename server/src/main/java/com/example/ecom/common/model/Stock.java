@@ -16,11 +16,7 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Stock extends BaseEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Stock extends AuditableEntity {
 
     @OneToMany(mappedBy = "stock", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<StockItem> items = new HashSet<>();
@@ -47,11 +43,4 @@ public class Stock extends BaseEntity {
                 .map(StockItem::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Set<StockItem> getItems() { return items; }
-    public void setItems(Set<StockItem> items) { this.items = items; }
-    public BigDecimal getTotalCost() { return totalCost; }
-    public void setTotalCost(BigDecimal totalCost) { this.totalCost = totalCost; }
 }

@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -52,11 +53,15 @@ class OrderServiceTest {
     @InjectMocks
     private OrderService orderService;
 
+    private static final UUID USER_ID   = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final UUID ORDER_ID  = UUID.fromString("00000000-0000-0000-0000-000000000100");
+    private static final UUID PRODUCT_ID = UUID.fromString("00000000-0000-0000-0000-000000000010");
+
     @Test
     void createOrder_withNoItems_shouldSaveEmptyOrder() {
         // Arrange
         User user = new User();
-        user.setId(1L);
+        user.setId(USER_ID);
         user.setName("Test User");
         CustomUserDetails userDetails = new CustomUserDetails(user);
 
@@ -64,10 +69,10 @@ class OrderServiceTest {
                 new ArrayList<>(), "Test Receiver", "01234567890", "Test Address 12345", PaymentMethod.CASH_ON_DELIVERY
         );
 
-        when(userService.findByIdHelper(1L)).thenReturn(user);
+        when(userService.findByIdHelper(USER_ID)).thenReturn(user);
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
             Order order = invocation.getArgument(0);
-            order.setId(100L);
+            order.setId(ORDER_ID);
             return order;
         });
 
@@ -83,27 +88,27 @@ class OrderServiceTest {
     void createOrder_withItems_shouldReserveStock() {
         // Arrange
         User user = new User();
-        user.setId(1L);
+        user.setId(USER_ID);
         user.setName("Test User");
         CustomUserDetails userDetails = new CustomUserDetails(user);
 
         com.example.ecom.common.model.Product product = new com.example.ecom.common.model.Product();
-        product.setId(10L);
+        product.setId(PRODUCT_ID);
         product.setPrice(new java.math.BigDecimal("50.00"));
         product.setQuantity(20);
 
         com.example.ecom.order.dto.CreateOrderItemRequest itemRequest =
-                new com.example.ecom.order.dto.CreateOrderItemRequest(10L, 2);
+                new com.example.ecom.order.dto.CreateOrderItemRequest(PRODUCT_ID, 2);
 
         CreateOrderRequest request = new CreateOrderRequest(
                 java.util.List.of(itemRequest), "Test Receiver", "01234567890", "Test Address 12345", PaymentMethod.CASH_ON_DELIVERY
         );
 
-        when(userService.findByIdHelper(1L)).thenReturn(user);
-        when(productService.findByIdHelper(10L)).thenReturn(product);
+        when(userService.findByIdHelper(USER_ID)).thenReturn(user);
+        when(productService.findByIdHelper(PRODUCT_ID)).thenReturn(product);
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
             Order order = invocation.getArgument(0);
-            order.setId(100L);
+            order.setId(ORDER_ID);
             return order;
         });
 
@@ -119,25 +124,25 @@ class OrderServiceTest {
     void cancelOrder_shouldRestoreStock() {
         // Arrange
         User user = new User();
-        user.setId(1L);
+        user.setId(USER_ID);
         CustomUserDetails userDetails = new CustomUserDetails(user);
 
         com.example.ecom.common.model.Product product = new com.example.ecom.common.model.Product();
-        product.setId(10L);
+        product.setId(PRODUCT_ID);
         product.setPrice(new java.math.BigDecimal("50.00"));
 
         Order order = new Order();
-        order.setId(100L);
+        order.setId(ORDER_ID);
         order.setUser(user);
         order.setStatus(com.example.ecom.common.enums.OrderStatus.PENDING);
         order.addItem(product, 3);
 
-        when(orderRepository.findById(100L)).thenReturn(java.util.Optional.of(order));
-        when(userService.findByIdHelper(1L)).thenReturn(user);
+        when(orderRepository.findById(ORDER_ID)).thenReturn(java.util.Optional.of(order));
+        when(userService.findByIdHelper(USER_ID)).thenReturn(user);
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        var response = orderService.cancel(100L, userDetails);
+        var response = orderService.cancel(ORDER_ID, userDetails);
 
         // Assert
         assertNotNull(response);

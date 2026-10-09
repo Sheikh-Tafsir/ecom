@@ -1,23 +1,12 @@
 package com.example.ecom.cms.faq.dto;
 
 import com.example.ecom.common.model.Faq;
-import lombok.Data;
 
-@Data
-public class FaqResponse {
+import java.util.UUID;
 
-    private Long id;
-
-    private String question;
-
-    private String answer;
-
-    private int displayOrder;
+public record FaqResponse(UUID id, String question, String answer, int displayOrder) {
 
     public FaqResponse(Faq faq) {
-        this.id = faq.getId();
-        this.question = faq.getQuestion();
-        this.answer = faq.getAnswer();
-        this.displayOrder = faq.getDisplayOrder();
+        this(faq.getId(), faq.getQuestion(), faq.getAnswer(), faq.getDisplayOrder());
     }
 }

@@ -19,6 +19,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -50,13 +51,13 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<UserResponse>> findById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<UserResponse>> findById(@PathVariable UUID id) {
         UserResponse user = userService.findById(id);
         return ResponseUtils.ok(user, messageService.get("successfully.found", "User"));
     }
 
     @PutMapping(value = "/{id}")
-    public ResponseEntity<ApiResponse<Void>> update(@PathVariable Long id,
+    public ResponseEntity<ApiResponse<Void>> update(@PathVariable UUID id,
                                                     @Valid @RequestBody UpdateUserRequest request) {
 
         userService.update(id, request);
@@ -64,7 +65,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID id) {
         userService.banned(id);
         return ResponseUtils.ok(messageService.get("successfully.deleted", "User"));
     }

@@ -10,9 +10,10 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Repository
-public interface SaleRepository extends JpaRepository<Sale, Long> {
+public interface SaleRepository extends JpaRepository<Sale, UUID> {
 
     @EntityGraph(attributePaths = {"product", "product.images"})
     @Query("""
@@ -26,7 +27,7 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
     Page<Sale> findAllByMonth(
             @Param("fromDate") Instant fromDate,
             @Param("toDate") Instant toDate,
-            @Param("productId") Long productId,
+            @Param("productId") UUID productId,
             @Param("productName") String productName,
             Pageable pageable
     );

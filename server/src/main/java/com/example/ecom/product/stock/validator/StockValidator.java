@@ -10,6 +10,7 @@ import org.springframework.validation.Errors;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Component
 public class StockValidator {
@@ -19,7 +20,7 @@ public class StockValidator {
             return;
         }
 
-        Set<Long> productIds = new HashSet<>();
+        Set<UUID> productIds = new HashSet<>();
         for (CreateStockItemRequest item : request.items()) {
             if (item == null) {
                 continue;
@@ -40,7 +41,7 @@ public class StockValidator {
             return;
         }
 
-        Set<Long> itemIds = new HashSet<>();
+        Set<UUID> itemIds = new HashSet<>();
         for (UpdateStockItemRequest item : request.items()) {
             if (item == null) {
                 continue;

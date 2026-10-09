@@ -17,6 +17,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 import static com.example.ecom.common.utils.Utils.checkErrors;
 
 @RestController
@@ -66,7 +68,7 @@ public class BlogController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<BlogResponse>> update(@PathVariable Long id, @Valid @RequestBody BlogRequest request, BindingResult bindingResult) {
+    public ResponseEntity<ApiResponse<BlogResponse>> update(@PathVariable UUID id, @Valid @RequestBody BlogRequest request, BindingResult bindingResult) {
         blogValidator.validateUpdate(id, request, bindingResult);
         checkErrors(bindingResult);
 
@@ -75,7 +77,7 @@ public class BlogController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID id) {
         blogService.delete(id);
         return ResponseUtils.ok(messageService.get("successfully.deleted", "Blog Post"));
     }

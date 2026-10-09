@@ -67,7 +67,7 @@ const Chat = () => {
     useEffect(() => {
         if (!searchedUser || !user?.id) return;
 
-        const ids = [user?.id, searchedUser?.id].sort((a, b) => a - b);
+        const ids = [user?.id, searchedUser?.id].sort((a, b) => String(a).localeCompare(String(b)));
         const key = `${ids[0]}_${ids[1]}`;
         const existingChat = chatMapByParticipants.get(key);
 

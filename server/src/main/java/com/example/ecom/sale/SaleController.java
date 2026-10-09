@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,7 +29,7 @@ public class SaleController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<SaleResponse>>> findAll(@RequestParam(required = false) @PastOrPresent LocalDate fromDate,
                                                                    @RequestParam(required = false) @PastOrPresent LocalDate toDate,
-                                                                   @RequestParam(required = false) Long productId,
+                                                                   @RequestParam(required = false) UUID productId,
                                                                    @RequestParam(required = false) String productName,
                                                                    Pageable pageable) {
 

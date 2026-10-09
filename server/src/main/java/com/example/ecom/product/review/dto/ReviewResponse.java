@@ -6,13 +6,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReviewResponse {
 
-    private Long id;
+    private UUID id;
 
     private Integer rating;
 
@@ -35,16 +36,4 @@ public class ReviewResponse {
         createdAt = review.getCreatedAt();
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Integer getRating() { return rating; }
-    public void setRating(Integer rating) { this.rating = rating; }
-    public String getComment() { return comment; }
-    public void setComment(String comment) { this.comment = comment; }
-    public String getUserName() { return userName; }
-    public void setUserName(String userName) { this.userName = userName; }
-    public String getUserImage() { return userImage; }
-    public void setUserImage(String userImage) { this.userImage = userImage; }
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

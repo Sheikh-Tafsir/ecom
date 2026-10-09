@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 import com.example.ecom.common.dto.CustomUserDetails;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -56,7 +57,7 @@ public class PaymentController {
 
         log.info("Callback hit — paymentID={}, status={}", paymentID, status);
 
-        Long orderId = paymentService.getOrderIdByPaymentId(paymentID);
+        UUID orderId = paymentService.getOrderIdByPaymentId(paymentID);
 
         if (orderId == null) {
             log.error("Order not found for paymentID: {}", paymentID);

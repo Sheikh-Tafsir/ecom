@@ -12,9 +12,10 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 @Repository
-public interface StockItemRepository extends JpaRepository<StockItem, Long> {
+public interface StockItemRepository extends JpaRepository<StockItem, UUID> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
@@ -24,19 +25,19 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
               AND item.remaining > 0
             ORDER BY item.stock.createdAt asc, item.id asc
             """)
-    List<StockItem> findAvailableByProductIdOrderByOldest(@Param("productId") Long productId);
+    List<StockItem> findAvailableByProductIdOrderByOldest(@Param("productId") UUID productId);
 
     @Query("""
             SELECT item
             FROM StockItem item
             WHERE (:productId IS NULL OR item.product.id = :productId)
-              AND (:productName IS NULL OR LOWER(CAST(item.product.name AS string)) 
+              AND (:productName IS NULL OR LOWER(CAST(item.product.name AS string))
                 LIKE LOWER(CONCAT('%', CAST(:productName AS string), '%')))
-              AND item.createdAt BETWEEN :fromDate AND :toDate
+              AND item.stock.createdAt BETWEEN :fromDate AND :toDate
             """)
     Page<StockItem> findAll(@Param("fromDate") Instant fromDate,
                             @Param("toDate") Instant toDate,
-                            @Param("productId") Long productId,
+                            @Param("productId") UUID productId,
                             @Param("productName") String productName,
                             Pageable pageable);
 }

@@ -3,6 +3,7 @@ const xss = require('xss');
 const sequelize = require('../config/SequelizeConfig');
 const {ChatParticipant, Message, MessageReceipt} = require('../model');
 const RuntimeError = require('../common/RuntimeError');
+const { generateUuidV7 } = require('../utils/UuidUtils');
 const {
     findChatByChatIdAndUserId,
     findOrCreateDirectChat,
@@ -23,6 +24,7 @@ const sendMessage = async (senderId, body) => {
 
         const message = await Message.create(
             {
+                id: generateUuidV7(),
                 chatId: chat.id,
                 senderId,
                 content: sanitizedContent,
@@ -68,10 +70,11 @@ const saveMessageReceipts = async (activeUsers = [], messageId, chatId, senderId
     const allParticipants = await findChatParticipantsByChatId(chatId);
 
     const receipts = allParticipants
-        .filter(participant => participant.userId != senderId)
+        .filter(participant => String(participant.userId) !== String(senderId))
         .map(participant => {
             const dateNow = new Date(now);
             return {
+                id: generateUuidV7(),
                 messageId,
                 userId: participant.userId,
                 deliveredAt: dateNow,

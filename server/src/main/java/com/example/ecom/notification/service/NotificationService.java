@@ -42,7 +42,7 @@ public class NotificationService implements MessageListener {
 
     private static final long SSE_TIMEOUT = Duration.ofMinutes(30).toMillis();
 
-    private final Map<Long, ClientConnection> connections = new ConcurrentHashMap<>();
+    private final Map<UUID, ClientConnection> connections = new ConcurrentHashMap<>();
 
     private final UserService userService;
 
@@ -85,7 +85,7 @@ public class NotificationService implements MessageListener {
     }
 
     public SseEmitter subscribe(CustomUserDetails userDetails) {
-        Long userId = userDetails.getId();
+        UUID userId = userDetails.getId();
 
         Set<Permission> permissions = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -116,7 +116,7 @@ public class NotificationService implements MessageListener {
         return emitter;
     }
 
-    public void sendToUser(Long userId, NotificationResponse notificationResponse) {
+    public void sendToUser(UUID userId, NotificationResponse notificationResponse) {
         if (userId == null || notificationResponse == null) {
             return;
         }
@@ -184,7 +184,7 @@ public class NotificationService implements MessageListener {
         }
     }
 
-    private void sendToUserLocally(Long userId, NotificationResponse notificationResponse) {
+    private void sendToUserLocally(UUID userId, NotificationResponse notificationResponse) {
         ClientConnection connection = connections.get(userId);
 
         if (connection != null) {
@@ -208,7 +208,7 @@ public class NotificationService implements MessageListener {
                 sendEvent(userId, "heartbeat", new NotificationResponse(NotificationType.SUCCESS, "")));
     }
 
-    private void sendEvent(Long userId, String eventName, NotificationResponse notificationResponse) {
+    private void sendEvent(UUID userId, String eventName, NotificationResponse notificationResponse) {
         ClientConnection connection = connections.get(userId);
 
         if (connection == null) {
@@ -229,7 +229,7 @@ public class NotificationService implements MessageListener {
         }
     }
 
-    private void removeConnection(Long userId, SseEmitter emitter) {
+    private void removeConnection(UUID userId, SseEmitter emitter) {
         connections.computeIfPresent(userId, (key, current) -> {
             if (current.emitter() == emitter) {
                 try {

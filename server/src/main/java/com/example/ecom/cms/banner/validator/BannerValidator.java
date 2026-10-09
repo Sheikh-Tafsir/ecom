@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 
+import java.util.UUID;
+
 @Component
 @RequiredArgsConstructor
 public class BannerValidator {
@@ -29,7 +31,7 @@ public class BannerValidator {
         }
     }
 
-    public void validateUpdate(Long id, BannerRequest request, Errors errors) {
+    public void validateUpdate(UUID id, BannerRequest request, Errors errors) {
         if (request.isActive()) {
             bannerRepository.findById(id).ifPresent(banner -> {
                 if (!banner.isActive() && bannerRepository.countByActiveTrue() >= MAX_ACTIVE_BANNERS) {

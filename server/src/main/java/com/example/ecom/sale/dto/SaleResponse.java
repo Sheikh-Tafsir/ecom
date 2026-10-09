@@ -8,13 +8,14 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class SaleResponse {
-    private Long id;
-    private Long productId;
+    private UUID id;
+    private UUID productId;
     private String productName;
     private String productImage;
     private BigDecimal profit;
@@ -36,18 +37,4 @@ public class SaleResponse {
         this.createdAt = sale.getCreatedAt();
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Long getProductId() { return productId; }
-    public void setProductId(Long productId) { this.productId = productId; }
-    public String getProductName() { return productName; }
-    public void setProductName(String productName) { this.productName = productName; }
-    public String getProductImage() { return productImage; }
-    public void setProductImage(String productImage) { this.productImage = productImage; }
-    public BigDecimal getProfit() { return profit; }
-    public void setProfit(BigDecimal profit) { this.profit = profit; }
-    public int getQuantity() { return quantity; }
-    public void setQuantity(int quantity) { this.quantity = quantity; }
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

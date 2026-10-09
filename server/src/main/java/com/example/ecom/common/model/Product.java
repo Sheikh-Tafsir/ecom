@@ -23,11 +23,7 @@ import static com.example.ecom.common.enums.ProductStatus.DISCONTINUED;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Product extends BaseEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Product extends AuditableEntity {
 
     @Column(nullable = false, unique = true)
     private String name;

@@ -8,6 +8,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.List;
+import java.util.UUID;
 
 import static com.example.ecom.common.utils.Utils.isEmpty;
 
@@ -16,7 +17,7 @@ public final class SecurityUtil {
     private SecurityUtil() {
     }
 
-    public static boolean isOwner(Long userId, CustomUserDetails userDetails) {
+    public static boolean isOwner(UUID userId, CustomUserDetails userDetails) {
         return userDetails.getId().equals(userId);
     }
 
@@ -59,7 +60,7 @@ public final class SecurityUtil {
         return null;
     }
 
-    public static void throwAccessException(Long ownerId, Long userId, String resource, Object resourceValue) {
+    public static void throwAccessException(UUID ownerId, UUID userId, String resource, Object resourceValue) {
         throw new AccessDeniedException("User: " + userId + "attempted to access "+ resource + ": " + resourceValue.toString() + " owned by:" + ownerId);
     }
 }

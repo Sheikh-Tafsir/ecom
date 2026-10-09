@@ -1,9 +1,10 @@
 package com.example.ecom.order.dto;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 public record CreateOrderResponse(
-        long id,
+        UUID id,
         BigDecimal totalPrice
 ) {
 }

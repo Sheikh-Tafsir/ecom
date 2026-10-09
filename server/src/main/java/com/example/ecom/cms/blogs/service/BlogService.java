@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 import static com.example.ecom.common.utils.CacheConstants.CACHE_BLOGS;
 import static com.example.ecom.common.enums.Permission.ADMIN_ACCESS;
@@ -80,7 +81,7 @@ public class BlogService {
             "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
     @CacheEvict(value = CACHE_BLOGS, allEntries = true)
-    public BlogResponse update(Long id, BlogRequest request) {
+    public BlogResponse update(UUID id, BlogRequest request) {
         Blogs post = findByIdHelper(id);
         updatePostFromRequest(post, request);
         return new BlogResponse(blogRepository.save(post));
@@ -90,12 +91,12 @@ public class BlogService {
             "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
     @CacheEvict(value = CACHE_BLOGS, allEntries = true)
-    public void delete(Long id) {
+    public void delete(UUID id) {
         Blogs post = findByIdHelper(id);
         blogRepository.delete(post);
     }
 
-    private Blogs findByIdHelper(Long id) {
+    private Blogs findByIdHelper(UUID id) {
         return blogRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "BlogPost", id)));
     }

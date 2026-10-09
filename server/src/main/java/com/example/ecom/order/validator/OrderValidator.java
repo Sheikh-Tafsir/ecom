@@ -7,6 +7,7 @@ import org.springframework.validation.Errors;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import static com.example.ecom.common.utils.Utils.isEmpty;
 
@@ -18,7 +19,7 @@ public class OrderValidator {
             return;
         }
 
-        Set<Long> productIds = new HashSet<>();
+        Set<UUID> productIds = new HashSet<>();
 
         for (CreateOrderItemRequest item : request.items()) {
             if (item == null) {

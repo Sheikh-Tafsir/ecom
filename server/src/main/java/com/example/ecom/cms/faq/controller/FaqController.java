@@ -14,6 +14,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 import static com.example.ecom.common.utils.Utils.checkErrors;
 
@@ -46,7 +47,7 @@ public class FaqController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<FaqResponse>> update(@PathVariable Long id, @Valid @RequestBody FaqRequest request,
+    public ResponseEntity<ApiResponse<FaqResponse>> update(@PathVariable UUID id, @Valid @RequestBody FaqRequest request,
                                                            BindingResult bindingResult) {
 
         faqValidator.validateUpdate(id, request, bindingResult);
@@ -57,7 +58,7 @@ public class FaqController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID id) {
         faqService.delete(id);
         return ResponseUtils.ok(messageService.get("successfully.deleted", "FAQ"));
     }

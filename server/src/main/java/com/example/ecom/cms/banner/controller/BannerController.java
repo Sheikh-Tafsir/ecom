@@ -14,6 +14,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 import static com.example.ecom.common.utils.Utils.checkErrors;
 
@@ -52,7 +53,7 @@ public class BannerController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<BannerResponse>> update(@PathVariable Long id,
+    public ResponseEntity<ApiResponse<BannerResponse>> update(@PathVariable UUID id,
                                                               @Valid @RequestBody BannerRequest request,
                                                               BindingResult bindingResult) {
 
@@ -64,7 +65,7 @@ public class BannerController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID id) {
         bannerService.delete(id);
         return ResponseUtils.ok(messageService.get("successfully.deleted", "Banner"));
     }

@@ -129,7 +129,7 @@ public class BkashPaymentService implements PaymentService {
     }
 
     @Override
-    public Long getOrderIdByPaymentId(String paymentID) {
+    public UUID getOrderIdByPaymentId(String paymentID) {
         return paymentRepository.findByPaymentIntentId(paymentID)
                 .map(Payment::getOrderId)
                 .orElse(null);

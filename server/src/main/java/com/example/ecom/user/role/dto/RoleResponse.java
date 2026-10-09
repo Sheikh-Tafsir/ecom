@@ -8,13 +8,14 @@ import lombok.NoArgsConstructor;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class RoleResponse {
 
-    private Long id;
+    private UUID id;
 
     private String name;
 
@@ -26,8 +27,8 @@ public class RoleResponse {
         permissions = role.getPermissions();
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public Set<Permission> getPermissions() { return permissions; }

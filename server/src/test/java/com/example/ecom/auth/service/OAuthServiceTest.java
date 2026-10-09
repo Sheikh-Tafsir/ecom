@@ -21,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -202,7 +203,7 @@ class OAuthServiceTest {
         oAuthService.stubTokenInfo = tokenInfo;
 
         User existingUser = new User();
-        existingUser.setId(10L);
+        existingUser.setId(UUID.fromString("00000000-0000-0000-0000-000000000010"));
         existingUser.setEmail("existing@gmail.com");
         existingUser.setName("Existing User");
         existingUser.setStatus(UserStatus.ACTIVE);

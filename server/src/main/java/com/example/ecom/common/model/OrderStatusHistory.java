@@ -9,6 +9,9 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
+import java.util.UUID;
+
+import com.example.ecom.common.annotation.UuidV7;
 
 @Entity
 @Table(name = "order_history")
@@ -19,8 +22,9 @@ import java.time.Instant;
 public class OrderStatusHistory {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @UuidV7
+    @Column(updatable = false, nullable = false)
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 import static com.example.ecom.common.utils.CacheConstants.CACHE_CATEGORIES;
 
@@ -34,7 +35,7 @@ public class CategoryService {
             "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @CacheEvict(value = CACHE_CATEGORIES, allEntries = true)
     @Transactional
-    public Long create(CategorySaveRequest request) {
+    public UUID create(CategorySaveRequest request) {
         checkNameExists(request.name(), null);
         Category category = new Category();
         category.setName(request.name());
@@ -47,7 +48,7 @@ public class CategoryService {
             "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @CacheEvict(value = CACHE_CATEGORIES, allEntries = true)
     @Transactional
-    public void update(Long id, CategorySaveRequest request) {
+    public void update(UUID id, CategorySaveRequest request) {
         Category category = findByIdHelper(id);
 
         checkNameExists(request.name(), id);
@@ -60,12 +61,12 @@ public class CategoryService {
             "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @CacheEvict(value = CACHE_CATEGORIES, allEntries = true)
     @Transactional
-    public void delete(Long id) {
+    public void delete(UUID id) {
         Category category = findByIdHelper(id);
         categoryRepository.delete(category);
     }
 
-    private void checkNameExists(String name, Long currentId) {
+    private void checkNameExists(String name, UUID currentId) {
         Category category = categoryRepository.findByName(name);
 
         if (category != null && (currentId == null || !category.getId().equals(currentId))) {
@@ -73,7 +74,7 @@ public class CategoryService {
         }
     }
 
-    private Category findByIdHelper(Long id) {
+    private Category findByIdHelper(UUID id) {
         return categoryRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Category", id)));
     }

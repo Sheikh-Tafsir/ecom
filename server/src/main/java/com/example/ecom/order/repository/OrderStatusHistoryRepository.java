@@ -7,10 +7,11 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.UUID;
 
 @Repository
-public interface OrderStatusHistoryRepository extends JpaRepository<OrderStatusHistory, Long> {
+public interface OrderStatusHistoryRepository extends JpaRepository<OrderStatusHistory, UUID> {
 
     @Query("SELECT osh FROM OrderStatusHistory osh LEFT JOIN FETCH osh.changedBy WHERE osh.order.id = :orderId ORDER BY osh.createdAt ASC")
-    List<OrderStatusHistory> findByOrderIdOrderByCreatedAtAsc(@Param("orderId") Long orderId);
+    List<OrderStatusHistory> findByOrderIdOrderByCreatedAtAsc(@Param("orderId") UUID orderId);
 }

@@ -206,14 +206,14 @@ export const useChatSync = (id, userId) => {
         const markMessagesAsSeen = async () => {
             try {
                 queryClient.setQueryData(['chats'], (oldChats = []) => {
-                    const currentChat = oldChats.find(chat => chat.id == Number(id));
+                    const currentChat = oldChats.find(chat => String(chat.id) === String(id));
                     if (!currentChat) {
                         queryClient.invalidateQueries(['chats']);
                         return oldChats;
                     }
 
                     return oldChats.map(chat =>
-                        chat.id == Number(id) ? {...chat, unreadMessage: 0} : chat
+                        String(chat.id) === String(id) ? {...chat, unreadMessage: 0} : chat
                     );
                 });
 

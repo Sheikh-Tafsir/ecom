@@ -7,14 +7,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderItemResponse {
-    private Long id;
-    private Long orderId;
-    private Long productId;
+    private UUID id;
+    private UUID orderId;
+    private UUID productId;
     private String productName;
     private String productImage;
     private BigDecimal productPrice;

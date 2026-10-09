@@ -8,7 +8,7 @@ describe('MessageService Authorization', () => {
     beforeAll(async () => {
         // Setup a test chat room
         testChat = await Chat.create({ type: 'group', name: 'Security Test Room' });
-        await ChatParticipant.create({ chatId: testChat.id, userId: 1, role: 'member' });
+        await ChatParticipant.create({ chatId: testChat.id, userId: '018f4a3e-62b1-7890-a234-56789abcdef1', role: 'member' });
     });
 
     afterAll(async () => {
@@ -16,7 +16,7 @@ describe('MessageService Authorization', () => {
     });
 
     test('should prevent user from sending message to a room they do not belong to', async () => {
-        const maliciousUserId = 999;
+        const maliciousUserId = '018f4a3e-62b1-7890-a234-56789abcdef2';
         const body = {
             chatId: testChat.id,
             content: 'I should not be able to send this',
@@ -27,7 +27,7 @@ describe('MessageService Authorization', () => {
     });
 
     test('should allow participant to send message', async () => {
-        const validUserId = 1;
+        const validUserId = '018f4a3e-62b1-7890-a234-56789abcdef1';
         const body = {
             chatId: testChat.id,
             content: 'Hello World',

@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Data
@@ -13,7 +14,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class ProductEditResponse {
 
-    private Long id;
+    private UUID id;
     private String name;
     private String description;
     private BigDecimal price;

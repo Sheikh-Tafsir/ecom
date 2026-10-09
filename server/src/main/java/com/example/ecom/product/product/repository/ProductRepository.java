@@ -13,17 +13,18 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface ProductRepository extends JpaRepository<Product, Long> {
+public interface ProductRepository extends JpaRepository<Product, UUID> {
 
     @EntityGraph(attributePaths = {"images", "categories", "reviews"})
     @Query("select p from Product p where p.id = :id")
-    Optional<Product> findDetailsById(Long id);
+    Optional<Product> findDetailsById(UUID id);
 
     @EntityGraph(attributePaths = {"images", "categories"})
     @Query("select p from Product p where p.id = :id")
-    Optional<Product> findEditById(Long id);
+    Optional<Product> findEditById(UUID id);
 
     @EntityGraph(attributePaths = {"categories"})
     @Query("""
@@ -61,7 +62,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                   AND p.quantity >= :qty
                   AND p.deleted = false
             """)
-    int decreaseStockIfAvailable(@Param("id") Long id, @Param("qty") int qty);
+    int decreaseStockIfAvailable(@Param("id") UUID id, @Param("qty") int qty);
 
     @org.springframework.data.jpa.repository.Modifying
     @Query("""
@@ -70,5 +71,5 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                 WHERE p.id = :id
                   AND p.deleted = false
             """)
-    int increaseStock(@Param("id") Long id, @Param("qty") int qty);
+    int increaseStock(@Param("id") UUID id, @Param("qty") int qty);
 }

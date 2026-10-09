@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
+import java.util.UUID;
 
 import static com.example.ecom.common.utils.CacheConstants.CACHE_REVOKED_ACCESS_TOKENS;
 import static com.example.ecom.common.utils.CacheConstants.CACHE_ROTATED_TOKENS;
@@ -137,7 +138,7 @@ public class AuthTokenService {
     }
 
     @Transactional
-    public void revokeAllForUser(Long userId) {
+    public void revokeAllForUser(UUID userId) {
         if (userId != null) {
             userRefreshTokenRepository.revokeAllForUser(userId, UserRefreshTokenStatus.REVOKED);
             log.info("Revoked all active refresh tokens for user: {}", userId);

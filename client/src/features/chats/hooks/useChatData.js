@@ -73,7 +73,7 @@ export const useChatData = (id) => {
             chats.forEach(chat => {
                 if (!chat?.Participants || chat.Participants.length !== 2) return;
 
-                const ids = chat.Participants.map(participant => participant.userId).sort((a, b) => a - b);
+                const ids = chat.Participants.map(participant => participant.userId).sort((a, b) => String(a).localeCompare(String(b)));
                 const key = `${ids[0]}_${ids[1]}`;
                 map.set(key, chat);
             });

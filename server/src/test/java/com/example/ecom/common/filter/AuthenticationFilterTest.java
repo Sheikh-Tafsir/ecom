@@ -24,6 +24,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import static com.example.ecom.common.utils.CacheConstants.CACHE_REVOKED_ACCESS_TOKENS;
 import static org.junit.jupiter.api.Assertions.*;
@@ -66,22 +67,24 @@ class AuthenticationFilterTest {
         request.addHeader(HttpHeaders.AUTHORIZATION, "Bearer valid-token");
         MockHttpServletResponse response = new MockHttpServletResponse();
 
+        UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000042");
+
         when(jwtService.parseAccessTokenClaims("valid-token")).thenReturn(claims);
         when(claims.getId()).thenReturn("jti-123");
-        when(claims.getSubject()).thenReturn("42");
+        when(claims.getSubject()).thenReturn(userId.toString());
         when(claims.get("email", String.class)).thenReturn("user@example.com");
         when(claims.get("status", String.class)).thenReturn("ACTIVE");
         when(claims.get("permissions", List.class)).thenReturn(List.of("READ"));
 
         when(cacheManager.getCache(CACHE_REVOKED_ACCESS_TOKENS)).thenReturn(revokedTokensCache);
         when(revokedTokensCache.get("jti-123")).thenReturn(null);
-        when(revokedTokensCache.get("user:42")).thenReturn(null);
+        when(revokedTokensCache.get("user:" + userId)).thenReturn(null);
 
         authenticationFilter.doFilterInternal(request, response, filterChain);
 
         verify(filterChain).doFilter(request, response);
         assertNotNull(SecurityContextHolder.getContext().getAuthentication());
-        assertEquals("42", SecurityContextHolder.getContext().getAuthentication().getName());
+        assertEquals(userId.toString(), SecurityContextHolder.getContext().getAuthentication().getName());
     }
 
     @Test
@@ -118,9 +121,11 @@ class AuthenticationFilterTest {
         long tokenIssuedAtMilli = 1_000_000_000L;
         long userRevokedAtMilli = 1_000_005_000L; // Revoked 5 seconds AFTER token was issued
 
+        UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000099");
+
         when(jwtService.parseAccessTokenClaims("old-user-token")).thenReturn(claims);
         when(claims.getId()).thenReturn("jti-active");
-        when(claims.getSubject()).thenReturn("99");
+        when(claims.getSubject()).thenReturn(userId.toString());
         when(claims.getIssuedAt()).thenReturn(new Date(tokenIssuedAtMilli));
 
         Cache.ValueWrapper userRevocationWrapper = mock(Cache.ValueWrapper.class);
@@ -128,7 +133,7 @@ class AuthenticationFilterTest {
 
         when(cacheManager.getCache(CACHE_REVOKED_ACCESS_TOKENS)).thenReturn(revokedTokensCache);
         when(revokedTokensCache.get("jti-active")).thenReturn(null);
-        when(revokedTokensCache.get("user:99")).thenReturn(userRevocationWrapper);
+        when(revokedTokensCache.get("user:" + userId)).thenReturn(userRevocationWrapper);
 
         authenticationFilter.doFilterInternal(request, response, filterChain);
 
@@ -148,9 +153,11 @@ class AuthenticationFilterTest {
         long userRevokedAtMilli = 1_000_000_000L;
         long tokenIssuedAtMilli = 1_000_010_000L; // Fresh token issued 10 seconds AFTER password reset / unban
 
+        UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000099");
+
         when(jwtService.parseAccessTokenClaims("fresh-token")).thenReturn(claims);
         when(claims.getId()).thenReturn("jti-fresh");
-        when(claims.getSubject()).thenReturn("99");
+        when(claims.getSubject()).thenReturn(userId.toString());
         when(claims.getIssuedAt()).thenReturn(new Date(tokenIssuedAtMilli));
         when(claims.get("email", String.class)).thenReturn("user@example.com");
         when(claims.get("status", String.class)).thenReturn("ACTIVE");
@@ -161,7 +168,7 @@ class AuthenticationFilterTest {
 
         when(cacheManager.getCache(CACHE_REVOKED_ACCESS_TOKENS)).thenReturn(revokedTokensCache);
         when(revokedTokensCache.get("jti-fresh")).thenReturn(null);
-        when(revokedTokensCache.get("user:99")).thenReturn(userRevocationWrapper);
+        when(revokedTokensCache.get("user:" + userId)).thenReturn(userRevocationWrapper);
 
         authenticationFilter.doFilterInternal(request, response, filterChain);
 

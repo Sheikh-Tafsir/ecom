@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.UUID;
 
 import static com.example.ecom.common.utils.CacheConstants.CACHE_PRODUCTS;
 import static com.example.ecom.common.utils.CacheConstants.CACHE_PRODUCTS_EDIT;
@@ -45,12 +46,12 @@ public class ReviewService {
 
     private final CacheManager cacheManager;
 
-    public Page<ReviewResponse> findAllByProduct(Long productId, Pageable pageable) {
+    public Page<ReviewResponse> findAllByProduct(UUID productId, Pageable pageable) {
         return reviewRepository.findAllByProduct_Id(productId, getValidPageable(pageable)).map(ReviewResponse::new);
     }
 
     @Transactional
-    public void create(Long id, CreateReviewRequest request, CustomUserDetails userDetails) {
+    public void create(UUID id, CreateReviewRequest request, CustomUserDetails userDetails) {
         if (reviewRepository.existsByUser_IdAndProduct_Id(userDetails.getId(), id)) {
             throw new IllegalArgumentException("You have already reviewed this product");
         }
@@ -85,7 +86,7 @@ public class ReviewService {
     }
 
     @Transactional
-    public void update(Long id, UpdateReviewRequest request, CustomUserDetails userDetails) {
+    public void update(UUID id, UpdateReviewRequest request, CustomUserDetails userDetails) {
         Review review = findByIdHelper(id);
 
         if (!isOwner(review.getUser().getId(), userDetails)) {
@@ -116,7 +117,7 @@ public class ReviewService {
     }
 
     @Transactional
-    public void delete(Long id, CustomUserDetails userDetails) {
+    public void delete(UUID id, CustomUserDetails userDetails) {
         Review review = findByIdHelper(id);
         if (!isOwner(review.getUser().getId(), userDetails)
                 && !hasPermission(List.of(SUPER_ADMIN_ACCESS.getValue(), ADMIN_ACCESS.getValue()), userDetails)) {
@@ -145,7 +146,7 @@ public class ReviewService {
         evictProductCache(product.getId());
     }
 
-    private void evictProductCache(Long productId) {
+    private void evictProductCache(UUID productId) {
         if (productId == null) return;
         Cache productCache = cacheManager.getCache(CACHE_PRODUCTS);
         if (productCache != null) {
@@ -158,7 +159,7 @@ public class ReviewService {
     }
 
     // -- helpers --
-    private Review findByIdHelper(Long id) {
+    private Review findByIdHelper(UUID id) {
         return reviewRepository.findById(id).
                 orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Review", id)));
     }

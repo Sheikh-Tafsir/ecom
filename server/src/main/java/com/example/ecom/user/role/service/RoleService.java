@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import static com.example.ecom.common.utils.CacheConstants.CACHE_ROLE;
 import static com.example.ecom.common.utils.CacheConstants.CACHE_ROLES;
@@ -39,14 +40,14 @@ public class RoleService {
 
     @PreAuthorize("hasAuthority(T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Cacheable(value = CACHE_ROLE, key = "#id")
-    public RoleResponse findById(Long id) {
+    public RoleResponse findById(UUID id) {
         return new RoleResponse(findByIdHelper(id));
     }
 
     @PreAuthorize("hasAuthority(T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
     @CacheEvict(value = CACHE_ROLES, allEntries = true)
-    public long create(String name, Set<Permission> permissions) {
+    public UUID create(String name, Set<Permission> permissions) {
         if (findByName(name) != null) {
             throw new ValidationException("Role with same name already exists");
         }
@@ -65,7 +66,7 @@ public class RoleService {
             @CacheEvict(value = CACHE_ROLE, key = "#id"),
             @CacheEvict(value = CACHE_ROLES, allEntries = true)
     })
-    public RoleResponse update(Long id, String name, Set<Permission> permissions) {
+    public RoleResponse update(UUID id, String name, Set<Permission> permissions) {
         Role role = findByIdHelper(id);
 
         Role roleWithSameName = findByName(name);
@@ -84,12 +85,12 @@ public class RoleService {
             @CacheEvict(value = CACHE_ROLE, key = "#id"),
             @CacheEvict(value = CACHE_ROLES, allEntries = true)
     })
-    public void delete(Long id) {
+    public void delete(UUID id) {
         Role role = findByIdHelper(id);
         roleRepository.delete(role);
     }
 
-    public Role findByIdHelper(Long id) {
+    public Role findByIdHelper(UUID id) {
         return roleRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Role not found with id: " + id));
     }

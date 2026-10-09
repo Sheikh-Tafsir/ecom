@@ -7,9 +7,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface BannerRepository extends JpaRepository<Banner, Long> {
+public interface BannerRepository extends JpaRepository<Banner, UUID> {
 
     List<Banner> findAllByActiveTrueOrderByDisplayOrderAsc();
 
@@ -20,5 +21,5 @@ public interface BannerRepository extends JpaRepository<Banner, Long> {
 
     boolean existsByDisplayOrder(int displayOrder);
 
-    boolean existsByDisplayOrderAndIdNot(int displayOrder, Long id);
+    boolean existsByDisplayOrderAndIdNot(int displayOrder, UUID id);
 }

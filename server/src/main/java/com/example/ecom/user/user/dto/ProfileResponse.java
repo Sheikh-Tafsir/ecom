@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Set;
+import java.util.UUID;
 
 import static com.example.ecom.common.utils.Utils.isNull;
 
@@ -14,7 +15,7 @@ import static com.example.ecom.common.utils.Utils.isNull;
 @AllArgsConstructor
 public class ProfileResponse {
 
-    private Long id;
+    private UUID id;
 
     private String name;
 
@@ -38,8 +39,8 @@ public class ProfileResponse {
         }
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public String getEmail() { return email; }

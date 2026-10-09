@@ -4,12 +4,13 @@ import com.example.ecom.common.enums.OrderStatus;
 import com.example.ecom.common.model.OrderStatusHistory;
 
 import java.time.Instant;
+import java.util.UUID;
 
 public record OrderStatusHistoryResponse(
-        Long id,
+        UUID id,
         OrderStatus fromStatus,
         OrderStatus toStatus,
-        Long changedByUserId,
+        UUID changedByUserId,
         String changedByUserName,
         String comment,
         Instant createdAt

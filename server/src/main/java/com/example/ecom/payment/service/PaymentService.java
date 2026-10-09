@@ -5,6 +5,8 @@ import com.example.ecom.payment.dto.CreatePaymentRequest;
 import com.example.ecom.payment.dto.CreatePaymentResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 
+import java.util.UUID;
+
 public interface PaymentService {
 
     String create(CreatePaymentRequest request, CustomUserDetails userDetails);
@@ -15,7 +17,7 @@ public interface PaymentService {
 
     JsonNode refundPayment(String paymentID, String trxID, String amount, String reason);
 
-    Long getOrderIdByPaymentId(String paymentID);
+    UUID getOrderIdByPaymentId(String paymentID);
 
     void updatePaymentStatus(String paymentID, com.example.ecom.payment.dto.CreatePaymentResponse result, boolean success);
 }

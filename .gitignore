@@ -57,3 +57,6 @@ scripts/backup-service/config/rclone.conf
 
 # Code review artifacts
 code-review.md
+
+*.class
+/server/build_old_root

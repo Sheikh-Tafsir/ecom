@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.example.ecom.common.enums.UserStatus.BANNED;
@@ -61,7 +62,7 @@ public class UserService {
     @PreAuthorize("hasAnyAuthority(T(com.example.ecom.common.enums.Permission).ADMIN_ACCESS.getValue()," +
             "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Cacheable(value = CacheConstants.CACHE_USER, key = "#id")
-    public UserResponse findById(Long id) {
+    public UserResponse findById(UUID id) {
         return new UserResponse(findByIdHelper(id));
     }
 
@@ -71,7 +72,7 @@ public class UserService {
             @CacheEvict(value = CacheConstants.CACHE_PROFILE, key = "#id")
     })
     @Transactional
-    public void update(long id, UpdateUserRequest request) {
+    public void update(UUID id, UpdateUserRequest request) {
         User user = findByIdHelper(id);
 
         if (request.roles() != null && !request.roles().isEmpty()) {
@@ -99,7 +100,7 @@ public class UserService {
             @CacheEvict(value = CacheConstants.CACHE_PROFILE, key = "#id")
     })
     @Transactional
-    public void delete(Long id) {
+    public void delete(UUID id) {
         delete(findByIdHelper(id), DELETED);
     }
 
@@ -109,7 +110,7 @@ public class UserService {
             @CacheEvict(value = CacheConstants.CACHE_PROFILE, key = "#id")
     })
     @Transactional
-    public void banned(Long id) {
+    public void banned(UUID id) {
         delete(findByIdHelper(id), BANNED);
     }
 
@@ -119,7 +120,7 @@ public class UserService {
         return userRepository.findActiveUsersWithPermissions(Set.of(Permission.ADMIN_ACCESS, Permission.SUPER_ADMIN_ACCESS));
     }
 
-    public User findByIdHelper(Long id) {
+    public User findByIdHelper(UUID id) {
         return userRepository.findById(id).
                 orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "User", id)));
     }

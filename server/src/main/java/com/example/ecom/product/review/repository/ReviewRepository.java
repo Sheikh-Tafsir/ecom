@@ -7,11 +7,13 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.UUID;
+
 @Repository
-public interface ReviewRepository extends JpaRepository<Review, Long> {
+public interface ReviewRepository extends JpaRepository<Review, UUID> {
 
     @EntityGraph(attributePaths = {"user"})
-    Page<Review> findAllByProduct_Id(Long productId, Pageable pageable);
+    Page<Review> findAllByProduct_Id(UUID productId, Pageable pageable);
 
-    boolean existsByUser_IdAndProduct_Id(Long userId, Long productId);
+    boolean existsByUser_IdAndProduct_Id(UUID userId, UUID productId);
 }

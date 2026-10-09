@@ -17,6 +17,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 import static com.example.ecom.common.service.IdempotencyService.IDEMPOTENCY_HEADER;
 import static com.example.ecom.common.utils.Utils.checkErrors;
@@ -45,7 +46,7 @@ public class StockController {
     @GetMapping("/items")
     public ResponseEntity<ApiResponse<Page<StockItemResponse>>> findAllItems(@RequestParam(required = false) @PastOrPresent LocalDate fromDate,
                                                                              @RequestParam(required = false) @PastOrPresent LocalDate toDate,
-                                                                             @RequestParam(required = false) Long productId,
+                                                                             @RequestParam(required = false) UUID productId,
                                                                              @RequestParam(required = false) String productName,
                                                                              Pageable pageable) {
 
@@ -54,26 +55,26 @@ public class StockController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<StockResponse>> findById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<StockResponse>> findById(@PathVariable UUID id) {
         StockResponse stock = stockService.findById(id);
         return ResponseUtils.ok(stock, messageService.get("successfully.found", "Stock"));
     }
 
     @Idempotent
     @PostMapping
-    public ResponseEntity<ApiResponse<Long>> create(@Valid @RequestBody CreateStockRequest stockRequest,
+    public ResponseEntity<ApiResponse<UUID>> create(@Valid @RequestBody CreateStockRequest stockRequest,
                                                     BindingResult bindingResult,
                                                     @RequestHeader(value = IDEMPOTENCY_HEADER, required = false) String key) {
 
         stockValidator.validateCreate(stockRequest, bindingResult);
         checkErrors(bindingResult);
 
-        long id = stockService.create(stockRequest, key);
+        UUID id = stockService.create(stockRequest, key);
         return ResponseUtils.created(id, messageService.get("entity.creating", "Stock"));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<StockResponse>> update(@PathVariable Long id,
+    public ResponseEntity<ApiResponse<StockResponse>> update(@PathVariable UUID id,
                                                              @Valid @RequestBody UpdateStockRequest stockRequest,
                                                              BindingResult bindingResult) {
 
@@ -85,7 +86,7 @@ public class StockController {
     }
 
     @PostMapping("/{id}/items")
-    public ResponseEntity<ApiResponse<StockResponse>> addItem(@PathVariable Long id,
+    public ResponseEntity<ApiResponse<StockResponse>> addItem(@PathVariable UUID id,
                                                               @Valid @RequestBody CreateStockItemRequest itemRequest,
                                                               BindingResult bindingResult) {
 
@@ -97,8 +98,8 @@ public class StockController {
     }
 
     @PutMapping("/{stockId}/items/{itemId}")
-    public ResponseEntity<ApiResponse<StockResponse>> updateItem(@PathVariable Long stockId,
-                                                                 @PathVariable Long itemId,
+    public ResponseEntity<ApiResponse<StockResponse>> updateItem(@PathVariable UUID stockId,
+                                                                 @PathVariable UUID itemId,
                                                                  @Valid @RequestBody UpdateStockItemRequest itemRequest,
                                                                  BindingResult bindingResult) {
 
@@ -110,13 +111,13 @@ public class StockController {
     }
 
     @DeleteMapping("/{stockId}/items/{itemId}")
-    public ResponseEntity<ApiResponse<StockResponse>> removeItem(@PathVariable Long stockId, @PathVariable Long itemId) {
+    public ResponseEntity<ApiResponse<StockResponse>> removeItem(@PathVariable UUID stockId, @PathVariable UUID itemId) {
         StockResponse stock = stockService.removeItem(stockId, itemId);
         return ResponseUtils.ok(stock, messageService.get("successfully.updated", "Stock"));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID id) {
         stockService.delete(id);
         return ResponseUtils.ok(messageService.get("successfully.deleted", "Stock"));
     }

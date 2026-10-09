@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 
 import static com.example.ecom.common.utils.Utils.checkErrors;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/review")
 @RequiredArgsConstructor
@@ -28,7 +30,7 @@ public class ReviewController {
     private final MessageService messageService;
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> update(@PathVariable Long id,
+    public ResponseEntity<ApiResponse<Void>> update(@PathVariable UUID id,
                                                     @Valid @RequestBody UpdateReviewRequest request,
                                                     BindingResult bindingResult,
                                                     @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -41,7 +43,7 @@ public class ReviewController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id,
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID id,
                                                     @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         reviewService.delete(id, userDetails);

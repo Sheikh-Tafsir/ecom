@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 import static com.example.ecom.common.utils.DateUtils.*;
 import static com.example.ecom.common.utils.Utils.getValidPageable;
@@ -26,7 +27,7 @@ public class SaleService {
     private final SaleRepository saleRepository;
 
     @PreAuthorize("hasAuthority(T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
-    public Page<SaleResponse> findAll(LocalDate fromDate, LocalDate toDate, Long productId, String productName, Pageable pageable) {
+    public Page<SaleResponse> findAll(LocalDate fromDate, LocalDate toDate, UUID productId, String productName, Pageable pageable) {
         DateRangeDto dateRange = resolveDates(fromDate, toDate);
 
         return saleRepository.findAllByMonth(dateRange.fromDate(), dateRange.toDate(), productId, productName, getValidPageable(pageable))

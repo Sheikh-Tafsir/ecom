@@ -7,6 +7,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.UUID;
+
+import com.example.ecom.common.annotation.UuidV7;
+
 @Entity
 @Table(name = "product_images")
 @Getter
@@ -16,8 +20,9 @@ import lombok.Setter;
 public class ProductImage {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @UuidV7
+    @Column(updatable = false, nullable = false)
+    private UUID id;
 
     private String image;
 
@@ -25,11 +30,4 @@ public class ProductImage {
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getImage() { return image; }
-    public void setImage(String image) { this.image = image; }
-    public Product getProduct() { return product; }
-    public void setProduct(Product product) { this.product = product; }
 }

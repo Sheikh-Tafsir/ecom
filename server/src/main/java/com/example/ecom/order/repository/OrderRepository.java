@@ -13,13 +13,14 @@ import org.springframework.stereotype.Repository;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface OrderRepository extends JpaRepository<Order, Long> {
+public interface OrderRepository extends JpaRepository<Order, UUID> {
 
     @EntityGraph(attributePaths = {"user", "items", "items.product", "items.product.images", "statusHistories", "statusHistories.changedBy"})
     @Query("select o from Order o where o.id = :id")
-    Optional<Order> findDetailsById(Long id);
+    Optional<Order> findDetailsById(UUID id);
 
     @EntityGraph(attributePaths = {"user", "items", "items.product"})
     @Query("""
@@ -33,7 +34,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             ORDER BY o.createdAt ASC
             """)
     Page<Order> findAllByStatus(
-            @Param("userId") Long userId,
+            @Param("userId") UUID userId,
             @Param("statuses") List<OrderStatus> statuses,
             @Param("fromDate") Instant fromDate,
             @Param("toDate") Instant toDate,

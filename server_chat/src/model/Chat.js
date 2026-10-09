@@ -1,9 +1,16 @@
 const { IS_REQUIRED, lengthValidationMessage } = require('../utils/Messages');
 const { CHAT_TYPE } = require('../utils/Enum');
+const { generateUuidV7 } = require('../utils/UuidUtils');
 
 module.exports = (sequelize, DataTypes) => {
     const Chat = sequelize.define('Chat',
         {
+            id: {
+                type: DataTypes.UUID,
+                primaryKey: true,
+                defaultValue: () => generateUuidV7(),
+            },
+
             type: {
                 type: DataTypes.ENUM(...Object.values(CHAT_TYPE)),
                 allowNull: false,
@@ -48,7 +55,7 @@ module.exports = (sequelize, DataTypes) => {
             },
 
             lastSenderId: {
-                type: DataTypes.BIGINT,
+                type: DataTypes.UUID,
                 allowNull: true,
                 field: 'last_sender_id'
             },

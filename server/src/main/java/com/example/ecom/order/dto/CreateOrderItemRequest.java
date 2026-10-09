@@ -3,10 +3,12 @@ package com.example.ecom.order.dto;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
+import java.util.UUID;
+
 public record CreateOrderItemRequest(
 
         @NotNull
-        Long productId,
+        UUID productId,
 
         @NotNull
         @Min(1)

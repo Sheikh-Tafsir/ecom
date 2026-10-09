@@ -37,6 +37,7 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.example.ecom.common.utils.CacheConstants.CACHE_PRODUCTS;
@@ -85,7 +86,7 @@ public class ProductService {
             "hasAnyAuthority(T(com.example.ecom.common.enums.Permission).ADMIN_ACCESS.getValue(), " +
             "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Cacheable(value = CACHE_PRODUCTS, key = "#id")
-    public ProductResponse findById(Long id) {
+    public ProductResponse findById(UUID id) {
         Product product = productRepository.findDetailsById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Product", id)));
 
@@ -94,7 +95,7 @@ public class ProductService {
 
     @PreAuthorize("hasAuthority(T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Transactional
-    public long create(CreateProductRequest request) throws IOException {
+    public UUID create(CreateProductRequest request) throws IOException {
         Product product = new Product();
         product.setName(request.getName());
         product.setDescription(request.getDescription());
@@ -111,7 +112,7 @@ public class ProductService {
 
     @PreAuthorize("hasAuthority(T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Cacheable(value = CACHE_PRODUCTS_EDIT, key = "#id")
-    public ProductEditResponse findEditById(Long id) {
+    public ProductEditResponse findEditById(UUID id) {
         Product product = findEditByIdHelper(id);
 
         return new ProductEditResponse(product);
@@ -123,7 +124,7 @@ public class ProductService {
             @CacheEvict(value = CACHE_PRODUCTS_EDIT, key = "#id")
     })
     @Transactional
-    public void update(Long id, UpdateProductRequest request) throws IOException {
+    public void update(UUID id, UpdateProductRequest request) throws IOException {
         Product product = findEditByIdHelper(id);
 
         if (request.getImages() == null) {
@@ -139,7 +140,7 @@ public class ProductService {
         product.setPrice(request.getPrice());
         product.setCategories(new HashSet<>(categoryRepository.findAllById(request.getCategoryIds())));
 
-        Set<Long> existingImageIds = product.getImages()
+        Set<UUID> existingImageIds = product.getImages()
                 .stream()
                 .map(ProductImage::getId)
                 .collect(Collectors.toSet());
@@ -179,7 +180,7 @@ public class ProductService {
             @CacheEvict(value = CACHE_PRODUCTS_EDIT, key = "#id")
     })
     @Transactional
-    public void delete(Long id) {
+    public void delete(UUID id) {
         Product product = findByIdHelper(id);
         product.setStatus(DISCONTINUED);
         product.setDeleted(true);
@@ -187,12 +188,12 @@ public class ProductService {
     }
 
     // --helpers --
-    public Product findByIdHelper(Long id) {
+    public Product findByIdHelper(UUID id) {
         return productRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Product", id)));
     }
 
-    private Product findEditByIdHelper(Long id) {
+    private Product findEditByIdHelper(UUID id) {
         return productRepository.findEditById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Product", id)));
     }

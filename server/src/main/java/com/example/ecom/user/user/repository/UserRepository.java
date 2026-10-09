@@ -16,12 +16,13 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, UUID> {
 
     @EntityGraph(attributePaths = {"roles", "roles.permissions"})
-    Optional<User> findById(Long id);
+    Optional<User> findById(UUID id);
 
     @EntityGraph(attributePaths = {"roles", "roles.permissions"})
     Optional<User> findByEmail(String email);
@@ -50,7 +51,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findAllByNameAndStatus(
             @Param("name") String name,
             @Param("status") UserStatus status,
-            @Param("userId") Long userId,
+            @Param("userId") UUID userId,
             Pageable pageable
     );
 

@@ -4,6 +4,11 @@ const { UserStatus } = require('../utils/Enum');
 module.exports = (sequelize, DataTypes) => {
     const User = sequelize.define('User',
         {
+            id: {
+                type: DataTypes.UUID,
+                primaryKey: true,
+            },
+
             name: {
                 type: DataTypes.STRING,
                 allowNull: false,

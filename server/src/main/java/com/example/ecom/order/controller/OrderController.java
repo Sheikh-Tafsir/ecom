@@ -21,6 +21,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 import static com.example.ecom.common.service.IdempotencyService.IDEMPOTENCY_HEADER;
 import static com.example.ecom.common.utils.Utils.checkErrors;
@@ -50,7 +51,7 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<OrderResponse>> findById(@PathVariable Long id,
+    public ResponseEntity<ApiResponse<OrderResponse>> findById(@PathVariable UUID id,
                                                                @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         OrderResponse order = orderService.findById(id, userDetails);
@@ -73,7 +74,7 @@ public class OrderController {
     }
 
     @PatchMapping("/{id}/cancel")
-    public ResponseEntity<ApiResponse<OrderResponse>> cancel(@PathVariable Long id,
+    public ResponseEntity<ApiResponse<OrderResponse>> cancel(@PathVariable UUID id,
                                                              @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         OrderResponse order = orderService.cancel(id, userDetails);
@@ -81,7 +82,7 @@ public class OrderController {
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<ApiResponse<OrderResponse>> updateStatus(@PathVariable Long id,
+    public ResponseEntity<ApiResponse<OrderResponse>> updateStatus(@PathVariable UUID id,
                                                                    @Valid @RequestBody UpdateOrderStatusRequest request,
                                                                    @AuthenticationPrincipal CustomUserDetails userDetails) {
 

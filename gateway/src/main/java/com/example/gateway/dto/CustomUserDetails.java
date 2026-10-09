@@ -12,13 +12,13 @@ import java.util.List;
 @Getter
 public class CustomUserDetails implements UserDetails {
 
-    private final Long id;
+    private final String id;
     private final String email;
     private final UserStatus status;
     private final Collection<? extends GrantedAuthority> authorities;
 
     public CustomUserDetails(Claims claims) {
-        this.id = Long.valueOf(claims.getSubject());
+        this.id = claims.getSubject();
         this.email = claims.get("email", String.class);
         this.status = UserStatus.fromValue(claims.get("status", String.class));
 

@@ -2,7 +2,7 @@ const express = require('express');
 const AsyncHandler = require('express-async-handler');
 
 const AuthenticationMiddleware = require('../middleware/AuthenticationMiddleware');
-const ValidateNumericParams = require('../middleware/ValidateNumericParams');
+const ValidateUuidParams = require('../middleware/ValidateUuidParams');
 
 const ChatService = require('../service/ChatService');
 const {FOUND} = require("../utils/Messages");
@@ -18,9 +18,11 @@ const router = express.Router();
  *       type: object
  *       properties:
  *         id:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         userId:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         name:
  *           type: string
  *         image:
@@ -31,7 +33,8 @@ const router = express.Router();
  *       type: object
  *       properties:
  *         id:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         type:
  *           type: string
  *           enum: [direct, group]
@@ -54,16 +57,19 @@ const router = express.Router();
  *       type: object
  *       properties:
  *         id:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         chatId:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         content:
  *           type: string
  *         contentType:
  *           type: string
  *           enum: [text, image, file]
  *         senderId:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         createdAt:
  *           type: string
  *           format: date-time
@@ -73,7 +79,8 @@ const router = express.Router();
  *         hasMore:
  *           type: boolean
  *         nextCursor:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         limit:
  *           type: integer
  */
@@ -104,7 +111,8 @@ const router = express.Router();
  *       - in: query
  *         name: cursorId
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: Pagination cursor (id of the last chat in previous page)
  *     responses:
  *       200:
@@ -144,7 +152,8 @@ router.get("", AuthenticationMiddleware, AsyncHandler(async (req, res) => {
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: The chat ID
  *       - in: query
  *         name: cursorCreatedAt
@@ -155,12 +164,14 @@ router.get("", AuthenticationMiddleware, AsyncHandler(async (req, res) => {
  *       - in: query
  *         name: cursorId
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: Pagination cursor (id of the last message in previous page)
  *       - in: query
  *         name: afterId
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: Forward pagination cursor — returns messages with id greater than this value (used for fetching missed messages after reconnect)
  *     responses:
  *       200:
@@ -194,7 +205,7 @@ router.get("", AuthenticationMiddleware, AsyncHandler(async (req, res) => {
  *       404:
  *         description: Chat not found or user is not a participant
  */
-router.get("/:id", ValidateNumericParams('id'), AuthenticationMiddleware, AsyncHandler(async (req, res) => {
+router.get("/:id", ValidateUuidParams('id'), AuthenticationMiddleware, AsyncHandler(async (req, res) => {
     const data = await ChatService.findDetailsChatById(req.params?.id, req?.query, req.user?.id);
     ok(res, {message: FOUND, data})
 }));
@@ -212,7 +223,8 @@ router.get("/:id", ValidateNumericParams('id'), AuthenticationMiddleware, AsyncH
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: The chat ID
  *     requestBody:
  *       required: true
@@ -231,7 +243,7 @@ router.get("/:id", ValidateNumericParams('id'), AuthenticationMiddleware, AsyncH
  *       403:
  *         description: Not a participant of the chat
  */
-router.post("/:id/view", ValidateNumericParams('id'), AuthenticationMiddleware, AsyncHandler(async (req, res) => {
+router.post("/:id/view", ValidateUuidParams('id'), AuthenticationMiddleware, AsyncHandler(async (req, res) => {
     await ChatService.seenChatMessage(req.params?.id, req.body, req.user?.id)
     created(res, {message: FOUND})
 }));

@@ -4,6 +4,7 @@ const {User, Chat, ChatParticipant, Message} = require('../model');
 const {NOT_FOUND} = require('../utils/Messages');
 const {CHAT_TYPE, CHAT_MEMBER_TYPE} = require('../utils/Enum');
 const RuntimeError = require('../common/RuntimeError');
+const { generateUuidV7 } = require('../utils/UuidUtils');
 
 const CHAT_LIST_DEFAULT_SIZE = 15;
 const CHAT_MESSAGE_DEFAULT_SIZE = 15;
@@ -50,7 +51,7 @@ const findOrCreateDirectChat = async (user1, user2, transaction) => {
             FROM chats c
                      JOIN chat_participants cp ON cp.chat_id = c.id
             WHERE c.type = 'direct'
-              AND (cp.user_id = :user1 OR cp.user_id = :user2)
+              AND (cp.user_id = :user1::uuid OR cp.user_id = :user2::uuid)
             GROUP BY c.id
             HAVING COUNT(DISTINCT cp.user_id) = 2 
                 AND COUNT(cp.user_id) = 2 LIMIT 1
@@ -67,14 +68,14 @@ const findOrCreateDirectChat = async (user1, user2, transaction) => {
     }
 
     const chat = await Chat.create(
-        {type: CHAT_TYPE.DIRECT},
+        {id: generateUuidV7(), type: CHAT_TYPE.DIRECT},
         {transaction}
     );
 
     await ChatParticipant.bulkCreate(
         [
-            {chatId: chat.id, userId: user1, role: CHAT_MEMBER_TYPE.MEMBER},
-            {chatId: chat.id, userId: user2, role: CHAT_MEMBER_TYPE.MEMBER},
+            {id: generateUuidV7(), chatId: chat.id, userId: user1, role: CHAT_MEMBER_TYPE.MEMBER},
+            {id: generateUuidV7(), chatId: chat.id, userId: user2, role: CHAT_MEMBER_TYPE.MEMBER},
         ],
         {transaction}
     );
@@ -194,7 +195,7 @@ const formatChatListDetails = (chat, userId) => {
         role: p.role,
     }));
 
-    const currentUserParticipant = c.Participants.find(p => Number(p.userId) === Number(userId));
+    const currentUserParticipant = c.Participants.find(p => String(p.userId) === String(userId));
     const unreadMessage = currentUserParticipant ? currentUserParticipant.unreadMessage : 0;
 
     let name = c.name;
@@ -203,7 +204,7 @@ const formatChatListDetails = (chat, userId) => {
     let shortName = null;
 
     if (c.type === CHAT_TYPE.DIRECT) {
-        const other = participants.find(p => Number(p.id) !== Number(userId));
+        const other = participants.find(p => String(p.id) !== String(userId));
         name = other?.name || "Unknown";
         image = other?.image;
         otherUserId = other?.id;
@@ -336,7 +337,7 @@ const formatChatDetails = (chat, userId) => {
     let name = c.name;
 
     if (c.type === CHAT_TYPE.DIRECT) {
-        const other = participants.find(p => Number(p.id) !== Number(userId));
+        const other = participants.find(p => String(p.id) !== String(userId));
         name = other?.name || "Unknown";
     }
 
@@ -395,14 +396,15 @@ const createGroup = async (body, user) => {
         const name = buildGroupName(user, body.users);
 
         const chat = await Chat.create(
-            {name, type: CHAT_TYPE.GROUP},
+            {id: generateUuidV7(), name, type: CHAT_TYPE.GROUP},
             {transaction: t}
         );
 
         await ChatParticipant.bulkCreate(
             [
-                {chatId: chat.id, userId: user.id, role: CHAT_MEMBER_TYPE.ADMIN},
+                {id: generateUuidV7(), chatId: chat.id, userId: user.id, role: CHAT_MEMBER_TYPE.ADMIN},
                 ...body.users.map(u => ({
+                    id: generateUuidV7(),
                     chatId: chat.id,
                     userId: u.id,
                     role: CHAT_MEMBER_TYPE.MEMBER,
@@ -448,7 +450,8 @@ const updateGroup = async (body, user) => {
 
         await ChatParticipant.bulkCreate(
             users.map(u => ({
-                chatId: Number(chatId),
+                id: generateUuidV7(),
+                chatId,
                 userId: u.id,
                 role: CHAT_MEMBER_TYPE.MEMBER,
             })),

@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 
+import java.util.UUID;
+
 @Component
 @RequiredArgsConstructor
 public class FaqValidator {
@@ -24,7 +26,7 @@ public class FaqValidator {
         }
     }
 
-    public void validateUpdate(Long id, FaqRequest request, Errors errors) {
+    public void validateUpdate(UUID id, FaqRequest request, Errors errors) {
         if (request.getDisplayOrder() != 0 && faqRepository.existsByDisplayOrderAndIdNot(request.getDisplayOrder(), id)) {
             errors.rejectValue("displayOrder", "error.field.duplicate", new Object[]{"Display Order"}, "Display order already exists");
         }

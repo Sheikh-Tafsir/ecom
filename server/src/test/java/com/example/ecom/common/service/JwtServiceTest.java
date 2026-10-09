@@ -7,12 +7,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Date;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class JwtServiceTest {
 
     private JwtService jwtService;
+
+    private static final UUID USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     @BeforeEach
     void setUp() {
@@ -32,7 +35,7 @@ class JwtServiceTest {
     @Test
     void testGenerateAndValidateAccessToken() {
         User user = new User();
-        user.setId(1L);
+        user.setId(USER_ID);
         user.setEmail("test@example.com");
         user.setName("Test User");
         user.setStatus(UserStatus.ACTIVE);
@@ -44,8 +47,8 @@ class JwtServiceTest {
         assertEquals("test@example.com", jwtService.getEmailFromAccessToken(token));
 
         Claims claims = jwtService.parseAccessTokenClaims(token);
-        assertEquals("1", claims.getSubject());
-        assertEquals("1", claims.get("id").toString());
+        assertEquals(USER_ID.toString(), claims.getSubject());
+        assertEquals(USER_ID.toString(), claims.get("id").toString());
         assertEquals("Test User", claims.get("name"));
         assertEquals("test@example.com", claims.get("email"));
         assertNotNull(claims.getId());
@@ -54,7 +57,7 @@ class JwtServiceTest {
     @Test
     void testGenerateAndValidateRefreshToken() {
         User user = new User();
-        user.setId(1L);
+        user.setId(USER_ID);
         user.setEmail("test@example.com");
 
         String refreshToken = jwtService.generateRefreshToken(user);
@@ -69,7 +72,7 @@ class JwtServiceTest {
     @Test
     void testGenerateSseAccessToken() {
         User user = new User();
-        user.setId(1L);
+        user.setId(USER_ID);
         user.setEmail("sse@example.com");
         user.setStatus(UserStatus.ACTIVE);
 
@@ -100,7 +103,7 @@ class JwtServiceTest {
     @Test
     void testGetJtiFromAccessToken() {
         User user = new User();
-        user.setId(1L);
+        user.setId(USER_ID);
         user.setEmail("test@example.com");
 
         String token = jwtService.generateAccessToken(user);

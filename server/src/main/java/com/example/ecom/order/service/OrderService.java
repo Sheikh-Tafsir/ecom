@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 import static com.example.ecom.common.enums.Permission.*;
 import static com.example.ecom.common.utils.DateUtils.resolveDates;
@@ -85,7 +86,7 @@ public class OrderService {
                 productName, getValidPageable(pageable)).map(OrderListResponse::new);
     }
 
-    public OrderResponse findById(Long id, CustomUserDetails userDetails) {
+    public OrderResponse findById(UUID id, CustomUserDetails userDetails) {
         Order order = orderRepository.findDetailsById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Order", id)));
 
@@ -128,7 +129,7 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderResponse cancel(Long id, CustomUserDetails userDetails) {
+    public OrderResponse cancel(UUID id, CustomUserDetails userDetails) {
         Order order = findByIdHelper(id);
 
         if (order.getStatus() != OrderStatus.PENDING) {
@@ -152,7 +153,7 @@ public class OrderService {
             "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue()," +
             "T(com.example.ecom.common.enums.Permission).DELIVERY_MAN_ACCESS.getValue())")
     @Transactional
-    public OrderResponse updateStatus(Long id, UpdateOrderStatusRequest request, CustomUserDetails userDetails) {
+    public OrderResponse updateStatus(UUID id, UpdateOrderStatusRequest request, CustomUserDetails userDetails) {
         Order order = findByIdHelper(id);
         OrderStatus status = request.status();
         OrderStatus oldStatus = order.getStatus();
@@ -192,13 +193,13 @@ public class OrderService {
 
     // -- helpers --
     @Transactional
-    public void delete(Long id) {
+    public void delete(UUID id) {
         Order order = findByIdHelper(id);
         orderRepository.delete(order);
     }
 
     @Transactional
-    public void acceptOrderForPrepayment(long id) {
+    public void acceptOrderForPrepayment(UUID id) {
         Order order = findByIdHelper(id);
         OrderStatus oldStatus = order.getStatus();
         if (order.getStatus() != OrderStatus.ACCEPTED) {
@@ -246,7 +247,7 @@ public class OrderService {
         order.getItems().forEach(item -> productService.increaseQuantity(item.getProduct(), item.getQuantity()));
     }
 
-    private Order findByIdHelper(Long id) {
+    private Order findByIdHelper(UUID id) {
         return orderRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Order", id)));
     }

@@ -11,12 +11,13 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface StockRepository extends JpaRepository<Stock, Long> {
+public interface StockRepository extends JpaRepository<Stock, UUID> {
 
     @EntityGraph(attributePaths = {"items", "items.product"})
-    Optional<Stock> findDetailsById(Long id);
+    Optional<Stock> findDetailsById(UUID id);
 
     @Query("""
             SELECT DISTINCT s FROM Stock s

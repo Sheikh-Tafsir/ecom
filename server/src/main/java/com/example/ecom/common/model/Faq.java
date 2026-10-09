@@ -12,11 +12,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Faq extends BaseEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+public class Faq extends AuditableEntity {
 
     @Column(nullable = false)
     private String question;
@@ -25,13 +21,4 @@ public class Faq extends BaseEntity {
     private String answer;
 
     private int displayOrder;
-
-    public long getId() { return id; }
-    public void setId(long id) { this.id = id; }
-    public String getQuestion() { return question; }
-    public void setQuestion(String question) { this.question = question; }
-    public String getAnswer() { return answer; }
-    public void setAnswer(String answer) { this.answer = answer; }
-    public int getDisplayOrder() { return displayOrder; }
-    public void setDisplayOrder(int displayOrder) { this.displayOrder = displayOrder; }
 }

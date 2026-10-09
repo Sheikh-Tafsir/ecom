@@ -28,6 +28,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.UUID;
 
 import static com.example.ecom.common.utils.CacheConstants.CACHE_SSE_TICKETS;
 import static org.junit.jupiter.api.Assertions.*;
@@ -60,6 +61,11 @@ class NotificationServiceTest {
     @InjectMocks
     private NotificationService notificationService;
 
+    private static final UUID USER_ID_10 = UUID.fromString("00000000-0000-0000-0000-000000000010");
+    private static final UUID USER_ID_1  = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final UUID USER_ID_5  = UUID.fromString("00000000-0000-0000-0000-000000000005");
+    private static final UUID USER_ID_42 = UUID.fromString("00000000-0000-0000-0000-000000000042");
+
     @BeforeEach
     void setUp() {
         when(cacheManager.getCache(CACHE_SSE_TICKETS)).thenReturn(cache);
@@ -70,11 +76,11 @@ class NotificationServiceTest {
     @DisplayName("generateSseAuthToken should generate token, store in cache with ticket, and return ticket")
     void generateSseAuthToken_success() {
         CustomUserDetails userDetails = mock(CustomUserDetails.class);
-        when(userDetails.getId()).thenReturn(10L);
+        when(userDetails.getId()).thenReturn(USER_ID_10);
 
         User user = new User();
-        user.setId(10L);
-        when(userService.findByIdHelper(10L)).thenReturn(user);
+        user.setId(USER_ID_10);
+        when(userService.findByIdHelper(USER_ID_10)).thenReturn(user);
         when(jwtService.generateSseAccessToken(user)).thenReturn("sse-jwt-token");
 
         String ticket = notificationService.generateSseAuthToken(userDetails);
@@ -110,7 +116,7 @@ class NotificationServiceTest {
     @DisplayName("subscribe should return SseEmitter and register client connection")
     void subscribe_success() {
         CustomUserDetails userDetails = mock(CustomUserDetails.class);
-        when(userDetails.getId()).thenReturn(1L);
+        when(userDetails.getId()).thenReturn(USER_ID_1);
         doReturn(List.of(new SimpleGrantedAuthority(Permission.ADMIN_ACCESS.getValue())))
                 .when(userDetails).getAuthorities();
 
@@ -125,7 +131,7 @@ class NotificationServiceTest {
         NotificationResponse response = new NotificationResponse(NotificationType.INFO, "Order shipped");
         when(objectMapper.writeValueAsString(any())).thenReturn("{\"recipientType\":\"USER\"}");
 
-        notificationService.sendToUser(5L, response);
+        notificationService.sendToUser(USER_ID_5, response);
 
         verify(stringRedisTemplate).convertAndSend(eq(NotificationService.NOTIFICATION_CHANNEL), eq("{\"recipientType\":\"USER\"}"));
     }
@@ -138,7 +144,7 @@ class NotificationServiceTest {
         NotificationResponse response = new NotificationResponse(NotificationType.INFO, "Order shipped");
 
         // Does not throw and does not call redis
-        assertDoesNotThrow(() -> notificationService.sendToUser(5L, response));
+        assertDoesNotThrow(() -> notificationService.sendToUser(USER_ID_5, response));
     }
 
     @Test
@@ -155,8 +161,8 @@ class NotificationServiceTest {
     @Test
     @DisplayName("onMessage should deserialize event and dispatch to user locally")
     void onMessage_userEvent_dispatchesLocally() throws Exception {
-        NotificationEvent event = new NotificationEvent("USER", 42L, NotificationType.SUCCESS, "Hello");
-        String json = "{\"recipientType\":\"USER\",\"recipientId\":42,\"type\":\"SUCCESS\",\"message\":\"Hello\"}";
+        NotificationEvent event = new NotificationEvent("USER", USER_ID_42, NotificationType.SUCCESS, "Hello");
+        String json = "{\"recipientType\":\"USER\",\"recipientId\":\"00000000-0000-0000-0000-000000000042\",\"type\":\"SUCCESS\",\"message\":\"Hello\"}";
         Message redisMessage = new DefaultMessage("ecom:sse:notifications".getBytes(StandardCharsets.UTF_8), json.getBytes(StandardCharsets.UTF_8));
 
         when(objectMapper.readValue(json, NotificationEvent.class)).thenReturn(event);

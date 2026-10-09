@@ -10,11 +10,12 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface UserRefreshTokenRepository extends JpaRepository<UserRefreshToken, Long> {
+public interface UserRefreshTokenRepository extends JpaRepository<UserRefreshToken, UUID> {
 
-    Optional<UserRefreshToken> findByUser_Id(Long userId);
+    Optional<UserRefreshToken> findByUser_Id(UUID userId);
 
     Optional<UserRefreshToken> findByJti(String jti);
 
@@ -28,7 +29,7 @@ public interface UserRefreshTokenRepository extends JpaRepository<UserRefreshTok
                 WHERE urt.user.id = :userId
                   AND urt.status = 'ACTIVE'
             """)
-    int revokeAllForUser(@Param("userId") Long userId, @Param("status") UserRefreshTokenStatus status);
+    int revokeAllForUser(@Param("userId") UUID userId, @Param("status") UserRefreshTokenStatus status);
 
     @Modifying
     @Query("""

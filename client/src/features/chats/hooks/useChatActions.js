@@ -35,10 +35,10 @@ export const useChatActions = (id, userId, updateChatOnMessage, onNewChat, showT
             id: tempId,
             content,
             contentType,
-            chatId: Number(id),
+            chatId: id,
             senderId: userId,
             createdAt,
-            updatedAt: createdAt,
+            updatedAt,
             isTemporary: true,
             tempId,
         };
@@ -60,7 +60,7 @@ export const useChatActions = (id, userId, updateChatOnMessage, onNewChat, showT
         updateChatLocally(content, contentType, tempId);
 
         socket.emit(MESSAGE_SEND_EVENT, {
-            ...(searchedUser?.id ? {receiverId: searchedUser.id} : {chatId: Number(id)}),
+            ...(searchedUser?.id ? {receiverId: searchedUser.id} : {chatId: id}),
             content,
             contentType,
             tempId,

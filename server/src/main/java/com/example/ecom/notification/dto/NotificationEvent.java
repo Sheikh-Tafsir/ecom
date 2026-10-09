@@ -2,9 +2,11 @@ package com.example.ecom.notification.dto;
 
 import com.example.ecom.common.enums.NotificationType;
 
+import java.util.UUID;
+
 public record NotificationEvent(
         String recipientType,
-        Long recipientId,
+        UUID recipientId,
         NotificationType type,
         String message
 ) {

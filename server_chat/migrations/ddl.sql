@@ -10,13 +10,13 @@
 
 CREATE TABLE chats
 (
-    id             BIGSERIAL PRIMARY KEY,
+    id             UUID PRIMARY KEY,
     type           VARCHAR(32) NOT NULL,
     name           VARCHAR(100),
     image          VARCHAR(511),
     last_message   TEXT,
     last_sent      TIMESTAMP            DEFAULT CURRENT_TIMESTAMP,
-    last_sender_id BIGINT      REFERENCES users (id) ON UPDATE CASCADE ON DELETE SET NULL,
+    last_sender_id UUID        REFERENCES users (id) ON UPDATE CASCADE ON DELETE SET NULL,
     created_at     TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at     TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     version        INT                  DEFAULT 0
@@ -24,9 +24,9 @@ CREATE TABLE chats
 
 CREATE TABLE chat_participants
 (
-    id             BIGSERIAL PRIMARY KEY,
-    chat_id        BIGINT      NOT NULL REFERENCES chats (id) ON UPDATE CASCADE ON DELETE CASCADE,
-    user_id        BIGINT      NOT NULL REFERENCES users (id) ON UPDATE CASCADE ON DELETE SET NULL,
+    id             UUID PRIMARY KEY,
+    chat_id        UUID        NOT NULL REFERENCES chats (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    user_id        UUID        NOT NULL REFERENCES users (id) ON UPDATE CASCADE ON DELETE SET NULL,
     role           VARCHAR(32) NOT NULL DEFAULT 'member', -- 'admin', 'member'
     unread_message INTEGER     NOT NULL DEFAULT 0,
     last_seen      TIMESTAMP            DEFAULT CURRENT_TIMESTAMP,
@@ -38,9 +38,9 @@ CREATE TABLE chat_participants
 
 CREATE TABLE messages
 (
-    id           BIGSERIAL PRIMARY KEY,
-    chat_id      BIGINT      NOT NULL REFERENCES chats (id) ON UPDATE CASCADE ON DELETE CASCADE,
-    sender_id    BIGINT      NOT NULL REFERENCES users (id) ON UPDATE CASCADE ON DELETE SET NULL,
+    id           UUID PRIMARY KEY,
+    chat_id      UUID        NOT NULL REFERENCES chats (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    sender_id    UUID        REFERENCES users (id) ON UPDATE CASCADE ON DELETE SET NULL,
     content      TEXT        NOT NULL,
     content_type VARCHAR(32) NOT NULL DEFAULT 'text', -- 'text', 'image'
     created_at   TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -50,9 +50,9 @@ CREATE TABLE messages
 
 CREATE TABLE message_receipts
 (
-    id           BIGSERIAL PRIMARY KEY,
-    message_id   BIGINT    NOT NULL REFERENCES messages (id) ON DELETE CASCADE ON UPDATE CASCADE,
-    user_id      BIGINT    NOT NULL REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    id           UUID PRIMARY KEY,
+    message_id   UUID      NOT NULL REFERENCES messages (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    user_id      UUID      NOT NULL REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE,
     delivered_at TIMESTAMP,
     read_at      TIMESTAMP,
     created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
