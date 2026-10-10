@@ -35,45 +35,64 @@ export default function Navbar() {
 
 
     const getMenuItems = () => {
+        const isSuperAdmin = hasPermission(user, PERMISSION.SUPER_ADMIN_ACCESS);
+        const isAdmin = hasPermission(user, PERMISSION.ADMIN_ACCESS);
+
         return [
             ...BASE_MENU,
 
+            // Products — visible to all; super admin gets Add Product + Sales
             {
                 name: "Products",
                 href: "/products",
                 submenu: [
                     {name: "Product List", href: "/products"},
-                    ...(hasPermission(user, PERMISSION.SUPER_ADMIN_ACCESS)
-                        ? [{name: "Add Product", href: "/products/create"}]
+                    ...(isSuperAdmin
+                        ? [
+                            {name: "Add Product", href: "/products/create"},
+                            {name: "Sales", href: "/sales"},
+                          ]
                         : []),
                 ],
             },
 
-            ...(isAuthenticated
-                ? [
-                    {name: 'Orders', href: '/orders'},
-                ]
-                : []),
-
-            ...(hasPermission(user, PERMISSION.ADMIN_ACCESS)
+            // Operations — Orders + Stock grouped for admins; Orders standalone for regular users
+            ...(isAdmin
                 ? [
                     {
-                        name: "Stock",
-                        href: "/stocks",
+                        name: "Operations",
+                        href: "#",
                         submenu: [
+                            {name: "Orders", href: "/orders"},
                             {name: "Stock List", href: "/stocks"},
-                            {name: "Stock Item List", href: "/stocks/items"},
+                            {name: "Stock Items", href: "/stocks/items"},
                             {name: "Add Stock", href: "/stocks/create"},
                         ],
                     },
-                    {name: 'Users', href: '/users'}
                 ]
+                : isAuthenticated
+                ? [{name: "Orders", href: "/orders"}]
                 : []),
 
-            ...(hasPermission(user, PERMISSION.SUPER_ADMIN_ACCESS)
+            // Admin — Users + Roles for super admin; Users alone for admin
+            ...(isSuperAdmin
                 ? [
-                    {name: "Roles", href: "/roles"},
-                    {name: "Sales", href: "/sales"},
+                    {
+                        name: "Admin",
+                        href: "#",
+                        submenu: [
+                            {name: "Users", href: "/users"},
+                            {name: "Roles", href: "/roles"},
+                        ],
+                    },
+                ]
+                : isAdmin
+                ? [{name: "Users", href: "/users"}]
+                : []),
+
+            // CMS — super admin only
+            ...(isSuperAdmin
+                ? [
                     {
                         name: "CMS",
                         href: "#",
@@ -87,9 +106,7 @@ export default function Navbar() {
                 : []),
 
             ...(isAuthenticated
-                ? [
-                    {name: "Chats", href: "/chats"},
-                ]
+                ? [{name: "Chats", href: "/chats"}]
                 : []),
         ];
     };
