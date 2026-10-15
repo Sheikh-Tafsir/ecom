@@ -60,3 +60,4 @@ code-review.md
 
 *.class
 /server/build_old_root
+/server/.gradle_old_root

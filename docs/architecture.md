@@ -58,13 +58,11 @@ Client ──WS──▶ Gateway ──/socket.io/**──▶ Chat Server
                                           Socket.IO broadcast ──▶ recipient Client
 ```
 
-### SSE Notifications (Server-Sent Events)
+### Real-time Notifications (Redis Pub/Sub → WebSocket)
 ```
-Client → GET /notifications/sse-token  → Server → short-lived ticket (stored in Redis)
-Client → GET /notifications/subscribe?ticket=<ticket> → Server → SseEmitter (long-lived connection)
-Server → push events ──▶ Client (order status changes, admin alerts)
+Server ──publish──▶ Redis (ecom:notifications) ──subscribe──▶ Chat Server ──Socket.IO emit──▶ Client
 ```
-Note: SSE uses a one-time ticket instead of a Bearer token because browsers cannot set `Authorization` headers on `EventSource` connections.
+Note: Main Server publishes `NotificationEvent` to Redis. Chat Server subscribes and emits `notification` events to `user_${id}` or `admin_room` over the existing authenticated Socket.IO connection.
 
 ### Email / Async Jobs
 ```

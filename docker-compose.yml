@@ -112,6 +112,8 @@ services:
       - CHAT_SERVICE_WS_URL=ws://chat-server:${CHAT_SERVER_PORT}
       - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
       - CORS_ALLOWED_ORIGINS=${CLIENT_URL}
+      - TRUSTED_PROXY_IPS=${TRUSTED_PROXY_IPS}
+      - REVOKED_TOKENS_PREFIX=${REVOKED_TOKENS_PREFIX}
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
       interval: 30s
@@ -279,7 +281,6 @@ services:
         - VITE_SESSION_HINT_KEY=${SESSION_HINT_KEY}
         - VITE_LOCAL_STORAGE_CART_KEY=${LOCAL_STORAGE_CART_KEY}
         - VITE_WEB_SOCKET_ON=${WEB_SOCKET_ON}
-        - VITE_SSE_ON=${SSE_ON}
         - SERVER_URL=${SERVER_URL}
         - CHAT_SERVER_URL=${CHAT_SERVICE_URL}
     restart: unless-stopped

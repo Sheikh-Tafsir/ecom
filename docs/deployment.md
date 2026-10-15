@@ -86,7 +86,6 @@ All env vars are in the root `.env` file and injected by Docker Compose. **No de
 | `VITE_SESSION_HINT_KEY`      | e.g., `ecom_session`           |
 | `VITE_LOCAL_STORAGE_CART_KEY`| e.g., `visoredCart`            |
 | `VITE_WEB_SOCKET_ON`         | `true` / `false`               |
-| `VITE_SSE_ON`                | `true` / `false`               |
 
 ### External Services
 | Variable                | Service        | Notes                                  |

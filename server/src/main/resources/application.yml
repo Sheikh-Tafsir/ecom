@@ -5,7 +5,6 @@ app:
       default-minutes: 5
       idempotency-minutes: 60
       otp-minutes: 5
-      sse-ticket-minutes: 1
       cms-minutes: 10
       token-rotation-seconds: 60
 
@@ -102,8 +101,6 @@ jwt:
   refresh-token:
     expiration: 604800 # 7 days
     secret: ${REFRESH_TOKEN_SECRET}
-  sse-token:
-    expiration: 60 # 1 minute
 
 oauth:
   google:

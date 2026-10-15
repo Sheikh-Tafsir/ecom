@@ -32,7 +32,6 @@ public final class CacheConstants {
     // --- Security & System Caches ---
     public static final String CACHE_IDEMPOTENCY = "idempotency";
     public static final String CACHE_OTPS = "otps";
-    public static final String CACHE_SSE_TICKETS = "sseTickets";
     public static final String CACHE_ROTATED_TOKENS = "rotatedTokens";
     public static final String CACHE_REVOKED_ACCESS_TOKENS = "revokedAccessTokens";
 }

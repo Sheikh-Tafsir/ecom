@@ -37,8 +37,6 @@ export const connectSocket = async () => {
             });
 
             socket.on("connect_error", async (err) => {
-                console.error("Socket connection error:", err);
-
                 if (err.message === "Unauthorized" && !hasRetried) {
                     hasRetried = true;
 
@@ -80,5 +78,5 @@ export const disconnectSocket = () => {
 };
 
 export const isSocketOn = () => {
-    return WEB_SOCKET_ON == "true";
-}
+    return WEB_SOCKET_ON === "true";
+};

@@ -27,8 +27,7 @@ class JwtServiceTest {
                 accessSecret,
                 1800,
                 refreshSecret,
-                604800,
-                30
+                604800
         );
     }
 
@@ -67,20 +66,6 @@ class JwtServiceTest {
         assertNotNull(jwtService.getJtiFromRefreshToken(refreshToken));
         assertNotNull(jwtService.getExpirationFromRefreshToken(refreshToken));
         assertTrue(jwtService.getExpirationFromRefreshToken(refreshToken).after(new Date()));
-    }
-
-    @Test
-    void testGenerateSseAccessToken() {
-        User user = new User();
-        user.setId(USER_ID);
-        user.setEmail("sse@example.com");
-        user.setStatus(UserStatus.ACTIVE);
-
-        String sseToken = jwtService.generateSseAccessToken(user);
-
-        assertNotNull(sseToken);
-        assertTrue(jwtService.isAccessTokenValid(sseToken));
-        assertEquals("sse@example.com", jwtService.getEmailFromAccessToken(sseToken));
     }
 
     @Test

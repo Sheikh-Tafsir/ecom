@@ -95,7 +95,16 @@ function endStartupPhase() {
     isStartupPhase = false;
 }
 
+const logger = {
+    info: (...args) => console.info(...args),
+    warn: (...args) => console.warn(...args),
+    error: (...args) => console.error(...args),
+    debug: (...args) => console.debug(...args),
+    log: (...args) => console.log(...args)
+};
+
 module.exports = {
+    logger,
     endStartupPhase,
     serverLogFile,
     startupLogFile

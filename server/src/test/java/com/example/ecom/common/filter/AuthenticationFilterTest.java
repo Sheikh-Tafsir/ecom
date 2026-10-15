@@ -1,7 +1,6 @@
 package com.example.ecom.common.filter;
 
 import com.example.ecom.common.service.JwtService;
-import com.example.ecom.notification.service.NotificationService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
@@ -42,9 +41,6 @@ class AuthenticationFilterTest {
 
     @Mock
     private Cache revokedTokensCache;
-
-    @Mock
-    private NotificationService notificationService;
 
     @Mock
     private FilterChain filterChain;

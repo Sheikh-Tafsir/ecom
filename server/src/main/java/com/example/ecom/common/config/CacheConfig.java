@@ -41,9 +41,6 @@ public class CacheConfig implements CachingConfigurer {
     @Value("${app.cache.ttl.otp-minutes:5}")
     protected int otpTtl;
 
-    @Value("${app.cache.ttl.sse-ticket-minutes:1}")
-    protected int sseTicketTtl;
-
     @Value("${app.cache.ttl.cms-minutes:10}")
     protected int cmsTtl;
 
@@ -92,7 +89,6 @@ public class CacheConfig implements CachingConfigurer {
 
             cacheConfigurations.put(CACHE_IDEMPOTENCY, buildConfig(idempotencyTtl, redisSerializer));
             cacheConfigurations.put(CACHE_OTPS, buildConfig(otpTtl, redisSerializer));
-            cacheConfigurations.put(CACHE_SSE_TICKETS, buildConfig(sseTicketTtl, redisSerializer));
 
             RedisCacheConfiguration cmsConfig = buildConfig(cmsTtl, redisSerializer);
             cacheConfigurations.put(CACHE_BANNERS, cmsConfig);
@@ -148,7 +144,6 @@ public class CacheConfig implements CachingConfigurer {
             // System Caches
             cacheManager.registerCustomCache(CACHE_OTPS, buildCaffeineCache(otpTtl));
             cacheManager.registerCustomCache(CACHE_IDEMPOTENCY, buildCaffeineCache(idempotencyTtl));
-            cacheManager.registerCustomCache(CACHE_SSE_TICKETS, buildCaffeineCache(sseTicketTtl));
 
             cacheManager.registerCustomCache(CACHE_ROTATED_TOKENS, buildCaffeineCache(1)); // 1 minute
             cacheManager.registerCustomCache(CACHE_REVOKED_ACCESS_TOKENS, buildCaffeineCache(60)); // 1 hour

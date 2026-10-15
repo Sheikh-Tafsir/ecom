@@ -194,7 +194,6 @@ Available cache names (from `CacheConstants.java`):
 | `CACHE_BLOGS`                | `"blogs"`               | Blog list                  |
 | `CACHE_REVOKED_ACCESS_TOKENS`| `"revokedAccessTokens"` | Token blacklist            |
 | `CACHE_OTPS`                 | `"otps"`                | OTP codes                  |
-| `CACHE_SSE_TICKETS`          | `"sseTickets"`          | One-time SSE auth tickets  |
 | `CACHE_IDEMPOTENCY`          | `"idempotency"`         | Idempotency key store      |
 
 ---

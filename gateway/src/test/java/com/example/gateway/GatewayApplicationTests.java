@@ -15,7 +15,11 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
     "REDIS_PORT=6379",
     "REDIS_PASSWORD=",
     "CHAT_SERVICE_URL=http://localhost:3001",
-    "MAIN_SERVICE_URL=http://localhost:8081"
+    "CHAT_SERVICE_WS_URL=ws://localhost:3001",
+    "MAIN_SERVICE_URL=http://localhost:8081",
+    "SPRING_PROFILES_ACTIVE=test",
+    "TRUSTED_PROXY_IPS=",
+    "REVOKED_TOKENS_PREFIX=v1:revokedAccessTokens::"
 })
 class GatewayApplicationTests {
 

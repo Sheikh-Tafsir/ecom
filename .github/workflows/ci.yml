@@ -100,7 +100,8 @@ jobs:
           ACCESS_TOKEN=dummy
           LOCAL_STORAGE_CART_KEY=cart
           WEB_SOCKET_ON=true
-          SSE_ON=true
+          REVOKED_TOKENS_PREFIX=v1:revokedAccessTokens::
+          TRUSTED_PROXY_IPS=
           GOOGLE_LOGIN_CLIENT_ID=dummy
           APP_CACHE_STRATEGY=NONE
           MAIL_SMTP_HOST=smtp.example.com

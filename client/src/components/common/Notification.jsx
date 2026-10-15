@@ -4,12 +4,13 @@ import {motion, AnimatePresence} from "framer-motion";
 import {Alert, AlertDescription} from "@/components/ui/alert";
 import {Button} from "@/components/ui/button";
 import {TOAST_TYPE} from "@/constants/app.constants";
+import {cn} from "@/lib/utils";
 
 export function Notification({notification, onClose}) {
     const [isOpen, setIsOpen] = useState(true);
 
     useEffect(() => {
-        if (notification.type == TOAST_TYPE.ERROR || notification.type == TOAST_TYPE.WARNING) {
+        if (notification.type === TOAST_TYPE.ERROR || notification.type === TOAST_TYPE.WARNING) {
             return;
         }
 
@@ -19,14 +20,14 @@ export function Notification({notification, onClose}) {
         }, 5000); // auto-close after 5s
 
         return () => clearTimeout(timer);
-    }, [onClose]);
+    }, [notification.type, onClose]);
 
     const colorStyle =
-        notification.type == TOAST_TYPE.ERROR
+        notification.type === TOAST_TYPE.ERROR
             ? "bg-red-500"
-            : notification.type == TOAST_TYPE.WARNING
+            : notification.type === TOAST_TYPE.WARNING
                 ? "bg-red-400"
-                : notification.type == TOAST_TYPE.SUCCESS
+                : notification.type === TOAST_TYPE.SUCCESS
                     ? "bg-green-500"
                     : "bg-blue-500";
 
@@ -40,7 +41,7 @@ export function Notification({notification, onClose}) {
                     transition={{duration: 0.2}}
                 >
                     <Alert
-                        className={`w-[250px] text-white flex justify-between px-4 rounded-lg shadow-md ${colorStyle}`}>
+                        className={cn("w-[250px] text-white flex justify-between px-4 rounded-lg shadow-md", colorStyle)}>
                         <div className="my-auto">
                             <AlertDescription>{notification.message}</AlertDescription>
                         </div>

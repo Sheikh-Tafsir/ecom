@@ -41,8 +41,7 @@ public class SecurityConfig {
             "/webjars/**",
             "/actuator",
             "/actuator/**",
-            "/socket.io/**",
-            "/notifications/subscribe"
+            "/socket.io/**"
     );
 
     @Value("${cors.allowed.origins}")

@@ -215,12 +215,12 @@ public class OrderService {
         java.time.Instant oneDayAgo = java.time.Instant.now().minus(1, java.time.temporal.ChronoUnit.DAYS);
         java.time.Instant twoDaysAgo = java.time.Instant.now().minus(2, java.time.temporal.ChronoUnit.DAYS);
 
-        // 1. Notify admins about orders > 1 days old via SSE
+        // 1. Notify admins about orders > 1 days old
         List<Order> ordersToNotify = orderRepository.findAllByStatusAndCreatedAtBefore(OrderStatus.PENDING, oneDayAgo);
         if (!ordersToNotify.isEmpty()) {
             String message = "There are " + ordersToNotify.size() + " orders pending for more than 1 day.";
             notificationService.sendToAdmins(new NotificationResponse(NotificationType.WARNING, message));
-            log.info("Notified connected admins about {} pending orders via SSE", ordersToNotify.size());
+            log.info("Notified connected admins about {} pending orders", ordersToNotify.size());
         }
 
         // 2. Reject orders > 2 days old

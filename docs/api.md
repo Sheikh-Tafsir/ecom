@@ -111,21 +111,15 @@ Standard `page` + `size` query params used for admin list endpoints.
 | GET    | `/payment/query/{id}`     | Query payment status (admin only)        |
 | POST   | `/payment/refund`         | Refund payment (admin only)              |
 
-### Notifications (SSE)
-| Method | Path                          | Description                                          |
-|--------|-------------------------------|------------------------------------------------------|
-| GET    | `/notifications/sse-token`    | Generate a one-time SSE ticket (requires Bearer token)|
-| GET    | `/notifications/subscribe`    | Open SSE stream via `?ticket=<ticket>` query param   |
+## Real-time Notifications (Socket.IO)
 
-> **Why tickets?** Browsers cannot set `Authorization` headers on `EventSource` connections. The client first fetches a short-lived ticket via authenticated REST, then uses it to open the SSE stream.
+Notifications are pushed over the authenticated Socket.IO connection. The Main Server publishes events to Redis (`ecom:notifications`), and the Chat Server routes them to the appropriate room (`user_${id}` or `admin_room`).
+
+| Event (Server → Client) | Payload                                    | Description                              |
+|-------------------------|--------------------------------------------|------------------------------------------|
+| `notification`          | `{ type, message, createdAt }`             | Real-time user or admin alert            |
 
 ---
-
-## SSE Events (Server → Client)
-
-| Event            | Trigger                                | Payload               |
-|------------------|----------------------------------------|-----------------------|
-| `order-update`   | Order status change (admin action)     | `{ orderId, status }` |
 
 
 

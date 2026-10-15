@@ -61,9 +61,8 @@ public class SecurityConfig {
     private final JwtService jwtService;
 
     @Bean
-    public AuthenticationFilter authenticationFilter(org.springframework.cache.CacheManager cacheManager,
-                                                   com.example.ecom.notification.service.NotificationService notificationService) {
-        return new AuthenticationFilter(jwtService, cacheManager, notificationService);
+    public AuthenticationFilter authenticationFilter(org.springframework.cache.CacheManager cacheManager) {
+        return new AuthenticationFilter(jwtService, cacheManager);
     }
 
     @Bean

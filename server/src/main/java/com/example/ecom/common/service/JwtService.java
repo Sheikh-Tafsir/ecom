@@ -25,19 +25,15 @@ public class JwtService {
 
     public final long refreshTokenValidity;
 
-    public final long sseAccessTokenValidity;
-
     public JwtService(@Value("${jwt.access-token.secret:${access.token.value:}}") String accessTokenSecret,
                       @Value("${jwt.access-token.expiration:${access.token.validity:1800}}") long accessTokenValidity, // 30 minutes in seconds
                       @Value("${jwt.refresh-token.secret:${refresh.token.value:}}") String refreshTokenSecret,
-                      @Value("${jwt.refresh-token.expiration:${refresh.token.validity:604800}}") long refreshTokenValidity, // 7 days in seconds
-                      @Value("${jwt.sse-token.expiration:60}") long sseAccessTokenValidity // 60 seconds
+                      @Value("${jwt.refresh-token.expiration:${refresh.token.validity:604800}}") long refreshTokenValidity // 7 days in seconds
     ) {
         this.accessTokenSecret = Keys.hmacShaKeyFor(accessTokenSecret.getBytes(StandardCharsets.UTF_8));
         this.accessTokenValidity = accessTokenValidity;
         this.refreshTokenSecret = Keys.hmacShaKeyFor(refreshTokenSecret.getBytes(StandardCharsets.UTF_8));
         this.refreshTokenValidity = refreshTokenValidity;
-        this.sseAccessTokenValidity = sseAccessTokenValidity;
     }
 
     public String generateAccessToken(User user) {
@@ -68,20 +64,6 @@ public class JwtService {
                 .setIssuedAt(new Date())
                 .setExpiration(expiration)
                 .signWith(refreshTokenSecret)
-                .compact();
-    }
-
-    public String generateSseAccessToken(User user) {
-        return Jwts.builder()
-                .setSubject(user.getId().toString())
-                .setId(UUID.randomUUID().toString())
-                .claim("id", user.getId())
-                .claim("email", user.getEmail())
-                .claim("status", user.getStatus())
-                .claim("permissions", user.getPermissionValues())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + Duration.ofSeconds(sseAccessTokenValidity).toMillis()))
-                .signWith(accessTokenSecret)
                 .compact();
     }
 

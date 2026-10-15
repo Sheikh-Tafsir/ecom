@@ -7,4 +7,6 @@ module.exports = {
 
     GROUP_UPDATE_REQUEST_EVENT: 'group-update-request',
     GROUP_UPDATE_RESPONSE_EVENT: 'group-update-response',
+
+    NOTIFICATION_EVENT: 'notification',
 };

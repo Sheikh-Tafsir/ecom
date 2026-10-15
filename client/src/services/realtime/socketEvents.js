@@ -6,3 +6,5 @@ export const GROUP_CREATE_RESPONSE_EVENT = 'group-create-response';
 
 export const GROUP_UPDATE_REQUEST_EVENT = 'group-update-request';
 export const GROUP_UPDATE_RESPONSE_EVENT = 'group-update-response';
+
+export const NOTIFICATION_EVENT = 'notification';

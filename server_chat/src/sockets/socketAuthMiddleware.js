@@ -1,12 +1,13 @@
 const {ACCESS_TOKEN_REQUIRED, ACCESS_TOKEN_INVALID} = require("../utils/Messages");
 const {isAccessTokenValid} = require("../service/JwtService");
 const RedisConfig = require("../config/RedisConfig");
+const {logger} = require("../config/logger");
 
 const socketAuthMiddleware = async (socket, next) => {
     try {
         const token = socket.handshake.auth?.token;
         if (!token) {
-            console.error("Access token is required for socket connection.");
+            logger.error("Access token is required for socket connection.");
 
             // Use "Unauthorized" so client connect_error handler triggers token refresh retry
             const error = new Error("Unauthorized");
@@ -23,7 +24,7 @@ const socketAuthMiddleware = async (socket, next) => {
 
         // Enforce mandatory JTI claim presence for defense-in-depth security
         if (!jti) {
-            console.warn("Access token lacks a mandatory JTI claim for socket connection");
+            logger.warn("Access token lacks a mandatory JTI claim for socket connection");
             // Use "Unauthorized" so client connect_error handler triggers token refresh retry
             const error = new Error("Unauthorized");
             error.data = {
@@ -40,7 +41,7 @@ const socketAuthMiddleware = async (socket, next) => {
         try {
             const isBlacklisted = await RedisConfig.get(cacheKey);
             if (isBlacklisted) {
-                console.warn(`Access token JTI: ${jti} is revoked/blacklisted for socket connection`);
+                logger.warn(`Access token JTI: ${jti} is revoked/blacklisted for socket connection`);
                 // Use "Unauthorized" so client connect_error handler triggers token refresh retry
                 const error = new Error("Unauthorized");
                 error.data = {
@@ -52,7 +53,7 @@ const socketAuthMiddleware = async (socket, next) => {
         } catch (redisErr) {
             // Fail closed: deny socket connection when we cannot verify token revocation status.
             // Allowing a potentially revoked token through is a security risk.
-            console.error(`Redis error checking revoked tokens blacklist for JTI ${jti} (socket):`, redisErr.message);
+            logger.error(`Redis error checking revoked tokens blacklist for JTI ${jti} (socket):`, redisErr.message);
 
             const error = new Error('Service temporarily unavailable — unable to verify token status');
             error.data = {
@@ -68,7 +69,7 @@ const socketAuthMiddleware = async (socket, next) => {
 
         next();
     } catch (err) {
-        console.error("Invalid access token:", err.message);
+        logger.error("Invalid access token:", err.message);
 
         // Use "Unauthorized" so client connect_error handler triggers token refresh retry
         const error = new Error("Unauthorized");

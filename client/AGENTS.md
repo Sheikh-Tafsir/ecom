@@ -72,4 +72,3 @@ src/
 | `VITE_SESSION_HINT_KEY`        | Session storage key           |
 | `VITE_LOCAL_STORAGE_CART_KEY`  | Cart persistence key          |
 | `VITE_WEB_SOCKET_ON`           | Enable/disable Socket.IO      |
-| `VITE_SSE_ON`                  | Enable/disable SSE            |

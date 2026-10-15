@@ -30,9 +30,7 @@ import static com.example.ecom.common.utils.CacheConstants.*;
 @RequiredArgsConstructor
 public class RateLimiterService {
 
-    public static final Set<String> RATE_LIMIT_EXCLUDED_PATHS = Set.of(
-            "/notifications/subscribe"
-    );
+    public static final Set<String> RATE_LIMIT_EXCLUDED_PATHS = Set.of();
 
     @Value("${rate-limit.global.rate:2000}")
     private int globalRateLimit;

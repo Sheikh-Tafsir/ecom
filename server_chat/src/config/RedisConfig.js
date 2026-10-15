@@ -27,7 +27,13 @@ RedisConfig.setAsync = async (key, value) => {
 
 // Close Redis connection when the application exits
 process.on('exit', () => {
-    RedisConfig.quit();
+    try {
+        if (RedisConfig.status === 'ready' || RedisConfig.status === 'connect') {
+            RedisConfig.disconnect();
+        }
+    } catch (e) {
+        // Ignore during process termination
+    }
     console.info('Redis connection closed');
 });
 

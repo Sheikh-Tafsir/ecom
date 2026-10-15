@@ -2,7 +2,6 @@ package com.example.ecom.common.filter;
 
 import com.example.ecom.common.dto.CustomUserDetails;
 import com.example.ecom.common.service.JwtService;
-import com.example.ecom.notification.service.NotificationService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -34,13 +33,9 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
     public static final String BEARER_PREFIX = "Bearer ";
 
-    private static final String SSE_TICKET = "ticket";
-
     private final JwtService jwtService;
 
     private final CacheManager cacheManager;
-
-    private final NotificationService notificationService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -184,11 +179,6 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
         if (StringUtils.hasText(authHeader) && authHeader.startsWith(BEARER_PREFIX)) {
             return authHeader.substring(BEARER_PREFIX.length());
-        }
-
-        String ticket = request.getParameter(SSE_TICKET);
-        if (StringUtils.hasText(ticket) && notificationService != null) {
-            return notificationService.getAndDeleteTokenByTicket(ticket);
         }
 
         return null;

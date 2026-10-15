@@ -9,7 +9,7 @@ import ProtectedRoute from "@/routes/ProtectedRoute";
 import PublicRoute from "@/routes/PublicRoute";
 
 import {connectSocket, disconnectSocket, isSocketOn} from '@/services/realtime/socket';
-import {notificationService, isSseOn} from '@/services/realtime/notificationService.js';
+import {registerNotificationListeners} from '@/services/realtime/notificationSocket';
 import {PERMISSION} from "@/constants/auth.constants";
 import NotificationWrapper from "@/services/realtime/NotificationWrapper.jsx";
 import ErrorBoundary from "@/common/ErrorBoundary";
@@ -77,6 +77,7 @@ const InnerApp = () => {
     const user = useUserStore((state) => state.user);
     const isLoading = useUserStore((state) => state.isLoading);
     const setSocket = useUserStore((state) => state.setSocket);
+    const socket = useUserStore((state) => state.socket);
 
     useEffect(() => {
         initUser();
@@ -102,24 +103,12 @@ const InnerApp = () => {
             disconnectSocket();
             setSocket(null);
         };
-    }, [user, setSocket, isLoading])
+    }, [user, setSocket, isLoading]);
 
     useEffect(() => {
-        if (!isSseOn() || isLoading) {
-            notificationService.stop();
-            return;
-        }
-
-        if (user?.email) {
-            notificationService.start();
-        } else {
-            notificationService.stop();
-        }
-
-        return () => {
-            notificationService.stop();
-        };
-    }, [user, isLoading])
+        if (!socket) return;
+        return registerNotificationListeners(socket);
+    }, [socket]);
 
     if (isLoading) {
         return <PageLoadingOverlay/>;
