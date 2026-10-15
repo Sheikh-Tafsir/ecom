@@ -1,8 +1,15 @@
 import React from 'react';
+import SEO from '@/common/SEO';
 
 const TermsOfService = () => {
     return (
         <div className="container mx-auto py-10 px-4 max-w-4xl">
+            <SEO
+                title="Terms of Service | Aspire"
+                description="Review the terms, conditions, and guidelines governing the use of Aspire's e-commerce services."
+                canonicalUrl="/terms"
+                ogType="website"
+            />
             <h1 className="text-4xl font-bold text-slate-900 mb-10 tracking-tighter uppercase">
                 Terms of Service
             </h1>

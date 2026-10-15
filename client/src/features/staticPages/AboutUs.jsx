@@ -1,8 +1,15 @@
 import React from 'react';
+import SEO from '@/common/SEO';
 
 const AboutUs = () => {
     return (
         <div className="container mx-auto py-10 px-4 max-w-4xl">
+            <SEO
+                title="About Us | Aspire"
+                description="Learn about Aspire's mission to provide exceptional shopping experiences, premium curated products, and innovative technology."
+                canonicalUrl="/about"
+                ogType="website"
+            />
             <h1 className="text-4xl font-bold text-slate-900 mb-10 tracking-tighter uppercase">
                 About Us
             </h1>

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, User, Calendar } from "lucide-react";
 import { formatDate } from '@/utils';
 import NotFound from '@/features/NotFound';
+import SEO from "@/common/SEO";
 
 const getBlogByTitle = async (title) => {
     const response = await AuthenticatedAxios.get(`/blogs/${title}`);
@@ -46,6 +47,25 @@ const BlogDetails = () => {
 
     return (
         <article className="container mx-auto py-10 px-4 max-w-4xl">
+            <SEO
+                title={post?.title ? `${post.title} | Aspire Blog` : "Blog | Aspire"}
+                description={post?.summary || "Read this article on Aspire."}
+                canonicalUrl={`/blogs/${title}`}
+                ogImage={post?.coverImage}
+                ogType="article"
+                schema={post ? {
+                    "@context": "https://schema.org",
+                    "@type": "BlogPosting",
+                    "headline": post.title,
+                    "image": post.coverImage ? [post.coverImage] : [],
+                    "datePublished": post.createdAt,
+                    "author": {
+                        "@type": "Person",
+                        "name": post.author?.name || "Aspire Team"
+                    },
+                    "description": post.summary
+                } : null}
+            />
             <Button 
                 variant="ghost" 
                 className="mb-8 font-bold text-slate-500 hover:text-blue-600 p-0 hover:bg-transparent flex items-center gap-2 group"

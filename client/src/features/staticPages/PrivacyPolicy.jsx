@@ -1,8 +1,15 @@
 import React from 'react';
+import SEO from '@/common/SEO';
 
 const PrivacyPolicy = () => {
     return (
         <div className="container mx-auto py-10 px-4 max-w-4xl">
+            <SEO
+                title="Privacy Policy | Aspire"
+                description="Read Aspire's privacy policy to understand how we collect, use, and protect your personal information."
+                canonicalUrl="/privacy"
+                ogType="website"
+            />
             <h1 className="text-4xl font-bold text-slate-900 mb-10 tracking-tighter uppercase">
                 Privacy Policy
             </h1>

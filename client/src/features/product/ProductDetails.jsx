@@ -24,6 +24,7 @@ import {useQuery} from "@tanstack/react-query"
 import {toastify} from "@/common/toastify.js"
 import ReviewSave from "./ReviewSave";
 import {BackButton} from "@/components/common/BackButton";
+import SEO from "@/common/SEO";
 
 const fetchProduct = async (id) => {
     const response = await AuthenticatedAxios.get(`/products/${id}`);
@@ -116,6 +117,29 @@ export default function ProductDetails() {
 
     return (
         <div className="bg-slate-50 min-h-screen">
+            <SEO
+                title={product?.name ? `${product.name} | Aspire` : "Product Details | Aspire"}
+                description={product?.description ? product.description.slice(0, 160) : "Discover this product with fast delivery and warranty at Aspire."}
+                canonicalUrl={`/products/${id}`}
+                ogImage={product?.images?.[0]?.image || product?.image}
+                ogType="product"
+                schema={product ? {
+                    "@context": "https://schema.org/",
+                    "@type": "Product",
+                    "name": product.name,
+                    "image": product.images?.length > 0 ? product.images.map(img => img.image) : (product.image ? [product.image] : []),
+                    "description": product.description || `Buy ${product.name} at Aspire`,
+                    "sku": `PROD-${product.id}`,
+                    "offers": {
+                        "@type": "Offer",
+                        "url": typeof window !== 'undefined' ? window.location.href : '',
+                        "priceCurrency": "USD",
+                        "price": product.price,
+                        "availability": product.quantity > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+                        "itemCondition": "https://schema.org/NewCondition"
+                    }
+                } : null}
+            />
             {isProductLoading && <PageLoadingOverlay/>}
 
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-10">

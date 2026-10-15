@@ -1,0 +1,42 @@
+# robots.txt for Aspire E-Commerce Platform
+User-agent: *
+
+# Allow public crawlable content
+Allow: /
+Allow: /products
+Allow: /products/*
+Allow: /blogs
+Allow: /blogs/*
+Allow: /about
+Allow: /privacy
+Allow: /terms
+
+# Disallow private user flows & authenticated areas
+Disallow: /auth/
+Disallow: /cart
+Disallow: /orders
+Disallow: /orders/*
+Disallow: /profile
+Disallow: /profile/*
+Disallow: /chats
+Disallow: /chats/*
+Disallow: /payment/
+Disallow: /payment-success
+Disallow: /payment-failed
+
+# Disallow administrative dashboards
+Disallow: /users
+Disallow: /users/*
+Disallow: /roles
+Disallow: /roles/*
+Disallow: /stocks
+Disallow: /stocks/*
+Disallow: /sales
+Disallow: /banners
+Disallow: /faqs
+
+# AI Agents & LLM documentation
+Allow: /llms.txt
+
+# Sitemap location
+Sitemap: https://aspire-shop.com/sitemap.xml

@@ -2,12 +2,30 @@ import { Button } from '@/components/ui/button';
 import BannerSlider from "@/features/homepage/BannerSlider";
 import Faqs from "./Faqs";
 import { useNavigate } from "react-router-dom";
+import SEO from "@/common/SEO";
 
 const Homepage = () => {
   const navigate = useNavigate();
 
   return (
     <div className='min-h-screen bg-slate-50 flex flex-col'>
+      <SEO
+        title="Aspire | Modern Online Store & Exclusive Collections"
+        description="Shop the latest trends, electronics, and lifestyle products at Aspire. Enjoy fast shipping, seamless checkout, and 24/7 customer care."
+        canonicalUrl="/"
+        ogType="website"
+        schema={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Aspire",
+          "url": typeof window !== 'undefined' ? window.location.origin : 'https://aspire-shop.com',
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": `${typeof window !== 'undefined' ? window.location.origin : 'https://aspire-shop.com'}/products?search={search_term_string}`,
+            "query-input": "required name=search_term_string"
+          }
+        }}
+      />
       <div className="container mx-auto px-4 py-8">
         <BannerSlider />
       </div>

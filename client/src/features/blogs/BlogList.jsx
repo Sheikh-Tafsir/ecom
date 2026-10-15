@@ -19,6 +19,7 @@ import { formatDate } from '@/utils';
 import { FIRST_PAGE } from '@/utils/PaginationUtils';
 import { Search, SortAsc } from 'lucide-react';
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
+import SEO from "@/common/SEO";
 
 const getPublishedBlogs = async (params) => {
     const response = await AuthenticatedAxios.get("/blogs/published", { params });
@@ -64,6 +65,12 @@ const BlogList = () => {
 
     return (
         <div className="container mx-auto py-10 px-4 relative min-h-[600px]">
+            <SEO
+                title="News & Articles | Aspire Blog"
+                description="Read our latest stories, shopping guides, announcements, and product insights from the Aspire team."
+                canonicalUrl="/blogs"
+                ogType="website"
+            />
             {isLoading && !posts.length && <PageLoadingOverlay />}
             
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">

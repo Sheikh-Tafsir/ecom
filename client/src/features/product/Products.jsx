@@ -27,6 +27,7 @@ import {PRODUCT_SORTBY} from "@/constants/product.constants";
 import {TOAST_TYPE} from "@/constants/app.constants";
 import {toastify} from "@/common/toastify.js"
 import {Button} from "@/components/ui/button"
+import SEO from "@/common/SEO";
 
 const ALLOWED_SORT_FIELDS = new Set([
     "createdAt",
@@ -173,6 +174,12 @@ export default function Products() {
 
     return (
         <div className="min-h-screen">
+            <SEO
+                title="Shop All Products | Aspire"
+                description="Browse our curated collection of high-quality products. Filter by category, price, and customer ratings to find what you love."
+                canonicalUrl="/products"
+                ogType="website"
+            />
             {(isCategoriesLoading || isProductsLoading) && (<PageLoadingOverlay/>)}
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16">

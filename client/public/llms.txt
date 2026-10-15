@@ -1,0 +1,18 @@
+# Aspire E-Commerce Platform
+
+> Aspire is a modern e-commerce storefront offering premium consumer goods, curated electronics, accessories, and home lifestyle products.
+
+## Overview & Store Sections
+
+- [Storefront / Home](https://aspire-shop.com/): Featured collections, trending banners, and promotions.
+- [Product Catalog](https://aspire-shop.com/products): Complete catalog with search, category filtering, price sorting, and stock availability.
+- [Blog & News](https://aspire-shop.com/blogs): Company updates, buying guides, and product announcements.
+- [About Us](https://aspire-shop.com/about): Company mission, team, and customer-first values.
+- [Terms of Service](https://aspire-shop.com/terms): Store policies, purchasing terms, and warranty agreements.
+- [Privacy Policy](https://aspire-shop.com/privacy): User data handling, cookies, and privacy protection.
+
+## Customer Support & Features
+
+- Real-time customer chat assistance for instant support.
+- Secure customer order tracking and checkout.
+- Fast dispatch with automated tracking notifications.
