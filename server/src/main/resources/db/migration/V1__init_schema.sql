@@ -55,8 +55,9 @@ CREATE TABLE IF NOT EXISTS user_refresh_tokens (
 
 -- 3. Categories & Products
 CREATE TABLE IF NOT EXISTS categories (
-    id   UUID PRIMARY KEY,
-    name VARCHAR(255) NOT NULL UNIQUE
+    id         UUID PRIMARY KEY,
+    name       VARCHAR(255) NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS products (
