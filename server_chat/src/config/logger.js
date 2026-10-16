@@ -1,5 +1,8 @@
 const fs = require("fs");
 const path = require("path");
+const util = require("util");
+const { Writable } = require("stream");
+const pino = require("pino");
 
 const LOG_DIR = process.env.LOG_DIR || path.join(process.cwd(), "logs/chat-server");
 
@@ -15,97 +18,107 @@ const serverLogFile = path.join(LOG_DIR, "server.log");
 const startupLogFile = path.join(LOG_DIR, "server-startup.log");
 
 let isStartupPhase = true;
+let serverFileStream = null;
+let startupFileStream = null;
 
-const originalLog = console.log;
-const originalDebug = console.debug;
-const originalInfo = console.info;
-const originalWarn = console.warn;
-const originalError = console.error;
-
-function formatArgs(args) {
-    return args
-        .map(arg => {
-            if (arg instanceof Error) {
-                return arg.stack || arg.message;
-            }
-            if (typeof arg === "object" && arg !== null) {
-                try {
-                    return JSON.stringify(arg);
-                } catch (e) {
-                    return String(arg);
-                }
-            }
-            return String(arg);
-        })
-        .join(" ");
+try {
+    serverFileStream = fs.createWriteStream(serverLogFile, { flags: "a" });
+    startupFileStream = fs.createWriteStream(startupLogFile, { flags: "a" });
+} catch (e) {
+    // Fail-safe: continue without file streams if permission error
 }
 
-function writeToFile(level, levelValue, ...args) {
-    const timestamp = new Date().toISOString();
-    const message = formatArgs(args);
-
-    const logEntry = {
-        "@timestamp": timestamp,
-        "@version": "1",
-        message: message,
-        logger_name: "com.example.ecom.chat.ChatServer",
-        thread_name: "main",
-        level: level,
-        level_value: levelValue
-    };
-
-    const line = JSON.stringify(logEntry) + "\n";
-
-    try {
-        fs.appendFileSync(serverLogFile, line);
-        if (isStartupPhase) {
-            fs.appendFileSync(startupLogFile, line);
+const startupStreamWrapper = new Writable({
+    write(chunk, encoding, callback) {
+        if (isStartupPhase && startupFileStream) {
+            startupFileStream.write(chunk, encoding, callback);
+        } else {
+            callback();
         }
-    } catch (e) {
-        // Fail-safe: do not crash on log write failure
+    }
+});
+
+const streams = [{ stream: process.stdout }];
+if (serverFileStream) {
+    streams.push({ stream: serverFileStream });
+}
+if (startupFileStream) {
+    streams.push({ stream: startupStreamWrapper });
+}
+
+const levelMap = {
+    trace: 10000,
+    debug: 10000,
+    info: 20000,
+    warn: 30000,
+    error: 40000,
+    fatal: 50000,
+};
+
+const baseLogger = pino(
+    {
+        level: process.env.LOG_LEVEL || "debug",
+        timestamp: () => `,"@timestamp":"${new Date().toISOString()}"`,
+        formatters: {
+            level(label) {
+                return {
+                    level: label.toUpperCase(),
+                    level_value: levelMap[label] || 20000,
+                };
+            },
+            bindings() {
+                return {
+                    logger_name: "com.example.ecom.chat.ChatServer",
+                    thread_name: "main",
+                    "@version": "1",
+                };
+            },
+        },
+        messageKey: "message",
+    },
+    pino.multistream(streams)
+);
+
+function dispatchLog(level, ...args) {
+    if (args.length === 0) return;
+    if (
+        typeof args[0] === "object" &&
+        args[0] !== null &&
+        !(args[0] instanceof Error) &&
+        args.length === 2 &&
+        typeof args[1] === "string"
+    ) {
+        baseLogger[level](args[0], args[1]);
+    } else {
+        baseLogger[level](util.format(...args));
     }
 }
 
-console.log = (...args) => {
-    originalLog("[LOG]", ...args);
-    writeToFile("INFO", 20000, ...args);
+const logger = {
+    info: (...args) => dispatchLog("info", ...args),
+    warn: (...args) => dispatchLog("warn", ...args),
+    error: (...args) => dispatchLog("error", ...args),
+    debug: (...args) => dispatchLog("debug", ...args),
+    child: (bindings) => baseLogger.child(bindings),
+    pino: baseLogger,
 };
 
-console.debug = (...args) => {
-    originalDebug("[DEBUG]", ...args);
-    writeToFile("DEBUG", 10000, ...args);
-};
-
-console.info = (...args) => {
-    originalInfo("[INFO]", ...args);
-    writeToFile("INFO", 20000, ...args);
-};
-
-console.warn = (...args) => {
-    originalWarn("[WARN]", ...args);
-    writeToFile("WARN", 30000, ...args);
-};
-
-console.error = (...args) => {
-    originalError("[ERROR]", ...args);
-    writeToFile("ERROR", 40000, ...args);
-};
+// Redirect console to Pino
+console.log = (...args) => logger.info(...args);
+console.info = (...args) => logger.info(...args);
+console.warn = (...args) => logger.warn(...args);
+console.error = (...args) => logger.error(...args);
+console.debug = (...args) => logger.debug(...args);
 
 function endStartupPhase() {
     isStartupPhase = false;
+    if (startupFileStream) {
+        startupFileStream.end();
+        startupFileStream = null;
+    }
 }
-
-const logger = {
-    info: (...args) => console.info(...args),
-    warn: (...args) => console.warn(...args),
-    error: (...args) => console.error(...args),
-    debug: (...args) => console.debug(...args),
-    log: (...args) => console.log(...args)
-};
 
 module.exports = {
     logger,
     endStartupPhase,
-    serverLogFile,
-    startupLogFile
 };
