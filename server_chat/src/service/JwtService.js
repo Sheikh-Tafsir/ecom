@@ -24,10 +24,11 @@ const generateAccessToken = (user) => {
             id: user.id,
             name: user.name,
             email: user.email,
-            permissions: user.permissions
+            permissions: user.permissions,
+            status: user.status || 'ACTIVE'
         },
         Buffer.from(process.env.ACCESS_TOKEN_SECRET, "utf8"),
-        { expiresIn: process.env.ACCESS_TOKEN_VALIDITY || '30m' }
+        { expiresIn: process.env.ACCESS_TOKEN_VALIDITY || '30m', jwtid: randomUUID() }
     );
 }
 

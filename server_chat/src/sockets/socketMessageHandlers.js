@@ -6,6 +6,7 @@ const {addSocketToRoom, getRoom, getActiveUsersInRoom} = require('./socketRoomMa
 const {SENT, RECEIVED} = require("../utils/Messages");
 const {buildErrorResponse} = require("../utils/ResponseUtils");
 const RedisConfig = require('../config/RedisConfig');
+const {logger} = require('../config/logger');
 
 const MAX_MESSAGE_LENGTH = 4096;
 
@@ -43,7 +44,7 @@ const setupMessageHandlers = (io, socket) => {
                 limited = await isRateLimitedRedis(user.id);
             } catch (redisErr) {
                 // Redis unavailable — fall back to per-socket counter
-                console.warn('Redis rate-limit unavailable, using fallback:', redisErr.message);
+                logger.warn('Redis rate-limit unavailable, using fallback:', redisErr.message);
                 const now = Date.now();
                 if (now - fallbackReset > FALLBACK_RATE_WINDOW_MS) {
                     fallbackCount = 0;
@@ -95,12 +96,12 @@ const setupMessageHandlers = (io, socket) => {
                     data: messageData,
                 })
             );
-            // console.info("Message %s sent from %s:", reqBody?.content, user.name, messageData);
+            logger.info(`Message sent from ${user.name} (${user.id}) in chat ${message.chatId}`);
 
             const activeUsersInRoom = await getActiveUsersInRoom(io, roomId);
             await MessageService.saveMessageReceipts(activeUsersInRoom, message.id, message.chatId, user.id);
         } catch (err) {
-            console.error(`Error sending message from ${user.name}:`, err);
+            logger.error(`Error sending message from ${user.name}:`, err);
             ack(buildErrorResponse(err.message))
         }
     });

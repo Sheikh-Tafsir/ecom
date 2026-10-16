@@ -8,16 +8,20 @@ const db = {};
 
 // 1. Load all models
 fs.readdirSync(__dirname)
-  .filter(file => file !== basename && file.endsWith('.js'))
+  .filter(file => file !== basename && file.endsWith('.js') && !file.endsWith('.test.js'))
   .forEach(file => {
     const modelDef = require(path.join(__dirname, file));
-    const model = modelDef(sequelize, Sequelize.DataTypes);
-    db[model.name] = model;
+    if (typeof modelDef === 'function') {
+      const model = modelDef(sequelize, Sequelize.DataTypes);
+      if (model && model.name) {
+        db[model.name] = model;
+      }
+    }
   });
 
 // 2. Run all associations
 Object.keys(db).forEach(modelName => {
-  if (db[modelName].associate) {
+  if (db[modelName] && typeof db[modelName].associate === 'function') {
     db[modelName].associate(db);
   }
 });

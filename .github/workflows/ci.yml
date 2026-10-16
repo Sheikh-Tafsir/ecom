@@ -119,6 +119,13 @@ jobs:
           BKASH_APP_SECRET=dummy
           BKASH_USERNAME=dummy
           BKASH_PASSWORD=dummy
+          INTERNAL_SERVICE_KEY=dummy-ci-internal-service-key-32-chars-long
+          CHAT_DB_NAME=chat_db
+          CHAT_DB_USERNAME=postgres
+          CHAT_DB_PASSWORD=postgres
+          CHAT_DB_HOST=postgres-chat
+          CHAT_DB_PORT=5432
+          CLOUDINARY_FOLDER=dummy
           EOF
       - name: Build Docker images
         run: docker compose build

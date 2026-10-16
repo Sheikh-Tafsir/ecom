@@ -5,7 +5,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 
 require("dotenv").config();
-const { endStartupPhase } = require("./src/config/logger"); 
+const { logger, endStartupPhase } = require("./src/config/logger"); 
 
 // const {CorsMiddleware} = require("./src/middleware/CorsMiddleware");
 const TrimInput = require("./src/middleware/TrimInput");
@@ -79,32 +79,44 @@ app.use(ErrorHandler);
 const server = http.createServer(app);
 SocketHandler(server);
 
-server.listen(process.env.CHAT_SERVER_PORT, () => {
-    console.info(`Chat server is running ${process.env.CHAT_SERVICE_URL}.`);
-    endStartupPhase();
-});
+const initDb = require("./src/config/initDb");
+
+(async () => {
+    try {
+        await initDb();
+    } catch (err) {
+        logger.error("Failed to initialize database schema:", err.message);
+        process.exit(1);
+    }
+
+    const port = process.env.CHAT_SERVER_PORT || process.env.PORT || 3001;
+    server.listen(port, () => {
+        logger.info(`Chat server is running on port ${port} (${process.env.CHAT_SERVICE_URL}).`);
+        endStartupPhase();
+    });
+})();
 
 // Graceful shutdown
 const gracefulShutdown = (signal) => {
-    console.info(`${signal} received. Starting graceful shutdown...`);
+    logger.info(`${signal} received. Starting graceful shutdown...`);
     server.close(() => {
-        console.info('HTTP server closed.');
+        logger.info('HTTP server closed.');
         const sequelize = require('./src/config/SequelizeConfig');
         const redis = require('./src/config/RedisConfig');
         Promise.all([
-            sequelize.close().then(() => console.info('Database connection closed.')),
-            redis.quit().then(() => console.info('Redis connection closed.'))
+            sequelize.close().then(() => logger.info('Database connection closed.')),
+            redis.quit().then(() => logger.info('Redis connection closed.'))
         ]).then(() => {
-            console.info('Graceful shutdown complete.');
+            logger.info('Graceful shutdown complete.');
             process.exit(0);
         }).catch((err) => {
-            console.error('Error during shutdown:', err);
+            logger.error('Error during shutdown:', err);
             process.exit(1);
         });
     });
 
     setTimeout(() => {
-        console.error('Forced shutdown after timeout.');
+        logger.error('Forced shutdown after timeout.');
         process.exit(1);
     }, 15000);
 };

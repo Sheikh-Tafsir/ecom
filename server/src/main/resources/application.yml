@@ -1,4 +1,6 @@
 app:
+  internal:
+    service-key: ${INTERNAL_SERVICE_KEY}
   cache:
     strategy: ${APP_CACHE_STRATEGY:redis}
     ttl:

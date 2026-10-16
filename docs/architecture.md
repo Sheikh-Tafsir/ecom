@@ -16,18 +16,18 @@ Spring Cloud Gateway (:8080)          ← sole public API entry point
 Main Server (:8081)   Chat Server (:3001)
 (Spring Boot 3.5)     (Node.js / Socket.IO)
         │                │
-        ├── PostgreSQL 16 (shared DB, each service owns its own tables)
-        ├── Redis 7       (cache · idempotency · rate-limit · pub/sub)
-        └── RabbitMQ 3    (async email queues — Main Server only)
+        ├── PostgreSQL (Main DB) ├── PostgreSQL (Chat DB: chats, msgs)
+        ├── Redis 7              ├── Redis 7 (pub/sub & user cache)
+        └── RabbitMQ 3           └── HTTP Internal -> Main Server (:8081)
 ```
 
 ## Docker Network Isolation
 
-| Network    | Members                              | Purpose                           |
-|------------|--------------------------------------|-----------------------------------|
-| `frontend` | gateway, client                      | Client ↔ Gateway traffic          |
-| `backend`  | gateway, server, chat-server         | Internal service communication    |
-| `data`     | server, chat-server, gateway, redis, postgres, rabbitmq | Data layer access |
+| Network    | Members                                          | Purpose                           |
+|------------|--------------------------------------------------|-----------------------------------|
+| `frontend` | gateway, client                                  | Client ↔ Gateway traffic          |
+| `backend`  | gateway, server, chat-server                     | Internal service communication    |
+| `data`     | server, chat-server, gateway, redis, postgres, postgres-chat, rabbitmq | Data layer access |
 
 - **Client** is on `frontend` only — it cannot reach `server` or `chat-server` directly.
 - **Gateway** spans `frontend`, `backend`, and `data` — it needs Redis for token revocation checks.
@@ -84,7 +84,7 @@ Server ──publish──▶ RabbitMQ ──consume──▶ Server (MailConsum
 ## Key Technology Decisions
 
 - **Spring Cloud Gateway** — centralized CORS, JWT validation, rate limiting, and request logging. Individual services do not handle CORS.
-- **Shared PostgreSQL** — single DB instance; each service owns its schema tables. Chat Server uses Sequelize (Node); Main Server uses Spring Data JPA + Flyway.
+- **Database-per-Service (PostgreSQL)** — Independent databases: `postgres` for Main Server (Flyway migrations) and `postgres-chat` for Chat Server (automated DDL initialization). Chat Server resolves user details via internal HTTP (`POST /users/batch`) with Redis multi-tier caching (TTL 10m).
 - **Redis** — used by all three backend services: Spring Cache (Main Server), Socket.IO adapter pub/sub (Chat Server), rate-limit bucket storage (Gateway + Main Server).
 - **No dedicated sync endpoint for chat** — reconnect recovery uses standard `GET /chats/:id?afterId=` forward pagination.
 - **Timestamps** — always `java.time.Instant` (UTC ISO-8601) on the JVM side. Never `LocalDateTime`.

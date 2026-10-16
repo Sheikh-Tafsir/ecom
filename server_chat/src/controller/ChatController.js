@@ -135,7 +135,7 @@ const router = express.Router();
  *                       $ref: '#/components/schemas/Pagination'
  */
 router.get("", AuthenticationMiddleware, AsyncHandler(async (req, res) => {
-    const data = await ChatService.findAllChatsByUserId(req?.query, req.user?.id);
+    const data = await ChatService.findAllChatsByUserId(req?.query, req.user?.id, req.headers.authorization);
     ok(res, {message: FOUND, data})
 }));
 
@@ -206,7 +206,7 @@ router.get("", AuthenticationMiddleware, AsyncHandler(async (req, res) => {
  *         description: Chat not found or user is not a participant
  */
 router.get("/:id", ValidateUuidParams('id'), AuthenticationMiddleware, AsyncHandler(async (req, res) => {
-    const data = await ChatService.findDetailsChatById(req.params?.id, req?.query, req.user?.id);
+    const data = await ChatService.findDetailsChatById(req.params?.id, req?.query, req.user?.id, req.headers.authorization);
     ok(res, {message: FOUND, data})
 }));
 

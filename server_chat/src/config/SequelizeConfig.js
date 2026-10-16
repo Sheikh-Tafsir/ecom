@@ -3,13 +3,17 @@ const pg = require('pg');
 const { isEnvironmentProduction } = require('../utils/Utils');
 require('dotenv').config();
 
+const { logger } = require('./logger');
+
 // Load environment variables with fallback
-const dbUrl = process.env.DB_URL;
-const database = process.env.DB_NAME;
-const user = process.env.DB_USERNAME;
-const password = process.env.DB_PASSWORD;
-const host = process.env.DB_HOST;
-const port = process.env.DB_PORT;
+const rawDbUrl = process.env.CHAT_DB_URL || process.env.DB_URL;
+const dbUrl = (rawDbUrl && !rawDbUrl.startsWith('jdbc:') && rawDbUrl.trim() !== '') ? rawDbUrl : null;
+
+const database = process.env.CHAT_DB_NAME || process.env.DB_NAME;
+const user = process.env.CHAT_DB_USERNAME || process.env.DB_USERNAME;
+const password = process.env.CHAT_DB_PASSWORD || process.env.DB_PASSWORD;
+const host = process.env.CHAT_DB_HOST || process.env.DB_HOST;
+const port = parseInt(process.env.CHAT_DB_PORT || process.env.DB_PORT, 10);
 
 const sslOption = (isEnvironmentProduction() && process.env.DB_SSL !== 'false')
   ? { ssl: { require: true, rejectUnauthorized: false } }
@@ -23,7 +27,7 @@ const poolConfig = {
   idle: parseInt(process.env.DB_POOL_IDLE || '10000', 10)
 };
 
-if (dbUrl && !dbUrl.startsWith('jdbc:')) {
+if (dbUrl) {
   sequelize = new Sequelize(dbUrl, {
     dialect: 'postgres',
     dialectModule: pg,
@@ -47,9 +51,9 @@ if (dbUrl && !dbUrl.startsWith('jdbc:')) {
 async function testConnection() {
   try {
     await sequelize.authenticate();
-    console.info('Connection to the database has been established successfully.');
+    logger.info('Connection to the database has been established successfully.');
   } catch (error) {
-    console.error('Unable to connect to the database:', error.message);
+    logger.error('Unable to connect to the database:', error.message);
   }
 }
 

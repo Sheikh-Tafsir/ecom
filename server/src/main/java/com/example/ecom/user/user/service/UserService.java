@@ -46,6 +46,8 @@ public class UserService {
 
     private final AuthTokenService authTokenService;
 
+    private final java.util.Optional<org.springframework.data.redis.core.StringRedisTemplate> stringRedisTemplate;
+
     @PreAuthorize("hasAnyAuthority(T(com.example.ecom.common.enums.Permission).ADMIN_ACCESS.getValue()," +
             "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     public Page<UserResponse> findAll(Pageable pageable, String name, String role, UserStatus status) {
@@ -58,6 +60,17 @@ public class UserService {
                 .map(UserSearchResponse::new)
                 .toList();
     }
+
+    public List<UserSearchResponse> findAllByIds(List<UUID> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        return userRepository.findAllById(ids)
+                .stream()
+                .map(UserSearchResponse::new)
+                .toList();
+    }
+
 
     @PreAuthorize("hasAnyAuthority(T(com.example.ecom.common.enums.Permission).ADMIN_ACCESS.getValue()," +
             "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
@@ -92,6 +105,7 @@ public class UserService {
         }
 
         userRepository.save(user);
+        evictChatUserCache(id);
     }
 
     @PreAuthorize("hasAuthority(T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
@@ -102,6 +116,7 @@ public class UserService {
     @Transactional
     public void delete(UUID id) {
         delete(findByIdHelper(id), DELETED);
+        evictChatUserCache(id);
     }
 
     @PreAuthorize("hasAuthority(T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
@@ -112,6 +127,18 @@ public class UserService {
     @Transactional
     public void banned(UUID id) {
         delete(findByIdHelper(id), BANNED);
+        evictChatUserCache(id);
+    }
+
+    private void evictChatUserCache(UUID id) {
+        stringRedisTemplate.ifPresent(template -> {
+            try {
+                template.delete("cache:user:" + id);
+                template.convertAndSend("ecom:user-updates", id.toString());
+            } catch (Exception e) {
+                log.warn("Failed to evict chat user cache or publish user update for {}: {}", id, e.getMessage());
+            }
+        });
     }
 
     // -- helpers --

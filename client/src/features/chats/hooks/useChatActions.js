@@ -38,7 +38,7 @@ export const useChatActions = (id, userId, updateChatOnMessage, onNewChat, showT
             chatId: id,
             senderId: userId,
             createdAt,
-            updatedAt,
+            updatedAt: createdAt,
             isTemporary: true,
             tempId,
         };
@@ -67,7 +67,7 @@ export const useChatActions = (id, userId, updateChatOnMessage, onNewChat, showT
         }, (acknowledgment) => {
             if (acknowledgment.error) {
                 console.error(acknowledgment.error);
-                showToast(acknowledgment.error, 'error');
+                showToast?.(acknowledgment.error, 'error');
                 return;
             }
 
@@ -86,7 +86,7 @@ export const useChatActions = (id, userId, updateChatOnMessage, onNewChat, showT
         }, (acknowledgment) => {
             if (acknowledgment.error) {
                 console.error(acknowledgment.error);
-                showToast(acknowledgment.error, 'error');
+                showToast?.(acknowledgment.error, 'error');
                 return;
             }
 

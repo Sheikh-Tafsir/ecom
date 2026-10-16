@@ -45,6 +45,31 @@ services:
     networks:
       - data
 
+  postgres-chat:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: ${CHAT_DB_NAME}
+      POSTGRES_USER: ${CHAT_DB_USERNAME}
+      POSTGRES_PASSWORD: ${CHAT_DB_PASSWORD}
+    volumes:
+      - postgres_chat_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${CHAT_DB_USERNAME} -d ${CHAT_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
   redis:
     image: redis:7-alpine
     restart: unless-stopped
@@ -164,9 +189,9 @@ services:
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_DRIVER_CLASS=${DB_DRIVER_CLASS}
-      - REDIS_HOST=${REDIS_HOST:-redis}
-      - REDIS_PORT=${REDIS_PORT:-6379}
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-foobared}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
       - MQ_HOST=${MQ_HOST}
       - MQ_PORT=${MQ_PORT}
       - MQ_USERNAME=${MQ_USERNAME}
@@ -174,6 +199,7 @@ services:
       - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
       - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
       - REFRESH_TOKEN_NAME=${REFRESH_TOKEN_NAME}
+      - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY}
       - CORS_ALLOWED_ORIGINS=${CLIENT_URL}
       - APP_CACHE_STRATEGY=${APP_CACHE_STRATEGY}
       - MAIL_SMTP_HOST=${MAIL_SMTP_HOST}
@@ -183,7 +209,7 @@ services:
       - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
       - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
       - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
-      - CLOUDINARY_FOLDER=${CLOUDINARY_FOLDER:-ecom_uploads}
+      - CLOUDINARY_FOLDER=${CLOUDINARY_FOLDER}
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_API_KEY=${SUPABASE_API_KEY}
       - SUPABASE_BUCKET=${SUPABASE_BUCKET}
@@ -239,15 +265,20 @@ services:
         max-file: "3"
     environment:
       - PORT=${CHAT_SERVER_PORT}
-      - DB_URL=${DB_URL}
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_URL=""
+      - DB_HOST=postgres-chat
+      - DB_PORT=5432
+      - DB_NAME=${CHAT_DB_NAME}
+      - DB_USERNAME=${CHAT_DB_USERNAME}
+      - DB_PASSWORD=${CHAT_DB_PASSWORD}
+      - MAIN_SERVICE_URL=http://server:8081
       - DB_DRIVER_CLASS=${DB_DRIVER_CLASS}
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
       - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
+      - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY}
       - CORS_ALLOWED_ORIGINS=${CLIENT_URL}
       - DB_SSL=false
     healthcheck:
@@ -257,9 +288,11 @@ services:
       retries: 3
       start_period: 20s
     depends_on:
-      postgres:
+      postgres-chat:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      server:
         condition: service_healthy
     networks:
       - backend
@@ -322,6 +355,7 @@ services:
 
 volumes:
   postgres_data:
+  postgres_chat_data:
   redis_data:
   server_logs:
   gateway_logs:

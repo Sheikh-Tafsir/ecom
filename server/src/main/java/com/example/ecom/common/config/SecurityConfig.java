@@ -87,6 +87,7 @@ public class SecurityConfig {
                         .requestMatchers(PUBLIC_URLS.toArray(new String[0])).permitAll()
 
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/internal/**").permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/products", "/products/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/categories", "/categories/*").permitAll()

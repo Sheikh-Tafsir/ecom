@@ -94,7 +94,7 @@ module.exports = (sequelize, DataTypes) => {
 
     // Define associations
     ChatParticipant.associate = models => {
-        ChatParticipant.belongsTo(models.User, { foreignKey: 'userId', as: 'User' });
+        ChatParticipant.belongsTo(models.Chat, { foreignKey: 'chatId', as: 'Chat' });
     };
 
     return ChatParticipant;

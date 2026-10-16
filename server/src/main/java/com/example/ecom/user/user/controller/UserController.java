@@ -56,6 +56,7 @@ public class UserController {
         return ResponseUtils.ok(user, messageService.get("successfully.found", "User"));
     }
 
+
     @PutMapping(value = "/{id}")
     public ResponseEntity<ApiResponse<Void>> update(@PathVariable UUID id,
                                                     @Valid @RequestBody UpdateUserRequest request) {

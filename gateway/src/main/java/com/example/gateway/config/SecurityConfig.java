@@ -86,6 +86,7 @@ public class SecurityConfig {
                 .addFilterBefore(authenticationFilter(), SecurityWebFiltersOrder.AUTHENTICATION)
                 .addFilterAfter(userRateLimiterFilter(), SecurityWebFiltersOrder.AUTHENTICATION)
                 .authorizeExchange(exchanges -> exchanges
+                        .pathMatchers("/internal/**").denyAll()
                         .pathMatchers(PUBLIC_URLS.toArray(new String[0])).permitAll()
                         .pathMatchers("/auth/**").permitAll()
                         .pathMatchers(HttpMethod.GET, "/products", "/products/*").permitAll()

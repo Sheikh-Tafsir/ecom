@@ -1,6 +1,7 @@
 const {Op} = require('sequelize');
 const sequelize = require('../config/SequelizeConfig');
-const {User, Chat, ChatParticipant, Message} = require('../model');
+const {Chat, ChatParticipant, Message} = require('../model');
+const UserService = require('./UserService');
 const {NOT_FOUND} = require('../utils/Messages');
 const {CHAT_TYPE, CHAT_MEMBER_TYPE} = require('../utils/Enum');
 const RuntimeError = require('../common/RuntimeError');
@@ -103,7 +104,7 @@ const findAllChatParticipantsByUserId = async (userId) => {
    READ METHODS
 ========================= */
 
-const findAllChatsByUserId = async (filters = {}, userId) => {
+const findAllChatsByUserId = async (filters = {}, userId, token) => {
     const {
         type,
         cursorLastSent,
@@ -145,13 +146,6 @@ const findAllChatsByUserId = async (filters = {}, userId) => {
                 model: ChatParticipant,
                 as: "Participants",
                 attributes: ["userId", "role", "unreadMessage"],
-                include: [
-                    {
-                        model: User,
-                        as: "User",
-                        attributes: ["id", "name", "image"],
-                    },
-                ],
             }
         ],
         order: [
@@ -167,7 +161,21 @@ const findAllChatsByUserId = async (filters = {}, userId) => {
         ? chats.slice(0, limit)
         : chats;
 
-    const formattedChats = pageChats.map(chat => formatChatListDetails(chat, userId));
+    // Collect all unique userIds of participants across the chats
+    const participantUserIds = new Set();
+    for (const chat of pageChats) {
+        const participants = chat.Participants || [];
+        for (const p of participants) {
+            if (p.userId) {
+                participantUserIds.add(p.userId);
+            }
+        }
+    }
+
+    // Hydrate participants using UserService
+    const usersMap = await UserService.getUsersBatch(Array.from(participantUserIds), token);
+
+    const formattedChats = pageChats.map(chat => formatChatListDetails(chat, userId, usersMap));
 
     const nextCursor =
         hasMore && pageChats.length
@@ -184,18 +192,21 @@ const findAllChatsByUserId = async (filters = {}, userId) => {
     };
 };
 
-const formatChatListDetails = (chat, userId) => {
-    const c = chat.get({plain: true});
+const formatChatListDetails = (chat, userId, usersMap = {}) => {
+    const c = typeof chat.get === 'function' ? chat.get({plain: true}) : chat;
 
-    const participants = c.Participants.map(p => ({
-        id: p.userId,
-        userId: p.userId,
-        name: p.User?.name,
-        image: p.User?.image,
-        role: p.role,
-    }));
+    const participants = (c.Participants || []).map(p => {
+        const user = usersMap[p.userId];
+        return {
+            id: p.userId,
+            userId: p.userId,
+            name: user?.name || "User",
+            image: user?.image || null,
+            role: p.role,
+        };
+    });
 
-    const currentUserParticipant = c.Participants.find(p => String(p.userId) === String(userId));
+    const currentUserParticipant = (c.Participants || []).find(p => String(p.userId) === String(userId));
     const unreadMessage = currentUserParticipant ? currentUserParticipant.unreadMessage : 0;
 
     let name = c.name;
@@ -206,7 +217,7 @@ const formatChatListDetails = (chat, userId) => {
     if (c.type === CHAT_TYPE.DIRECT) {
         const other = participants.find(p => String(p.id) !== String(userId));
         name = other?.name || "Unknown";
-        image = other?.image;
+        image = other?.image || null;
         otherUserId = other?.id;
         shortName = other?.name ? other.name.split(" ")[0] : "Unknown";
     } else {
@@ -229,7 +240,7 @@ const formatChatListDetails = (chat, userId) => {
     };
 };
 
-const findDetailsChatById = async (id, filters = {}, userId) => {
+const findDetailsChatById = async (id, filters = {}, userId, token) => {
     await checkChatParticipant(id, userId, null)
 
     const {
@@ -271,13 +282,6 @@ const findDetailsChatById = async (id, filters = {}, userId) => {
                     model: ChatParticipant,
                     as: "Participants",
                     attributes: ["userId", "role"],
-                    include: [
-                        {
-                            model: User,
-                            as: "User",
-                            attributes: ["id", "name", "image"],
-                        },
-                    ],
                 },
             ],
         }),
@@ -297,6 +301,10 @@ const findDetailsChatById = async (id, filters = {}, userId) => {
         throw new RuntimeError(404, NOT_FOUND);
     }
 
+    const c = typeof chat.get === 'function' ? chat.get({plain: true}) : chat;
+    const participantUserIds = (c.Participants || []).map(p => p.userId).filter(Boolean);
+    const usersMap = await UserService.getUsersBatch(participantUserIds, token);
+
     const hasMore = messages.length > limit;
 
     const pageMessages = hasMore
@@ -309,7 +317,7 @@ const findDetailsChatById = async (id, filters = {}, userId) => {
             : null;
 
     return {
-        ...formatChatDetails(chat, userId),
+        ...formatChatDetails(chat, userId, usersMap),
 
         // Forward pagination already returns chronological order
         // Backward pagination needs reverse (was fetched DESC)
@@ -323,16 +331,19 @@ const findDetailsChatById = async (id, filters = {}, userId) => {
     }
 };
 
-const formatChatDetails = (chat, userId) => {
-    const c = chat.get({plain: true});
+const formatChatDetails = (chat, userId, usersMap = {}) => {
+    const c = typeof chat.get === 'function' ? chat.get({plain: true}) : chat;
 
-    const participants = c.Participants.map(p => ({
-        id: p.userId,
-        userId: p.userId,
-        name: p.User?.name,
-        image: p.User?.image,
-        role: p.role,
-    }));
+    const participants = (c.Participants || []).map(p => {
+        const user = usersMap[p.userId];
+        return {
+            id: p.userId,
+            userId: p.userId,
+            name: user?.name || "User",
+            image: user?.image || null,
+            role: p.role,
+        };
+    });
 
     let name = c.name;
 

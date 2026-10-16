@@ -1,4 +1,6 @@
 app:
+  internal:
+    service-key: test-internal-service-key-for-testing
   cache:
     strategy: local  # Use Caffeine for tests to avoid needing Redis
 
