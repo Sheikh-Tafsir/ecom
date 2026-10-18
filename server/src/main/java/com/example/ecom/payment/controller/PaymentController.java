@@ -1,12 +1,13 @@
 package com.example.ecom.payment.controller;
 
+import com.example.ecom.common.annotation.Idempotent;
 import com.example.ecom.common.config.BkashConfigProperties;
 import com.example.ecom.common.dto.ApiResponse;
 import com.example.ecom.common.utils.ResponseUtils;
 import com.example.ecom.order.service.OrderService;
 import com.example.ecom.payment.dto.CreatePaymentRequest;
 import com.example.ecom.payment.dto.CreatePaymentResponse;
-import com.example.ecom.payment.service.BkashPaymentService;
+import com.example.ecom.payment.service.PaymentService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 @RequiredArgsConstructor
 public class PaymentController {
 
-    private final BkashPaymentService paymentService;
+    private final PaymentService paymentService;
 
     private final OrderService orderService;
 
@@ -38,6 +39,7 @@ public class PaymentController {
     /**
      * Called by React to initiate payment
      */
+    @Idempotent
     @PostMapping
     public ResponseEntity<ApiResponse<String>> createPayment(@Valid @RequestBody CreatePaymentRequest request,
                                                             @AuthenticationPrincipal CustomUserDetails userDetails) {

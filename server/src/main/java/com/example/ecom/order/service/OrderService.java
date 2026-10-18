@@ -109,6 +109,7 @@ public class OrderService {
         order.setPhone(request.phone());
         order.setAddress(request.address());
         order.setPaymentMethod(request.paymentMethod());
+        order.setIdempotencyKey(idempotencyKey);
 
         User user = userService.findByIdHelper(userDetails.getId());
         if (isNull(order.getName())) {

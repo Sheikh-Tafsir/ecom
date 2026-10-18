@@ -50,6 +50,9 @@ public class Order extends AuditableEntity {
 
     private boolean paid;
 
+    @Column(nullable = false)
+    private String idempotencyKey;
+
     public boolean isCancelledOrRejected() {
         return status == OrderStatus.CANCELLED || status == OrderStatus.REJECTED;
     }

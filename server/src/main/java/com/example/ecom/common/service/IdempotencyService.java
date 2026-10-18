@@ -35,6 +35,18 @@ public class IdempotencyService {
         }
     }
 
+    public void savePayloadHash(String idempotencyKey, Object request) {
+        Cache cache = getCache();
+        if (cache != null) {
+            cache.put("hash:" + idempotencyKey, objectHash(request));
+        }
+    }
+
+    public String getStoredPayloadHash(String idempotencyKey) {
+        Cache cache = getCache();
+        return cache != null ? cache.get("hash:" + idempotencyKey, String.class) : null;
+    }
+
     private Cache getCache() {
         return cacheManager.getCache(CACHE_IDEMPOTENCY);
     }

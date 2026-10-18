@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.NoResultException;
 import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -87,6 +88,12 @@ public class GlobalExceptionHandler {
     }
 
     // 409 Conflict
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<?> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+        log.error("Data Integrity Violation Exception: {}", ex.getMessage());
+        return error("Duplicate request detected. This operation has already been processed.", HttpStatusCode.valueOf(409));
+    }
+
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
     public ResponseEntity<?> handleOptimisticLockingFailureException(ObjectOptimisticLockingFailureException ex) {
         log.error("Optimistic locking failure: {}", ex.getMessage());

@@ -120,11 +120,13 @@ CREATE TABLE IF NOT EXISTS orders (
     address        TEXT           NOT NULL,
     payment_method VARCHAR(50)    DEFAULT 'CASH_ON_DELIVERY',
     paid           BOOLEAN        DEFAULT FALSE,
+    idempotency_key VARCHAR(64) NOT NULL,
     version        INT            DEFAULT 0,
     created_at     TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
     updated_at     TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
     created_by     UUID,
-    updated_by     UUID
+    updated_by     UUID,
+    CONSTRAINT uq_orders_user_idempotency UNIQUE (user_id, idempotency_key)
 );
 
 CREATE TABLE IF NOT EXISTS order_items (
