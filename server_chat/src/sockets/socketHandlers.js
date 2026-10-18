@@ -42,4 +42,6 @@ module.exports = (server) => {
         // Group handlers
         socketGroupHandlers(io, socket);
     });
+
+    return io;
 };

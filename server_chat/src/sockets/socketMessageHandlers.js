@@ -2,7 +2,7 @@ const MessageService = require('../service/MessageService');
 const ChatService = require('../service/ChatService');
 const ApiResponse = require('../common/ApiResponse');
 const {MESSAGE_SEND_EVENT, MESSAGE_RECEIVE_EVENT} = require('./socketEvents');
-const {addSocketToRoom, getRoom, getActiveUsersInRoom} = require('./socketRoomManager');
+const {addSocketToRoom, getRoom} = require('./socketRoomManager');
 const {SENT, RECEIVED} = require("../utils/Messages");
 const {buildErrorResponse} = require("../utils/ResponseUtils");
 const RedisConfig = require('../config/RedisConfig');
@@ -98,8 +98,7 @@ const setupMessageHandlers = (io, socket) => {
             );
             logger.info(`Message sent from ${user.name} (${user.id}) in chat ${message.chatId}`);
 
-            const activeUsersInRoom = await getActiveUsersInRoom(io, roomId);
-            await MessageService.saveMessageReceipts(activeUsersInRoom, message.id, message.chatId, user.id);
+            // Receipts created inside sendMessage
         } catch (err) {
             logger.error(`Error sending message from ${user.name}:`, err);
             ack(buildErrorResponse(err.message))

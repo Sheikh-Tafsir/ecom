@@ -2,7 +2,7 @@ const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert');
 const { sendMessage } = require('./MessageService');
 const sequelize = require('../config/SequelizeConfig');
-const { ChatParticipant, Chat, Message } = require('../model');
+const { ChatParticipant, Chat, Message, MessageReceipt } = require('../model');
 
 describe('MessageService Authorization', () => {
     let testChat;
@@ -47,6 +47,8 @@ describe('MessageService Authorization', () => {
 
             Message.create = async (data) => data;
             ChatParticipant.increment = async () => [1];
+            ChatParticipant.findAll = async () => [{ userId: validUserId }];
+            MessageReceipt.bulkCreate = async (receipts) => receipts;
         }
     });
 

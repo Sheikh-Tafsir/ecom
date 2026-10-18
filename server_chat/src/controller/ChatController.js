@@ -244,8 +244,22 @@ router.get("/:id", ValidateUuidParams('id'), AuthenticationMiddleware, AsyncHand
  *         description: Not a participant of the chat
  */
 router.post("/:id/view", ValidateUuidParams('id'), AuthenticationMiddleware, AsyncHandler(async (req, res) => {
-    await ChatService.seenChatMessage(req.params?.id, req.body, req.user?.id)
-    created(res, {message: FOUND})
+    const chatId = req.params?.id;
+    const userId = req.user?.id;
+    await ChatService.seenChatMessage(chatId, req.body, userId);
+
+    const io = req.app.get('io');
+    if (io) {
+        const { getRoom } = require('../sockets/socketRoomManager');
+        const { MESSAGES_SEEN_EVENT } = require('../sockets/socketEvents');
+        io.to(getRoom(chatId)).emit(MESSAGES_SEEN_EVENT, {
+            chatId,
+            userId,
+            lastSeen: req.body.lastSeen,
+        });
+    }
+
+    created(res, {message: FOUND});
 }));
 
 module.exports = router;

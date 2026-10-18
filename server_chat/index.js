@@ -77,7 +77,8 @@ app.use("/chats", ChatController);
 app.use(ErrorHandler);
 
 const server = http.createServer(app);
-SocketHandler(server);
+const io = SocketHandler(server);
+app.set('io', io);
 
 const initDb = require("./src/config/initDb");
 

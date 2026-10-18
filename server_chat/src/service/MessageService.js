@@ -50,6 +50,26 @@ const sendMessage = async (senderId, body) => {
             }
         );
 
+        // Create delivery receipts in the same transaction
+        const participants = await findChatParticipantsByChatId(chat.id);
+        const now = new Date();
+        const receipts = participants
+            .filter(p => String(p.userId) !== String(senderId))
+            .map(p => ({
+                id: generateUuidV7(),
+                messageId: message.id,
+                userId: p.userId,
+                deliveredAt: now,
+                readAt: null,
+            }));
+
+        if (receipts.length > 0) {
+            await MessageReceipt.bulkCreate(receipts, {
+                ignoreDuplicates: true,
+                transaction: t,
+            });
+        }
+
         await t.commit();
 
         return message;
@@ -60,47 +80,6 @@ const sendMessage = async (senderId, body) => {
     }
 };
 
-const saveMessageReceipts = async (activeUsers = [], messageId, chatId, senderId) => {
-    // activeUsers is kept for backward compatibility but is intentionally unused here.
-    // Read receipts (readAt) must only be set when the user explicitly views the chat
-    // via a 'mark-as-read' event. Being connected via socket does not imply the user
-    // is actively viewing this specific chat window.
-    const now = Date.now();
-
-    const allParticipants = await findChatParticipantsByChatId(chatId);
-
-    const receipts = allParticipants
-        .filter(participant => String(participant.userId) !== String(senderId))
-        .map(participant => {
-            const dateNow = new Date(now);
-            return {
-                id: generateUuidV7(),
-                messageId,
-                userId: participant.userId,
-                deliveredAt: dateNow,
-                readAt: null
-            };
-        }
-    );
-
-    const t = await sequelize.transaction();
-
-    try {
-        const result = await MessageReceipt.bulkCreate(receipts, {
-            ignoreDuplicates: true,
-            transaction: t
-        });
-
-        await t.commit();
-        return result;
-
-    } catch (err) {
-        await t.rollback();
-        throw err;
-    }
-}
-
 module.exports = {
     sendMessage,
-    saveMessageReceipts,
 };
