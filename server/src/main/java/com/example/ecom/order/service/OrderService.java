@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -258,6 +259,9 @@ public class OrderService {
     }
 
     private void consumeStockForAcceptedOrder(Order order) {
-        order.getItems().forEach(item -> stockService.consume(item.getProduct(), item.getQuantity(), item.getOrder()));
+        // Sort by product ID to prevent deadlock from non-deterministic lock order
+        order.getItems().stream()
+            .sorted(Comparator.comparing(item -> item.getProduct().getId()))
+            .forEach(item -> stockService.consume(item.getProduct(), item.getQuantity(), item.getOrder()));
     }
 }
