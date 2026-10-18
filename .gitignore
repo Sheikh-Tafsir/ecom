@@ -55,9 +55,8 @@ HELP.md
 # Backup service credentials
 scripts/backup-service/config/rclone.conf
 
-# Code review artifacts
-code-review.md
-
 *.class
 /server/build_old_root
 /server/.gradle_old_root
+/server/build_bak2
+/context/*
