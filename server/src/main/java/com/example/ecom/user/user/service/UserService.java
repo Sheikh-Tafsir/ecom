@@ -14,12 +14,12 @@ import com.example.ecom.common.enums.UserStatus;
 import com.example.ecom.common.model.User;
 import com.example.ecom.common.service.MessageService;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.lang.Nullable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +36,6 @@ import static com.example.ecom.common.utils.Utils.isEmpty;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
@@ -47,7 +46,18 @@ public class UserService {
 
     private final AuthTokenService authTokenService;
 
-    private final java.util.Optional<org.springframework.data.redis.core.StringRedisTemplate> stringRedisTemplate;
+    private final UserEventPublisher userEventPublisher;
+
+    public UserService(UserRepository userRepository, RoleService roleService,
+                       MessageService messageService, AuthTokenService authTokenService,
+                       @Nullable UserEventPublisher userEventPublisher) {
+        
+        this.userRepository = userRepository;
+        this.roleService = roleService;
+        this.messageService = messageService;
+        this.authTokenService = authTokenService;
+        this.userEventPublisher = userEventPublisher;
+    }
 
     @PreAuthorize("hasAnyAuthority(T(com.example.ecom.common.enums.Permission).ADMIN_ACCESS.getValue()," +
             "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
@@ -106,7 +116,7 @@ public class UserService {
         }
 
         userRepository.save(user);
-        evictChatUserCache(id);
+        publishUserChanged(id);
     }
 
     @PreAuthorize("hasAuthority(T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
@@ -117,7 +127,7 @@ public class UserService {
     @Transactional
     public void delete(UUID id) {
         delete(findByIdHelper(id), DELETED);
-        evictChatUserCache(id);
+        publishUserChanged(id);
     }
 
     @PreAuthorize("hasAuthority(T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
@@ -128,18 +138,20 @@ public class UserService {
     @Transactional
     public void banned(UUID id) {
         delete(findByIdHelper(id), BANNED);
-        evictChatUserCache(id);
+        publishUserChanged(id);
     }
 
-    private void evictChatUserCache(UUID id) {
-        stringRedisTemplate.ifPresent(template -> {
-            try {
-                template.delete("cache:user:" + id);
-                template.convertAndSend("ecom:user-updates", id.toString());
-            } catch (Exception e) {
-                log.warn("Failed to evict chat user cache or publish user update for {}: {}", id, e.getMessage());
-            }
-        });
+    private void publishUserChanged(UUID id) {
+        if (userEventPublisher == null) {
+            log.info("UserEventPublisher is null. Skipping user change event for: {}", id);
+            return;
+        }
+
+        try {
+            userEventPublisher.publishUserChanged(id);
+        } catch (Exception e) {
+            log.warn("Failed to publish user change event for {}: {}", id, e.getMessage());
+        }
     }
 
     // -- helpers --

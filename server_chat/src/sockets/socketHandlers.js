@@ -8,6 +8,7 @@ const socketConnectionHandler = require('./socketConnectionHandler');
 const socketMessageHandlers = require('./socketMessageHandlers');
 const socketGroupHandlers = require('./socketGroupHandlers');
 const { initNotificationSubscriber } = require('./socketNotificationHandler');
+const { initUserUpdateSubscriber } = require('./socketUserUpdateHandler');
 
 module.exports = (server) => {
     const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS;
@@ -28,6 +29,9 @@ module.exports = (server) => {
 
     // Initialize notification subscriber for cross-service events
     initNotificationSubscriber(io);
+
+    // Initialize user-update subscriber for chat user cache eviction
+    initUserUpdateSubscriber();
 
     // Auth middleware
     io.use(socketAuthMiddleware);
