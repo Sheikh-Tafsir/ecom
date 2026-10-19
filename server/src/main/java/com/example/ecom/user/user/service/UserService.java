@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 import static com.example.ecom.common.enums.UserStatus.BANNED;
 import static com.example.ecom.common.enums.UserStatus.DELETED;
 import static com.example.ecom.common.utils.Utils.getValidPageable;
+import static com.example.ecom.common.utils.Utils.isEmpty;
 
 @Slf4j
 @Service
@@ -62,7 +63,7 @@ public class UserService {
     }
 
     public List<UserSearchResponse> findAllByIds(List<UUID> ids) {
-        if (ids == null || ids.isEmpty()) {
+        if (isEmpty(ids)) {
             return List.of();
         }
         return userRepository.findAllById(ids)

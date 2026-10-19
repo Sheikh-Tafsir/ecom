@@ -19,6 +19,8 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.UUID;
 
+import static org.springframework.util.StringUtils.hasText;
+
 @Slf4j
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -58,7 +60,7 @@ public class LoggingFilter implements WebFilter {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String originalRequestId = exchange.getRequest().getHeaders().getFirst(REQUEST_ID_HEADER);
-        final String requestId = (originalRequestId == null || originalRequestId.isEmpty())
+        final String requestId = !hasText(originalRequestId)
                 ? UUID.randomUUID().toString()
                 : originalRequestId;
 

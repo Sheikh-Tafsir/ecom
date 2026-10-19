@@ -12,6 +12,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Map;
 
+import static org.springframework.util.StringUtils.hasText;
+
 @Slf4j
 @Primary
 @Service
@@ -33,7 +35,7 @@ public class CloudinaryService extends FileStorageService {
 
     @Override
     public void deleteFile(String fileUrl) {
-        if (fileUrl == null || fileUrl.isEmpty()) return;
+        if (!hasText(fileUrl)) return;
 
         try {
             String publicIdWithExtension = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);

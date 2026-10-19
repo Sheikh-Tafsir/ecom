@@ -20,6 +20,8 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static org.springframework.util.StringUtils.hasText;
+
 @Slf4j
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 2)
@@ -55,7 +57,7 @@ public class IpRateLimiterFilter implements WebFilter {
 
         String ip = extractIp(exchange.getRequest());
 
-        if (ip == null || ip.isBlank()) {
+        if (!hasText(ip)) {
             log.warn("Missing client IP");
             return ResponseUtils.error(exchange, HttpStatus.BAD_REQUEST, "Missing client IP address");
         }

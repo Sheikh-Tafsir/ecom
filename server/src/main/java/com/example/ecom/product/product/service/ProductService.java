@@ -261,7 +261,7 @@ public class ProductService {
     }
 
     private void addImages(Product product, Set<MultipartFile> images, Set<String> uploadedUrls) {
-        if (images == null || images.isEmpty()) {
+        if (isEmpty(images)) {
             return;
         }
 

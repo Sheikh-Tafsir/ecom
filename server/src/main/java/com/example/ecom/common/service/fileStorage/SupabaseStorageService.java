@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.UUID;
 
+import static org.springframework.util.StringUtils.hasText;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -65,7 +67,7 @@ public class SupabaseStorageService extends FileStorageService {
 
     @Override
     public void deleteFile(String fileUrl) {
-        if (fileUrl == null || fileUrl.isEmpty()) return;
+        if (!hasText(fileUrl)) return;
 
         try {
             String filePath = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);

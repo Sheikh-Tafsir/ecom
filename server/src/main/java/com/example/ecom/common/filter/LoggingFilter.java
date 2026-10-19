@@ -18,6 +18,7 @@ import java.time.Duration;
 import java.util.UUID;
 
 import static com.example.ecom.common.utils.RequestUtil.getClientIp;
+import static org.springframework.util.StringUtils.hasText;
 
 @Slf4j
 @Component
@@ -36,7 +37,7 @@ public class LoggingFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         String requestId = request.getHeader(REQUEST_ID_HEADER);
-        if (requestId == null || requestId.isBlank()) {
+        if (!hasText(requestId)) {
             requestId = UUID.randomUUID().toString();
         }
 

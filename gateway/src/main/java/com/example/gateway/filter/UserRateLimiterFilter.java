@@ -15,6 +15,8 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
+import static org.springframework.util.StringUtils.hasText;
+
 @Slf4j
 @RequiredArgsConstructor
 public class UserRateLimiterFilter implements WebFilter {
@@ -30,7 +32,7 @@ public class UserRateLimiterFilter implements WebFilter {
         return getEmailFromContext()
                 .defaultIfEmpty("")
                 .flatMap(email -> {
-                    if (email == null || email.isBlank()) {
+                    if (!hasText(email)) {
                         return chain.filter(exchange);
                     }
 

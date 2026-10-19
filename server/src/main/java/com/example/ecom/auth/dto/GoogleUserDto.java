@@ -6,6 +6,8 @@ import lombok.Data;
 
 import java.util.Collection;
 
+import static com.example.ecom.common.utils.Utils.isEmpty;
+
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GoogleUserDto {
@@ -27,7 +29,7 @@ public class GoogleUserDto {
     private String azp;
 
     public boolean matchesAudience(Collection<String> allowedClientIds) {
-        if (allowedClientIds == null || allowedClientIds.isEmpty()) {
+        if (isEmpty(allowedClientIds)) {
             return false;
         }
 
