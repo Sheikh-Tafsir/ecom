@@ -23,7 +23,7 @@ public class ResilientCacheService implements CacheService {
     @Autowired
     public ResilientCacheService(@Nullable RedisCacheService redisService,
                                  InMemoryCacheService inMemoryService,
-                                 @Value("${app.cache.strategy:redis}") String cacheStrategy) {
+                                 @Value("${app.cache.strategy}") String cacheStrategy) {
         this.redisService = redisService;
         this.inMemoryService = inMemoryService;
         this.cacheStrategy = cacheStrategy;

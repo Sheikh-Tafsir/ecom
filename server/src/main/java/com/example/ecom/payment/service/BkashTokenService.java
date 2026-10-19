@@ -1,11 +1,11 @@
 package com.example.ecom.payment.service;
 
 import com.example.ecom.common.config.BkashConfigProperties;
+import com.example.ecom.common.service.cache.CacheService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -19,24 +19,24 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class BkashTokenService {
 
-    private final BkashConfigProperties config;
-    private final StringRedisTemplate redisTemplate;
-    private final WebClient bkashWebClient;
-    private final ObjectMapper objectMapper;
-
     private static final String TOKEN_KEY = "bkash:id_token";
     private static final String REFRESH_KEY = "bkash:refresh_token";
+
+    private final BkashConfigProperties config;
+    private final CacheService cacheService;
+    private final WebClient bkashWebClient;
+    private final ObjectMapper objectMapper;
 
     /**
      * Returns a valid id_token, refreshing or re-granting as needed.
      */
     public String getValidToken() {
-        String cached = redisTemplate.opsForValue().get(TOKEN_KEY);
+        String cached = cacheService.getToken(TOKEN_KEY);
         if (cached != null) {
             return cached;
         }
 
-        String refresh = redisTemplate.opsForValue().get(REFRESH_KEY);
+        String refresh = cacheService.getToken(REFRESH_KEY);
         if (refresh != null) {
             return refreshToken(refresh);
         }
@@ -104,9 +104,9 @@ public class BkashTokenService {
             }
 
             // id_token valid for 1 hour, cache for 55 min to be safe
-            redisTemplate.opsForValue().set(TOKEN_KEY, idToken, Duration.ofMinutes(55));
+            cacheService.putToken(TOKEN_KEY, idToken, Duration.ofMinutes(55));
             // refresh_token valid for 28 days
-            redisTemplate.opsForValue().set(REFRESH_KEY, refreshToken, Duration.ofDays(27));
+            cacheService.putToken(REFRESH_KEY, refreshToken, Duration.ofDays(27));
 
             return idToken;
         } catch (Exception e) {
