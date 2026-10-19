@@ -5,7 +5,7 @@ import com.cloudinary.utils.ObjectUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Primary;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,8 +15,8 @@ import java.util.Map;
 import static org.springframework.util.StringUtils.hasText;
 
 @Slf4j
-@Primary
 @Service
+@ConditionalOnProperty(name = "image.storage.provider", havingValue = "cloudinary", matchIfMissing = true)
 @RequiredArgsConstructor
 public class CloudinaryService extends FileStorageService {
 

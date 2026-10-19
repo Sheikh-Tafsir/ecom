@@ -199,3 +199,7 @@ rate-limit:
     validity-minutes: 5
   window-seconds: 60
 
+image:
+  storage:
+    provider: ${IMAGE_STORAGE_PROVIDER}
+

@@ -3,6 +3,7 @@ package com.example.ecom.common.service.fileStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,6 +17,7 @@ import static org.springframework.util.StringUtils.hasText;
 
 @Slf4j
 @Service
+@ConditionalOnProperty(name = "image.storage.provider", havingValue = "supabase")
 @RequiredArgsConstructor
 public class SupabaseStorageService extends FileStorageService {
 
