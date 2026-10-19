@@ -6,7 +6,6 @@ import com.example.ecom.common.enums.NotificationType;
 import com.example.ecom.common.enums.OrderStatus;
 import com.example.ecom.common.model.*;
 import com.example.ecom.common.service.MessageService;
-import com.example.ecom.notification.dto.NotificationResponse;
 import com.example.ecom.order.dto.*;
 import com.example.ecom.order.repository.OrderRepository;
 import com.example.ecom.order.dto.CreateOrderResponse;
@@ -221,7 +220,7 @@ public class OrderService {
         List<Order> ordersToNotify = orderRepository.findAllByStatusAndCreatedAtBefore(OrderStatus.PENDING, oneDayAgo);
         if (!ordersToNotify.isEmpty()) {
             String message = "There are " + ordersToNotify.size() + " orders pending for more than 1 day.";
-            notificationService.sendToAdmins(new NotificationResponse(NotificationType.WARNING, message));
+            notificationService.sendToAdmins(message, NotificationType.WARNING);
             log.info("Notified connected admins about {} pending orders", ordersToNotify.size());
         }
 

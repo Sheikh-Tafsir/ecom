@@ -284,6 +284,51 @@ test('Socket Connection Handler - Regular user does not join admin room', async 
 
     assert.ok(joinedRooms.includes('user_customer-id-1'), 'Should join personal user room');
     assert.strictEqual(joinedRooms.includes('admin_room'), false, 'Should not join admin_room without admin permissions');
+    assert.ok(joinedRooms.includes('perm_user:access'), 'Should join perm_user:access room');
+});
+
+test('Notification Subscriber - targetPermissions routing', async (t) => {
+    const mockSubClient = new EventEmitter();
+    mockSubClient.subscribe = (channel, cb) => {
+        if (cb) cb(null, 1);
+    };
+    mockSubClient.quit = async () => {};
+
+    const originalDuplicate = RedisConfig.duplicate;
+    RedisConfig.duplicate = () => mockSubClient;
+
+    try {
+        const emitted = [];
+        const mockIo = {
+            to: (room) => ({
+                emit: (event, payload) => {
+                    emitted.push({ room, event, payload });
+                }
+            })
+        };
+
+        initNotificationSubscriber(mockIo);
+
+        const permPayload = {
+            targetPermissions: ['admin:access', 'super_admin:access'],
+            type: 'WARNING',
+            message: '5 pending orders',
+            createdAt: '2026-10-19T10:00:00.000Z'
+        };
+
+        mockSubClient.emit('message', 'ecom:notifications', JSON.stringify(permPayload));
+
+        assert.strictEqual(emitted.length, 2, 'Should emit exactly to the 2 permission rooms (no duplicate admin_room)');
+        const rooms = emitted.map(e => e.room);
+        assert.ok(rooms.includes('perm_admin:access'), 'Should emit to perm_admin:access');
+        assert.ok(rooms.includes('perm_super_admin:access'), 'Should emit to perm_super_admin:access');
+        assert.strictEqual(rooms.includes('admin_room'), false, 'Should NOT emit to admin_room (perm_ rooms replace it)');
+        assert.strictEqual(emitted[0].event, 'notification');
+        assert.strictEqual(emitted[0].payload.message, '5 pending orders');
+    } finally {
+        await closeNotificationSubscriber();
+        RedisConfig.duplicate = originalDuplicate;
+    }
 });
 
 test.after(async () => {

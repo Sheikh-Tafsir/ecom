@@ -7,7 +7,8 @@ public enum Permission {
 
     SUPER_ADMIN_ACCESS("super_admin:access"),
     ADMIN_ACCESS("admin:access"),
-    DELIVERY_MAN_ACCESS("delivery_man:access");
+    DELIVERY_MAN_ACCESS("delivery_man:access"),
+    USER("user:access");
 
     private final String value;
 

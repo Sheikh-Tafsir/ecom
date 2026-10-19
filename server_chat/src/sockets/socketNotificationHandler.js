@@ -32,7 +32,7 @@ const initNotificationSubscriber = (io) => {
 
         try {
             const payload = typeof message === 'string' ? JSON.parse(message) : message;
-            const { recipientType, recipientId, type, message: notifMessage, createdAt } = payload || {};
+            const { recipientType, recipientId, targetPermissions, type, message: notifMessage, createdAt } = payload || {};
 
             const notificationData = {
                 type,
@@ -40,14 +40,39 @@ const initNotificationSubscriber = (io) => {
                 createdAt: createdAt || new Date().toISOString()
             };
 
-            const normalizedRecipientType = recipientType ? String(recipientType).toUpperCase() : null;
+            let handled = false;
 
-            if (normalizedRecipientType === 'USER' && recipientId) {
+            // 1. Direct to user
+            if (recipientId) {
                 io.to(`user_${recipientId}`).emit(NOTIFICATION_EVENT, notificationData);
-            } else if (normalizedRecipientType === 'ADMIN') {
-                io.to('admin_room').emit(NOTIFICATION_EVENT, notificationData);
-            } else {
-                logger.warn(`[Notification] Unhandled recipientType: ${recipientType}`);
+                handled = true;
+            }
+
+            // 2. Broadcast to users by target permissions
+            // No need to also emit to admin_room — admin users already join perm_admin:access
+            // and perm_super_admin:access rooms on connect (socketConnectionHandler.js)
+            if (Array.isArray(targetPermissions) && targetPermissions.length > 0) {
+                targetPermissions.forEach(perm => {
+                    const permStr = typeof perm === 'object' && perm ? (perm.value || perm.name || String(perm)) : String(perm);
+                    io.to(`perm_${permStr}`).emit(NOTIFICATION_EVENT, notificationData);
+                });
+                handled = true;
+            }
+
+            // 3. Backward compatibility for legacy recipientType if not yet handled
+            if (!handled && recipientType) {
+                const normalizedRecipientType = String(recipientType).toUpperCase();
+                if (normalizedRecipientType === 'USER' && recipientId) {
+                    io.to(`user_${recipientId}`).emit(NOTIFICATION_EVENT, notificationData);
+                    handled = true;
+                } else if (normalizedRecipientType === 'ADMIN') {
+                    io.to('admin_room').emit(NOTIFICATION_EVENT, notificationData);
+                    handled = true;
+                }
+            }
+
+            if (!handled) {
+                logger.warn(`[Notification] Unhandled notification payload: ${JSON.stringify(payload)}`);
             }
         } catch (err) {
             logger.error('❌ Failed to process notification message from Redis:', err.message);

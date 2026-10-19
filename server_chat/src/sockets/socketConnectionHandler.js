@@ -17,6 +17,13 @@ const socketConnectionHandler = async (io, socket) => {
         socket.join('admin_room');
     }
 
+    // Join permission rooms dynamically for permission-based broadcasts
+    permissions.forEach(perm => {
+        if (perm) {
+            socket.join(`perm_${perm}`);
+        }
+    });
+
     /* join user rooms */
     const chatParticipants = await findAllChatParticipantsByUserId(user.id);
     chatParticipants.forEach(participants => {

@@ -1,15 +1,19 @@
 package com.example.ecom.notification.service;
 
+import com.example.ecom.common.enums.NotificationType;
+import com.example.ecom.common.enums.Permission;
 import com.example.ecom.notification.dto.NotificationEvent;
-import com.example.ecom.notification.dto.NotificationResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
+
+import static com.example.ecom.common.utils.Utils.isEmpty;
+import static org.springframework.util.StringUtils.hasText;
 
 @Slf4j
 @Service
@@ -18,61 +22,62 @@ public class NotificationService {
     public static final String NOTIFICATION_CHANNEL = "ecom:notifications";
 
     private final ObjectMapper objectMapper;
-    private StringRedisTemplate stringRedisTemplate;
+    private final NotificationPublisher notificationPublisher;
 
     public NotificationService(ObjectMapper objectMapper) {
         this(objectMapper, null);
     }
 
     @Autowired
-    public NotificationService(ObjectMapper objectMapper, @Autowired(required = false) StringRedisTemplate stringRedisTemplate) {
+    public NotificationService(ObjectMapper objectMapper, @Nullable NotificationPublisher notificationPublisher) {
         this.objectMapper = objectMapper;
-        this.stringRedisTemplate = stringRedisTemplate;
+        this.notificationPublisher = notificationPublisher;
     }
 
-    public void sendToUser(UUID userId, NotificationResponse notificationResponse) {
-        if (userId == null || notificationResponse == null) {
+    public void sendToUser(UUID userId, String message, NotificationType notificationType) {
+        if (userId == null || !hasText(message) || notificationType == null) {
             return;
         }
 
         NotificationEvent event = new NotificationEvent(
-                "USER",
                 userId,
-                notificationResponse.type(),
-                notificationResponse.message(),
-                notificationResponse.createdAt() != null ? notificationResponse.createdAt() : Instant.now()
+                null,
+                notificationType,
+                message
         );
 
-        publishToRedis(event);
+        publish(event);
     }
 
-    public void sendToAdmins(NotificationResponse notificationResponse) {
-        if (notificationResponse == null) {
+    public void sendToPermissions(List<Permission> permissions, String message, NotificationType notificationType) {
+        if (isEmpty(permissions) || !hasText(message) || notificationType == null) {
             return;
         }
 
         NotificationEvent event = new NotificationEvent(
-                "ADMIN",
                 null,
-                notificationResponse.type(),
-                notificationResponse.message(),
-                notificationResponse.createdAt() != null ? notificationResponse.createdAt() : Instant.now()
+                permissions,
+                notificationType,
+                message
         );
 
-        publishToRedis(event);
+        publish(event);
     }
 
-    private void publishToRedis(NotificationEvent event) {
-        if (stringRedisTemplate == null) {
-            log.warn("StringRedisTemplate is null. Unable to publish notification to Redis channel: {}", NOTIFICATION_CHANNEL);
+    public void sendToAdmins(String message, NotificationType notificationType) {
+        sendToPermissions(List.of(Permission.SUPER_ADMIN_ACCESS, Permission.ADMIN_ACCESS), message, notificationType);
+    }
+
+    private void publish(NotificationEvent event) {
+        if (notificationPublisher == null) {
+            log.info("NotificationPublisher is null (Redis not enabled). Skipping notification: {}", event);
             return;
         }
 
         try {
-            String payload = objectMapper.writeValueAsString(event);
-            stringRedisTemplate.convertAndSend(NOTIFICATION_CHANNEL, payload);
+            notificationPublisher.publish(objectMapper.writeValueAsString(event));
         } catch (Exception e) {
-            log.warn("Failed to publish notification to Redis channel {}: {}", NOTIFICATION_CHANNEL, e.getMessage(), e);
+            log.warn("Failed to publish notification: {}", e.getMessage(), e);
         }
     }
 }
