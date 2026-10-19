@@ -59,4 +59,4 @@ scripts/backup-service/config/rclone.conf
 /server/build_old_root
 /server/.gradle_old_root
 /server/build_bak2
-/context/*
+.agents/*

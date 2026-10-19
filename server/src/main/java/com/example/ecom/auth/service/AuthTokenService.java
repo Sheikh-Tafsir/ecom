@@ -28,7 +28,7 @@ import static com.example.ecom.common.utils.CacheConstants.CACHE_REVOKED_ACCESS_
 import static com.example.ecom.common.utils.CacheConstants.CACHE_ROTATED_TOKENS;
 import static com.example.ecom.common.utils.CookieUtils.addCookie;
 import static com.example.ecom.common.utils.CookieUtils.getCookieValue;
-import static com.example.ecom.common.utils.Utils.isProductionEnvironment;
+import static com.example.ecom.common.utils.Utils.isEnvironmentProduction;
 import static java.util.Objects.isNull;
 import static org.springframework.util.StringUtils.hasText;
 
@@ -54,7 +54,7 @@ public class AuthTokenService {
 
     public void addRefreshCookie(HttpServletResponse response, TokenDto authResponse) {
         addCookie(response, refreshTokenName, authResponse.getRefreshToken(), refreshTokenValidity,
-                isProductionEnvironment(springProfile));
+                isEnvironmentProduction(springProfile));
     }
 
     @Transactional
@@ -134,7 +134,7 @@ public class AuthTokenService {
             }
         }
 
-        addCookie(response, refreshTokenName, null, 0, isProductionEnvironment(springProfile));
+        addCookie(response, refreshTokenName, null, 0, isEnvironmentProduction(springProfile));
     }
 
     @Transactional

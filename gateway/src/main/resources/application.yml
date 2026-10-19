@@ -4,6 +4,8 @@ spring:
 
   profiles:
     active: ${SPRING_PROFILES_ACTIVE}
+    group:
+      production: prod
 
   data:
     redis:

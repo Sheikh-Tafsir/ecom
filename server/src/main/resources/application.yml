@@ -17,7 +17,9 @@ spring:
     name: ecom
 
   profiles:
-    active: ${DEPLOYMENT_ENVIRONMENT:dev}
+    active: ${DEPLOYMENT_ENVIRONMENT}
+    group:
+      production: prod
 
   servlet:
     multipart:

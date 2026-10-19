@@ -30,20 +30,22 @@ class UtilsTest {
 
     @Test
     void isProductionEnvironment_whenProd_returnsTrue() {
-        assertTrue(Utils.isProductionEnvironment("prod"));
-        assertTrue(Utils.isProductionEnvironment("PROD"));
-        assertTrue(Utils.isProductionEnvironment(" prod "));
+        assertTrue(Utils.isEnvironmentProduction("prod"));
+        assertTrue(Utils.isEnvironmentProduction("PROD"));
+        assertTrue(Utils.isEnvironmentProduction(" prod "));
+        assertTrue(Utils.isEnvironmentProduction("production"));
+        assertTrue(Utils.isEnvironmentProduction("PRODUCTION"));
+        assertTrue(Utils.isEnvironmentProduction(" production "));
     }
 
     @Test
     void isProductionEnvironment_whenNotProd_returnsFalse() {
-        assertFalse(Utils.isProductionEnvironment("production"));
-        assertFalse(Utils.isProductionEnvironment("dev"));
-        assertFalse(Utils.isProductionEnvironment("test"));
-        assertFalse(Utils.isProductionEnvironment("local"));
-        assertFalse(Utils.isProductionEnvironment("staging"));
-        assertFalse(Utils.isProductionEnvironment(""));
-        assertFalse(Utils.isProductionEnvironment("   "));
-        assertFalse(Utils.isProductionEnvironment(null));
+        assertFalse(Utils.isEnvironmentProduction("dev"));
+        assertFalse(Utils.isEnvironmentProduction("test"));
+        assertFalse(Utils.isEnvironmentProduction("local"));
+        assertFalse(Utils.isEnvironmentProduction("staging"));
+        assertFalse(Utils.isEnvironmentProduction(""));
+        assertFalse(Utils.isEnvironmentProduction("   "));
+        assertFalse(Utils.isEnvironmentProduction(null));
     }
 }
