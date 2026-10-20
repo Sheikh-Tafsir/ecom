@@ -21,7 +21,12 @@ const ChatMessages = ({
                           isMobileView,
                           fetchNextPage,
                           hasNextPage,
-                          isFetchingNextPage
+                          isFetchingNextPage,
+                          isOnline,
+                          lastSeenAt,
+                          presenceMap,
+                          getTypingUsers,
+                          emitTyping
                       }) => {
 
     const {user} = useUserStore();
@@ -73,6 +78,26 @@ const ChatMessages = ({
         });
         return map;
     }, [chat?.participants]);
+
+    // Derive otherUserId for DM chats
+    const otherUserId = useMemo(() => {
+        if (chat?.type !== CHAT_TYPE.DIRECT || !chat?.participants) return null;
+        const other = chat.participants.find(p => String(p.id) !== String(user?.id));
+        return other?.id || null;
+    }, [chat?.type, chat?.participants, user?.id]);
+
+    const formatLastSeen = (isoString) => {
+        if (!isoString) return '';
+        const date = new Date(isoString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMin = Math.floor(diffMs / 60000);
+        if (diffMin < 1) return 'just now';
+        if (diffMin < 60) return `${diffMin}m ago`;
+        const diffHours = Math.floor(diffMin / 60);
+        if (diffHours < 24) return `${diffHours}h ago`;
+        return format(date, 'MMM d');
+    };
 
     const handleSendMessage = (e) => {
         e.preventDefault();
@@ -197,14 +222,36 @@ const ChatMessages = ({
                                         <AvatarFallback
                                             className="bg-blue-100 text-blue-600 font-semibold">{chat?.name?.slice(0, 1)}</AvatarFallback>
                                     </Avatar>
-                                    <div
-                                        className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"/>
+                                    {chat?.type === CHAT_TYPE.DIRECT && otherUserId && isOnline?.(otherUserId) && (
+                                        <div
+                                            className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"/>
+                                    )}
                                 </div>
                                 <div>
                                     <h2 className="text-sm font-bold text-slate-900">{chat?.name}</h2>
                                     <div className="flex items-center gap-1.5">
-                                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"/>
-                                        <p className="text-[11px] text-slate-500 font-medium">Online</p>
+                                        {chat?.type === CHAT_TYPE.DIRECT ? (
+                                            otherUserId && isOnline?.(otherUserId) ? (
+                                                <>
+                                                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"/>
+                                                    <p className="text-[11px] text-slate-500 font-medium">Online</p>
+                                                </>
+                                            ) : otherUserId && lastSeenAt?.(otherUserId) ? (
+                                                <p className="text-[11px] text-slate-400 font-medium">
+                                                    Last seen {formatLastSeen(lastSeenAt(otherUserId))}
+                                                </p>
+                                            ) : null
+                                        ) : (
+                                            (() => {
+                                                const onlineCount = chat?.participants?.filter(p => presenceMap?.[p.id]?.online).length || 0;
+                                                return onlineCount > 0 ? (
+                                                    <>
+                                                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"/>
+                                                        <p className="text-[11px] text-slate-500 font-medium">{onlineCount} online</p>
+                                                    </>
+                                                ) : null;
+                                            })()
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -237,6 +284,19 @@ const ChatMessages = ({
                             </div>
                         </ScrollArea>
 
+                        {/* Typing indicator */}
+                        {(() => {
+                            const typing = getTypingUsers?.(chat?.id) || [];
+                            if (typing.length === 0) return null;
+                            const names = typing.map(t => t.userName?.split(' ')[0]).join(', ');
+                            return (
+                                <div className="px-6 py-1.5 text-xs text-slate-500 animate-pulse">
+                                    <span className="font-medium text-slate-600">{names}</span>
+                                    {typing.length === 1 ? ' is typing...' : ' are typing...'}
+                                </div>
+                            );
+                        })()}
+
                         <div className="p-4 bg-white border-t border-slate-100">
                             <form onSubmit={handleSendMessage}
                                   className="flex items-end gap-3 bg-slate-50 p-2 rounded-2xl border border-slate-100 focus-within:border-blue-200 focus-within:ring-2 focus-within:ring-blue-100/50 transition-all duration-200">
@@ -246,7 +306,10 @@ const ChatMessages = ({
                                 <textarea
                                     placeholder="Type your message..."
                                     value={newMessage}
-                                    onChange={(e) => setNewMessage(e.target.value)}
+                                    onChange={(e) => {
+                                        setNewMessage(e.target.value);
+                                        if (e.target.value && chat?.id) emitTyping?.(chat.id);
+                                    }}
                                     onKeyDown={(e) => {
                                         if (e.key == 'Enter' && !e.shiftKey) {
                                             e.preventDefault();
@@ -300,7 +363,8 @@ const ChatMessages = ({
                         type={chat.type}
                         participants={chat.participants}
                         handleUserSelectorDialogOpen={handleUserSelectorDialogOpen}
-                        connected={chat?.messages?.length > 0}
+                        isOnline={chat?.type === CHAT_TYPE.DIRECT && otherUserId ? isOnline?.(otherUserId) : false}
+                        presenceMap={presenceMap}
                     />
                 )}
             </div>

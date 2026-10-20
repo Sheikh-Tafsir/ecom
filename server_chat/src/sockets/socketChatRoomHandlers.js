@@ -4,6 +4,7 @@ const {getRoom} = require('./socketRoomManager');
 const {buildErrorResponse} = require('../utils/ResponseUtils');
 const {isValidUuid} = require('../utils/UuidUtils');
 const {logger} = require('../config/logger');
+const {getPresence} = require('./socketPresenceHandler');
 
 const setupChatRoomHandlers = (io, socket) => {
     const user = socket.user;
@@ -25,7 +26,11 @@ const setupChatRoomHandlers = (io, socket) => {
             socket.join(roomId);
             logger.info(`${user.name} joined room ${roomId}`);
 
-            ack?.({success: true});
+            // Fetch presence for chat participants to include in the ack
+            const participants = await ChatService.findChatParticipantsByChatId(chatId);
+            const participantUserIds = participants.map(p => p.userId).filter(uid => uid !== user.id);
+            const presence = await getPresence(participantUserIds);
+            ack?.({success: true, presence});
         } catch (err) {
             logger.warn(`${user.name} failed to join chat ${chatId}: ${err.message}`);
             ack?.(buildErrorResponse(err.message));

@@ -15,6 +15,8 @@ import {useUserStore} from "@/store/useUserStore.js";
 import {useChatData} from './hooks/useChatData';
 import {useChatSync} from './hooks/useChatSync';
 import {useChatActions} from './hooks/useChatActions';
+import {usePresence} from './hooks/usePresence';
+import {useTypingIndicator} from './hooks/useTypingIndicator';
 import {toastify} from '@/common/toastify.js';
 import {cn} from '@/lib/utils';
 
@@ -22,6 +24,7 @@ const Chat = () => {
     const {id} = useParams();
     const navigate = useNavigate();
     const {user} = useUserStore();
+    const socket = useUserStore(state => state.socket);
     const queryClient = useQueryClient();
 
     const [searchedUser, setSearchedUser] = useState(null);
@@ -42,7 +45,10 @@ const Chat = () => {
         isFetchingNextPage
     } = useChatData(id);
 
-    const {updateChatOnMessage} = useChatSync(id, user?.id);
+    const {presenceMap, isOnline, lastSeenAt, mergePresence} = usePresence(socket, chats);
+    const {typingUsers, emitTyping, clearTypingUser, getTypingUsers} = useTypingIndicator(socket);
+
+    const {updateChatOnMessage} = useChatSync(id, user?.id, mergePresence);
 
     const handleNewChat = useCallback((chatId) => {
         setSearchedUser(null);
@@ -133,7 +139,7 @@ const Chat = () => {
                 </div>
 
                 <div className="flex-1 overflow-hidden">
-                    <ChatList chats={chats || []} handleUserSelectorDialogOpen={handleUserSelectorDialogOpen}/>
+                    <ChatList chats={chats || []} handleUserSelectorDialogOpen={handleUserSelectorDialogOpen} isOnline={isOnline}/>
                 </div>
             </div>
 
@@ -150,6 +156,11 @@ const Chat = () => {
                     fetchNextPage={fetchNextPage}
                     hasNextPage={hasNextPage}
                     isFetchingNextPage={isFetchingNextPage}
+                    isOnline={isOnline}
+                    lastSeenAt={lastSeenAt}
+                    presenceMap={presenceMap}
+                    getTypingUsers={getTypingUsers}
+                    emitTyping={emitTyping}
                 />
             </div>
 

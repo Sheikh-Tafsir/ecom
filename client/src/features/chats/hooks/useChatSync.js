@@ -11,7 +11,7 @@ import {
     GROUP_UPDATE_RESPONSE_EVENT
 } from "@/services/realtime/socketEvents.js";
 
-export const useChatSync = (id, userId) => {
+export const useChatSync = (id, userId, onPresenceReceived) => {
     const queryClient = useQueryClient();
     const socket = useUserStore(state => state.socket);
 
@@ -77,6 +77,9 @@ export const useChatSync = (id, userId) => {
             socket.emit(JOIN_CHAT_EVENT, {chatId: id}, (res) => {
                 if (res?.success) {
                     joinedChatRef.current = id;
+                    if (res.presence && onPresenceReceived) {
+                        onPresenceReceived(res.presence);
+                    }
                 }
             });
         }
@@ -202,6 +205,9 @@ export const useChatSync = (id, userId) => {
                     socket.emit(JOIN_CHAT_EVENT, {chatId: id}, (res) => {
                         if (res?.success) {
                             joinedChatRef.current = id;
+                            if (res.presence && onPresenceReceived) {
+                                onPresenceReceived(res.presence);
+                            }
                         }
                     });
                 }

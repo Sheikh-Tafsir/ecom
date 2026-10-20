@@ -18,7 +18,7 @@ import {useUserStore} from '@/store/useUserStore';
 
 const BUTTON_OPTIONS = ["All", "Unread", "Group"];
 
-const ChatList = ({chats, handleUserSelectorDialogOpen}) => {
+const ChatList = ({chats, handleUserSelectorDialogOpen, isOnline}) => {
     const {id} = useParams();
     const {user} = useUserStore();
     const [selectedOption, setSelectedOption] = useState(BUTTON_OPTIONS[0]);
@@ -79,9 +79,10 @@ const ChatList = ({chats, handleUserSelectorDialogOpen}) => {
                                                 {chat.name?.slice(0, 1)}
                                             </AvatarFallback>
                                         </Avatar>
-                                        {/* Mock online status for now */}
-                                        <div
-                                            className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"/>
+                                        {chat.otherUserId && isOnline?.(chat.otherUserId) && (
+                                            <div
+                                                className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"/>
+                                        )}
                                     </div>
 
                                     <div className="flex-1 min-w-0 py-0.5">

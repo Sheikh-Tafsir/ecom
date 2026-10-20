@@ -1,4 +1,4 @@
-const {Op} = require('sequelize');
+const {Op, Sequelize} = require('sequelize');
 const sequelize = require('../config/SequelizeConfig');
 const {Chat, ChatParticipant, Message} = require('../model');
 const UserService = require('./UserService');
@@ -481,6 +481,24 @@ const updateGroup = async (body, user) => {
     }
 };
 
+const findContactUserIds = async (userId) => {
+    const userParticipants = await findAllChatParticipantsByUserId(userId);
+    const chatIds = userParticipants.map(p => p.chatId);
+
+    if (chatIds.length === 0) return [];
+
+    const contacts = await ChatParticipant.findAll({
+        where: {
+            chatId: {[Op.in]: chatIds},
+            userId: {[Op.ne]: userId},
+        },
+        attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('user_id')), 'userId']],
+        raw: true,
+    });
+
+    return contacts.map(c => c.userId);
+};
+
 const buildGroupName = (creator, users) =>
     `${creator.name.split(" ")[0]}, ${users.map(u => u.name.split(" ")[0]).join(", ")}`;
 
@@ -499,6 +517,9 @@ module.exports = {
     findDetailsChatById,
     seenChatMessage,
     
+    // Presence
+    findContactUserIds,
+
     // Management
     createGroup,
     updateGroup,

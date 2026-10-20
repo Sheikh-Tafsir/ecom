@@ -8,6 +8,8 @@ const socketConnectionHandler = require('./socketConnectionHandler');
 const socketMessageHandlers = require('./socketMessageHandlers');
 const socketGroupHandlers = require('./socketGroupHandlers');
 const socketChatRoomHandlers = require('./socketChatRoomHandlers');
+const {setupPresenceHandler, startPresenceHeartbeat} = require('./socketPresenceHandler');
+const setupTypingHandler = require('./socketTypingHandler');
 const { initNotificationSubscriber } = require('./socketNotificationHandler');
 const { initUserUpdateSubscriber } = require('./socketUserUpdateHandler');
 
@@ -27,6 +29,9 @@ module.exports = (server) => {
     subClient.on('error', (err) => logger.error('❌ Redis SubClient error:', err));
 
     io.adapter(createAdapter(pubClient, subClient));
+
+    // Start presence heartbeat to refresh TTLs
+    startPresenceHeartbeat(io);
 
     // Initialize notification subscriber for cross-service events
     initNotificationSubscriber(io);
@@ -49,6 +54,12 @@ module.exports = (server) => {
 
         // Chat room handlers (join/leave active conversations)
         socketChatRoomHandlers(io, socket);
+
+        // Presence query handler
+        setupPresenceHandler(io, socket);
+
+        // Typing handler
+        setupTypingHandler(io, socket);
     });
 
     return io;

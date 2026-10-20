@@ -12,3 +12,8 @@ export const GROUP_UPDATE_REQUEST_EVENT = 'group-update-request';
 export const GROUP_UPDATE_RESPONSE_EVENT = 'group-update-response';
 
 export const NOTIFICATION_EVENT = 'notification';
+
+export const USER_PRESENCE_EVENT = 'user-presence';
+export const PRESENCE_QUERY_EVENT = 'presence-query';
+export const TYPING_EVENT = 'typing';
+export const TYPING_BROADCAST_EVENT = 'user-typing';

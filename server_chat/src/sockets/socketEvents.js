@@ -15,4 +15,9 @@ module.exports = {
     GROUP_UPDATE_RESPONSE_EVENT: 'group-update-response',
 
     NOTIFICATION_EVENT: 'notification',
+
+    USER_PRESENCE_EVENT: 'user-presence',
+    PRESENCE_QUERY_EVENT: 'presence-query',
+    TYPING_EVENT: 'typing',
+    TYPING_BROADCAST_EVENT: 'user-typing',
 };

@@ -6,7 +6,7 @@ import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar"
 import {cn} from "@/lib/utils"
 import {ScrollArea} from "@/components/ui/scroll-area"
 
-const ChatInfo = ({name, image, type, participants, handleUserSelectorDialogOpen, connected}) => {
+const ChatInfo = ({name, image, type, participants, handleUserSelectorDialogOpen, isOnline, presenceMap}) => {
     return (
         <div className="flex flex-col h-full bg-white animate-in slide-in-from-right duration-300">
             <div className="p-8 flex flex-col items-center border-b border-slate-50">
@@ -19,14 +19,16 @@ const ChatInfo = ({name, image, type, participants, handleUserSelectorDialogOpen
                             {name?.slice(0, 1)}
                         </AvatarFallback>
                     </Avatar>
-                    <div
-                        className="absolute bottom-1 right-1 w-5 h-5 bg-green-500 border-4 border-white rounded-full shadow-sm"/>
+                    {isOnline && (
+                        <div
+                            className="absolute bottom-1 right-1 w-5 h-5 bg-green-500 border-4 border-white rounded-full shadow-sm"/>
+                    )}
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 mb-1">{name}</h3>
                 <p className="text-xs font-medium text-slate-500 flex items-center gap-1.5">
                     {type == CHAT_TYPE.GROUP ? "Group Chat" : "Direct Message"}
                     <span className="w-1 h-1 bg-slate-300 rounded-full"/>
-                    {connected ? "Active" : "Away"}
+                    {isOnline ? "Active" : "Away"}
                 </p>
             </div>
 
@@ -62,7 +64,9 @@ const ChatInfo = ({name, image, type, participants, handleUserSelectorDialogOpen
                                             <div className="flex flex-col">
                                                 <span
                                                     className="text-sm font-semibold text-slate-800">{participant.name}</span>
-                                                <span className="text-[10px] text-slate-500">Active now</span>
+                                                <span className="text-[10px] text-slate-500">
+                                                    {presenceMap?.[participant.id]?.online ? 'Active now' : 'Offline'}
+                                                </span>
                                             </div>
                                         </div>
                                         <Badge className={cn(

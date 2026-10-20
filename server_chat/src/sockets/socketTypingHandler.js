@@ -1,0 +1,39 @@
+const RedisConfig = require('../config/RedisConfig');
+const {logger} = require('../config/logger');
+const {TYPING_EVENT, TYPING_BROADCAST_EVENT} = require('./socketEvents');
+const {getRoom} = require('./socketRoomManager');
+
+const TYPING_THROTTLE_PREFIX = 'typing:';
+const TYPING_THROTTLE_TTL = 2; // seconds
+
+const setupTypingHandler = (io, socket) => {
+    const user = socket.user;
+
+    socket.on(TYPING_EVENT, async (data = {}) => {
+        try {
+            const {chatId} = data;
+            if (!chatId) return;
+
+            const roomId = getRoom(chatId);
+
+            // Auth check: only broadcast if the user has joined this chat room (zero DB cost)
+            if (!socket.rooms.has(roomId)) return;
+
+            // Redis throttle: NX ensures only one event per 2 seconds per user per chat
+            const throttleKey = `${TYPING_THROTTLE_PREFIX}${chatId}:${user.id}`;
+            const set = await RedisConfig.set(throttleKey, '1', 'EX', TYPING_THROTTLE_TTL, 'NX');
+            if (!set) return; // Throttled
+
+            // Broadcast to chat room excluding sender
+            socket.to(roomId).emit(TYPING_BROADCAST_EVENT, {
+                chatId,
+                userId: user.id,
+                userName: user.name,
+            });
+        } catch (err) {
+            logger.error(`Typing handler error for ${user.id}:`, err.message);
+        }
+    });
+};
+
+module.exports = setupTypingHandler;

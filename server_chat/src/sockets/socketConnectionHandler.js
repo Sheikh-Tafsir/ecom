@@ -1,5 +1,6 @@
 const {logger} = require('../config/logger');
 const RedisConfig = require('../config/RedisConfig');
+const {trackConnect, trackDisconnect} = require('./socketPresenceHandler');
 
 const USER_CACHE_PREFIX = 'cache:user:';
 const USER_CACHE_TTL = 600; // 10 minutes — matches UserService.js
@@ -10,6 +11,9 @@ const socketConnectionHandler = async (io, socket) => {
     // Join a personal room for direct cross-node emits
     socket.join(`user_${user.id}`);
     logger.info(`Connected: ${user?.name} (Socket ID: ${socket.id})`);
+
+    // Track user presence in Redis
+    await trackConnect(io, socket);
 
     // Refresh the Redis user cache from JWT claims on every connect.
     // This keeps user name/email fresh without an HTTP call to the main server.
@@ -57,8 +61,9 @@ const socketConnectionHandler = async (io, socket) => {
     // Chat rooms are joined on demand via 'join-chat' event (hybrid architecture).
     // No DB query or bulk room joins needed on connect.
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
         logger.info(`Disconnected: ${user.name}`);
+        await trackDisconnect(io, socket);
     });
 };
 
