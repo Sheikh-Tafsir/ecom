@@ -38,4 +38,4 @@ COPY --from=build /app/build/libs/*.jar app.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Xmx320m", "-XX:MaxMetaspaceSize=128m", "-XX:MaxDirectMemorySize=64m", "-XX:+UseContainerSupport", "-XX:+UseG1GC", "-jar", "app.jar"]
