@@ -7,6 +7,9 @@ import {TOAST_TYPE} from "@/constants/app.constants";
 const API_PATH = import.meta.env.VITE_API_PATH;
 const TIMEOUT = 15000;
 
+// Cross-tab logout broadcast — when one tab logs out, all tabs follow immediately.
+const authChannel = new BroadcastChannel('ecom_auth');
+
 const PublicAxios = axios.create({
     baseURL: API_PATH,
     withCredentials: true,
@@ -162,6 +165,22 @@ const logout = async () => {
     } catch (error) {
         console.error("Logout failed:", error);
     } finally {
+        removeAccessToken();
+        removeCart();
+
+        isRefreshing = false;
+        refreshSubscribers = [];
+
+        // Notify other tabs to logout immediately
+        authChannel.postMessage({type: 'logout'});
+
+        window.location.replace("/");
+    }
+};
+
+// Listen for logout from other tabs
+authChannel.onmessage = (event) => {
+    if (event.data?.type === 'logout') {
         removeAccessToken();
         removeCart();
 
