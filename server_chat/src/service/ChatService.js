@@ -502,6 +502,18 @@ const findContactUserIds = async (userId) => {
 const buildGroupName = (creator, users) =>
     `${creator.name.split(" ")[0]}, ${users.map(u => u.name.split(" ")[0]).join(", ")}`;
 
+/**
+ * Get the type of a chat ('direct' or 'group') by chatId.
+ * Lightweight single-attribute query.
+ */
+const getChatType = async (chatId) => {
+    const chat = await Chat.findByPk(chatId, {
+        attributes: ['type'],
+        raw: true,
+    });
+    return chat?.type || null;
+};
+
 
 module.exports = {
     // Lookups
@@ -511,6 +523,7 @@ module.exports = {
     findOrCreateDirectChat,
     findChatParticipantsByChatId,
     findAllChatParticipantsByUserId,
+    getChatType,
     
     // Read
     findAllChatsByUserId,

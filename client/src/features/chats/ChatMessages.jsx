@@ -26,7 +26,10 @@ const ChatMessages = ({
                           lastSeenAt,
                           presenceMap,
                           getTypingUsers,
-                          emitTyping
+                          emitTyping,
+                          blockStatus,
+                          toggleBlock,
+                          isBlockLoading
                       }) => {
 
     const {user} = useUserStore();
@@ -298,6 +301,24 @@ const ChatMessages = ({
                         })()}
 
                         <div className="p-4 bg-white border-t border-slate-100">
+                            {blockStatus?.blocked ? (
+                                <div className="flex items-center justify-center gap-2 py-3 px-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                    <span className="text-sm text-slate-500">
+                                        {blockStatus.blockedByMe
+                                            ? 'You blocked this user.'
+                                            : 'You have been blocked.'}
+                                    </span>
+                                    {blockStatus.blockedByMe && (
+                                        <button
+                                            onClick={toggleBlock}
+                                            disabled={isBlockLoading}
+                                            className="text-sm font-medium text-blue-600 hover:text-blue-700 disabled:opacity-50"
+                                        >
+                                            Unblock
+                                        </button>
+                                    )}
+                                </div>
+                            ) : (
                             <form onSubmit={handleSendMessage}
                                   className="flex items-end gap-3 bg-slate-50 p-2 rounded-2xl border border-slate-100 focus-within:border-blue-200 focus-within:ring-2 focus-within:ring-blue-100/50 transition-all duration-200">
                                 <div className="flex-shrink-0 mb-1 ml-1">
@@ -330,6 +351,7 @@ const ChatMessages = ({
                                     <Send className="h-4 w-4"/>
                                 </Button>
                             </form>
+                            )}
                         </div>
                     </>
                 ) : (
@@ -365,6 +387,9 @@ const ChatMessages = ({
                         handleUserSelectorDialogOpen={handleUserSelectorDialogOpen}
                         isOnline={chat?.type === CHAT_TYPE.DIRECT && otherUserId ? isOnline?.(otherUserId) : false}
                         presenceMap={presenceMap}
+                        blockStatus={blockStatus}
+                        toggleBlock={toggleBlock}
+                        isBlockLoading={isBlockLoading}
                     />
                 )}
             </div>

@@ -17,3 +17,5 @@ export const USER_PRESENCE_EVENT = 'user-presence';
 export const PRESENCE_QUERY_EVENT = 'presence-query';
 export const TYPING_EVENT = 'typing';
 export const TYPING_BROADCAST_EVENT = 'user-typing';
+
+export const USER_BLOCKED_EVENT = 'user-blocked';

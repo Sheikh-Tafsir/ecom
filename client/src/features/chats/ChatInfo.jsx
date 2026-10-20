@@ -6,7 +6,7 @@ import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar"
 import {cn} from "@/lib/utils"
 import {ScrollArea} from "@/components/ui/scroll-area"
 
-const ChatInfo = ({name, image, type, participants, handleUserSelectorDialogOpen, isOnline, presenceMap}) => {
+const ChatInfo = ({name, image, type, participants, handleUserSelectorDialogOpen, isOnline, presenceMap, blockStatus, toggleBlock, isBlockLoading}) => {
     return (
         <div className="flex flex-col h-full bg-white animate-in slide-in-from-right duration-300">
             <div className="p-8 flex flex-col items-center border-b border-slate-50">
@@ -99,9 +99,11 @@ const ChatInfo = ({name, image, type, participants, handleUserSelectorDialogOpen
                                     Mute Notifications
                                 </Button>
                                 <Button variant="ghost"
+                                        onClick={toggleBlock}
+                                        disabled={isBlockLoading}
                                         className="w-full justify-start text-xs font-medium text-red-600 hover:bg-red-50 rounded-xl px-2 h-10">
                                     <span className="w-8 flex justify-center">🚫</span>
-                                    Block User
+                                    {blockStatus?.blockedByMe ? 'Unblock User' : 'Block User'}
                                 </Button>
                             </div>
                         </div>

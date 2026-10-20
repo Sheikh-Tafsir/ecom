@@ -20,4 +20,6 @@ module.exports = {
     PRESENCE_QUERY_EVENT: 'presence-query',
     TYPING_EVENT: 'typing',
     TYPING_BROADCAST_EVENT: 'user-typing',
+
+    USER_BLOCKED_EVENT: 'user-blocked',
 };

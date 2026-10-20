@@ -50,3 +50,13 @@ CREATE TABLE IF NOT EXISTS message_receipts
     version      INT                DEFAULT 0,
     CONSTRAINT uq_message_receipts_message_user UNIQUE (message_id, user_id)
 );
+
+CREATE TABLE IF NOT EXISTS blocked_users
+(
+    id              UUID PRIMARY KEY,
+    user_id         UUID        NOT NULL,
+    blocked_user_id UUID        NOT NULL,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_blocked_users UNIQUE (user_id, blocked_user_id)
+);

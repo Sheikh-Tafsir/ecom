@@ -5,6 +5,7 @@ const AuthenticationMiddleware = require('../middleware/AuthenticationMiddleware
 const ValidateUuidParams = require('../middleware/ValidateUuidParams');
 
 const ChatService = require('../service/ChatService');
+const BlockService = require('../service/BlockService');
 const {FOUND} = require("../utils/Messages");
 const {ok, created} = require("../utils/ResponseUtils");
 
@@ -261,5 +262,111 @@ router.post("/:id/view", ValidateUuidParams('id'), AuthenticationMiddleware, Asy
 
     created(res, {message: FOUND});
 }));
+
+// ==================== Block / Unblock ====================
+
+/**
+ * @swagger
+ * /chats/users/{userId}/block:
+ *   post:
+ *     summary: Block a user
+ *     tags: [Chats]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: User blocked
+ */
+router.post('/users/:userId/block',
+    AuthenticationMiddleware,
+    ValidateUuidParams('userId'),
+    AsyncHandler(async (req, res) => {
+        await BlockService.blockUser(req.user.id, req.params.userId);
+
+        // Notify both users in real-time (multi-tab/device sync)
+        const io = req.app.get('io');
+        if (io) {
+            const {USER_BLOCKED_EVENT} = require('../sockets/socketEvents');
+            const payload = {userId: req.user.id, blocked: true};
+            io.to(`user_${req.params.userId}`).emit(USER_BLOCKED_EVENT, payload);
+            io.to(`user_${req.user.id}`).emit(USER_BLOCKED_EVENT, payload);
+        }
+
+        ok(res, {message: 'User blocked successfully'});
+    })
+);
+
+/**
+ * @swagger
+ * /chats/users/{userId}/block:
+ *   delete:
+ *     summary: Unblock a user
+ *     tags: [Chats]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: User unblocked
+ */
+router.delete('/users/:userId/block',
+    AuthenticationMiddleware,
+    ValidateUuidParams('userId'),
+    AsyncHandler(async (req, res) => {
+        await BlockService.unblockUser(req.user.id, req.params.userId);
+
+        // Notify both users in real-time (multi-tab/device sync)
+        const io = req.app.get('io');
+        if (io) {
+            const {USER_BLOCKED_EVENT} = require('../sockets/socketEvents');
+            const payload = {userId: req.user.id, blocked: false};
+            io.to(`user_${req.params.userId}`).emit(USER_BLOCKED_EVENT, payload);
+            io.to(`user_${req.user.id}`).emit(USER_BLOCKED_EVENT, payload);
+        }
+
+        ok(res, {message: 'User unblocked successfully'});
+    })
+);
+
+/**
+ * @swagger
+ * /chats/users/{userId}/block-status:
+ *   get:
+ *     summary: Get block status with a user
+ *     tags: [Chats]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Block status
+ */
+router.get('/users/:userId/block-status',
+    AuthenticationMiddleware,
+    ValidateUuidParams('userId'),
+    AsyncHandler(async (req, res) => {
+        const status = await BlockService.getBlockStatus(req.user.id, req.params.userId);
+        ok(res, {message: 'Block status retrieved', data: status});
+    })
+);
 
 module.exports = router;

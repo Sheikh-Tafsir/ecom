@@ -2,6 +2,8 @@ const RedisConfig = require('../config/RedisConfig');
 const {logger} = require('../config/logger');
 const {TYPING_EVENT, TYPING_BROADCAST_EVENT} = require('./socketEvents');
 const {getRoom} = require('./socketRoomManager');
+const ChatService = require('../service/ChatService');
+const BlockService = require('../service/BlockService');
 
 const TYPING_THROTTLE_PREFIX = 'typing:';
 const TYPING_THROTTLE_TTL = 2; // seconds
@@ -23,6 +25,16 @@ const setupTypingHandler = (io, socket) => {
             const throttleKey = `${TYPING_THROTTLE_PREFIX}${chatId}:${user.id}`;
             const set = await RedisConfig.set(throttleKey, '1', 'EX', TYPING_THROTTLE_TTL, 'NX');
             if (!set) return; // Throttled
+
+            // Block check for DMs: don't broadcast typing to a blocked user
+            const chatType = await ChatService.getChatType(chatId);
+            if (chatType === 'direct') {
+                const participants = await ChatService.findChatParticipantsByChatId(chatId);
+                const otherUser = participants.find(p => p.userId !== user.id);
+                if (otherUser && await BlockService.isBlocked(user.id, otherUser.userId)) {
+                    return; // Silently drop — blocked
+                }
+            }
 
             // Broadcast to chat room excluding sender
             socket.to(roomId).emit(TYPING_BROADCAST_EVENT, {

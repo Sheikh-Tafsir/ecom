@@ -17,6 +17,7 @@ import {useChatSync} from './hooks/useChatSync';
 import {useChatActions} from './hooks/useChatActions';
 import {usePresence} from './hooks/usePresence';
 import {useTypingIndicator} from './hooks/useTypingIndicator';
+import {useBlockUser} from './hooks/useBlockUser';
 import {toastify} from '@/common/toastify.js';
 import {cn} from '@/lib/utils';
 
@@ -50,6 +51,10 @@ const Chat = () => {
 
     const {updateChatOnMessage} = useChatSync(id, user?.id, mergePresence);
 
+    const {blockStatus, toggleBlock, isLoading: isBlockLoading} = useBlockUser(
+        newChat || selectedChat, user?.id
+    );
+
     const handleNewChat = useCallback((chatId) => {
         setSearchedUser(null);
         setNewChat(null);
@@ -81,6 +86,11 @@ const Chat = () => {
             setNewChat({
                 id: Date.now().toString() + Math.random().toString(36).slice(2),
                 name: searchedUser.name,
+                type: 'direct',
+                participants: [
+                    {id: user.id, name: user.name},
+                    {id: searchedUser.id, name: searchedUser.name, image: searchedUser.image},
+                ],
             });
             return;
         }
@@ -161,6 +171,9 @@ const Chat = () => {
                     presenceMap={presenceMap}
                     getTypingUsers={getTypingUsers}
                     emitTyping={emitTyping}
+                    blockStatus={blockStatus}
+                    toggleBlock={toggleBlock}
+                    isBlockLoading={isBlockLoading}
                 />
             </div>
 

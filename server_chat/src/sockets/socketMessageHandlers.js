@@ -6,6 +6,8 @@ const {SENT, RECEIVED} = require("../utils/Messages");
 const {buildErrorResponse} = require("../utils/ResponseUtils");
 const RedisConfig = require('../config/RedisConfig');
 const {logger} = require('../config/logger');
+const BlockService = require('../service/BlockService');
+const ChatService = require('../service/ChatService');
 
 const MAX_MESSAGE_LENGTH = 4096;
 
@@ -66,6 +68,24 @@ const setupMessageHandlers = (io, socket) => {
             if (!content || content.length > MAX_MESSAGE_LENGTH) {
                 socket.emit('error', { message: 'Message too long or empty.' });
                 return ack(buildErrorResponse("Message too long or empty."));
+            }
+
+            // --- Block check (direct messages only) ---
+            if (reqBody?.receiverId) {
+                // New DM conversation via receiverId — check directly
+                if (await BlockService.isBlocked(user.id, reqBody.receiverId)) {
+                    return ack(buildErrorResponse("Cannot send message — user is blocked."));
+                }
+            } else if (reqBody?.chatId) {
+                // Existing chat — only block in DMs, not groups
+                const chatType = await ChatService.getChatType(reqBody.chatId);
+                if (chatType === 'direct') {
+                    const participants = await ChatService.findChatParticipantsByChatId(reqBody.chatId);
+                    const otherUser = participants.find(p => p.userId !== user.id);
+                    if (otherUser && await BlockService.isBlocked(user.id, otherUser.userId)) {
+                        return ack(buildErrorResponse("Cannot send message — user is blocked."));
+                    }
+                }
             }
 
             const { message, participants } = await MessageService.sendMessage(user.id, reqBody);
