@@ -26,8 +26,10 @@ Client ──Bearer token──▶ Gateway (AuthenticationFilter)
 - On `connect_error` with "Unauthorized", the client attempts an access token refresh via `socket.js`.
 
 ### Token Revocation
-- On logout or account suspension, tokens are invalidated via Redis (`SET NX PX` atomic lock).
+- On logout or account suspension, tokens are invalidated via Redis (`SET NX PX` atomic lock with key `v1:revokedAccessTokens::{jti}`).
 - The Gateway has direct access to the `data` network for Redis-based revocation checks.
+- **Fail-Closed Resilience:** Gateway holds an in-memory Caffeine cache (valid JTIs: 15s TTL; revoked JTIs: 10m TTL) to absorb short Redis hiccups. If Redis is down for longer than 15 seconds, the Gateway **fails closed** with HTTP `503 Service Unavailable`. It never fails open, ensuring revoked or banned tokens cannot be used during an outage.
+- Chat Server's `socketAuthMiddleware` also validates the `jti` against Redis and fails closed on connection handshake.
 
 ---
 
@@ -67,15 +69,19 @@ Client ──Bearer token──▶ Gateway (AuthenticationFilter)
 - Implemented via `IpRateLimiterFilter` using **Bucket4j** with Redis backing.
 - **Dev/test mode** falls back to local Caffeine cache.
 - True client IPs are extracted via `RequestUtil.getClientIp()` which reads `X-Forwarded-For` and `X-Real-IP` headers (reverse proxy / Docker gateway aware).
-- Chat Server: hard limit of **5 WebSocket messages per second** per socket connection.
+- **Chat Server Rate Limiting:**
+  - Message send: Redis sliding window of **20 messages per 10 seconds** per user (`ratelimit:msg:{userId}`). Falls back to an in-memory limit of 5 msgs/sec per socket if Redis is unavailable.
+  - Typing indicators: Throttled to **1 event per 2 seconds** per user per chat via Redis `NX` (`typing:{chatId}:{userId}`). Verified via in-memory room authorization (`socket.rooms.has`).
 
 ---
 
 ## Idempotency
 
-- All mutating financial/critical-state endpoints support the `Idempotency-Key` request header.
-- Handled by `IdempotencyAspect` + `IdempotencyService` using Redis atomic locks (`SET NX PX`).
-- Protects against duplicate order submissions and payment double-charges caused by network retries.
+- All mutating financial/critical-state endpoints (`POST /orders`, `POST /payment`) support the `Idempotency-Key` request header.
+- **Dual-Layer Protection:**
+  1. **Fast Concurrency Defense (Redis):** Handled by `IdempotencyAspect` + `IdempotencyService` using Redis atomic locks (`SET NX PX` 30s) and cached response payloads. Payload hash mismatches return HTTP `422 Unprocessable Entity`.
+  2. **Hard Persistence Defense (PostgreSQL):** Flyway migration `V5` adds `idempotency_key` with a partial unique index `uq_orders_user_idempotency` on `orders (user_id, idempotency_key) WHERE idempotency_key IS NOT NULL`.
+  3. **Outage Resilience:** If Redis is down, `IdempotencyAspect` catches `RedisConnectionFailureException`, logs a warning, and falls back directly to the database constraint. Duplicate submissions are strictly prevented even during complete Redis outages.
 
 ---
 
@@ -89,7 +95,8 @@ Client ──Bearer token──▶ Gateway (AuthenticationFilter)
 
 ## Infrastructure Security
 
-- PostgreSQL, Redis, and RabbitMQ are on the `data` network — **not exposed** to the `frontend` network.
+- `gateway` and `client` Docker container ports are bound to `127.0.0.1` on the host (`docker-compose.yml`), preventing direct public exposure without passing through the host's reverse proxy / TLS layer.
+- PostgreSQL, Redis, and RabbitMQ are on the internal `data` network — **never exposed** to the `frontend` network.
 - No data-layer service has a host-mapped port in production.
 - Redis requires password auth (`REDIS_PASSWORD` env var, `--requirepass` flag).
 - Database backup files are AES-256-CBC encrypted at rest (`BACKUP_ENCRYPTION_KEY`). **Change this before production deployment.**

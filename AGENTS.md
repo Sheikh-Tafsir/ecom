@@ -24,6 +24,7 @@ A microservices-based e-commerce platform. Monorepo with four services: Gateway,
 | Why Redis cache + dual eviction      | [docs/decisions/003-redis-caching.md](./docs/decisions/003-redis-caching.md) |
 | Why no message queue for chat        | [docs/decisions/004-websocket-no-mq.md](./docs/decisions/004-websocket-no-mq.md) |
 | Why React Query pages[0] = newest    | [docs/decisions/005-react-query-cache.md](./docs/decisions/005-react-query-cache.md) |
+| Why polyglot fallbacks on Redis down | [docs/decisions/006-resilience-and-fallbacks.md](./docs/decisions/006-resilience-and-fallbacks.md) |
 
 ## Services at a Glance
 

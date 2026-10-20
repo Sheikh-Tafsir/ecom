@@ -96,12 +96,13 @@ Standard `page` + `size` query params used for admin list endpoints.
 | GET    | `/api/v1/orders`              | List user orders (paginated)  |
 | PATCH  | `/api/v1/orders/:id/status`   | Update order status (admin)   |
 
-### Chat
-| Method | Path                          | Description                          |
-|--------|-------------------------------|--------------------------------------|
-| GET    | `/api/v1/chat/chats`          | List chats (with unread counts)      |
-| GET    | `/api/v1/chat/chats/:id`      | Messages with cursor pagination      |
-| POST   | `/api/v1/chat/chats`          | Create new chat                      |
+### Chat & Media
+| Method | Path                            | Description                                          |
+|--------|---------------------------------|------------------------------------------------------|
+| GET    | `/chats`                        | List user conversations (with unread counts)         |
+| GET    | `/chats/:id`                    | Messages with cursor pagination (forward/backward)   |
+| POST   | `/chats/:id/view`               | Mark messages as seen (`{ lastSeen: ISO }`)          |
+| POST   | `/common/upload-signature`      | Generate signed Cloudinary signature for direct upload|
 
 ### Payments
 | Method | Path                      | Description                              |
@@ -121,23 +122,34 @@ Notifications are pushed over the authenticated Socket.IO connection. The Main S
 
 ---
 
-
-
 ## Socket.IO Events
 
-| Event (Client → Server) | Payload                        | Description                    |
-|-------------------------|--------------------------------|--------------------------------|
-| `send-message`          | `{ chatId, content }`          | Send a chat message            |
-| `join-chat`             | `{ chatId }`                   | Join a chat room               |
-| `typing`                | `{ chatId }`                   | Emit typing indicator          |
+### Client ➜ Server
 
-| Event (Server → Client) | Payload                        | Description                    |
-|-------------------------|--------------------------------|--------------------------------|
-| `receive-message`       | `{ message }`                  | Incoming message broadcast     |
-| `user-typing`           | `{ chatId, userId }`           | Typing indicator               |
+| Event | Payload | Description |
+| :--- | :--- | :--- |
+| `send-message` | `{ chatId?, receiverId?, content, contentType, tempId }` | Send message (acknowledges with `{ chatId }`) |
+| `join-chat` | `{ chatId }` | Join active room `chat_${chatId}` (ack returns `{ success, presence }`) |
+| `leave-chat` | `{ chatId }` | Leave active room `chat_${chatId}` |
+| `typing` | `{ chatId }` | Emit typing indicator (throttled to 1 event / 2s) |
+| `presence-query` | `{ userIds: [...] }` | Bulk query presence for specific users |
+| `group-create-request` | `{ users, chatId }` | Create a new group chat |
+| `group-update-request` | `{ users, chatId }` | Add participants to group (admin only) |
 
-- Event names use `lowerCamelCase`.
-- Rate limited to **5 messages/second** per socket connection.
+### Server ➜ Client
+
+| Event | Payload | Room / Scope | Description |
+| :--- | :--- | :--- | :--- |
+| `receive-message` | `{ data: { id, content, chatId, senderId, ... } }` | `chat_${chatId}` | Full message broadcast to active chat viewers |
+| `chat-updated` | `{ data: { chatId, lastMessage, lastSenderId, ... } }` | `user_${participantId}` | Lightweight sidebar preview & unread badge bump |
+| `messages-seen` | `{ data: { chatId, userId, lastSeen } }` | `user_${participantId}` | Real-time seen receipt broadcast |
+| `user-presence` | `{ userId, online, lastSeen }` | `user_${contactId}` | Real-time online/offline presence change |
+| `user-typing` | `{ chatId, userId, userName }` | `chat_${chatId}` | Typing notification (excludes sender) |
+| `group-create-response` | `{ data: chatId }` | `user_${participantId}` | Signal to refresh sidebar chat list |
+| `group-update-response` | `{ data: chatId }` | `user_${participantId}` | Signal to refresh sidebar chat list |
+
+- Event names use `kebab-case` strings.
+- Rate limited to **20 messages per 10 seconds** per user with in-memory 5 msg/s fallback per socket.
 
 ---
 
