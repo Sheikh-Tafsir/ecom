@@ -35,6 +35,7 @@ public class SecurityConfig {
 
     public static final Set<String> PUBLIC_URLS = Set.of(
             "/v3/api-docs/**",
+            "/chats/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/swagger-resources/**",

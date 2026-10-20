@@ -363,6 +363,36 @@ services:
           memory: 128M
           cpus: '0.1'
 
+  smoke-test:
+    image: curlimages/curl:8.6.0
+    restart: "no"
+    depends_on:
+      gateway:
+        condition: service_healthy
+      server:
+        condition: service_healthy
+      chat-server:
+        condition: service_healthy
+      client:
+        condition: service_healthy
+    networks:
+      - frontend
+      - backend
+    volumes:
+      - ./scripts/smoke-test.sh:/smoke-test.sh:ro
+    environment:
+      - GATEWAY_URL=http://gateway:8080
+      - SERVER_URL=http://server:8081
+      - CHAT_URL=http://chat-server:3001
+      - CLIENT_TARGET_URL=http://client:80
+      - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY}
+    entrypoint: ["/bin/sh", "/smoke-test.sh"]
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: '0.2'
+
 volumes:
   postgres_data:
   postgres_chat_data:
