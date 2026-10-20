@@ -1,6 +1,8 @@
-const {getRoom, addSocketToRoom} = require('./socketRoomManager');
-const {findAllChatParticipantsByUserId} = require('../service/ChatService'); // Direct import from ChatService
 const {logger} = require('../config/logger');
+const RedisConfig = require('../config/RedisConfig');
+
+const USER_CACHE_PREFIX = 'cache:user:';
+const USER_CACHE_TTL = 600; // 10 minutes — matches UserService.js
 
 const socketConnectionHandler = async (io, socket) => {
     const user = socket.user;
@@ -8,6 +10,34 @@ const socketConnectionHandler = async (io, socket) => {
     // Join a personal room for direct cross-node emits
     socket.join(`user_${user.id}`);
     logger.info(`Connected: ${user?.name} (Socket ID: ${socket.id})`);
+
+    // Refresh the Redis user cache from JWT claims on every connect.
+    // This keeps user name/email fresh without an HTTP call to the main server.
+    // Staleness window = JWT access token TTL (15 min) — acceptable for chat display names.
+    try {
+        const profile = {
+            id: user.id,
+            name: user.name || 'User',
+            image: null,
+            email: user.email || null,
+        };
+
+        // Merge with existing cache to preserve fields not in JWT (e.g. image)
+        const existingRaw = await RedisConfig.get(`${USER_CACHE_PREFIX}${user.id}`);
+        if (existingRaw) {
+            const existing = JSON.parse(existingRaw);
+            profile.image = existing.image || null;
+        }
+
+        await RedisConfig.set(
+            `${USER_CACHE_PREFIX}${user.id}`,
+            JSON.stringify(profile),
+            'EX',
+            USER_CACHE_TTL
+        );
+    } catch (err) {
+        logger.warn(`Failed to refresh user cache from JWT for ${user.id}:`, err.message);
+    }
 
     // Join admin room if user has administrative permissions
     const permissions = Array.isArray(user?.permissions)
@@ -24,12 +54,8 @@ const socketConnectionHandler = async (io, socket) => {
         }
     });
 
-    /* join user rooms */
-    const chatParticipants = await findAllChatParticipantsByUserId(user.id);
-    chatParticipants.forEach(participants => {
-        const roomId = getRoom(participants.chatId);
-        addSocketToRoom(socket, roomId);
-    });
+    // Chat rooms are joined on demand via 'join-chat' event (hybrid architecture).
+    // No DB query or bulk room joins needed on connect.
 
     socket.on('disconnect', () => {
         logger.info(`Disconnected: ${user.name}`);

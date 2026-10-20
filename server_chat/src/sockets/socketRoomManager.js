@@ -4,47 +4,22 @@ const ApiResponse = require('../common/ApiResponse');
 const getRoom = (chatId) => `chat_${chatId}`;
 
 const handleGroupMessage = async (io, chatId, eventName) => {
-    const roomId = getRoom(chatId);
     const participants = await ChatParticipant.findAll({
         where: {chatId},
         attributes: ['userId'],
         raw: true
     });
 
-    participants.forEach(participant => {
-        io.in(`user_${participant.userId}`).socketsJoin(roomId);
-    });
-
-    io.to(roomId).emit(eventName, ApiResponse({
-        message: "Group event",
-        data: chatId
-    }));
+    // Group events (create/update) are sidebar-level — emit to each participant's personal room
+    for (const participant of participants) {
+        io.to(`user_${participant.userId}`).emit(eventName, ApiResponse({
+            message: "Group event",
+            data: chatId
+        }));
+    }
 };
-
-const getActiveUsersInRoom = async (io, roomId) => {
-    const sockets = await io.in(roomId).fetchSockets();
-    if (!sockets) return [];
-
-    const activeUserIds = new Set();
-    for (const socket of sockets) {
-        const userId = socket.data?.user?.id || socket.user?.id;
-        if (userId) {
-            activeUserIds.add(userId);
-        }
-    }
-
-    return Array.from(activeUserIds);
-}
-
-const addSocketToRoom = (socket, roomId) => {
-    if (!socket.rooms.has(roomId)) {
-        socket.join(roomId);
-    }
-}
 
 module.exports = {
     getRoom,
     handleGroupMessage,
-    getActiveUsersInRoom,
-    addSocketToRoom,
 };

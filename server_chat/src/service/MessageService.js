@@ -72,7 +72,7 @@ const sendMessage = async (senderId, body) => {
 
         await t.commit();
 
-        return message;
+        return { message, participants };
 
     } catch (err) {
         await t.rollback();

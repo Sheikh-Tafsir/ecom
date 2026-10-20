@@ -90,8 +90,8 @@ describe('MessageService Authorization', () => {
             contentType: 'text'
         };
 
-        const message = await sendMessage(validUserId, body);
-        assert.strictEqual(message.chatId, testChat.id);
-        assert.strictEqual(message.senderId, validUserId);
+        const result = await sendMessage(validUserId, body);
+        assert.strictEqual(result.message.chatId, testChat.id);
+        assert.strictEqual(result.message.senderId, validUserId);
     });
 });

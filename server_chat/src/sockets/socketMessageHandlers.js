@@ -1,8 +1,7 @@
 const MessageService = require('../service/MessageService');
-const ChatService = require('../service/ChatService');
 const ApiResponse = require('../common/ApiResponse');
-const {MESSAGE_SEND_EVENT, MESSAGE_RECEIVE_EVENT} = require('./socketEvents');
-const {addSocketToRoom, getRoom} = require('./socketRoomManager');
+const {MESSAGE_SEND_EVENT, MESSAGE_RECEIVE_EVENT, CHAT_UPDATED_EVENT} = require('./socketEvents');
+const {getRoom} = require('./socketRoomManager');
 const {SENT, RECEIVED} = require("../utils/Messages");
 const {buildErrorResponse} = require("../utils/ResponseUtils");
 const RedisConfig = require('../config/RedisConfig');
@@ -69,7 +68,7 @@ const setupMessageHandlers = (io, socket) => {
                 return ack(buildErrorResponse("Message too long or empty."));
             }
 
-            const message = await MessageService.sendMessage(user.id, reqBody);
+            const { message, participants } = await MessageService.sendMessage(user.id, reqBody);
 
             ack(ApiResponse({
                 message: SENT,
@@ -81,21 +80,34 @@ const setupMessageHandlers = (io, socket) => {
                 messageData.tempId = reqBody.tempId;
             }
 
+            // Full message → active viewers in the chat room
             const roomId = getRoom(message.chatId);
-            addSocketToRoom(socket, roomId);
-
-            // Join all participants of this chat to the room so they receive the message
-            const participants = await ChatService.findChatParticipantsByChatId(message.chatId);
-            participants.forEach(p => {
-                io.in(`user_${p.userId}`).socketsJoin(roomId);
-            });
-
             io.to(roomId).emit(MESSAGE_RECEIVE_EVENT,
                 ApiResponse({
                     message: RECEIVED,
                     data: messageData,
                 })
             );
+
+            // Lightweight sidebar update → each participant's personal room
+            const chatUpdate = {
+                chatId: message.chatId,
+                lastMessage: messageData.content,
+                lastSenderId: messageData.senderId,
+                lastSent: messageData.createdAt,
+                lastSentId: messageData.id,
+                contentType: messageData.contentType,
+            };
+            if (reqBody.tempId) {
+                chatUpdate.tempId = reqBody.tempId;
+            }
+            for (const p of participants) {
+                io.to(`user_${p.userId}`).emit(CHAT_UPDATED_EVENT, ApiResponse({
+                    message: RECEIVED,
+                    data: chatUpdate,
+                }));
+            }
+
             logger.info(`Message sent from ${user.name} (${user.id}) in chat ${message.chatId}`);
 
             // Receipts created inside sendMessage

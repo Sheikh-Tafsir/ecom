@@ -7,6 +7,7 @@ const socketAuthMiddleware = require('./socketAuthMiddleware');
 const socketConnectionHandler = require('./socketConnectionHandler');
 const socketMessageHandlers = require('./socketMessageHandlers');
 const socketGroupHandlers = require('./socketGroupHandlers');
+const socketChatRoomHandlers = require('./socketChatRoomHandlers');
 const { initNotificationSubscriber } = require('./socketNotificationHandler');
 const { initUserUpdateSubscriber } = require('./socketUserUpdateHandler');
 
@@ -45,6 +46,9 @@ module.exports = (server) => {
 
         // Group handlers
         socketGroupHandlers(io, socket);
+
+        // Chat room handlers (join/leave active conversations)
+        socketChatRoomHandlers(io, socket);
     });
 
     return io;

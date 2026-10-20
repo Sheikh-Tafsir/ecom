@@ -8,13 +8,14 @@ const {
 } = require('./socketEvents');
 const {handleGroupMessage} = require('./socketRoomManager');
 const {buildErrorResponse} = require("../utils/ResponseUtils");
+const {logger} = require('../config/logger');
 
 const setupGroupHandlers = (io, socket) => {
     const user = socket.user;
 
     socket.on(GROUP_CREATE_REQUEST_EVENT, async (reqBody, ack) => {
         try {
-            console.info(`Group create request from ${user.name}:`, reqBody);
+            logger.info(`Group create request from ${user.name}:`, reqBody);
             const response = await ChatService.createGroup(reqBody, user);
 
             ack(ApiResponse({
@@ -30,7 +31,7 @@ const setupGroupHandlers = (io, socket) => {
 
     socket.on(GROUP_UPDATE_REQUEST_EVENT, async (reqBody, ack) => {
         try {
-            console.info(`Group update request from ${user.name}:`, reqBody);
+            logger.info(`Group update request from ${user.name}:`, reqBody);
             const response = await ChatService.updateGroup(reqBody, user);
 
             ack(ApiResponse({

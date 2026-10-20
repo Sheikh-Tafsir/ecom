@@ -4,6 +4,10 @@ module.exports = {
 
     MESSAGES_SEEN_EVENT: 'messages-seen',
 
+    JOIN_CHAT_EVENT: 'join-chat',
+    LEAVE_CHAT_EVENT: 'leave-chat',
+    CHAT_UPDATED_EVENT: 'chat-updated',
+
     GROUP_CREATE_REQUEST_EVENT: 'group-create-request',
     GROUP_CREATE_RESPONSE_EVENT: 'group-create-response',
 

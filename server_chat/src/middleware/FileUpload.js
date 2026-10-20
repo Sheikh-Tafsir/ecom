@@ -3,8 +3,8 @@ const { allowedImageTypes } = require('../utils/ImageUtils');
 const RuntimeError = require('../common/RuntimeError');
 const MAX_SIZE = 5 * 1024 * 1024;
 
-const FileUpload = multer({
-  // dest: 'uploads/',
+const upload = multer({
+  storage: multer.memoryStorage(),
   limits: { fileSize: MAX_SIZE },
   fileFilter: (req, file, cb) => {
     const mimetype = file.mimetype;
@@ -16,4 +16,5 @@ const FileUpload = multer({
   },
 });
 
-module.exports = FileUpload
+// Export the single-file middleware so it can be used directly in route definitions
+module.exports = upload.single('image');

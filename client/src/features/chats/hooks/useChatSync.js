@@ -4,6 +4,9 @@ import {useUserStore} from '@/store/useUserStore';
 import {AuthenticatedAxios} from "@/services/http/Axios.js";
 import {
     MESSAGE_RECEIVE_EVENT,
+    JOIN_CHAT_EVENT,
+    LEAVE_CHAT_EVENT,
+    CHAT_UPDATED_EVENT,
     GROUP_CREATE_RESPONSE_EVENT,
     GROUP_UPDATE_RESPONSE_EVENT
 } from "@/services/realtime/socketEvents.js";
@@ -16,100 +19,162 @@ export const useChatSync = (id, userId) => {
     const hasConnectedRef = useRef(false);
     const syncInProgressRef = useRef(false);
 
+    // Track current joined chat room for cleanup on switch
+    const joinedChatRef = useRef(null);
+
+    // updateChatOnMessage handles ONLY the active message thread (selected_chat query).
+    // Sidebar (chat list) updates are handled exclusively by handleChatUpdated via chat-updated event.
+    // This prevents double unread increments when both events arrive for an active viewer.
     const updateChatOnMessage = useCallback((newMessage) => {
-        // console.info("Received new message:", newMessage);
         if (!newMessage.content) return;
+        if (newMessage.chatId != id) return; // Only process messages for the active chat
 
-        queryClient.setQueryData(['chats'], (oldChats = []) => {
-            if (!Array.isArray(oldChats)) {
-                oldChats = [];
-            }
+        queryClient.setQueryData(['selected_chat', id], (oldData) => {
+            if (!oldData || !oldData.pages || oldData.pages.length === 0) return oldData;
 
-            const currentChat = oldChats.find(chat => chat?.id == newMessage.chatId);
-            if (!currentChat) {
-                queryClient.invalidateQueries(['chats']);
-                return oldChats;
-            }
+            const pages = [...oldData.pages];
+            
+            const firstPage = { ...pages[0] };
+            const messages = firstPage.messages || [];
 
-            const isOwnSentMessage = newMessage.senderId == userId;
+            let updatedMessages;
+            const isOwnSentMessage = newMessage.senderId == userId && !newMessage?.isTemporary && newMessage.tempId;
 
-            const updatedChat = {
-                ...currentChat,
-                lastMessage: newMessage.content,
-                lastSent: newMessage.createdAt,
-                lastSentId: newMessage.id,
-                lastSenderId: newMessage.senderId,
-                unreadMessage: isOwnSentMessage ? 0 : (currentChat.unreadMessage || 0) + 1,
-            };
-
-            const filteredChats = oldChats.filter(chat => chat?.id != newMessage.chatId);
-            return [updatedChat, ...filteredChats];
-        });
-
-        if (newMessage.chatId == id) {
-            queryClient.setQueryData(['selected_chat', id], (oldData) => {
-                if (!oldData || !oldData.pages || oldData.pages.length === 0) return oldData;
-
-                const pages = [...oldData.pages];
-                
-                const firstPage = { ...pages[0] };
-                const messages = firstPage.messages || [];
-
-                let updatedMessages;
-                const isOwnSentMessage = newMessage.senderId == userId && !newMessage?.isTemporary && newMessage.tempId;
-
-                if (isOwnSentMessage) {
-                    let found = false;
-                    updatedMessages = messages.map(msg => {
-                        if (msg.tempId == newMessage.tempId) {
-                            found = true;
-                            return newMessage;
-                        }
-                        return msg;
-                    });
-                    
-                    if (!found) {
-                        if (messages.some(m => m.id != null && m.id == newMessage.id)) return oldData;
-                        updatedMessages = [...messages, newMessage];
+            if (isOwnSentMessage) {
+                let found = false;
+                updatedMessages = messages.map(msg => {
+                    if (msg.tempId == newMessage.tempId) {
+                        found = true;
+                        return newMessage;
                     }
-                } else {
-                    // Dedup by ID to handle sync + WS race conditions
+                    return msg;
+                });
+                
+                if (!found) {
                     if (messages.some(m => m.id != null && m.id == newMessage.id)) return oldData;
                     updatedMessages = [...messages, newMessage];
                 }
+            } else {
+                // Dedup by ID to handle sync + WS race conditions
+                if (messages.some(m => m.id != null && m.id == newMessage.id)) return oldData;
+                updatedMessages = [...messages, newMessage];
+            }
 
-                pages[0] = { ...firstPage, messages: updatedMessages };
+            pages[0] = { ...firstPage, messages: updatedMessages };
 
-                return {
-                    ...oldData,
-                    pages: pages,
-                };
-            });
-        }
+            return {
+                ...oldData,
+                pages: pages,
+            };
+        });
     }, [id, userId, queryClient]);
 
+    // Join/leave active chat rooms on demand
     useEffect(() => {
         if (!socket) return;
 
-        //console.info("Socket is available in useChatSync");
+        if (id) {
+            socket.emit(JOIN_CHAT_EVENT, {chatId: id}, (res) => {
+                if (res?.success) {
+                    joinedChatRef.current = id;
+                }
+            });
+        }
 
+        return () => {
+            // Leave the room when switching chats or unmounting
+            if (joinedChatRef.current) {
+                socket.emit(LEAVE_CHAT_EVENT, {chatId: joinedChatRef.current});
+                joinedChatRef.current = null;
+            }
+        };
+    }, [socket, id]);
+
+    // Listen for full messages (active chat room) and sidebar updates (personal room)
+    useEffect(() => {
+        if (!socket) return;
+
+        // Full message — only arrives when the user is in the chat room (active viewer)
         const handleReceiveMessage = (response) => {
-            //console.info("Received new message:", response.data);
             updateChatOnMessage(response.data);
         };
+
+        // Lightweight sidebar update — arrives via personal user room for ALL participants.
+        // Updates the chat list preview without the full message payload.
+        const handleChatUpdated = (response) => {
+            const update = response.data;
+            if (!update?.chatId) return;
+
+            const isViewingThisChat = update.chatId == id;
+
+            queryClient.setQueryData(['chats'], (oldChats = []) => {
+                if (!Array.isArray(oldChats)) {
+                    oldChats = [];
+                }
+
+                const currentChat = oldChats.find(chat => chat?.id == update.chatId);
+                if (!currentChat) {
+                    // New chat or not in cache — refetch
+                    queryClient.invalidateQueries(['chats']);
+                    return oldChats;
+                }
+
+                const isOwnSentMessage = update.lastSenderId == userId;
+
+                const updatedChat = {
+                    ...currentChat,
+                    lastMessage: update.lastMessage,
+                    lastSent: update.lastSent,
+                    lastSentId: update.lastSentId,
+                    lastSenderId: update.lastSenderId,
+                    // Do not increment if own message OR if currently viewing this chat
+                    unreadMessage: (isOwnSentMessage || isViewingThisChat)
+                        ? 0
+                        : (currentChat.unreadMessage || 0) + 1,
+                };
+
+                const filteredChats = oldChats.filter(chat => chat?.id != update.chatId);
+                return [updatedChat, ...filteredChats];
+            });
+
+            // If the sender sent a message via another tab/device and the chat is active,
+            // reconcile using tempId to replace the optimistic message
+            if (update.chatId == id && update.lastSenderId == userId && update.tempId) {
+                queryClient.setQueryData(['selected_chat', id], (oldData) => {
+                    if (!oldData?.pages?.length) return oldData;
+
+                    const pages = [...oldData.pages];
+                    const firstPage = {...pages[0]};
+                    const messages = firstPage.messages || [];
+
+                    const updatedMessages = messages.map(msg => {
+                        if (msg.tempId && msg.tempId == update.tempId) {
+                            return {...msg, id: update.lastSentId, isTemporary: false};
+                        }
+                        return msg;
+                    });
+
+                    pages[0] = {...firstPage, messages: updatedMessages};
+                    return {...oldData, pages};
+                });
+            }
+        };
+
         const handleGroupCreationResponse = () => queryClient.invalidateQueries(['chats']);
         const handleUpdateResponse = () => queryClient.invalidateQueries(['chats']);
 
         socket.on(MESSAGE_RECEIVE_EVENT, handleReceiveMessage);
+        socket.on(CHAT_UPDATED_EVENT, handleChatUpdated);
         socket.on(GROUP_CREATE_RESPONSE_EVENT, handleGroupCreationResponse);
         socket.on(GROUP_UPDATE_RESPONSE_EVENT, handleUpdateResponse);
 
         return () => {
             socket.off(MESSAGE_RECEIVE_EVENT, handleReceiveMessage);
+            socket.off(CHAT_UPDATED_EVENT, handleChatUpdated);
             socket.off(GROUP_CREATE_RESPONSE_EVENT, handleGroupCreationResponse);
             socket.off(GROUP_UPDATE_RESPONSE_EVENT, handleUpdateResponse);
         };
-    }, [socket, updateChatOnMessage, queryClient]);
+    }, [socket, id, userId, updateChatOnMessage, queryClient]);
 
     // Reconnect synchronization: fetch missed data after WebSocket reconnects
     useEffect(() => {
@@ -132,7 +197,16 @@ export const useChatSync = (id, userId) => {
                 // 1. Refresh chat list (unread counts, last messages, ordering)
                 queryClient.invalidateQueries(['chats']);
 
-                // 2. If a chat is currently open, fetch missed messages
+                // 2. Rejoin the active chat room after reconnect
+                if (id) {
+                    socket.emit(JOIN_CHAT_EVENT, {chatId: id}, (res) => {
+                        if (res?.success) {
+                            joinedChatRef.current = id;
+                        }
+                    });
+                }
+
+                // 3. If a chat is currently open, fetch missed messages
                 if (id) {
                     const cachedData = queryClient.getQueryData(['selected_chat', id]);
                     if (!cachedData?.pages?.length) {
