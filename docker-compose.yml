@@ -26,11 +26,11 @@ services:
 
   db-backup:
     build:
-      context: ./scripts/backup-service
+      context: ./db-backup
     restart: always
     volumes:
       - ./backups:/backups
-      - ./scripts/backup-service/config:/config
+      - ./db-backup/config:/config
     depends_on:
       postgres:
         condition: service_healthy
@@ -395,6 +395,39 @@ services:
         limits:
           memory: 64M
           cpus: '0.2'
+
+  health-monitor:
+    image: curlimages/curl:8.6.0
+    restart: always
+    depends_on:
+      gateway:
+        condition: service_healthy
+      server:
+        condition: service_healthy
+      chat-server:
+        condition: service_healthy
+      client:
+        condition: service_healthy
+    networks:
+      - frontend
+      - backend
+    volumes:
+      - ./scripts/smoke-test.sh:/smoke-test.sh:ro
+      - ./scripts/health-check.sh:/health-check.sh:ro
+    environment:
+      - GATEWAY_URL=http://gateway:8080
+      - SERVER_URL=http://server:8081
+      - CHAT_URL=http://chat-server:3001
+      - CLIENT_TARGET_URL=http://client:80
+      - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY}
+      - HEALTH_CHECK_INTERVAL=${HEALTH_CHECK_INTERVAL}
+      - ALERT_WEBHOOK_URL=${ALERT_WEBHOOK_URL}
+    entrypoint: ["/bin/sh", "/health-check.sh"]
+    deploy:
+      resources:
+        limits:
+          memory: 32M
+          cpus: '0.1'
 
 volumes:
   postgres_data:
