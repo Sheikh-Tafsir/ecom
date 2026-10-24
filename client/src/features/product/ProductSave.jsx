@@ -42,7 +42,7 @@ const ProductSchema = z.object({
         .max(1023, "Description cannot exceed 1023 characters"),
     price: z.coerce.number().positive().min(1, "Price must be greater than 0"),
     categoryIds: z.array(z.string()).min(1, "Select at least one category"),
-    keptImageIds: z.array(z.number()).optional(),
+    keptImageIds: z.array(z.string()).optional(),
 });
 
 const fetchCategories = async () => {

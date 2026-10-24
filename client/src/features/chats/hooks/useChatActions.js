@@ -1,15 +1,16 @@
 import {useCallback} from 'react';
 import {useUserStore} from '@/store/useUserStore';
 import {AuthenticatedAxios} from "@/services/http/Axios.js";
-import {REGULAR_ACTION} from "@/constants/app.constants";
+import {REGULAR_ACTION, TOAST_TYPE} from "@/constants/app.constants";
 import {CONTENT_TYPE} from "@/constants/chat.constants";
+import {toastify} from '@/common/toastify.js';
 import {
     MESSAGE_SEND_EVENT,
     GROUP_CREATE_REQUEST_EVENT,
     GROUP_UPDATE_REQUEST_EVENT
 } from "@/services/realtime/socketEvents.js";
 
-export const useChatActions = (id, userId, updateChatOnMessage, onNewChat, showToast) => {
+export const useChatActions = (id, userId, updateChatOnMessage, onNewChat) => {
     const socket = useUserStore(state => state.socket);
 
     const getImageLink = async (image) => {
@@ -22,9 +23,17 @@ export const useChatActions = (id, userId, updateChatOnMessage, onNewChat, showT
                 timeout: 15000,
             });
 
-            return response.data?.data;
+            const url = response.data?.data;
+
+            if (!url) {
+                toastify(TOAST_TYPE.ERROR, 'Image upload failed: no URL returned');
+                return null;
+            }
+            return url;
         } catch (err) {
             console.error("Image upload failed:", err);
+            toastify(TOAST_TYPE.ERROR, 'Image upload failed. Please try again.');
+            return null;
         }
     }
 
@@ -53,6 +62,10 @@ export const useChatActions = (id, userId, updateChatOnMessage, onNewChat, showT
         let contentType = CONTENT_TYPE.TEXT;
         if (image) {
             content = await getImageLink(image);
+            if (!content) {
+                return;  // Upload failed — already toasted
+            }
+
             contentType = CONTENT_TYPE.IMAGE;
         }
 
@@ -67,7 +80,7 @@ export const useChatActions = (id, userId, updateChatOnMessage, onNewChat, showT
         }, (acknowledgment) => {
             if (acknowledgment.error) {
                 console.error(acknowledgment.error);
-                showToast?.(acknowledgment.error, 'error');
+                toastify(TOAST_TYPE.ERROR, acknowledgment.error);
                 return;
             }
 
@@ -75,7 +88,7 @@ export const useChatActions = (id, userId, updateChatOnMessage, onNewChat, showT
             const sentMessage = acknowledgment.data;
             onNewChat(sentMessage.chatId);
         });
-    }, [id, socket, updateChatLocally, onNewChat, showToast]);
+    }, [id, socket, updateChatLocally, onNewChat]);
 
     const handleGroupManagementRequest = useCallback(async (users, action, onSuccess) => {
         if (!socket) return;
@@ -86,13 +99,13 @@ export const useChatActions = (id, userId, updateChatOnMessage, onNewChat, showT
         }, (acknowledgment) => {
             if (acknowledgment.error) {
                 console.error(acknowledgment.error);
-                showToast?.(acknowledgment.error, 'error');
+                toastify(TOAST_TYPE.ERROR, acknowledgment.error);
                 return;
             }
 
             onSuccess(acknowledgment);
         });
-    }, [id, socket, showToast]);
+    }, [id, socket]);
 
     return {handleSendMessage, handleGroupManagementRequest, updateChatLocally};
 };

@@ -6,10 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { DialogFooter } from "@/components/ui/dialog";
 import InputError from '@/components/common/InputError';
+import {GLOBAL_ERROR} from '@/utils/ErrorUtils';
 
 const BannerForm = ({ register, control, errors, isPending, editingBanner, onSubmit }) => {
     return (
         <form onSubmit={onSubmit} className="space-y-6 pt-4">
+            <InputError errors={errors} field={GLOBAL_ERROR}/>
+
             <div className="space-y-2">
                 <Label className="font-bold uppercase tracking-widest text-xs">Banner Title</Label>
                 <Input 

@@ -19,7 +19,7 @@ import {AuthenticatedAxios} from '@/services/http/Axios.js';
 import InputError from '@/components/common/InputError';
 import StaredLabel from '@/components/common/StaredLabel';
 import {TOAST_TYPE} from "@/constants/app.constants";
-import {handleErrors} from '@/utils';
+import {GLOBAL_ERROR, handleErrors} from '@/utils';
 import {toastify} from '@/common/toastify.js';
 
 const ChangePasswordSchema = z.object({
@@ -75,6 +75,8 @@ const ChangePassword = () => {
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-2">
+                            <InputError errors={errors} field={GLOBAL_ERROR}/>
+
                             <div className="space-y-2">
                                 <StaredLabel label={"Current Password"}/>
                                 <Input

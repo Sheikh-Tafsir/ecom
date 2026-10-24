@@ -21,7 +21,8 @@ import {Button} from "@/components/ui/button";
 import {ButtonLoading} from "@/components/common/ButtonLoading";
 import {toastify} from "@/common/toastify.js";
 import {TOAST_TYPE} from "@/constants/app.constants";
-import {handleErrors} from "@/utils";
+import {GLOBAL_ERROR, handleErrors} from "@/utils";
+import InputError from "@/components/common/InputError";
 import {queryKeys} from "@/services/reactQuery/queryKeys";
 import {useUserStore} from "@/store/useUserStore";
 
@@ -114,6 +115,8 @@ const ReviewSave = () => {
                 </CardHeader>
 
                 <CardContent className="space-y-4 px-6">
+                    <InputError errors={errors} field={GLOBAL_ERROR}/>
+
                     <div className="space-y-2">
                         <Label className="flex">
                             Rating
@@ -151,9 +154,7 @@ const ReviewSave = () => {
                             )}
                         />
 
-                        <p className="validation-error">
-                            {errors.rating?.message}
-                        </p>
+                        <InputError errors={errors} field="rating"/>
                     </div>
 
                     <div className="space-y-2">
@@ -167,9 +168,7 @@ const ReviewSave = () => {
                             placeholder="Write your review..."
                         />
 
-                        <p className="validation-error">
-                            {errors.comment?.message}
-                        </p>
+                        <InputError errors={errors} field="comment"/>
                     </div>
                 </CardContent>
 

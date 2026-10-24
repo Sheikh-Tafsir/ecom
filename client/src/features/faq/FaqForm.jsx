@@ -5,10 +5,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
 import InputError from '@/components/common/InputError';
+import {GLOBAL_ERROR} from '@/utils/ErrorUtils';
 
 const FaqForm = ({ register, errors, isPending, editingFaq, onSubmit }) => {
     return (
         <form onSubmit={onSubmit} className="space-y-6 pt-4">
+            <InputError errors={errors} field={GLOBAL_ERROR}/>
+
             <div className="space-y-2">
                 <Label className="font-bold uppercase tracking-widest text-xs">Question</Label>
                 <Input 

@@ -19,7 +19,7 @@ import { ButtonLoading } from '@/components/common/ButtonLoading';
 import { PublicAxios } from '@/services/http/Axios.js';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/common/InputError';
-import { handleErrors } from '@/utils';
+import { GLOBAL_ERROR, handleErrors } from '@/utils';
 
 const ForgetPasswordVerifySchema = z.object({
     otp: z
@@ -94,6 +94,8 @@ const ForgetPasswordVerify = () => {
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-2">
+                            <InputError errors={errors} field={GLOBAL_ERROR}/>
+
                             <div className="space-y-2">
                                 <Label>Reset Code</Label>
                                 <div className="flex">

@@ -3,6 +3,8 @@ import { BookImage } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { validateFile } from '@/utils';
+import { toastify } from '@/common/toastify.js';
+import { TOAST_TYPE } from '@/constants/app.constants';
 
 export default function ImageInputInplace({ image, setImage }) {
   const fileInputRef = useRef(null);
@@ -12,8 +14,7 @@ export default function ImageInputInplace({ image, setImage }) {
     if (validateFile(file)) {
       setImage(file);
     } else {
-      console.warn("File too large, select an image smaller than 5MB.");
-      alert("File too large, select an image smaller than 5MB.");
+      toastify(TOAST_TYPE.ERROR, "File too large, select an image smaller than 2MB.");
     }
   };
 

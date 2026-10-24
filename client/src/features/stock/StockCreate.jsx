@@ -30,7 +30,7 @@ import { toastify } from '@/common/toastify.js';
 import {queryKeys} from "@/services/reactQuery/queryKeys";
 
 const StockItemSchema = z.object({
-    productId: z.number(),
+    productId: z.string(),
     name: z.string(),
     image: z.string().optional(),
     quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
@@ -236,7 +236,7 @@ const StockCreate = () => {
                         </CardContent>
                     </Card>
 
-                    <form onSubmit={handleSubmit(stockMutation.mutate(data))} className="space-y-6">
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                         <Card>
                             <CardHeader className="pb-3">
                                 <CardTitle>Selected Items</CardTitle>

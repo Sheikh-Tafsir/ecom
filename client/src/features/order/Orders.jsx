@@ -184,7 +184,8 @@ const Orders = () => {
             toastify(TOAST_TYPE.SUCCESS, `Updated order with ID ${id} status changed to ${status}`)
         } catch (error) {
             console.error(error);
-            toastify(TOAST_TYPE.ERROR, error.response.data.errors.global[0])
+            toastify(TOAST_TYPE.ERROR,
+                error.response?.data?.errors?.global?.[0] || error.response?.data?.message || "Failed to update order")
         }
     }
 
@@ -196,7 +197,7 @@ const Orders = () => {
             toastify(TOAST_TYPE.SUCCESS, `Cancelled order with ID ${id}`)
         } catch (error) {
             console.error(error);
-            toastify(TOAST_TYPE.ERROR, error.response.data.errors.global[0])
+            toastify(TOAST_TYPE.ERROR, error.response?.data?.errors?.global?.[0] || error.response?.data?.message || "Failed to update order")
         }
     }
 

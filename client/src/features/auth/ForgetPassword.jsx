@@ -15,7 +15,7 @@ import {
 import {Input} from "@/components/ui/input"
 import {PublicAxios} from '@/services/http/Axios.js';
 import {ButtonLoading} from '@/components/common/ButtonLoading';
-import { handleErrors } from '@/utils';
+import { GLOBAL_ERROR, handleErrors } from '@/utils';
 import StaredLabel from '@/components/common/StaredLabel';
 import InputError from '@/components/common/InputError';
 
@@ -24,7 +24,8 @@ const ForgetPasswordSchema = z.object({
     email: z
         .string()
         .min(1, 'Email is required')
-        .max(31, 'Email must be shorter than 31 characters'),
+        .max(31, 'Email must be shorter than 31 characters')
+        .email('Please enter a valid email address'),
 });
 
 const ForgetPassword = () => {
@@ -60,6 +61,8 @@ const ForgetPassword = () => {
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-2">
+                            <InputError errors={errors} field={GLOBAL_ERROR}/>
+
                             <div className="space-y-1">
                                 <StaredLabel label = "Email"/>
                                 <Input type="email" placeholder="ex something12@gmail.com" {...register('email')} required/>

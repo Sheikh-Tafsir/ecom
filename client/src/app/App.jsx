@@ -103,7 +103,7 @@ const InnerApp = () => {
             disconnectSocket();
             setSocket(null);
         };
-    }, [user, setSocket, isLoading]);
+    }, [user?.id, setSocket, isLoading]);
 
     useEffect(() => {
         if (!socket) return;

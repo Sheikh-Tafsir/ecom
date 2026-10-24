@@ -17,10 +17,10 @@ const tryAgain = async (orderId, userId, navigate) => {
         // Notify user that payment is being initiated
         toastify(TOAST_TYPE.SUCCESS, "Initiating payment retry...");
 
-        const paymentResponse = await createPayment(order, userId);
+        const paymentUrl = await createPayment(order, userId);
 
-        if (paymentResponse.data.data) {
-            window.location.assign(paymentResponse.data.data);
+        if (paymentUrl) {
+            window.location.assign(paymentUrl);
         } else {
             toastify(TOAST_TYPE.ERROR, "Failed to get payment URL.");
         }
