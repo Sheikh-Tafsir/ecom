@@ -18,6 +18,8 @@ cd server_chat && npm install && npm run dev
 cd client && npm install && npm run dev
 ```
 
+> The Vite dev server binds to `0.0.0.0` (`server.host: true`) for LAN access and proxies `/api` and `/socket.io` requests to `http://localhost:8080` (the Gateway). This mirrors the Nginx proxy routing used in Docker. See `client/vite.config.js`.
+
 - **Dev profile** uses human-readable colorized console logs and a local Caffeine cache fallback (no Redis required).
 - All env vars must be provided — no fallback defaults in `application.yaml`. Use a local `.env` or test `@SpringBootTest(properties = {...})`.
 

@@ -2,7 +2,7 @@
 
 ## What This Project Is
 
-A microservices-based e-commerce platform. Monorepo with four services: Gateway, Main Server, Chat Server, and Client.
+A microservices-based e-commerce platform. Monorepo with four services behind an Nginx reverse proxy: Gateway, Main Server, Chat Server, and Client.
 
 ## Read This Before Doing Anything
 
@@ -15,6 +15,7 @@ A microservices-based e-commerce platform. Monorepo with four services: Gateway,
 | Docker, env vars, CI/CD      | [docs/deployment.md](./docs/deployment.md)     |
 | API contract & response shape| [docs/api.md](./docs/api.md)                   |
 | Hot-reload config guide      | [docs/hot-reload.md](./docs/hot-reload.md)     |
+| Read replicas setup          | [docs/read-replicas.md](./docs/read-replicas.md) |
 
 ## Architecture Decisions (Why things are the way they are)
 
@@ -35,10 +36,11 @@ A microservices-based e-commerce platform. Monorepo with four services: Gateway,
 | Main Server   | Java / Spring Boot 3.5  | 8081 | `server/`    |
 | Chat Server   | Node.js / Socket.IO     | 3001 | `server_chat/`|
 | Client        | React 18 / Vite / Nginx | 80   | `client/`    |
+| Nginx Proxy   | Nginx Alpine            | 80 (APP_PORT) | root (`nginx-proxy.conf`) |
 
 ## Non-Negotiable Rules (Quick Reference)
 
-1. **All traffic goes through the Gateway.** Individual services do not handle CORS. JWT is validated at the Gateway for routing/rate-limiting *and* again in the Main Server's own `AuthenticationFilter` to populate the Spring Security context (`@AuthenticationPrincipal`).
+1. **All traffic goes through the Nginx reverse proxy, then the Gateway.** The proxy routes `/api/*` and `/socket.io/*` to the Gateway and `/*` to the Client. Individual services do not handle CORS (CORS is eliminated by same-origin routing). JWT is validated at the Gateway for routing/rate-limiting *and* again in the Main Server's own `AuthenticationFilter` to populate the Spring Security context (`@AuthenticationPrincipal`).
 2. **Every HTTP response is `ApiResponse<T>`** — never a raw entity or plain string.
 3. **All timestamps are `java.time.Instant`** (UTC ISO-8601). Never `LocalDateTime`.
 4. **All cache names come from `CacheConstants.java`** — no magic strings.

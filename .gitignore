@@ -60,3 +60,6 @@ scripts/backup-service/config/rclone.conf
 /server/.gradle_old_root
 /server/build_bak2
 .agents/*
+
+# Local dev override (LAN access, has machine-specific IP)
+docker-compose.override.yml

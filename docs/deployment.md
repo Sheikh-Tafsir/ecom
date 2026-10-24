@@ -2,7 +2,7 @@
 
 ## Docker Compose (Primary Method)
 
-All services are orchestrated via `docker-compose.yml` at the repo root.
+All services are orchestrated via `docker-compose.yml` at the repo root. The `nginx-proxy` service acts as the single entry point, routing traffic to the client and gateway. Optional replica overlay files (e.g., `docker-compose.replicas.yml`) can be layered on top for read-replica setups.
 
 ### Quick Commands
 
@@ -17,16 +17,16 @@ All services are orchestrated via `docker-compose.yml` at the repo root.
 | View running containers             | `docker compose ps`                              |
 | Resource usage                      | `docker stats`                                   |
 
-Service names: `server`, `gateway`, `chat-server`, `client`, `postgres`, `redis`, `rabbitmq`, `db-backup`.
+Service names: `server`, `gateway`, `chat-server`, `client`, `postgres`, `redis`, `rabbitmq`, `db-backup`, `nginx-proxy`, `smoke-test`, `health-monitor`.
 
 ### Service Start Order (enforced by `depends_on`)
 ```
 postgres (healthy) ──┐
 redis (healthy)    ──┼──▶ server (healthy) ──┐
-rabbitmq (healthy) ──┘                       ├──▶ gateway (healthy) ──▶ client
-                                             │
-redis (healthy)    ──┬──▶ chat-server (healthy) ──┘
-postgres (healthy) ──┘
+rabbitmq (healthy) ──┘                       ├──▶ gateway (healthy) ──▶ client ──┐
+                                             │                                   ├──▶ nginx-proxy
+redis (healthy)    ──┬──▶ chat-server (healthy) ──┘                              │
+postgres (healthy) ──┘                                     gateway (healthy) ──────┘
 ```
 
 ---
@@ -40,12 +40,13 @@ All env vars are in the root `.env` file and injected by Docker Compose. **No de
 |--------------------------|-------------------------------------------|
 | `DEPLOYMENT_ENVIRONMENT` | `prod` or `dev`                           |
 | `APP_CACHE_STRATEGY`     | `redis` (prod) or `NONE` (CI/dev)         |
+| `APP_PORT`               | `80` (default)                            |
 | `GATEWAY_PORT`           | `8080`                                    |
 | `MAIN_SERVER_PORT`       | `8081`                                    |
 | `CHAT_SERVER_PORT`       | `3001`                                    |
 | `CLIENT_PORT`            | `80` (prod), `5173` (dev)                 |
 | `SERVER_URL`             | `http://localhost:8080`                   |
-| `CLIENT_URL`             | `http://localhost:5173`                   |
+| `CLIENT_URL`             | `http://localhost`                        |
 
 ### Database (PostgreSQL)
 | Variable          | Notes                                |
@@ -79,9 +80,9 @@ All env vars are in the root `.env` file and injected by Docker Compose. **No de
 | `REFRESH_TOKEN_NAME`   | Cookie name: `refreshToken`                  |
 
 ### Client Build Args (Vite — baked in at build time)
-| Variable                     | Notes                          |
-|------------------------------|--------------------------------|
-| `VITE_API_PATH`              | `SERVER_URL`                   |
+| Variable                     | Notes                                                              |
+|------------------------------|--------------------------------------------------------------------|
+| `VITE_API_PATH`              | `/api` (relative same-origin path; routed through nginx-proxy)     |
 | `VITE_GOOGLE_LOGIN_CLIENT_ID`| Google OAuth client ID         |
 | `VITE_SESSION_HINT_KEY`      | e.g., `ecom_session`           |
 | `VITE_LOCAL_STORAGE_CART_KEY`| e.g., `visoredCart`            |
@@ -116,6 +117,16 @@ All env vars are in the root `.env` file and injected by Docker Compose. **No de
 | `BACKUP_RETENTION_DAYS`  | `7`                                            |
 | `GDRIVE_SYNC_ENABLED`    | `true` / `false`                               |
 | `BACKUP_ENCRYPTION_KEY`  | **Must be changed before production.** AES-256-CBC key. Generate: `openssl rand -base64 32` |
+
+### Read Replicas
+
+See [docs/read-replicas.md](./read-replicas.md) for full setup instructions.
+
+| Variable               | Notes                                        |
+|------------------------|----------------------------------------------|
+| `REPLICATION_USER`     | Dedicated PostgreSQL replication user         |
+| `REPLICATION_PASSWORD` | Password for the replication user             |
+| `REPLICA_PRIMARY_HOST` | Hostname of the primary PostgreSQL instance   |
 
 ---
 
@@ -197,3 +208,4 @@ Defined in `.github/workflows/ci.yml`.
 | client        | 256M        | 0.5       |
 | postgres      | 512M        | 1.0       |
 | redis         | 256M        | 0.5       |
+| nginx-proxy   | 128M        | 0.5       |

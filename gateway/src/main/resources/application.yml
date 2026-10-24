@@ -34,16 +34,20 @@ spring:
               predicates:
                 - Path=/socket.io/**
 
-            - id: chat-service
+            # Prefixed routes with /api
+            - id: chat-service-api
               uri: ${CHAT_SERVICE_URL}
               predicates:
-                - Path=/chats/**,/common/**
+                - Path=/api/chats/**,/api/common/**
+              filters:
+                - StripPrefix=1
 
-            - id: main-service
+            - id: main-service-api
               uri: ${MAIN_SERVICE_URL}
               predicates:
-                - Path=/**
+                - Path=/api/**
               filters:
+                - StripPrefix=1
                 - name: CircuitBreaker
                   args:
                     name: mainServiceCB

@@ -58,9 +58,9 @@ Client ──Bearer token──▶ Gateway (AuthenticationFilter)
 
 ## CORS
 
-- Configured **once** in the Gateway only (`CORS_ALLOWED_ORIGINS` = `CLIENT_URL`).
+- In production, CORS is effectively **eliminated** by same-origin routing through `nginx-proxy` — all traffic (API, WebSocket, and static assets) is served from the same origin.
+- The Gateway's CORS configuration (`CORS_ALLOWED_ORIGINS` = `CLIENT_URL`) is retained as a **defense-in-depth safety net** for local development and as a fallback if requests somehow bypass the proxy.
 - Individual services (`server`, `chat-server`) do NOT configure CORS independently.
-- Allowed origins are controlled by the `CORS_ALLOWED_ORIGINS` environment variable.
 
 ---
 
@@ -69,6 +69,7 @@ Client ──Bearer token──▶ Gateway (AuthenticationFilter)
 - Implemented via `IpRateLimiterFilter` using **Bucket4j** with Redis backing.
 - **Dev/test mode** falls back to local Caffeine cache.
 - True client IPs are extracted via `RequestUtil.getClientIp()` which reads `X-Forwarded-For` and `X-Real-IP` headers (reverse proxy / Docker gateway aware).
+- `nginx-proxy` sets both `X-Real-IP` and `X-Forwarded-For` headers, ensuring the Gateway always receives the true client IP for rate limiting.
 - **Chat Server Rate Limiting:**
   - Message send: Redis sliding window of **20 messages per 10 seconds** per user (`ratelimit:msg:{userId}`). Falls back to an in-memory limit of 5 msgs/sec per socket if Redis is unavailable.
   - Typing indicators: Throttled to **1 event per 2 seconds** per user per chat via Redis `NX` (`typing:{chatId}:{userId}`). Verified via in-memory room authorization (`socket.rooms.has`).
@@ -95,7 +96,9 @@ Client ──Bearer token──▶ Gateway (AuthenticationFilter)
 
 ## Infrastructure Security
 
-- `gateway` and `client` Docker container ports are bound to `127.0.0.1` on the host (`docker-compose.yml`), preventing direct public exposure without passing through the host's reverse proxy / TLS layer.
+- **`nginx-proxy`** is the **sole public entry point** — it exposes `0.0.0.0:${APP_PORT:-80}:80` on the host, making it the only container reachable from the internet.
+- **`gateway`** is bound to `127.0.0.1:8080` — accessible for local development only, not publicly exposed.
+- **`client`** uses `expose: 80` (internal Docker network only) — **no host port** is mapped at all.
 - PostgreSQL, Redis, and RabbitMQ are on the internal `data` network — **never exposed** to the `frontend` network.
 - No data-layer service has a host-mapped port in production.
 - Redis requires password auth (`REDIS_PASSWORD` env var, `--requirepass` flag).
@@ -118,7 +121,7 @@ Client ──Bearer token──▶ Gateway (AuthenticationFilter)
 |---------------------------------|---------------------------------------------------------|
 | Stolen JWT                      | Short expiry + Redis revocation on logout               |
 | Unauthorized API access         | Gateway `AuthenticationFilter` + `@PreAuthorize` RBAC  |
-| Cross-site data leakage         | Centralized CORS at Gateway only                        |
+| Cross-site data leakage         | Same-origin via Nginx proxy; CORS at Gateway as defense-in-depth |
 | Duplicate payments              | Idempotency key + Redis atomic lock                     |
 | IP-based abuse / DDoS           | Bucket4j rate limiting per IP with Redis backing        |
 | WebSocket abuse                 | `socketAuthMiddleware` + 5 msg/s rate limit             |

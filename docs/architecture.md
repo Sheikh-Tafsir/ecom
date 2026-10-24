@@ -2,45 +2,57 @@
 
 ## System Overview
 
-A monorepo microservices e-commerce platform. All traffic enters through a single gateway; no service is directly exposed except the React client (via Nginx).
+A monorepo microservices e-commerce platform. All traffic enters through an Nginx reverse proxy (`nginx-proxy`) which routes API and WebSocket requests to the Spring Cloud Gateway, and serves the React client. No individual service is directly exposed to the host network.
 
 ## Service Map
 
 ```
-React Client (Nginx :80)
+Nginx Reverse Proxy (:80)             ← sole public entry point
         │
-        ▼
-Spring Cloud Gateway (:8080)          ← sole public API entry point
-        │                │
-        ▼                ▼
-Main Server (:8081)   Chat Server (:3001)
-(Spring Boot 3.5)     (Node.js / Socket.IO)
-        │                │
-        ├── PostgreSQL (Main DB) ├── PostgreSQL (Chat DB: chats, msgs)
-        ├── Redis 7              ├── Redis 7 (pub/sub & user cache)
-        └── RabbitMQ 3           └── HTTP Internal -> Main Server (:8081)
+        ├── /api/* /socket.io/*  → Spring Cloud Gateway (:8080, internal)
+        │                              │                │
+        │                              ▼                ▼
+        │                    Main Server (:8081)   Chat Server (:3001)
+        │                    (Spring Boot 3.5)     (Node.js / Socket.IO)
+        │                              │                │
+        │                    ├── PostgreSQL (Main DB) ├── PostgreSQL (Chat DB: chats, msgs)
+        │                    ├── Redis 7              ├── Redis 7 (pub/sub & user cache)
+        │                    └── RabbitMQ 3           └── HTTP Internal -> Main Server (:8081)
+        │
+        └── /*               → React Client Nginx (:80, internal)
 ```
 
 ## Docker Network Isolation
 
 | Network    | Members                                          | Purpose                           |
 |------------|--------------------------------------------------|-----------------------------------|
-| `frontend` | gateway, client                                  | Client ↔ Gateway traffic          |
-| `backend`  | gateway, server, chat-server                     | Internal service communication    |
+| `frontend` | nginx-proxy, gateway, client                     | Client ↔ Gateway traffic          |
+| `backend`  | nginx-proxy, gateway, server, chat-server        | Internal service communication    |
 | `data`     | server, chat-server, gateway, redis, postgres, postgres-chat, rabbitmq | Data layer access |
 
+- **Nginx Proxy** spans `frontend` and `backend` — it routes external traffic to either the client or gateway.
 - **Client** is on `frontend` only — it cannot reach `server` or `chat-server` directly.
 - **Gateway** spans `frontend`, `backend`, and `data` — it needs Redis for token revocation checks.
 
-## Request Routing (Gateway Rules)
+## Request Routing
 
-| Route ID         | Path Predicate            | Upstream                  | Notes                          |
-|------------------|---------------------------|---------------------------|--------------------------------|
-| `chat-service-ws`| `/socket.io/**`           | `ws://chat-server:3001`   | WebSocket upgrade              |
-| `chat-service`   | `/chats/**`, `/common/**` | `http://chat-server:3001` | Chat REST & uploads            |
-| `main-service`   | `/**`                     | `http://server:8081`      | All other requests (catch-all) |
+### Nginx Proxy Layer
 
-The `main-service` catch-all has a CircuitBreaker (`mainServiceCB`) + GET retry (2 retries on `SERVICE_UNAVAILABLE`).
+| Path Pattern       | Upstream                        | Notes                                |
+|--------------------|---------------------------------|--------------------------------------|
+| `/api/*`           | `http://gateway:8080`           | All REST API traffic                 |
+| `/socket.io/*`     | `http://gateway:8080`           | WebSocket upgrade (proxy headers)    |
+| `/*`               | `http://client:80`              | React SPA (catch-all)               |
+
+### Gateway Rules
+
+| Route ID             | Path Predicate                  | Upstream                  | Notes                          |
+|----------------------|---------------------------------|---------------------------|--------------------------------|
+| `chat-service-ws`    | `/socket.io/**`                 | `ws://chat-server:3001`   | WebSocket upgrade              |
+| `chat-service-api`   | `/api/chats/**`, `/api/common/**` | `http://chat-server:3001` | Chat REST & uploads, StripPrefix=1 |
+| `main-service-api`   | `/api/**`                       | `http://server:8081`      | All other requests (catch-all), StripPrefix=1 |
+
+The `main-service-api` catch-all has a CircuitBreaker (`mainServiceCB`) + GET retry (2 retries on `SERVICE_UNAVAILABLE`).
 
 ## Data Flow by Feature
 

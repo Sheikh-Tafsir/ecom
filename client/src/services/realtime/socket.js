@@ -25,7 +25,11 @@ export const connectSocket = async () => {
                 return null;
             }
 
-            socket = io(API_PATH, {
+            const socketUrl = (API_PATH && API_PATH.startsWith('http'))
+                ? new URL(API_PATH).origin
+                : undefined;
+
+            socket = io(socketUrl, {
                 auth: {token},
                 transports: ['websocket'],
             });

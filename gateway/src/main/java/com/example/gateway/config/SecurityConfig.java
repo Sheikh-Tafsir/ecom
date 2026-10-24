@@ -35,7 +35,9 @@ public class SecurityConfig {
 
     public static final Set<String> PUBLIC_URLS = Set.of(
             "/v3/api-docs/**",
+            "/api/v3/api-docs/**",
             "/chats/v3/api-docs/**",
+            "/api/chats/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/swagger-resources/**",
@@ -90,20 +92,20 @@ public class SecurityConfig {
                 .addFilterBefore(authenticationFilter(), SecurityWebFiltersOrder.AUTHENTICATION)
                 .addFilterAfter(userRateLimiterFilter(), SecurityWebFiltersOrder.AUTHENTICATION)
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/internal/**").denyAll()
-                        .pathMatchers(HttpMethod.POST, "/actuator/refresh").access((authentication, context) -> {
+                        .pathMatchers("/internal/**", "/api/internal/**").denyAll()
+                        .pathMatchers(HttpMethod.POST, "/actuator/refresh", "/api/actuator/refresh").access((authentication, context) -> {
                             String key = context.getExchange().getRequest().getHeaders().getFirst("X-Internal-Service-Key");
                             boolean allowed = key != null && !key.isBlank() && key.equals(internalServiceKey);
                             return reactor.core.publisher.Mono.just(new org.springframework.security.authorization.AuthorizationDecision(allowed));
                         })
                         .pathMatchers(PUBLIC_URLS.toArray(new String[0])).permitAll()
-                        .pathMatchers("/auth/**").permitAll()
-                        .pathMatchers(HttpMethod.GET, "/products", "/products/*").permitAll()
-                        .pathMatchers(HttpMethod.GET, "/categories", "/categories/*").permitAll()
-                        .pathMatchers(HttpMethod.GET, "/banners", "/banners/**").permitAll()
-                        .pathMatchers(HttpMethod.GET, "/blogs", "/blogs/**").permitAll()
-                        .pathMatchers(HttpMethod.GET, "/faqs", "/faqs/**").permitAll()
-                        .pathMatchers("/payment/callback").permitAll()
+                        .pathMatchers("/api/auth/**").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/api/products", "/api/products/*").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/api/categories", "/api/categories/*").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/api/banners", "/api/banners/**").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/api/blogs", "/api/blogs/**").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/api/faqs", "/api/faqs/**").permitAll()
+                        .pathMatchers("/api/payment/callback").permitAll()
                         .anyExchange().authenticated()
                 )
                 .build();

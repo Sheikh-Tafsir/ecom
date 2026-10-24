@@ -64,15 +64,15 @@ printf "Client Web:  ${BOLD}%s${NC}\n\n" "$CLIENT_URL"
 # ------------------------------------------------------------------------------
 # Test 1: Gateway -> Main Server: Public Database Read & Cache
 # ------------------------------------------------------------------------------
-printf "${BOLD}[1/8] Gateway -> Main Server: Public DB Read & Cache (/categories)${NC}\n"
-RESPONSE=$(curl -s -w "\n%{http_code}" --max-time 5 "$GATEWAY_URL/categories" 2>/dev/null || printf "\n000")
+printf "${BOLD}[1/8] Gateway -> Main Server: Public DB Read & Cache (/api/categories)${NC}\n"
+RESPONSE=$(curl -s -w "\n%{http_code}" --max-time 5 "$GATEWAY_URL/api/categories" 2>/dev/null || printf "\n000")
 HTTP_CODE=$(printf "%s" "$RESPONSE" | tail -n1)
 BODY=$(printf "%s" "$RESPONSE" | sed '$d')
 
 if [ "$HTTP_CODE" -eq 200 ]; then
-    pass "GET /categories returned 200 OK (Postgres + Redis cache active via Gateway)"
+    pass "GET /api/categories returned 200 OK (Postgres + Redis cache active via Gateway)"
 else
-    fail "GET /categories returned HTTP $HTTP_CODE" "Response: $BODY"
+    fail "GET /api/categories returned HTTP $HTTP_CODE" "Response: $BODY"
 fi
 
 # ------------------------------------------------------------------------------
