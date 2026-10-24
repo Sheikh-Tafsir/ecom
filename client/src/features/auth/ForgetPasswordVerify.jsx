@@ -17,8 +17,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { ButtonLoading } from '@/components/common/ButtonLoading';
 import { PublicAxios } from '@/services/http/Axios.js';
-import { Label } from '@/components/ui/label';
 import InputError from '@/components/common/InputError';
+import FormField from '@/components/common/FormField';
 import { GLOBAL_ERROR, handleErrors } from '@/utils';
 
 const ForgetPasswordVerifySchema = z.object({
@@ -96,8 +96,7 @@ const ForgetPasswordVerify = () => {
                         <CardContent className="space-y-2">
                             <InputError errors={errors} field={GLOBAL_ERROR}/>
 
-                            <div className="space-y-2">
-                                <Label>Reset Code</Label>
+                            <FormField label="Reset Code" field="otp" errors={errors}>
                                 <div className="flex">
                                     <InputOTP maxLength={6} {...register('otp')} required>
                                         <InputOTPGroup>
@@ -110,30 +109,25 @@ const ForgetPasswordVerify = () => {
                                         </InputOTPGroup>
                                     </InputOTP>
                                 </div>
-                                <InputError errors={errors} field={"otp"}/>
-                            </div>
+                            </FormField>
 
-                            <div className="space-y-2">
-                                <Label>Password</Label>
+                            <FormField label="Password" field="password" errors={errors}>
                                 <Input
                                     type="password"
                                     placeholder="8 characters min"
                                     {...register('password')}
                                     required
                                 />
-                                <InputError errors={errors} field={"password"}/>
-                            </div>
+                            </FormField>
 
-                            <div className="space-y-2">
-                                <Label>Confirm Password</Label>
+                            <FormField label="Confirm Password" field="confirmPassword" errors={errors}>
                                 <Input
                                     type="password"
                                     placeholder="8 characters min"
                                     {...register('confirmPassword')}
                                     required
                                 />
-                                <InputError errors={errors} field={"confirmPassword"}/>
-                            </div>
+                            </FormField>
                         </CardContent>
 
                         <CardFooter className="flex-col gap-2 ">

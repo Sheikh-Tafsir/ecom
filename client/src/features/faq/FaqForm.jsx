@@ -1,10 +1,10 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
 import InputError from '@/components/common/InputError';
+import FormField from '@/components/common/FormField';
 import {GLOBAL_ERROR} from '@/utils/ErrorUtils';
 
 const FaqForm = ({ register, errors, isPending, editingFaq, onSubmit }) => {
@@ -12,34 +12,27 @@ const FaqForm = ({ register, errors, isPending, editingFaq, onSubmit }) => {
         <form onSubmit={onSubmit} className="space-y-6 pt-4">
             <InputError errors={errors} field={GLOBAL_ERROR}/>
 
-            <div className="space-y-2">
-                <Label className="font-bold uppercase tracking-widest text-xs">Question</Label>
+            <FormField label="Question" field="question" errors={errors} labelClassName="font-bold uppercase tracking-widest text-xs">
                 <Input 
                     {...register('question')}
                     className={errors.question ? "border-red-500 font-bold" : "font-bold"}
                 />
-                <InputError errors={errors} field="question" />
-            </div>
+            </FormField>
 
-            <div className="space-y-2">
-                <Label className="font-bold uppercase tracking-widest text-xs">Answer</Label>
+            <FormField label="Answer" field="answer" errors={errors} labelClassName="font-bold uppercase tracking-widest text-xs">
                 <Textarea 
                     {...register('answer')}
                     className={errors.answer ? "border-red-500 font-medium h-32" : "font-medium h-32"}
                 />
-                <InputError errors={errors} field="answer" />
-            </div>
+            </FormField>
 
-            <div className="space-y-2">
-                <Label className="font-bold uppercase tracking-widest text-xs">Display Order</Label>
+            <FormField label="Display Order" field="displayOrder" errors={errors} labelClassName="font-bold uppercase tracking-widest text-xs" helperText="Lower numbers appear first">
                 <Input 
                     type="number"
                     {...register('displayOrder')}
                     className="font-bold w-32"
                 />
-                <p className="text-[10px] text-slate-400 font-bold uppercase">Lower numbers appear first</p>
-                <InputError errors={errors} field="displayOrder" />
-            </div>
+            </FormField>
 
             <DialogFooter>
                 <Button 

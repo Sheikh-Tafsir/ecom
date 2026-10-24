@@ -17,7 +17,7 @@ import {Input} from "@/components/ui/input"
 import {ButtonLoading} from '@/components/common/ButtonLoading';
 import {AuthenticatedAxios} from '@/services/http/Axios.js';
 import InputError from '@/components/common/InputError';
-import StaredLabel from '@/components/common/StaredLabel';
+import FormField from '@/components/common/FormField';
 import {TOAST_TYPE} from "@/constants/app.constants";
 import {GLOBAL_ERROR, handleErrors} from '@/utils';
 import {toastify} from '@/common/toastify.js';
@@ -77,38 +77,32 @@ const ChangePassword = () => {
                         <CardContent className="space-y-2">
                             <InputError errors={errors} field={GLOBAL_ERROR}/>
 
-                            <div className="space-y-2">
-                                <StaredLabel label={"Current Password"}/>
+                            <FormField label="Current Password" field="currentPassword" errors={errors} required>
                                 <Input
                                     type="password"
                                     placeholder="8 characters min"
                                     {...register('currentPassword')}
                                     required
                                 />
-                                <InputError errors={errors} field={"currentPassword"}/>
-                            </div>
+                            </FormField>
 
-                            <div className="space-y-2">
-                                <StaredLabel label={"New Password"}/>
+                            <FormField label="New Password" field="newPassword" errors={errors} required>
                                 <Input
                                     type="password"
                                     placeholder="8 characters min"
                                     {...register('newPassword')}
                                     required
                                 />
-                                <InputError errors={errors} field={"newPassword"}/>
-                            </div>
+                            </FormField>
 
-                            <div className="space-y-2">
-                                <StaredLabel label={"Confirm Password"}/>
+                            <FormField label="Confirm Password" field="confirmPassword" errors={errors} required>
                                 <Input
                                     type="password"
                                     placeholder="8 characters min"
                                     {...register('confirmPassword')}
                                     required
                                 />
-                                <InputError errors={errors} field={"confirmPassword"}/>
-                            </div>
+                            </FormField>
                         </CardContent>
 
                         <CardFooter className="flex-col gap-2 ">

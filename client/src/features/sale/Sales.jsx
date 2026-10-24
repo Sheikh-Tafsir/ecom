@@ -23,7 +23,7 @@ import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadi
 import {formatDate, GLOBAL_ERROR, handleErrors} from "@/utils";
 import {FIRST_PAGE, getQueryString, normalizeQuery, redirectWhenInvalidPage} from '@/utils/PaginationUtils';
 
-import {Label} from "@/components/ui/label";
+import FormField from "@/components/common/FormField";
 import {
     Card,
     CardContent,
@@ -287,41 +287,29 @@ export default function Sales() {
                             <CardContent className="space-y-6 pt-8 px-8 pb-8">
                                 <InputError errors={errors} field={GLOBAL_ERROR}/>
 
-                                <div className="space-y-2">
-                                    <Label
-                                        className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Product
-                                        Name</Label>
+                                <FormField label="Product Name" field="productName" errors={errors} labelClassName="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">
                                     <Input
                                         placeholder="Search by product..."
                                         className="h-12 rounded-md border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all font-bold placeholder:font-medium"
                                         {...register("productName")}
                                     />
-                                    <InputError errors={errors} field="productName"/>
-                                </div>
+                                </FormField>
 
-                                <div className="space-y-2">
-                                    <Label
-                                        className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">From
-                                        Date</Label>
+                                <FormField label="From Date" field="fromDate" errors={errors} labelClassName="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">
                                     <Input
                                         type="date"
                                         className="h-12 rounded-md border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all font-bold"
                                         {...register("fromDate")}
                                     />
-                                    <InputError errors={errors} field="fromDate"/>
-                                </div>
+                                </FormField>
 
-                                <div className="space-y-2">
-                                    <Label
-                                        className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">To
-                                        Date</Label>
+                                <FormField label="To Date" field="toDate" errors={errors} labelClassName="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">
                                     <Input
                                         type="date"
                                         className="h-12 rounded-md border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all font-bold"
                                         {...register("toDate")}
                                     />
-                                    <InputError errors={errors} field="toDate"/>
-                                </div>
+                                </FormField>
                             </CardContent>
 
                             <CardFooter className="px-8 pb-8 pt-0">

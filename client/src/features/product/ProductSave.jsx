@@ -17,7 +17,7 @@ import {
 import {Input} from "@/components/ui/input.jsx";
 import {Textarea} from "@/components/ui/textarea";
 
-import StaredLabel from "@/components/common/StaredLabel";
+import FormField from "@/components/common/FormField";
 import MultiImageInput from "@/components/common/MultiImageInput";
 import InputError from "@/components/common/InputError";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
@@ -252,32 +252,24 @@ const ProductSave = () => {
                             />
                             <InputError errors={errors} field="keptImageIds"/>
 
-                            <div className="space-y-2">
-                                <StaredLabel label="Name"/>
+                            <FormField label="Name" field="name" errors={errors} required>
                                 <Input {...register("name")} />
-                                <InputError errors={errors} field="name"/>
-                            </div>
+                            </FormField>
 
-                            <div className="space-y-2">
-                                <StaredLabel label="Description"/>
+                            <FormField label="Description" field="description" errors={errors} required>
                                 <Textarea {...register("description")} />
-                                <InputError errors={errors} field="description"/>
-                            </div>
+                            </FormField>
 
-                            <div className="space-y-2">
-                                <StaredLabel label="Price"/>
+                            <FormField label="Price" field="price" errors={errors} required>
                                 <Input
                                     type="number"
                                     step="0.5"
                                     min="0"
                                     {...register("price")}
                                 />
-                                <InputError errors={errors} field="price"/>
-                            </div>
+                            </FormField>
 
-                            <div className="space-y-2">
-                                <StaredLabel label="Categories"/>
-
+                            <FormField label="Categories" field="categoryIds" errors={errors} required>
                                 <Controller
                                     name="categoryIds"
                                     control={control}
@@ -293,10 +285,8 @@ const ProductSave = () => {
                                         />
                                     )}
                                 />
-
-                                <InputError errors={errors} field="categories"/>
-                                <InputError errors={errors} field="categoryIds"/>
-                            </div>
+                            </FormField>
+                            <InputError errors={errors} field="categories"/>
                         </CardContent>
 
                         <CardFooter className="flex flex-col gap-4">

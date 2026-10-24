@@ -15,7 +15,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import {Input} from "@/components/ui/input";
-import {Label} from "@/components/ui/label";
+import FormField from "@/components/common/FormField";
 import {
     Card,
     CardContent,
@@ -175,40 +175,31 @@ const Stocks = () => {
                                 <InputError errors={errors} field={GLOBAL_ERROR}/>
 
                                 {/* Product Name */}
-                                <div className="space-y-2">
-                                    <Label className="text-base font-semibold uppercase tracking-widest ml-1">Product
-                                        Name</Label>
+                                <FormField label="Product Name" field="productName" errors={errors} labelClassName="text-base font-semibold uppercase tracking-widest ml-1">
                                     <Input
                                         placeholder="Search by product..."
                                         className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all"
                                         {...register("productName")}
                                     />
-                                    <InputError errors={errors} field="productName"/>
-                                </div>
+                                </FormField>
 
                                 {/* From Date */}
-                                <div className="space-y-2">
-                                    <Label className="text-base font-semibold uppercase tracking-widest ml-1">From
-                                        Date</Label>
+                                <FormField label="From Date" field="fromDate" errors={errors} labelClassName="text-base font-semibold uppercase tracking-widest ml-1">
                                     <Input
                                         type="date"
                                         className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all"
                                         {...register("fromDate")}
                                     />
-                                    <InputError errors={errors} field="fromDate"/>
-                                </div>
+                                </FormField>
 
                                 {/* To Date */}
-                                <div className="space-y-2">
-                                    <Label className="text-base font-semibold uppercase tracking-widest ml-1">To
-                                        Date</Label>
+                                <FormField label="To Date" field="toDate" errors={errors} labelClassName="text-base font-semibold uppercase tracking-widest ml-1">
                                     <Input
                                         type="date"
                                         className="h-11 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all"
                                         {...register("toDate")}
                                     />
-                                    <InputError errors={errors} field="toDate"/>
-                                </div>
+                                </FormField>
                             </CardContent>
 
                             <CardFooter className="pt-2">

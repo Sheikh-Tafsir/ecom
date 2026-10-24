@@ -23,6 +23,7 @@ import {PublicAxios} from '@/services/http/Axios';
 import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils';
 import {useUserStore} from '@/store/useUserStore.js';
 import InputError from "@/components/common/InputError.jsx";
+import FormField from "@/components/common/FormField";
 import { APP_NAME } from '@/utils';
 
 // ✅ Validation schema
@@ -115,10 +116,7 @@ const Login = () => {
                                 <InputError errors={errors} field={GLOBAL_ERROR}/>
 
                                 {/* Email */}
-                                <div className="space-y-2">
-                                    <Label htmlFor="email" className="text-xs font-bold text-slate-700 uppercase tracking-wider ml-1">
-                                        Email Address
-                                    </Label>
+                                <FormField label="Email Address" field="email" errors={errors} required labelClassName="text-xs font-bold text-slate-700 uppercase tracking-wider ml-1">
                                     <Input 
                                         id="email" 
                                         type="email" 
@@ -127,8 +125,7 @@ const Login = () => {
                                         {...register('email')} 
                                         required
                                     />
-                                    <InputError errors={errors} field={"email"}/>
-                                </div>
+                                </FormField>
 
                                 {/* Password */}
                                 <div className="space-y-2">

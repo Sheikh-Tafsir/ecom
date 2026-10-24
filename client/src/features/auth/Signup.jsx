@@ -14,12 +14,12 @@ import {
     CardTitle,
 } from "@/components/ui/card.jsx"
 import {Input} from "@/components/ui/input.jsx"
-import {Label} from "@/components/ui/label.jsx"
 import {ButtonLoading} from '@/components/common/ButtonLoading';
 import {PublicAxios} from '@/services/http/Axios';
 import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils.js';
 import InputError from "@/components/common/InputError.jsx";
 import StaredLabel from '@/components/common/StaredLabel';
+import FormField from '@/components/common/FormField';
 import { useState } from 'react';
 
 const SignupSchema = z.object({
@@ -91,22 +91,14 @@ const Signup = () => {
                             <InputError errors={errors} field={GLOBAL_ERROR}/>
 
                             {/* Name */}
-                            <div className="space-y-2">
-                                <Label htmlFor="name" className="flex">
-                                    Name<p className="text-red-600 ml-1">*</p>
-                                </Label>
+                            <FormField label="Name" field="name" errors={errors} required>
                                 <Input type="text" id="name" {...register("name")} required/>
-                                <InputError errors={errors} field={"name"}/>
-                            </div>
+                            </FormField>
 
                             {/* Email */}
-                            <div className="space-y-2">
-                                <Label htmlFor="email" className="flex">
-                                    Email<p className="text-red-600 ml-1">*</p>
-                                </Label>
+                            <FormField label="Email" field="email" errors={errors} required>
                                 <Input type="email" id="email" {...register("email")} required />
-                                <InputError errors={errors} field={"email"}/>
-                            </div>
+                            </FormField>
 
                             {/* Password */}
                             <div className="space-y-2">

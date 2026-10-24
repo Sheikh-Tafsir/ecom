@@ -17,7 +17,7 @@ import {Input} from "@/components/ui/input"
 import {PublicAxios} from '@/services/http/Axios.js';
 import {ButtonLoading} from '@/components/common/ButtonLoading';
 import { GLOBAL_ERROR, handleErrors } from '@/utils';
-import StaredLabel from '@/components/common/StaredLabel';
+import FormField from '@/components/common/FormField';
 import { useUserStore } from '@/store/useUserStore';
 import InputError from '@/components/common/InputError';
 
@@ -86,11 +86,9 @@ const SignupVerify = () => {
                         <CardContent className="space-y-2">
                             <InputError errors={errors} field={GLOBAL_ERROR}/>
                          
-                            <div className="space-y-1">
-                                <StaredLabel label="otp"/>
+                            <FormField label="otp" field="otp" errors={errors} required className="space-y-1">
                                 <Input type="text" {...register("otp")} required/>
-                                <InputError errors={errors} field={"otp"}/>
-                            </div>
+                            </FormField>
                         </CardContent>
 
                         <CardFooter className="flex-col gap-2 ">

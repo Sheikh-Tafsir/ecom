@@ -16,6 +16,7 @@ import {AuthenticatedAxios} from "@/services/http/Axios"
 import {GLOBAL_ERROR, handleErrors} from "@/utils"
 import {ButtonLoading} from "@/components/common/ButtonLoading"
 import InputError from "@/components/common/InputError.jsx"
+import FormField from "@/components/common/FormField"
 import {PAYMENT_METHOD} from "@/constants/order.constants";
 import {TOAST_TYPE} from "@/constants/app.constants";
 import {getIdempotencyKey, IDEMPOTENCY_HEADER, removeIdempotencyKey} from "@/utils/idempotencyUtil.js"
@@ -180,31 +181,23 @@ export default function OrderCreate() {
                                             </div>
                                         </div>
 
-                                        <div className="space-y-2">
-                                            <Label
-                                                className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Phone
-                                                Number</Label>
+                                        <FormField label="Phone Number" field="phone" errors={errors} labelClassName="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
                                             <Input
                                                 type="tel"
                                                 placeholder="+1 (555) 000-0000"
                                                 className="h-12 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all font-medium"
                                                 {...register('phone')}
                                             />
-                                            <InputError errors={errors} field={"phone"}/>
-                                        </div>
+                                        </FormField>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <Label
-                                            className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Street
-                                            Address</Label>
+                                    <FormField label="Street Address" field="address" errors={errors} labelClassName="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
                                         <Input
                                             placeholder="123 Education St, Knowledge City"
                                             className="h-12 rounded-lg border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all font-medium"
                                             {...register('address')}
                                         />
-                                        <InputError errors={errors} field={"address"}/>
-                                    </div>
+                                    </FormField>
 
                                     <div className="space-y-2">
                                         <Label

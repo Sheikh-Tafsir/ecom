@@ -10,12 +10,12 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import {Button} from "@/components/ui/button";
-import {Label} from "@/components/ui/label";
 import {Input} from "@/components/ui/input";
 import {APP_MODULE, TOAST_TYPE} from "@/constants/app.constants";
 import {AuthenticatedAxios} from "@/services/http/Axios";
 import {toastify} from "@/common/toastify.js";
 import InputError from "./InputError";
+import FormField from "./FormField";
 import {GLOBAL_ERROR, handleErrors} from "@/utils";
 import {useForm} from "react-hook-form";
 import {z} from "zod";
@@ -148,8 +148,7 @@ export function ReportDialog({module = APP_MODULE.USER, trigger}) {
                 <div className="grid gap-4 py-4">
                     <InputError errors={errors} field={GLOBAL_ERROR}/>
 
-                    <div className="grid gap-2">
-                        <Label htmlFor="fromDate">From Date</Label>
+                    <FormField label="From Date" field="fromDate" errors={errors} className="grid gap-2">
                         <Input
                             id="fromDate"
                             type="date"
@@ -157,10 +156,8 @@ export function ReportDialog({module = APP_MODULE.USER, trigger}) {
                                 valueAsDate: true,
                             })}
                         />
-                        <InputError errors={errors} field={"fromDate"}/>
-                    </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="toDate">To Date</Label>
+                    </FormField>
+                    <FormField label="To Date" field="toDate" errors={errors} className="grid gap-2">
                         <Input
                             id="toDate"
                             type="date"
@@ -168,8 +165,7 @@ export function ReportDialog({module = APP_MODULE.USER, trigger}) {
                                 valueAsDate: true,
                             })}
                         />
-                        <InputError errors={errors} field={"toDate"}/>
-                    </div>
+                    </FormField>
                 </div>
                 <DialogFooter>
                     <Button onClick={handleSubmit(handleDownload)} disabled={isSubmitting}>

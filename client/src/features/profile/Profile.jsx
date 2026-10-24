@@ -16,7 +16,7 @@ import {ButtonLoading} from "@/components/common/ButtonLoading";
 import ImageInput from "@/components/common/ImageInput";
 import InputViewMode from "@/components/common/InputViewMode";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
-import StaredLabel from "@/components/common/StaredLabel";
+import FormField from "@/components/common/FormField";
 
 import {useUserStore} from "@/store/useUserStore";
 import {GLOBAL_ERROR, handleErrors} from "@/utils/ErrorUtils";
@@ -229,10 +229,7 @@ const Profile = () => {
                                         <div className="space-y-6">
                                             <InputError errors={errors} field={GLOBAL_ERROR}/>
 
-                                            <div className="space-y-2">
-                                                <Label
-                                                    className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Full
-                                                    Name</Label>
+                                            <FormField label="Full Name" field="name" errors={errors} labelClassName="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
                                                 <Input
                                                     {...register("name")}
                                                     placeholder="Md Rafiquddin"
@@ -241,8 +238,7 @@ const Profile = () => {
                                                         isEditable ? "border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400" : "bg-slate-50 border-transparent cursor-not-allowed text-slate-600"
                                                     )}
                                                 />
-                                                <InputError errors={errors} field="name"/>
-                                            </div>
+                                            </FormField>
 
                                             <div className="space-y-2">
                                                 <Label

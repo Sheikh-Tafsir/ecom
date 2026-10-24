@@ -15,7 +15,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import {Label} from "@/components/ui/label";
+import FormField from "@/components/common/FormField";
 import {Textarea} from "@/components/ui/textarea";
 import {Button} from "@/components/ui/button";
 import {ButtonLoading} from "@/components/common/ButtonLoading";
@@ -117,12 +117,7 @@ const ReviewSave = () => {
                 <CardContent className="space-y-4 px-6">
                     <InputError errors={errors} field={GLOBAL_ERROR}/>
 
-                    <div className="space-y-2">
-                        <Label className="flex">
-                            Rating
-                            <span className="text-red-600">*</span>
-                        </Label>
-
+                    <FormField label="Rating" field="rating" errors={errors} required>
                         <Controller
                             name="rating"
                             control={control}
@@ -153,23 +148,14 @@ const ReviewSave = () => {
                                 </Select>
                             )}
                         />
+                    </FormField>
 
-                        <InputError errors={errors} field="rating"/>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label className="flex">
-                            Review
-                            <span className="text-red-600">*</span>
-                        </Label>
-
+                    <FormField label="Review" field="comment" errors={errors} required>
                         <Textarea
                             {...register("comment")}
                             placeholder="Write your review..."
                         />
-
-                        <InputError errors={errors} field="comment"/>
-                    </div>
+                    </FormField>
                 </CardContent>
 
                 <CardFooter className="flex-col gap-2">

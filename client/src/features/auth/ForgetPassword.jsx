@@ -16,7 +16,7 @@ import {Input} from "@/components/ui/input"
 import {PublicAxios} from '@/services/http/Axios.js';
 import {ButtonLoading} from '@/components/common/ButtonLoading';
 import { GLOBAL_ERROR, handleErrors } from '@/utils';
-import StaredLabel from '@/components/common/StaredLabel';
+import FormField from '@/components/common/FormField';
 import InputError from '@/components/common/InputError';
 
 
@@ -63,11 +63,9 @@ const ForgetPassword = () => {
                         <CardContent className="space-y-2">
                             <InputError errors={errors} field={GLOBAL_ERROR}/>
 
-                            <div className="space-y-1">
-                                <StaredLabel label = "Email"/>
+                            <FormField label="Email" field="email" errors={errors} required className="space-y-1">
                                 <Input type="email" placeholder="ex something12@gmail.com" {...register('email')} required/>
-                                <InputError errors={errors} field={"email"}/>
-                            </div>
+                            </FormField>
                         </CardContent>
 
                         <CardFooter className="flex-col gap-2 ">

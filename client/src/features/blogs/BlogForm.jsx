@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { DialogFooter } from "@/components/ui/dialog";
 import InputError from '@/components/common/InputError';
+import FormField from '@/components/common/FormField';
 import {GLOBAL_ERROR} from '@/utils/ErrorUtils';
 
 const modules = {
@@ -30,14 +31,12 @@ const BlogForm = ({ register, control, errors, isPending, editingPost, onSubmit 
         <form onSubmit={onSubmit} className="space-y-6 pt-4">
             <InputError errors={errors} field={GLOBAL_ERROR}/>
 
-            <div className="space-y-2">
-                <Label className="font-bold uppercase tracking-widest text-xs">Post Title</Label>
+            <FormField label="Post Title" field="title" errors={errors} labelClassName="font-bold uppercase tracking-widest text-xs">
                 <Input 
                     {...register('title')}
                     className={errors.title ? "border-red-500 font-bold" : "font-bold"}
                 />
-                <InputError errors={errors} field="title" />
-            </div>
+            </FormField>
 
             <div className="space-y-2">
                 <Label className="font-bold uppercase tracking-widest text-xs mb-2 block">Content (Visual Editor)</Label>
@@ -62,24 +61,19 @@ const BlogForm = ({ register, control, errors, isPending, editingPost, onSubmit 
             </div>
 
             <div className="grid md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                    <Label className="font-bold uppercase tracking-widest text-xs">Author</Label>
+                <FormField label="Author" field="author" errors={errors} labelClassName="font-bold uppercase tracking-widest text-xs">
                     <Input 
                         {...register('author')}
                         className="font-medium"
                     />
-                    <InputError errors={errors} field="author" />
-                </div>
-                <div className="space-y-2">
-                    <Label className="font-bold uppercase tracking-widest text-xs">Image URL</Label>
+                </FormField>
+                <FormField label="Image URL" field="imageUrl" errors={errors} labelClassName="font-bold uppercase tracking-widest text-xs">
                     <Input 
                         {...register('imageUrl')}
                         className={errors.imageUrl ? "border-red-500 font-medium" : "font-medium"}
                     />
-                    <InputError errors={errors} field="imageUrl" />
-                </div>
-                <div className="space-y-2">
-                    <Label className="font-bold uppercase tracking-widest text-xs">Status</Label>
+                </FormField>
+                <FormField label="Status" field="status" errors={errors} labelClassName="font-bold uppercase tracking-widest text-xs">
                     <Controller
                         name="status"
                         control={control}
@@ -95,8 +89,7 @@ const BlogForm = ({ register, control, errors, isPending, editingPost, onSubmit 
                             </Select>
                         )}
                     />
-                    <InputError errors={errors} field="status" />
-                </div>
+                </FormField>
             </div>
 
             <DialogFooter>

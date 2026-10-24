@@ -21,6 +21,7 @@ import InputError from "@/components/common/InputError.jsx";
 import {toastify} from '@/common/toastify.js';
 import {Label} from "@/components/ui/label";
 import {MultiSelect} from '@/components/common/MultiSelect';
+import FormField from "@/components/common/FormField";
 import {queryKeys} from "@/services/reactQuery/queryKeys";
 
 const RoleSchema = z.object({
@@ -131,10 +132,7 @@ const RoleSave = () => {
                         <InputError errors={errors} field="name"/>
                     </div>
 
-                    <div className="space-y-3">
-                        <Label className="text-sm font-bold uppercase tracking-widest text-slate-600">
-                            <StaredLabel label="Permissions"/>
-                        </Label>
+                    <FormField label="Permissions" field="permissions" errors={errors} required className="space-y-3" labelClassName="text-sm font-bold uppercase tracking-widest text-slate-600">
                         <Controller
                             name="permissions"
                             control={control}
@@ -149,8 +147,7 @@ const RoleSave = () => {
                                 className="border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all"
                             />)}
                         />
-                        <InputError errors={errors} field="permissions"/>
-                    </div>
+                    </FormField>
                 </CardContent>
 
                 <CardFooter className="flex justify-end gap-3 px-8 pb-8 pt-4">
