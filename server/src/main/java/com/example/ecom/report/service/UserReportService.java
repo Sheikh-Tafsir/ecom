@@ -15,7 +15,6 @@ public class UserReportService extends ReportService {
             "User ID",
             "Name",
             "Email",
-            "Phone",
             "Status"
     );
 
@@ -24,7 +23,6 @@ public class UserReportService extends ReportService {
                 id,
                 name,
                 email,
-                phone,
                 status
             FROM users
             """;
@@ -51,10 +49,9 @@ public class UserReportService extends ReportService {
     @Override
     public void mapRow(ResultSet rs, RowConsumer consumer) throws SQLException {
         consumer.accept(
-                rs.getLong("id"),
+                rs.getString("id"),
                 rs.getString("name"),
                 rs.getString("email"),
-                rs.getString("phone"),
                 rs.getString("status")
         );
     }

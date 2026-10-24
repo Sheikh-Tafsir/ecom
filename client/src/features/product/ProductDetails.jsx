@@ -15,7 +15,7 @@ import {
     CarouselPrevious,
 } from "@/components/ui/carousel"
 import {useCartStore} from '@/store/useCartStore'
-import {AuthenticatedAxios} from "@/services/http/Axios"
+import {AuthenticatedAxios, PublicAxios} from "@/services/http/Axios"
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay"
 import {ScrollArea} from "@/components/ui/scroll-area"
 import ReviewCard from "./ReviewCard"
@@ -27,7 +27,7 @@ import {BackButton} from "@/components/common/BackButton";
 import SEO from "@/common/SEO";
 
 const fetchProduct = async (id) => {
-    const response = await AuthenticatedAxios.get(`/products/${id}`);
+    const response = await PublicAxios.get(`/products/${id}`);
     return response.data.data;
 };
 

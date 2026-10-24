@@ -59,8 +59,8 @@ public class OrderReportService extends ReportService {
     @Override
     public void mapRow(ResultSet rs, RowConsumer consumer) throws SQLException {
         consumer.accept(
-                rs.getLong("id"),
-                rs.getLong("user_id"),
+                rs.getString("id"),
+                rs.getString("user_id"),
                 rs.getBigDecimal("total_price"),
                 rs.getString("status"),
                 rs.getString("name"),

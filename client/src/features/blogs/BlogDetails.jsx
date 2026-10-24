@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import DOMPurify from 'dompurify';
-import { AuthenticatedAxios } from "@/services/http/Axios";
+import { PublicAxios } from "@/services/http/Axios";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, User, Calendar } from "lucide-react";
@@ -11,7 +11,7 @@ import NotFound from '@/features/NotFound';
 import SEO from "@/common/SEO";
 
 const getBlogByTitle = async (title) => {
-    const response = await AuthenticatedAxios.get(`/blogs/${title}`);
+    const response = await PublicAxios.get(`/blogs/${title}`);
     return response.data.data;
 };
 
