@@ -19,7 +19,8 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
     "MAIN_SERVICE_URL=http://localhost:8081",
     "SPRING_PROFILES_ACTIVE=test",
     "TRUSTED_PROXY_IPS=",
-    "REVOKED_TOKENS_PREFIX=v1:revokedAccessTokens::"
+    "REVOKED_TOKENS_PREFIX=v1:revokedAccessTokens::",
+    "INTERNAL_SERVICE_KEY=test-internal-service-key-32-chars-long"
 })
 class GatewayApplicationTests {
 
