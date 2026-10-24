@@ -1,0 +1,107 @@
+# =============================================================================
+# Read Replica Overlay
+# =============================================================================
+#
+# Adds 2 streaming read replicas to the main Postgres instance.
+#
+# Usage (same VPS / local dev):
+#   docker compose -f docker-compose.yml -f docker-compose.replica.yml up -d
+#
+# Usage (split across VPS — on replica VPS only):
+#   1. Copy this file + db-replica/ folder to the replica VPS
+#   2. Change PRIMARY_HOST from "postgres" to the primary VPS IP
+#   3. Run: docker compose -f docker-compose.replica.yml up -d postgres-replica-1
+#
+# Required .env vars (add to your .env):
+#   REPLICATION_USER=replicator
+#   REPLICATION_PASSWORD=<strong-password>
+# =============================================================================
+
+services:
+  # ── Override: configure the primary for replication ──
+  postgres:
+    command: >
+      -c wal_level=replica
+      -c max_wal_senders=4
+      -c max_replication_slots=4
+      -c hot_standby=on
+      -c wal_keep_size=256MB
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      REPLICATION_USER: ${REPLICATION_USER}
+      REPLICATION_PASSWORD: ${REPLICATION_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db-replica/init-primary.sh:/docker-entrypoint-initdb.d/init-replication.sh:ro
+
+  # ── Read Replica 1 ──
+  postgres-replica-1:
+    image: postgres:16-alpine
+    restart: always
+    entrypoint: ["/bin/bash", "/entrypoint-replica.sh"]
+    environment:
+      PRIMARY_HOST: ${REPLICA_PRIMARY_HOST:-postgres}
+      PRIMARY_PORT: "5432"
+      REPLICATION_USER: ${REPLICATION_USER}
+      REPLICATION_PASSWORD: ${REPLICATION_PASSWORD}
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - postgres_replica1_data:/var/lib/postgresql/data
+      - ./db-replica/entrypoint-replica.sh:/entrypoint-replica.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  # ── Read Replica 2 ──
+  postgres-replica-2:
+    image: postgres:16-alpine
+    restart: always
+    entrypoint: ["/bin/bash", "/entrypoint-replica.sh"]
+    environment:
+      PRIMARY_HOST: ${REPLICA_PRIMARY_HOST:-postgres}
+      PRIMARY_PORT: "5432"
+      REPLICATION_USER: ${REPLICATION_USER}
+      REPLICATION_PASSWORD: ${REPLICATION_PASSWORD}
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - postgres_replica2_data:/var/lib/postgresql/data
+      - ./db-replica/entrypoint-replica.sh:/entrypoint-replica.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+volumes:
+  postgres_replica1_data:
+  postgres_replica2_data:

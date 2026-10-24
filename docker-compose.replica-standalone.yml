@@ -1,0 +1,49 @@
+# =============================================================================
+# Standalone Replica — run this on a SEPARATE VPS from the primary
+# =============================================================================
+#
+# Usage:
+#   1. Copy this file + db-replica/ folder + .env to the replica VPS
+#   2. Set REPLICA_PRIMARY_HOST in .env to the primary VPS IP
+#   3. Run: docker compose -f docker-compose.replica-standalone.yml up -d
+#
+# Required .env vars:
+#   REPLICA_PRIMARY_HOST=<primary VPS IP>    (e.g., 142.93.45.67)
+#   REPLICATION_USER=replicator
+#   REPLICATION_PASSWORD=<must match primary>
+#   DB_USERNAME=<must match primary>
+#   DB_NAME=<must match primary>
+# =============================================================================
+
+services:
+  postgres-replica:
+    image: postgres:16-alpine
+    restart: always
+    entrypoint: ["/bin/bash", "/entrypoint-replica.sh"]
+    environment:
+      PRIMARY_HOST: ${REPLICA_PRIMARY_HOST}
+      PRIMARY_PORT: "5432"
+      REPLICATION_USER: ${REPLICATION_USER}
+      REPLICATION_PASSWORD: ${REPLICATION_PASSWORD}
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - postgres_replica_data:/var/lib/postgresql/data
+      - ./db-replica/entrypoint-replica.sh:/entrypoint-replica.sh:ro
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+volumes:
+  postgres_replica_data:
