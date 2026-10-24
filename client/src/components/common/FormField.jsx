@@ -17,10 +17,12 @@ const FormField = ({
 
     return (
         <div className={cn("space-y-2", className)}>
-            <Label htmlFor={id} className={labelClassName}>
-                {label}
-                {required && <span className="text-red-600 ml-0.5">*</span>}
-            </Label>
+            {label && (
+                <Label htmlFor={id} className={labelClassName}>
+                    {label}
+                    {required && <span className="text-red-600 ml-0.5">*</span>}
+                </Label>
+            )}
             {children}
             {helperText && (
                 <p className="text-[10px] text-slate-400 font-bold uppercase">
