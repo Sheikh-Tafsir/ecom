@@ -1,6 +1,10 @@
 spring:
   application:
     name: gateway
+  config:
+    import:
+      - "optional:file:config/gateway-overrides.properties"
+      - "optional:file:/app/config/gateway-overrides.properties"
 
   profiles:
     active: ${SPRING_PROFILES_ACTIVE}
@@ -99,8 +103,22 @@ springdoc:
     enabled: true
 
 app:
+  internal:
+    service-key: ${INTERNAL_SERVICE_KEY}
   cache:
     revoked-tokens-prefix: ${REVOKED_TOKENS_PREFIX}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics,refresh
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ecom-gateway
 
 resilience4j:
   circuitbreaker:

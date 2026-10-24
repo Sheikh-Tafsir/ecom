@@ -14,6 +14,7 @@ A microservices-based e-commerce platform. Monorepo with four services: Gateway,
 | Security rules & auth flow   | [docs/security.md](./docs/security.md)         |
 | Docker, env vars, CI/CD      | [docs/deployment.md](./docs/deployment.md)     |
 | API contract & response shape| [docs/api.md](./docs/api.md)                   |
+| Hot-reload config guide      | [docs/hot-reload.md](./docs/hot-reload.md)     |
 
 ## Architecture Decisions (Why things are the way they are)
 

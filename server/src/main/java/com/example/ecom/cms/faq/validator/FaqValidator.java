@@ -3,22 +3,26 @@ package com.example.ecom.cms.faq.validator;
 import com.example.ecom.cms.faq.dto.FaqRequest;
 import com.example.ecom.cms.faq.repository.FaqRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 
 import java.util.UUID;
 
 @Component
+@RefreshScope
 @RequiredArgsConstructor
 public class FaqValidator {
 
-    public static final int MAX_TOTAL_FAQS = 10;
+    @Value("${app.cms.max-total-faqs:10}")
+    private int maxTotalFaqs;
 
     private final FaqRepository faqRepository;
 
     public void validateCreate(FaqRequest request, Errors errors) {
-        if (faqRepository.count() >= MAX_TOTAL_FAQS) {
-            errors.reject("error.limit.exceeded", new Object[]{"FAQs", MAX_TOTAL_FAQS}, "Total FAQs limit exceeded, cannot add more than " + MAX_TOTAL_FAQS);
+        if (faqRepository.count() >= maxTotalFaqs) {
+            errors.reject("error.limit.exceeded", new Object[]{"FAQs", maxTotalFaqs}, "Total FAQs limit exceeded, cannot add more than " + maxTotalFaqs);
         }
 
         if (request.getDisplayOrder() != 0 && faqRepository.existsByDisplayOrder(request.getDisplayOrder())) {

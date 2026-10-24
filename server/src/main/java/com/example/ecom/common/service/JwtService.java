@@ -25,10 +25,10 @@ public class JwtService {
 
     public final long refreshTokenValidity;
 
-    public JwtService(@Value("${jwt.access-token.secret:${access.token.value:}}") String accessTokenSecret,
-                      @Value("${jwt.access-token.expiration:${access.token.validity:1800}}") long accessTokenValidity, // 30 minutes in seconds
-                      @Value("${jwt.refresh-token.secret:${refresh.token.value:}}") String refreshTokenSecret,
-                      @Value("${jwt.refresh-token.expiration:${refresh.token.validity:604800}}") long refreshTokenValidity // 7 days in seconds
+    public JwtService(@Value("${jwt.access-token.secret}") String accessTokenSecret,
+                      @Value("${jwt.access-token.expiration:900}") long accessTokenValidity, // in seconds
+                      @Value("${jwt.refresh-token.secret}") String refreshTokenSecret,
+                      @Value("${jwt.refresh-token.expiration:604800}") long refreshTokenValidity // in seconds
     ) {
         this.accessTokenSecret = Keys.hmacShaKeyFor(accessTokenSecret.getBytes(StandardCharsets.UTF_8));
         this.accessTokenValidity = accessTokenValidity;

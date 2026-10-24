@@ -1,6 +1,18 @@
 app:
   internal:
     service-key: ${INTERNAL_SERVICE_KEY}
+
+  product:
+    max-image-count: 5
+
+  cms:
+    max-total-banners: 20
+    max-active-banners: 5
+    max-total-faqs: 10
+
+  upload:
+    max-file-size-bytes: 5242880 # 5MB
+
   cache:
     strategy: ${APP_CACHE_STRATEGY:redis}
     ttl:
@@ -15,6 +27,11 @@ app:
 spring:
   application:
     name: ecom
+
+  config:
+    import:
+      - "optional:file:config/server-overrides.properties"
+      - "optional:file:/app/config/server-overrides.properties"
 
   profiles:
     active: ${DEPLOYMENT_ENVIRONMENT}
@@ -103,23 +120,13 @@ jwt:
     expiration: 900 # 15 minutes
     secret: ${ACCESS_TOKEN_SECRET}
   refresh-token:
+    name: ${REFRESH_TOKEN_NAME}
     expiration: 604800 # 7 days
     secret: ${REFRESH_TOKEN_SECRET}
 
 oauth:
   google:
     client-id: ${GOOGLE_LOGIN_CLIENT_ID}
-
-access:
-  token:
-    value: ${ACCESS_TOKEN_SECRET}
-    validity: 900
-
-refresh:
-  token:
-    name: ${REFRESH_TOKEN_NAME}
-    value: ${REFRESH_TOKEN_SECRET}
-    validity: 604800 # 7 days in seconds
 
 cloudinary:
   cloud:
@@ -150,7 +157,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: health,info,metrics,prometheus,refresh
 
   endpoint:
     health:

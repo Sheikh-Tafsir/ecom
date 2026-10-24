@@ -25,7 +25,11 @@ public final class FileUtils {
     }
 
     public static boolean fileTooLarge(MultipartFile file) {
-        return file.getSize() > MAX_FILE_SIZE;
+        return fileTooLarge(file, MAX_FILE_SIZE);
+    }
+
+    public static boolean fileTooLarge(MultipartFile file, long maxSizeBytes) {
+        return file.getSize() > maxSizeBytes;
     }
 
     public static String detect(InputStream inputStream) throws IOException {

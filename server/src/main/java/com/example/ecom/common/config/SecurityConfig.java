@@ -50,11 +50,14 @@ public class SecurityConfig {
             "/actuator/health"
     );
 
-    @Value("${app.standalone:true}")
+    @Value("${app.standalone:false}")
     private boolean isStandAloneServer;
 
     @Value("${cors.allowed.origins}")
     private String allowedOrigins;
+
+    @Value("${app.internal.service-key}")
+    private String internalServiceKey;
 
     private final CustomUserDetailsService userDetailsService;
 
@@ -85,6 +88,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .requestMatchers(PUBLIC_URLS.toArray(new String[0])).permitAll()
+
+                        .requestMatchers("/actuator/refresh").access((authentication, context) -> {
+                            String key = context.getRequest().getHeader("X-Internal-Service-Key");
+                            boolean allowed = key != null && key.equals(internalServiceKey);
+                            return new org.springframework.security.authorization.AuthorizationDecision(allowed);
+                        })
 
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/internal/**").permitAll()

@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +27,7 @@ import static com.example.ecom.common.utils.CacheConstants.*;
 
 @Slf4j
 @Service
+@RefreshScope
 @ConditionalOnProperty(name = "app.standalone", havingValue = "true")
 @RequiredArgsConstructor
 public class RateLimiterService {

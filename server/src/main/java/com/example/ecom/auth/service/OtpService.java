@@ -5,8 +5,10 @@ import com.example.ecom.auth.enums.OtpType;
 import com.example.ecom.common.model.User;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Component;
 
@@ -15,10 +17,12 @@ import java.security.SecureRandom;
 import static com.example.ecom.common.utils.CacheConstants.CACHE_OTPS;
 
 @Component
+@RefreshScope
 @RequiredArgsConstructor
 public class OtpService {
 
-    public static final int MAX_TRIES = 3;
+    @Value("${rate-limit.otp.max-tries:3}")
+    private int maxTries;
 
     private final CacheManager cacheManager;
 
@@ -51,14 +55,14 @@ public class OtpService {
             throw new BadCredentialsException("No OTP found");
         }
 
-        if (otp.getTries() >= MAX_TRIES) {
+        if (otp.getTries() >= maxTries) {
             deleteOtp(type, email);
             throw new BadCredentialsException("Max tries attempted. Please request a new OTP.");
         }
 
         if (otp.getValue() != otpInput) {
             int newTries = otp.getTries() + 1;
-            if (newTries >= MAX_TRIES) {
+            if (newTries >= maxTries) {
                 deleteOtp(type, email);
                 throw new BadCredentialsException("Max tries attempted. Please request a new OTP.");
             }

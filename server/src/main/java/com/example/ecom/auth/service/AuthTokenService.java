@@ -40,10 +40,10 @@ public class AuthTokenService {
     @Value("${spring.profiles.active:dev}")
     private String springProfile;
 
-    @Value("${refresh.token.name:refreshToken}")
+    @Value("${jwt.refresh-token.name:refreshToken}")
     private String refreshTokenName;
 
-    @Value("${refresh.token.validity:604800}")
+    @Value("${jwt.refresh-token.expiration:604800}")
     private long refreshTokenValidity;
 
     private final JwtService jwtService;

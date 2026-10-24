@@ -1,5 +1,7 @@
 package com.example.ecom.common.validator;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.Errors;
@@ -11,9 +13,13 @@ import java.io.InputStream;
 import static com.example.ecom.common.utils.FileUtils.*;
 
 @Component
+@RefreshScope
 public class CommonValidator {
 
     private static final String IMAGE_TYPE = "image/";
+
+    @Value("${app.upload.max-file-size-bytes:5242880}")
+    private long maxFileSizeBytes = MAX_FILE_SIZE;
 
     public void validateString(String value, boolean required, int min, int max, String fieldName, Errors errors) {
         if (required && !StringUtils.hasText(value)) {
@@ -40,7 +46,7 @@ public class CommonValidator {
             return;
         }
 
-        if (fileTooLarge(file)) {
+        if (fileTooLarge(file, maxFileSizeBytes)) {
             errors.rejectValue(fieldName, "error.file.tooLarge");
             return;
         }

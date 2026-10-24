@@ -4,6 +4,8 @@ import com.example.ecom.common.validator.CommonValidator;
 import com.example.ecom.product.product.dto.CreateProductRequest;
 import com.example.ecom.product.product.dto.UpdateProductRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,10 +15,12 @@ import java.util.Set;
 import static com.example.ecom.common.utils.Utils.isEmpty;
 
 @Component
+@RefreshScope
 @RequiredArgsConstructor
 public class ProductValidator {
 
-    public static final int MAX_IMAGE_COUNT = 5;
+    @Value("${app.product.max-image-count:5}")
+    private int maxImageCount;
 
     private final CommonValidator commonValidator;
 
@@ -32,9 +36,9 @@ public class ProductValidator {
     }
 
     private void validateImages(int imageCount, Set<MultipartFile> imageFiles, Errors errors) {
-        if (imageCount > MAX_IMAGE_COUNT) {
-            errors.rejectValue("images", "error.file.quantity", new Object[]{MAX_IMAGE_COUNT},
-                    "Cannot upload more than " + MAX_IMAGE_COUNT + " files");
+        if (imageCount > maxImageCount) {
+            errors.rejectValue("images", "error.file.quantity", new Object[]{maxImageCount},
+                    "Cannot upload more than " + maxImageCount + " files");
             return;
         }
 

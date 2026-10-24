@@ -51,6 +51,9 @@ public class SecurityConfig {
     @Value("${app.cache.revoked-tokens-prefix}")
     private String revokedTokensPrefix;
 
+    @Value("${app.internal.service-key}")
+    private String internalServiceKey;
+
     private final JwtService jwtService;
 
     private final RateLimiterService rateLimiterService;
@@ -88,6 +91,11 @@ public class SecurityConfig {
                 .addFilterAfter(userRateLimiterFilter(), SecurityWebFiltersOrder.AUTHENTICATION)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/internal/**").denyAll()
+                        .pathMatchers(HttpMethod.POST, "/actuator/refresh").access((authentication, context) -> {
+                            String key = context.getExchange().getRequest().getHeaders().getFirst("X-Internal-Service-Key");
+                            boolean allowed = key != null && !key.isBlank() && key.equals(internalServiceKey);
+                            return reactor.core.publisher.Mono.just(new org.springframework.security.authorization.AuthorizationDecision(allowed));
+                        })
                         .pathMatchers(PUBLIC_URLS.toArray(new String[0])).permitAll()
                         .pathMatchers("/auth/**").permitAll()
                         .pathMatchers(HttpMethod.GET, "/products", "/products/*").permitAll()

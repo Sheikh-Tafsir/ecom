@@ -44,8 +44,8 @@ public class CacheConfig implements CachingConfigurer {
     @Value("${app.cache.ttl.cms-minutes:10}")
     protected int cmsTtl;
 
-    @Value("${app.cache.ttl.token-rotation-seconds:60}")
-    protected int tokenRotationTtl;
+    @Value("${jwt.access-token.expiration:900}")
+    protected int accessTokenValidity;
 
     /**
      * Principal Engineering Practice: Resilience.
@@ -104,7 +104,8 @@ public class CacheConfig implements CachingConfigurer {
             cacheConfigurations.put(CACHE_PROFILE, buildConfig(10, redisSerializer));
 
             cacheConfigurations.put(CACHE_ROTATED_TOKENS, buildConfig(1, redisSerializer)); // 1 minute
-            cacheConfigurations.put(CACHE_REVOKED_ACCESS_TOKENS, buildConfig(60, redisSerializer)); // 1 hour
+            int revokedTokensTtlMinutes = Math.max(1, accessTokenValidity / 60);
+            cacheConfigurations.put(CACHE_REVOKED_ACCESS_TOKENS, buildConfig(revokedTokensTtlMinutes, redisSerializer));
 
             return RedisCacheManager.builder(connectionFactory)
                     .cacheDefaults(defaultConfig)
@@ -146,7 +147,8 @@ public class CacheConfig implements CachingConfigurer {
             cacheManager.registerCustomCache(CACHE_IDEMPOTENCY, buildCaffeineCache(idempotencyTtl));
 
             cacheManager.registerCustomCache(CACHE_ROTATED_TOKENS, buildCaffeineCache(1)); // 1 minute
-            cacheManager.registerCustomCache(CACHE_REVOKED_ACCESS_TOKENS, buildCaffeineCache(60)); // 1 hour
+            int revokedTokensTtlMinutes = Math.max(1, accessTokenValidity / 60);
+            cacheManager.registerCustomCache(CACHE_REVOKED_ACCESS_TOKENS, buildCaffeineCache(revokedTokensTtlMinutes));
 
             // Default configuration for any other caches
             cacheManager.setCaffeine(Caffeine.newBuilder()

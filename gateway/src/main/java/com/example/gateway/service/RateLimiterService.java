@@ -5,12 +5,12 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.Refill;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ServerWebExchange;
@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Service
+@RefreshScope
 @RequiredArgsConstructor
 public class RateLimiterService {
 
