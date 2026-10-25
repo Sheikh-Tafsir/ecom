@@ -49,6 +49,7 @@ cd server && ./gradlew test
 ### Main Server (Spring Boot)
 - Every entity must extend `BaseEntity` (`createdAt`, `updatedAt` as `Instant`).
 - Always use `java.time.Instant` for timestamps — never `LocalDateTime`.
+  The global `ObjectMapper` registers `JavaTimeModule` with `WRITE_DATES_AS_TIMESTAMPS=false`, so timestamps serialize as UTC ISO-8601 (`yyyy-MM-dd'T'HH:mm:ss.SSS'Z'`).
 - Every controller endpoint returns `ApiResponse<T>`.
 - Never expose JPA entities directly — use dedicated Request/Response DTOs.
 - Apply `@Valid` on all controller method parameters.

@@ -29,6 +29,27 @@ redis (healthy)    ──┬──▶ chat-server (healthy) ──┘           
 postgres (healthy) ──┘                                     gateway (healthy) ──────┘
 ```
 
+### Port Exposure
+
+Docker Compose provides two mechanisms for making a container's port reachable. Only use `ports:` when host access is required:
+
+| Directive | Reachable from host? | Reachable from other containers? | Use for |
+|---|---|---|---|
+| `ports: "0.0.0.0:80:80"` | ✅ Yes (all interfaces) | ✅ Yes | Public entry points (nginx-proxy) |
+| `ports: "127.0.0.1:8080:8080"` | ✅ Localhost only | ✅ Yes | Dev/debug access (gateway) |
+| `expose: "8081"` | ❌ No | ✅ Yes (same Docker network) | Internal services (server, chat-server, client) |
+
+Containers on the same Docker network reach each other by **service name** — Docker's internal DNS resolves `server` to the container's IP. No port mapping is needed for inter-container communication.
+
+| Service | Exposure | Binding |
+|---|---|---|
+| nginx-proxy | `ports: "0.0.0.0:${APP_PORT:-80}:80"` | Public — sole entry point |
+| gateway | `ports: "127.0.0.1:${GATEWAY_PORT:-8080}:8080"` | Localhost only — dev/debug |
+| server | `expose: "8081"` | Internal only |
+| chat-server | `expose: "${CHAT_SERVER_PORT}"` | Internal only |
+| client | `expose: "80"` | Internal only |
+| postgres, redis, rabbitmq | (none) | Internal only — `data` network |
+
 ---
 
 ## Environment Variables
@@ -118,6 +139,26 @@ All env vars are in the root `.env` file and injected by Docker Compose. **No de
 | `GDRIVE_SYNC_ENABLED`    | `true` / `false`                               |
 | `BACKUP_ENCRYPTION_KEY`  | **Must be changed before production.** AES-256-CBC key. Generate: `openssl rand -base64 32` |
 
+**Backup scope & restore**
+- `db-backup` dumps the **main** database only (`BACKUP_DB_NAME`). The chat database (`postgres-chat`) is **not** backed up.
+- Files are written to `./backups` on the same host; off-host copies exist only if `GDRIVE_SYNC_ENABLED=true` (rclone config in `db-backup/config`).
+- `BACKUP_RETENTION_DAYS` is fixed to `7` in `docker-compose.yml`.
+- Restore (from `db-backup/entrypoint.sh`):
+  ```bash
+  openssl enc -d -aes-256-cbc -pbkdf2 -k "$BACKUP_ENCRYPTION_KEY" \
+    -in backups/db_backup_<TS>.sql.gz.enc | gunzip | psql -h <host> -U <user> <db>
+  ```
+  Test a restore into a scratch database periodically — an untested backup is not a backup.
+
+### Persistence by Service
+
+| Service | Volume | Survives `docker compose down`? | Survives `down -v`? |
+|---|---|---|---|
+| postgres | `postgres_data` | ✅ | ❌ |
+| postgres-chat | `postgres_chat_data` | ✅ | ❌ (and not backed up) |
+| redis | `redis_data` | ✅ (default RDB snapshots) | ❌ |
+| rabbitmq | **none** | ❌ queues/messages lost on container recreate | ❌ |
+
 ### Read Replicas
 
 See [docs/read-replicas.md](./read-replicas.md) for full setup instructions.
@@ -132,33 +173,35 @@ See [docs/read-replicas.md](./read-replicas.md) for full setup instructions.
 
 ## Logs
 
-All service logs are written to a unified `logs/` directory on the host.
+In `docker-compose.yml` the log directories are **named Docker volumes**, not host bind mounts. Read them with `docker compose exec` or `docker compose logs`. A `logs/` folder on the host is only populated when you run the services outside Docker, or with a local override that bind-mounts it.
 
-| Service      | Log Files                                              |
-|--------------|--------------------------------------------------------|
-| server       | `logs/server/server.log`, `logs/server/server-startup.log` |
-| gateway      | `logs/gateway/server.log`, `logs/gateway/server-startup.log` |
-| chat-server  | `logs/chat-server/server.log`                          |
-| client (Nginx)| `logs/client/access.log`, `logs/client/error.log`    |
+| Service | Path inside container | Volume |
+|---|---|---|
+| server | `/app/logs/server/server.log`, `server-startup.log` | `server_logs` |
+| gateway | `/app/logs/gateway/server.log`, `server-startup.log` | `gateway_logs` |
+| chat-server | `/app/logs/chat-server/server.log` | `chat_server_logs` |
+| client (Nginx) | `/var/log/nginx/access.log`, `error.log` | `client_logs` |
 
 **Format:** Production logs are Logstash JSON (server, gateway, chat-server). Nginx uses standard combined log format.
 **Rotation:** `server.log` — 10MB max, 7 days, 100MB total cap. `server-startup.log` — 5MB max, 3 days.
 
-```bash
-# Live tail examples
-tail -f logs/server/server.log
-tail -f logs/gateway/server.log
-tail -f logs/chat-server/server.log
-tail -f logs/client/access.log
+**Where logging is configured:**
+- Main Server: `server/src/main/resources/logback-spring.xml` — `prod` profile writes Logstash JSON to console + rolling files (archives named `server.YYYY-MM-DD.i.log.gz`); `server-startup.log` captures `SpringApplication` / `EcomApplication` bootstrap only. `dev` profile is colorized console only.
+- Gateway: `gateway/src/main/resources/logback-spring.xml` — same layout as the server.
+- Chat Server: `server_chat/src/config/logger.js` (pino) — JSON in the Logstash schema; also re-routes stray `console.*` calls.
+- Client Nginx: `client/nginx.main.conf` (global) + `client/nginx.conf` (server block).
+- Docker's own `json-file` driver additionally keeps 3 × 10MB per container (`docker compose logs`).
 
-# Via Docker
-docker compose logs -f server
-docker compose logs -f gateway
-```
-
-If containers throw `Permission denied` on log files:
 ```bash
-chmod 777 logs/server logs/gateway logs/chat-server logs/client
+# Container stdout (all services, incl. nginx-proxy)
+docker compose logs -f --tail=200 server
+docker compose logs -f --since=30m gateway chat-server
+
+# Rolling log files inside the volumes
+docker compose exec server  tail -f /app/logs/server/server.log
+docker compose exec gateway tail -f /app/logs/gateway/server.log
+docker compose exec chat-server tail -f /app/logs/chat-server/server.log
+docker compose exec client  tail -f /var/log/nginx/access.log
 ```
 
 ---
@@ -173,10 +216,10 @@ docker compose exec chat-server sh
 docker compose exec client sh
 
 # Database access
-docker compose exec postgres psql -U ecom -d ecom
+docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
 
 # Redis CLI
-docker compose exec redis redis-cli -a foobared
+docker compose exec redis sh -c 'REDISCLI_AUTH="$REDIS_PASSWORD" redis-cli'
 ```
 
 ---

@@ -43,3 +43,14 @@ This is a **defense-in-depth** approach — the server does not blindly trust in
 
 - The `backend` Docker network must be internal-only. No service on `backend` should be reachable from outside the Docker network.
 - `chat-server` WebSocket auth (`socketAuthMiddleware`) validates the JWT directly because WebSocket upgrades have a different flow — they do not go through the standard HTTP filter chain.
+
+## Amendment — 2026-10-25 (implementation as audited)
+
+The "Implementation" section above describes header injection that was never built (or was later removed). Actual behaviour:
+
+1. The Gateway verifies signature, expiry and JTI revocation, but **does not inject** `X-User-Id` / `X-User-Role` headers and forwards the `Authorization` header unchanged.
+2. The Main Server and the Chat Server **each re-verify the JWT** themselves; neither reads identity headers. Bypassing the Gateway therefore does not bypass authentication.
+3. Consequently the "downstream services don't need JWT libraries or secrets" benefit does not hold: all three services hold `ACCESS_TOKEN_SECRET`. Because the algorithm is HMAC, each of them can also mint tokens. Moving to an asymmetric algorithm (RS256/EdDSA, private key only on the Main Server) would restore a single signing authority.
+4. Per-user revocation (ban, password reset) is checked only by the Main Server; the Gateway and Chat Server check per-token JTIs only.
+
+See [docs/security.md](../security.md#jwt-validation-flow) for the current flow and [the 2026-10-25 audit](../../.context/2026-10-25-system-audit.md) (F-08, F-16).
