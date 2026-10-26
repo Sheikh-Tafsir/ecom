@@ -1,11 +1,11 @@
 export const FIRST_PAGE = 1
-export const DEFAULT_PAGE_SIZE = 24
-export const DEFAULT_SORT_BY = "createdAt"
-export const DEFAULT_SORT_ORDER = "DESC"
-export const DEFAULT_SORT = DEFAULT_SORT_BY + "," + DEFAULT_SORT_ORDER
-
-export const MAX_PAGE_SIZE = DEFAULT_PAGE_SIZE;
 export const ALL_SELECTED = "__all__";
+
+const DEFAULT_PAGE_SIZE = 24
+const DEFAULT_SORT_BY = "createdAt"
+const DEFAULT_SORT_ORDER = "DESC"
+const DEFAULT_SORT = DEFAULT_SORT_BY + "," + DEFAULT_SORT_ORDER
+const MAX_PAGE_SIZE = DEFAULT_PAGE_SIZE;
 
 /**
  * Clean query string builder (UI only)
@@ -23,11 +23,11 @@ export const getQueryString = (params = {}) => {
     return qs ? `?${qs}` : ""
 }
 
-export const parsePage = (page) => {
+const parsePage = (page) => {
     return Math.max(1, Number(page) || 1)
 }
 
-export const parseSize = (size) => {
+const parseSize = (size) => {
     const s = Number(size);
 
     if (!Number.isFinite(s) || s <= 0) {
@@ -37,7 +37,7 @@ export const parseSize = (size) => {
     return Math.min(MAX_PAGE_SIZE, s);
 };
 
-export const parseSort = (sort = DEFAULT_SORT, allowedSortFields = []) => {
+const parseSort = (sort = DEFAULT_SORT, allowedSortFields = []) => {
     const fields = allowedSortFields instanceof Set
         ? allowedSortFields
         : new Set(allowedSortFields);
@@ -68,7 +68,7 @@ export const normalizeQuery = (q = {}, allowedSortFields = []) => {
     };
 }
 
-export const isInvalidPageNo = (page, totalPages) => {
+const isInvalidPageNo = (page, totalPages) => {
     return page < FIRST_PAGE || page > totalPages;
 }
 
@@ -86,9 +86,6 @@ export const redirectWhenInvalidPage = ({page, totalPages, navigate, queryParams
     }
 };
 
-export const checkAllSelected = (value) => {
-    return value && value !== ALL_SELECTED ? value : undefined;
-}
 
 export const updateQueryWhenParamChange = ({queryParams, newParams, navigate}) => {
     const cleanedParams = Object.fromEntries(

@@ -24,7 +24,7 @@ import {TOAST_TYPE, ALERT_TYPE} from "@/constants/app.constants";
 import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils';
 import InputError from "@/components/common/InputError.jsx";
 import {toastify} from '@/common/toastify.js';
-import {hasPermission} from "@/utils/index.js";
+import {hasPermission} from "@/utils/AuthUtils";
 import {useUserStore} from "@/store/useUserStore.js";
 import {MultiSelect} from "@/components/common/MultiSelect.jsx";
 import {queryKeys} from "@/services/reactQuery/queryKeys";
@@ -109,7 +109,6 @@ const UserEdit = () => {
             navigate(`/users/${id}`);
         },
         onError: (error) => {
-            console.error(error);
             handleErrors(error, setError);
             toastify(TOAST_TYPE.ERROR, "Failed to update user")
         },
@@ -126,7 +125,6 @@ const UserEdit = () => {
             navigate("/users", {replace: true});
         },
         onError: (error) => {
-            console.error(error);
             toastify(TOAST_TYPE.ERROR, "Failed to delete user")
         },
     });

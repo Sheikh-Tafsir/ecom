@@ -9,9 +9,11 @@ import InputError from "@/components/common/InputError";
 
 import {
     handleClientSideError,
+} from "@/utils/ErrorUtils";
+import {
     MAX_FILE_SIZE,
     ONE_MB,
-} from "@/utils";
+} from "@/utils/Utils";
 import {Label} from "@/components/ui/label.jsx";
 
 const ImageInput = ({

@@ -6,8 +6,9 @@ import { PublicAxios } from "@/services/http/Axios";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, User, Calendar } from "lucide-react";
-import { formatDate } from '@/utils';
+import { formatDate } from '@/utils/DateUtils';
 import NotFound from '@/features/NotFound';
+import StatusBadge from '@/components/common/StatusBadge';
 import SEO from "@/common/SEO";
 
 const getBlogByTitle = async (title) => {
@@ -81,9 +82,9 @@ const BlogDetails = () => {
                         {post.title}
                     </h1>
                     {post.status === 'DRAFT' && (
-                        <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest h-fit mt-2">
+                        <StatusBadge variant="amber" className="h-fit mt-2">
                             Draft Preview
-                        </span>
+                        </StatusBadge>
                     )}
                 </div>
                 

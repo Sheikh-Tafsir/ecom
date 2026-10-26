@@ -22,37 +22,26 @@ import {
 import {Input} from "@/components/ui/input";
 import FormField from "@/components/common/FormField";
 import {Button} from '@/components/ui/button.jsx';
-import {AuthenticatedAxios} from '@/services/http/Axios.js';
 import PaginationButton from '@/components/common/PaginationButton.jsx';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay.jsx';
-import {
-    FIRST_PAGE,
-    getQueryString,
-} from '@/utils/PaginationUtils';
-import {formatDate, GLOBAL_ERROR, handleErrors} from '@/utils/index.js';
+import {formatDate} from '@/utils/DateUtils';
+import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils';
+import {FIRST_PAGE, getQueryString} from '@/utils/PaginationUtils';
 import {TOAST_TYPE} from "@/constants/app.constants";
 import InputError from "@/components/common/InputError";
 import {toastify} from '@/common/toastify.js';
 import {cn} from "@/lib/utils";
 import {queryKeys} from "@/services/reactQuery/queryKeys";
 import {useListPage} from "@/hooks/useListPage";
+import {createListFetcher} from "@/services/api";
 
-const fetchStockItems = async ({queryKey}) => {
-    const [, params] = queryKey
-
-    const response = await AuthenticatedAxios.get("/stocks/items", {
-        params: {
-            page: params.page - 1,
-            sort: params.sort,
-            size: params.size,
-            productName: params.productName || undefined,
-            fromDate: params.fromDate || undefined,
-            toDate: params.toDate || undefined,
-        },
-    })
-
-    return response.data.data
-}
+const fetchStockItems = createListFetcher("/stocks/items", {
+    mapParams: (p) => ({
+        productName: p.productName || undefined,
+        fromDate: p.fromDate || undefined,
+        toDate: p.toDate || undefined,
+    }),
+});
 
 const stockItemFilterSchema = z.object({
     productName: z.string().optional(),
@@ -61,6 +50,21 @@ const stockItemFilterSchema = z.object({
 });
 
 const StockItems = () => {
+    const {
+        register,
+        handleSubmit,
+        reset,
+        setError,
+        formState: {errors},
+    } = useForm({
+        resolver: zodResolver(stockItemFilterSchema),
+        defaultValues: {
+            productName: "",
+            fromDate: "",
+            toDate: "",
+        },
+    });
+
     const {
         items: stockItems,
         totalPages,
@@ -81,21 +85,6 @@ const StockItems = () => {
     });
 
     const {productName, fromDate, toDate} = filters;
-
-    const {
-        register,
-        handleSubmit,
-        reset,
-        setError,
-        formState: {errors},
-    } = useForm({
-        resolver: zodResolver(stockItemFilterSchema),
-        defaultValues: {
-            productName: "",
-            fromDate: "",
-            toDate: "",
-        },
-    });
 
     useEffect(() => {
         reset({

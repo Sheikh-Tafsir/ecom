@@ -1,4 +1,4 @@
-import {getError} from "@/utils/ErrorUtils.js";
+import {getError} from "@/utils/ErrorUtils";
 
 const InputError = ({errors, field}) => {
     return (

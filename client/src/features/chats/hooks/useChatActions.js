@@ -31,7 +31,6 @@ export const useChatActions = (id, userId, updateChatOnMessage, onNewChat) => {
             }
             return url;
         } catch (err) {
-            console.error("Image upload failed:", err);
             toastify(TOAST_TYPE.ERROR, 'Image upload failed. Please try again.');
             return null;
         }
@@ -79,7 +78,6 @@ export const useChatActions = (id, userId, updateChatOnMessage, onNewChat) => {
             tempId,
         }, (acknowledgment) => {
             if (acknowledgment.error) {
-                console.error(acknowledgment.error);
                 toastify(TOAST_TYPE.ERROR, acknowledgment.error);
                 return;
             }
@@ -98,7 +96,6 @@ export const useChatActions = (id, userId, updateChatOnMessage, onNewChat) => {
             chatId: id
         }, (acknowledgment) => {
             if (acknowledgment.error) {
-                console.error(acknowledgment.error);
                 toastify(TOAST_TYPE.ERROR, acknowledgment.error);
                 return;
             }

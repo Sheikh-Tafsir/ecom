@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { BookImage } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { validateFile } from '@/utils';
+import { validateFile } from '@/utils/Utils';
 import { toastify } from '@/common/toastify.js';
 import { TOAST_TYPE } from '@/constants/app.constants';
 

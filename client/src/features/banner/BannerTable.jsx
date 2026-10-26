@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from 'lucide-react';
+import StatusBadge from '@/components/common/StatusBadge';
 
 const BannerTable = ({ banners, handleEdit, deleteMutation }) => {
     return (
@@ -40,9 +41,9 @@ const BannerTable = ({ banners, handleEdit, deleteMutation }) => {
                             <span className="font-bold text-slate-400">{banner.displayOrder}</span>
                         </TableCell>
                         <TableCell className="px-6 py-4 text-center">
-                            <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${banner.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                            <StatusBadge variant={banner.active ? 'emerald' : 'slate'}>
                                 {banner.active ? 'Active' : 'Inactive'}
-                            </span>
+                            </StatusBadge>
                         </TableCell>
                         <TableCell className="px-6 py-4 text-right">
                             <div className="flex justify-end gap-2">

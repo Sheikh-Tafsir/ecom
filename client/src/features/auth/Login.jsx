@@ -21,10 +21,10 @@ import {Label} from "@/components/ui/label";
 import {ButtonLoading} from '@/components/common/ButtonLoading';
 import {PublicAxios} from '@/services/http/Axios';
 import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils';
+import {APP_NAME} from '@/utils/Utils';
 import {useUserStore} from '@/store/useUserStore.js';
 import InputError from "@/components/common/InputError.jsx";
 import FormField from "@/components/common/FormField";
-import { APP_NAME } from '@/utils';
 
 // ✅ Validation schema
 const LoginSchema = z.object({
@@ -67,7 +67,6 @@ const Login = () => {
 
             navigate(requestedPath, {replace: true});
         } catch (error) {
-            console.error(error);
             handleErrors(error, setError);
         }
     };
@@ -87,7 +86,6 @@ const Login = () => {
                 reset();
                 navigate(requestedPath, {replace: true});
             } catch (err) {
-                console.error(err);
                 handleErrors(err, setError);
             } finally {
                 setIsGoogleSubmitting(false);

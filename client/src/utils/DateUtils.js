@@ -1,12 +1,8 @@
 import { format, formatDistanceToNow } from "date-fns";
 
-export const REGULAR_DATE_FORMAT = "dd-MM-yyyy";
+const REGULAR_DATE_FORMAT = "dd-MM-yyyy";
 
-export const INVERSE_DATE_FORMAT = "yyyy-MM-dd";
-
-export const REGULAR_TIME_FORMAT_12 = "hh:mm a";
-
-export const REGULAR_TIME_FORMAT_24 = "HH:mm";
+const REGULAR_TIME_FORMAT_24 = "HH:mm";
 
 export const formatDate = (dateStr) => {
     if (!dateStr) return "-";

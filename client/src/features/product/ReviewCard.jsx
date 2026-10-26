@@ -2,7 +2,7 @@ import React from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Star } from "lucide-react"
-import { formatDate } from "@/utils"
+import { formatDate } from "@/utils/DateUtils"
 
 const ReviewCard = ({review}) => {
 

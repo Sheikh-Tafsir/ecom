@@ -8,7 +8,7 @@ import {Badge} from "@/components/ui/badge"
 import {useCartStore} from "@/store/useCartStore"
 import {PERMISSION} from "@/constants/auth.constants";
 import {TOAST_TYPE} from "@/constants/app.constants";
-import {hasPermission} from "@/utils/index.js";
+import {hasPermission} from "@/utils/AuthUtils";
 import {toastify} from "@/common/toastify.js"
 import {useUserStore} from "@/store/useUserStore"
 

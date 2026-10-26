@@ -1,4 +1,5 @@
 import {jwtDecode} from 'jwt-decode';
+import {PERMISSION} from '@/constants/auth.constants';
 
 let accessToken = null;
 
@@ -22,20 +23,6 @@ export const getAccessToken = () => {
     return accessToken;
 }
 
-export const getAccessUser = (token) => {
-    token ??= getAccessToken();
-
-    if (!token) {
-        return null;
-    }
-
-    try {
-        return jwtDecode(token);
-    } catch {
-        return null;
-    }
-};
-
 export const removeAccessToken = () => {
     accessToken = null;
     localStorage.removeItem(SESSION_HINT);
@@ -45,7 +32,7 @@ export const removeCart = () => {
     localStorage.removeItem(import.meta.env.VITE_LOCAL_STORAGE_CART_KEY);
 }
 
-export const getUserPermissions = (user) => {
+const getUserPermissions = (user) => {
     const permissions = user?.permissions;
     if (!permissions) return [];
 
@@ -69,3 +56,5 @@ export const hasPermission = (user, allowedPermissions) => {
 
     return permissions.includes(allowedPermissions);
 };
+
+export const isAdmin = (user) => hasPermission(user, [PERMISSION.ADMIN_ACCESS, PERMISSION.SUPER_ADMIN_ACCESS]);

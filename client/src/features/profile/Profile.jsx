@@ -16,6 +16,7 @@ import {ButtonLoading} from "@/components/common/ButtonLoading";
 import ImageInput from "@/components/common/ImageInput";
 import InputViewMode from "@/components/common/InputViewMode";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
+import StatusBadge from "@/components/common/StatusBadge";
 import FormField from "@/components/common/FormField";
 
 import {useUserStore} from "@/store/useUserStore";
@@ -128,7 +129,6 @@ const Profile = () => {
             navigate("/profile");
         },
         onError: (error) => {
-            console.error(error);
             toastify(TOAST_TYPE.ERROR, "Failed to update profile")
             handleErrors(error, setError);
         },
@@ -154,7 +154,6 @@ const Profile = () => {
         },
 
         onError: (error) => {
-            console.error(error);
             handleErrors(error, setError);
         },
     });
@@ -203,15 +202,13 @@ const Profile = () => {
                                     <CardTitle
                                         className="text-3xl font-bold text-slate-900 tracking-tight">{profile?.name || "Your Profile"}</CardTitle>
                                     <div className="flex flex-wrap justify-center md:justify-start gap-3">
-                                        <span
-                                            className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-widest">
+                                        <StatusBadge variant="blueSoft">
                                             {profile?.roles?.[0] || "User"}
-                                        </span>
-                                        <span
-                                            className="px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5">
+                                        </StatusBadge>
+                                        <StatusBadge variant="slate" className="flex items-center gap-1.5">
                                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"/>
                                             Active Account
-                                        </span>
+                                        </StatusBadge>
                                     </div>
                                 </div>
                             </div>

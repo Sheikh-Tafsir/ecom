@@ -57,7 +57,6 @@ export default function OrderDetails() {
     useEffect(() => {
         if (!isError) return;
 
-        console.error(error);
         toastify(TOAST_TYPE.ERROR, "Failed to show order");
     }, [isError, error]);
 

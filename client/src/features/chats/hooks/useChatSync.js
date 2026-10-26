@@ -265,7 +265,6 @@ export const useChatSync = (id, userId, onPresenceReceived) => {
                     });
                 }
             } catch (err) {
-                console.error('[ChatSync] Reconnect sync failed:', err);
                 // Fallback: invalidate to trigger fresh fetches
                 if (id) queryClient.invalidateQueries(['selected_chat', id]);
             } finally {

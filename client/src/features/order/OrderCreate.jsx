@@ -13,7 +13,7 @@ import {Separator} from "@/components/ui/separator"
 import {useCartStore} from "@/store/useCartStore"
 import {useUserStore} from "@/store/useUserStore"
 import {AuthenticatedAxios} from "@/services/http/Axios"
-import {GLOBAL_ERROR, handleErrors} from "@/utils"
+import {GLOBAL_ERROR, handleErrors} from "@/utils/ErrorUtils"
 import {ButtonLoading} from "@/components/common/ButtonLoading"
 import InputError from "@/components/common/InputError.jsx"
 import FormField from "@/components/common/FormField"
@@ -48,7 +48,6 @@ const createOrder = async (items, name, data, idempotencyKey) => {
 
         return response.data.data;
     } catch (error) {
-        console.error(error);
         toastify(TOAST_TYPE.ERROR, "Order placed Failed!");
         throw error;
     }
@@ -65,7 +64,6 @@ export const createPayment = async (order, userId) => {
 
         return response.data.data;
     } catch (error) {
-        console.error(error);
         toastify(TOAST_TYPE.ERROR, "Payment Failed!");
         throw error;
     }
@@ -126,7 +124,6 @@ export default function OrderCreate() {
             }
         },
         onError: (error) => {
-            console.error(error);
             handleErrors(error, setError);
             if (error.response) {
                 removeIdempotencyKey()

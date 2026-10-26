@@ -16,7 +16,7 @@ import {
 import {Input} from "@/components/ui/input"
 import {PublicAxios} from '@/services/http/Axios.js';
 import {ButtonLoading} from '@/components/common/ButtonLoading';
-import { GLOBAL_ERROR, handleErrors } from '@/utils';
+import { GLOBAL_ERROR, handleErrors } from '@/utils/ErrorUtils';
 import FormField from '@/components/common/FormField';
 import { useUserStore } from '@/store/useUserStore';
 import InputError from '@/components/common/InputError';
@@ -50,7 +50,6 @@ const SignupVerify = () => {
 
             navigate("/", {replace: true});
         } catch (error) {
-            console.error(error);
             handleErrors(error, setError);
         }
     }
@@ -65,7 +64,6 @@ const SignupVerify = () => {
                 }
             )
         } catch (error) {
-            console.error(error);
             handleErrors(error, setError);
         } finally {
             setIsResendOtpButtonLoading(false);

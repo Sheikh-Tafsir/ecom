@@ -16,7 +16,7 @@ import {Badge} from "@/components/ui/badge"
 import {Separator} from "@/components/ui/separator"
 import {AuthenticatedAxios} from '@/services/http/Axios.js';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay.jsx';
-import {formatDateAndTime} from '@/utils/index.js';
+import {formatDateAndTime} from '@/utils/DateUtils';
 import {TOAST_TYPE} from "@/constants/app.constants";
 import {toastify} from '@/common/toastify.js';
 import {BackButton} from '@/components/common/BackButton';
@@ -43,7 +43,6 @@ const StockDetails = () => {
 
     useEffect(() => {
         if (isError) {
-            console.error(error);
             toastify(TOAST_TYPE.ERROR, "Failed to load stock details")
         }
     }, [error, isError]);

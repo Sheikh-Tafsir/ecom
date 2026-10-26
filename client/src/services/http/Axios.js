@@ -191,4 +191,4 @@ authChannel.onmessage = (event) => {
     }
 };
 
-export {API_PATH, AuthenticatedAxios, PublicAxios, refreshAccessToken, logout};
+export {AuthenticatedAxios, PublicAxios, refreshAccessToken, logout};

@@ -9,7 +9,8 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.jsx"
-import {APP_NAME, hasPermission} from '@/utils/index.js'
+import {hasPermission} from '@/utils/AuthUtils'
+import {APP_NAME} from '@/utils/Utils'
 import {useUserStore} from '@/store/useUserStore.js'
 import {useCartStore} from '@/store/useCartStore.js'
 import {PERMISSION} from "@/constants/auth.constants";

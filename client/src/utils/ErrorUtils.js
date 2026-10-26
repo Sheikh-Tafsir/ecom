@@ -43,7 +43,7 @@ const handleFieldErrors = (errors, setError) => {
     });
 };
 
-export const handleClientSideGlobalError = (message, setError) => {
+const handleClientSideGlobalError = (message, setError) => {
     handleClientSideError(GLOBAL_ERROR, message, setError)
 };
 

@@ -25,7 +25,7 @@ import {ButtonLoading} from "@/components/common/ButtonLoading";
 import {MultiSelect} from "@/components/common/MultiSelect.jsx";
 
 import {AuthenticatedAxios} from "@/services/http/Axios";
-import {GLOBAL_ERROR, handleErrors} from "@/utils";
+import {GLOBAL_ERROR, handleErrors} from "@/utils/ErrorUtils";
 import {TOAST_TYPE} from "@/constants/app.constants";
 import {toastify} from "@/common/toastify.js";
 import {compressImages} from "@/utils/ImageUtils";
@@ -176,7 +176,6 @@ const ProductSave = () => {
             }
         },
         onError: (error) => {
-            console.error(error);
             handleErrors(error, setError);
         }
     });
@@ -202,14 +201,12 @@ const ProductSave = () => {
     useEffect(() => {
         if (!isCategoriesError) return;
 
-        console.error(categoriesError);
         toastify(TOAST_TYPE.ERROR, "Failed to show categories");
     }, [isCategoriesError, categoriesError]);
 
     useEffect(() => {
         if (!isProductError) return;
 
-        console.error(productError);
         toastify(TOAST_TYPE.ERROR, "Failed to show product");
     }, [isProductError, productError]);
 

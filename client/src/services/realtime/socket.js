@@ -1,6 +1,6 @@
 import {io} from 'socket.io-client';
 import {logout, refreshAccessToken} from '../http/Axios';
-import {getAccessToken} from '@/utils';
+import {getAccessToken} from '@/utils/AuthUtils';
 import {toastify} from '@/common/toastify.js';
 import {TOAST_TYPE} from "@/constants/app.constants";
 

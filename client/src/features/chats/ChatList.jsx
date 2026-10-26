@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import {EllipsisVertical, Trash2, Users} from 'lucide-react'
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar"
-import {getLastMessageTime} from '@/utils';
+import {getLastMessageTime} from '@/utils/DateUtils';
 import {CHAT_TYPE} from "@/constants/chat.constants";
 import {useUserStore} from '@/store/useUserStore';
 

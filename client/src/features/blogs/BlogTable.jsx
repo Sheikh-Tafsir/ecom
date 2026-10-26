@@ -9,7 +9,8 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Eye, Pencil, Trash2 } from 'lucide-react';
-import { formatDate } from '@/utils';
+import { formatDate } from '@/utils/DateUtils';
+import StatusBadge from '@/components/common/StatusBadge';
 
 const BlogTable = ({ posts, handleEdit, deleteMutation }) => {
     return (
@@ -38,9 +39,9 @@ const BlogTable = ({ posts, handleEdit, deleteMutation }) => {
                             <span className="text-xs font-bold text-slate-500">{formatDate(post.publishedAt || post.createdAt)}</span>
                         </TableCell>
                         <TableCell className="px-6 py-4 text-center">
-                            <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${post.status == 'PUBLISHED' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                            <StatusBadge variant={post.status == 'PUBLISHED' ? 'emerald' : 'amber'}>
                                 {post.status}
-                            </span>
+                            </StatusBadge>
                         </TableCell>
                         <TableCell className="px-6 py-4 text-right">
                             <div className="flex justify-end gap-2">

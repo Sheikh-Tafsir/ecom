@@ -1,5 +1,5 @@
 import {useMemo, useState} from "react";
-import {keepPreviousData, useMutation, useQueryClient} from "@tanstack/react-query";
+import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {Pencil, User as UserIcon, Shield, Filter} from "lucide-react";
 
 import {
@@ -31,41 +31,33 @@ import {AlertAction} from "@/components/common/AlertAction";
 import PaginationButton from "@/components/common/PaginationButton";
 import PaginationSearch from "@/components/common/PaginationSearch";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
+import {isAdmin} from "@/utils/AuthUtils";
 import {formatDate} from "@/utils/DateUtils";
+import {getSelectValue} from "@/utils/PaginationUtils";
 import {APP_MODULE, TOAST_TYPE, ALERT_TYPE} from "@/constants/app.constants";
-import {ROLE_PREFIX, USER_ROLE, PERMISSION} from "@/constants/auth.constants";
+import {ROLE_PREFIX, USER_ROLE} from "@/constants/auth.constants";
 import {USER_STATUS} from "@/constants/user.constants";
-import {getSelectValue} from "@/utils/PaginationUtils.js";
-import {hasPermission} from "@/utils";
 import {toastify} from "@/common/toastify.js";
-import {cn} from "@/lib/utils";
+import StatusBadge from "@/components/common/StatusBadge";
 
 import {ReportDialog} from "@/components/common/ReportDialog";
 import {useUserStore} from "@/store/useUserStore";
 import {queryKeys} from "@/services/reactQuery/queryKeys";
 import {useListPage} from "@/hooks/useListPage";
+import {createListFetcher} from "@/services/api";
 
 const ALLOWED_SORT_FIELDS = new Set([
     "createdAt",
     "name",
 ])
 
-const fetchUsers = async ({queryKey}) => {
-    const [, params] = queryKey
-
-    const response = await AuthenticatedAxios.get("/users", {
-        params: {
-            page: params.page - 1,
-            sort: params.sort,
-            size: params.size,
-            name: params.search || undefined,
-            role: params.role && params.role !== "__all__" ? params.role : undefined,
-            status: params.status && params.status !== "__all__" ? params.status : undefined,
-        },
-    })
-
-    return response.data.data
-};
+const fetchUsers = createListFetcher("/users", {
+    mapParams: (p) => ({
+        name: p.search || undefined,
+        role: p.role && p.role !== "__all__" ? p.role : undefined,
+        status: p.status && p.status !== "__all__" ? p.status : undefined,
+    }),
+});
 
 const updateUserStatusService = async (id, status) => {
     await AuthenticatedAxios.put(`/users/${id}`, {status});
@@ -128,7 +120,7 @@ const Users = () => {
                         <p className="text-slate-500 font-medium">Oversee and manage system users and their
                             permissions</p>
                     </div>
-                    {(hasPermission(currentUser, PERMISSION.ADMIN_ACCESS) || hasPermission(currentUser, PERMISSION.SUPER_ADMIN_ACCESS)) &&
+                    {isAdmin(currentUser) &&
                         <ReportDialog module={APP_MODULE.USER}/>}
                 </div>
 
@@ -247,12 +239,11 @@ const Users = () => {
                                                     {formatDate(user.createdAt)}
                                                 </TableCell>
                                                 <TableCell className="px-6 py-4 text-center">
-                                                    <span className={cn(
-                                                        "inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
-                                                        user.status == USER_STATUS.ACTIVE ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
-                                                    )}>
+                                                    <StatusBadge
+                                                        variant={user.status == USER_STATUS.ACTIVE ? "emerald" : "red"}
+                                                        className="font-black px-2.5">
                                                         {user.status}
-                                                    </span>
+                                                    </StatusBadge>
                                                 </TableCell>
                                                 <TableCell className="px-6 py-4 text-right">
                                                     <div className="flex justify-end gap-2">

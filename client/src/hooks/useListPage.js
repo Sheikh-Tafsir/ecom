@@ -1,4 +1,4 @@
-import {useEffect, useMemo} from "react";
+import {useCallback, useEffect, useMemo, useRef} from "react";
 import {useNavigate, useSearchParams} from "react-router-dom";
 import {useQuery, keepPreviousData} from "@tanstack/react-query";
 
@@ -44,6 +44,12 @@ export const useListPage = ({
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
 
+    // Stabilise callback refs so consumers don't need to memoize
+    const extraFiltersRef = useRef(extraFilters);
+    extraFiltersRef.current = extraFilters;
+    const onErrorRef = useRef(onError);
+    onErrorRef.current = onError;
+
     const queryParams = useMemo(
         () => Object.fromEntries(searchParams.entries()),
         [searchParams]
@@ -51,9 +57,9 @@ export const useListPage = ({
 
     const filters = useMemo(() => {
         const base = normalizeQuery(queryParams, allowedSortFields);
-        const extra = extraFilters ? extraFilters(queryParams) : {};
+        const extra = extraFiltersRef.current ? extraFiltersRef.current(queryParams) : {};
         return {...base, ...extra};
-    }, [queryParams]);
+    }, [queryParams, allowedSortFields]);
 
     const query = useQuery({
         queryKey: queryKey(filters),
@@ -76,12 +82,12 @@ export const useListPage = ({
         if (!query.isError) return;
 
         toastify(TOAST_TYPE.ERROR, errorMessage);
-        onError?.(query.error);
-    }, [query.isError, query.error]);
+        onErrorRef.current?.(query.error);
+    }, [query.isError, query.error, errorMessage]);
 
-    const updateQuery = (newParams) => {
+    const updateQuery = useCallback((newParams) => {
         updateQueryWhenParamChange({queryParams, newParams, navigate});
-    };
+    }, [queryParams, navigate]);
 
     return {
         items,

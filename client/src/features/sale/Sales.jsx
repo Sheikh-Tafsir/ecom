@@ -14,12 +14,13 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
-import {AuthenticatedAxios} from "@/services/http/Axios";
+
 import PaginationButton from "@/components/common/PaginationButton";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
 
-import {formatDate, GLOBAL_ERROR, handleErrors} from "@/utils";
-import {FIRST_PAGE, getQueryString} from '@/utils/PaginationUtils';
+import {formatDate} from "@/utils/DateUtils";
+import {GLOBAL_ERROR, handleErrors} from "@/utils/ErrorUtils";
+import {FIRST_PAGE, getQueryString} from "@/utils/PaginationUtils";
 
 import FormField from "@/components/common/FormField";
 import {
@@ -44,22 +45,15 @@ import {
 import {ReportDialog} from "@/components/common/ReportDialog";
 import {queryKeys} from "@/services/reactQuery/queryKeys";
 import {useListPage} from "@/hooks/useListPage";
+import {createListFetcher} from "@/services/api";
 
-const fetchSales = async ({queryKey}) => {
-    const [, params] = queryKey;
-
-    const response = await AuthenticatedAxios.get("/sales", {
-        params: {
-            page: params.page - 1,
-            sort: params.sort,
-            productName: params.productName || undefined,
-            fromDate: params.fromDate || undefined,
-            toDate: params.toDate || undefined,
-        },
-    });
-
-    return response.data.data;
-};
+const fetchSales = createListFetcher("/sales", {
+    mapParams: (p) => ({
+        productName: p.productName || undefined,
+        fromDate: p.fromDate || undefined,
+        toDate: p.toDate || undefined,
+    }),
+});
 
 const saleFilterSchema = z.object({
     productName: z.string().optional(),
@@ -68,6 +62,21 @@ const saleFilterSchema = z.object({
 });
 
 export default function Sales() {
+    const {
+        register,
+        handleSubmit,
+        reset,
+        setError,
+        formState: {errors},
+    } = useForm({
+        resolver: zodResolver(saleFilterSchema),
+        defaultValues: {
+            productName: "",
+            fromDate: "",
+            toDate: "",
+        },
+    });
+
     const {
         items: sales,
         totalPages,
@@ -88,21 +97,6 @@ export default function Sales() {
     });
 
     const {productName, fromDate, toDate} = filters;
-
-    const {
-        register,
-        handleSubmit,
-        reset,
-        setError,
-        formState: {errors},
-    } = useForm({
-        resolver: zodResolver(saleFilterSchema),
-        defaultValues: {
-            productName: "",
-            fromDate: "",
-            toDate: "",
-        },
-    });
 
     useEffect(() => {
         reset({

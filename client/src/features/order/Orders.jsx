@@ -27,13 +27,10 @@ import {
 import {AuthenticatedAxios} from '@/services/http/Axios';
 import PaginationButton from '@/components/common/PaginationButton';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay';
-import {formatDateAndTime, GLOBAL_ERROR, handleErrors, hasPermission} from '@/utils';
-import {
-    FIRST_PAGE,
-    getQueryString,
-    ALL_SELECTED,
-    getSelectValue
-} from '@/utils/PaginationUtils';
+import {hasPermission, isAdmin} from '@/utils/AuthUtils';
+import {formatDateAndTime} from '@/utils/DateUtils';
+import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils';
+import {FIRST_PAGE, getQueryString, ALL_SELECTED, getSelectValue} from '@/utils/PaginationUtils';
 import FormField from "@/components/common/FormField";
 import {
     Card,
@@ -52,27 +49,31 @@ import InputError from "@/components/common/InputError";
 import {toastify} from "@/common/toastify.js";
 import {queryClient} from "@/services/reactQuery/queryClient";
 import {useUserStore} from "@/store/useUserStore";
-import {cn} from "@/lib/utils";
+import StatusBadge from "@/components/common/StatusBadge";
 import {ReportDialog} from "@/components/common/ReportDialog";
 import {queryKeys} from "@/services/reactQuery/queryKeys";
 import {useListPage} from "@/hooks/useListPage";
+import {createListFetcher} from "@/services/api";
 
-const fetchOrders = async ({queryKey}) => {
-    const [, params] = queryKey;
-
-    const response = await AuthenticatedAxios.get("/orders", {
-        params: {
-            page: params.page - 1,
-            sort: params.sort,
-            productName: params.productName || undefined,
-            fromDate: params.fromDate || undefined,
-            toDate: params.toDate || undefined,
-            status: params.status == ALL_SELECTED ? undefined : params.status,
-        },
-    });
-
-    return response.data.data;
+const ORDER_STATUS_VARIANT = {
+    [ORDER_STATUS.PENDING]: "amber",
+    [ORDER_STATUS.ACCEPTED]: "emerald",
+    [ORDER_STATUS.REJECTED]: "red",
+    [ORDER_STATUS.CANCELLED]: "slateDark",
+    [ORDER_STATUS.SHIPPED]: "indigo",
+    [ORDER_STATUS.DELIVERED]: "emeraldDark",
+    [ORDER_STATUS.LOST]: "orange",
+    [ORDER_STATUS.COMPLETED]: "blue",
 };
+
+const fetchOrders = createListFetcher("/orders", {
+    mapParams: (p) => ({
+        productName: p.productName || undefined,
+        fromDate: p.fromDate || undefined,
+        toDate: p.toDate || undefined,
+        status: p.status == ALL_SELECTED ? undefined : p.status,
+    }),
+});
 
 const orderFilterSchema = z.object({
     productName: z.string().optional(),
@@ -85,6 +86,23 @@ const Orders = () => {
     const {user} = useUserStore();
 
     const defaultStatus = hasPermission(user, PERMISSION.DELIVERY_MAN_ACCESS) ? ORDER_STATUS.SHIPPED : ORDER_STATUS.PENDING;
+
+    const {
+        register,
+        handleSubmit,
+        reset,
+        setError,
+        formState: {errors},
+        control,
+    } = useForm({
+        resolver: zodResolver(orderFilterSchema),
+        defaultValues: {
+            productName: "",
+            fromDate: "",
+            toDate: "",
+            status: defaultStatus
+        },
+    });
 
     const {
         items: orders,
@@ -107,23 +125,6 @@ const Orders = () => {
     });
 
     const {page, productName, fromDate, toDate, status} = filters;
-
-    const {
-        register,
-        handleSubmit,
-        reset,
-        setError,
-        formState: {errors},
-        control,
-    } = useForm({
-        resolver: zodResolver(orderFilterSchema),
-        defaultValues: {
-            productName: "",
-            fromDate: "",
-            toDate: "",
-            status: defaultStatus
-        },
-    });
 
     useEffect(() => {
         reset({
@@ -186,7 +187,7 @@ const Orders = () => {
                         <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-2">My Orders</h1>
                         <p className="text-slate-500 font-medium">Track and manage your recent purchases</p>
                     </div>
-                    {(hasPermission(user, PERMISSION.ADMIN_ACCESS) || hasPermission(user, PERMISSION.SUPER_ADMIN_ACCESS))
+                    {isAdmin(user)
                         && <ReportDialog module={APP_MODULE.ORDER}/>}
                 </div>
 
@@ -332,19 +333,9 @@ const Orders = () => {
                                                         className="text-xs font-semibold text-slate-500">{item.paid ? 'Yes' : 'No'}</span>
                                                 </TableCell>
                                                 <TableCell className="px-6 py-4 text-center">
-                                                    <span className={cn(
-                                                        "inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
-                                                        item.status == ORDER_STATUS.PENDING && "bg-amber-100 text-amber-700",
-                                                        item.status == ORDER_STATUS.ACCEPTED && "bg-emerald-100 text-emerald-700",
-                                                        item.status == ORDER_STATUS.REJECTED && "bg-red-100 text-red-700",
-                                                        item.status == ORDER_STATUS.CANCELLED && "bg-slate-200 text-slate-600",
-                                                        item.status == ORDER_STATUS.SHIPPED && "bg-indigo-100 text-indigo-700",
-                                                        item.status == ORDER_STATUS.DELIVERED && "bg-emerald-200 text-emerald-800",
-                                                        item.status == ORDER_STATUS.LOST && "bg-orange-100 text-orange-700",
-                                                        item.status == ORDER_STATUS.COMPLETED && "bg-blue-100 text-blue-700"
-                                                    )}>
+                                                    <StatusBadge variant={ORDER_STATUS_VARIANT[item.status]} className="font-black px-2.5">
                                                         {item.status}
-                                                    </span>
+                                                    </StatusBadge>
                                                 </TableCell>
                                                 <TableCell className="px-6 py-4 text-right">
                                                     <div className="flex justify-end gap-2">
@@ -358,7 +349,7 @@ const Orders = () => {
                                                         </Button>
 
                                                         {/* Admin Actions */}
-                                                        {(hasPermission(user, PERMISSION.ADMIN_ACCESS) || hasPermission(user, PERMISSION.SUPER_ADMIN_ACCESS)) ? (
+                                                        {isAdmin(user) ? (
                                                             <>
                                                                 {(item.status === ORDER_STATUS.PENDING || item.status === ORDER_STATUS.ACCEPTED || item.status === ORDER_STATUS.DELIVERED) && (
                                                                     <DropdownMenu>

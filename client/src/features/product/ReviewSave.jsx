@@ -21,7 +21,7 @@ import {Button} from "@/components/ui/button";
 import {ButtonLoading} from "@/components/common/ButtonLoading";
 import {toastify} from "@/common/toastify.js";
 import {TOAST_TYPE} from "@/constants/app.constants";
-import {GLOBAL_ERROR, handleErrors} from "@/utils";
+import {GLOBAL_ERROR, handleErrors} from "@/utils/ErrorUtils";
 import InputError from "@/components/common/InputError";
 import {queryKeys} from "@/services/reactQuery/queryKeys";
 import {useUserStore} from "@/store/useUserStore";
@@ -93,7 +93,6 @@ const ReviewSave = () => {
             if (context?.previousReviews) {
                 queryClient.setQueryData(queryKeys.reviews.all(id), context.previousReviews);
             }
-            console.error(err);
             handleErrors(err, setError);
         },
         onSettled: () => {

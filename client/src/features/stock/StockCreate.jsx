@@ -19,7 +19,7 @@ import {Input} from '@/components/ui/input.jsx';
 import {AuthenticatedAxios} from '@/services/http/Axios.js';
 import {ButtonLoading} from "@/components/common/ButtonLoading.jsx";
 import { TOAST_TYPE } from "@/constants/app.constants";
-import {GLOBAL_ERROR, handleErrors} from '@/utils/index.js';
+import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils';
 import InputError from "@/components/common/InputError.jsx";
 import {
     getIdempotencyKey,
@@ -148,7 +148,6 @@ const StockCreate = () => {
             setTimeout(() => navigate(`/stocks/${stockId}`), 500);
         },
         onError: (error) => {
-            console.error(error);
             handleErrors(error, setError);
             if (error.response) {
                 removeIdempotencyKey();

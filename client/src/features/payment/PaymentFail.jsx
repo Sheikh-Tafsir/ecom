@@ -26,7 +26,6 @@ const tryAgain = async (orderId, userId, navigate) => {
         }
 
     } catch (error) {
-        console.error("Error occurred while trying again:", error);
         toastify(TOAST_TYPE.ERROR, "Failed to initiate payment. Please try again later.");
     }
 };

@@ -16,7 +16,7 @@ import {
 import {Input} from "@/components/ui/input.jsx"
 import {ButtonLoading} from '@/components/common/ButtonLoading';
 import {PublicAxios} from '@/services/http/Axios';
-import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils.js';
+import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils';
 import InputError from "@/components/common/InputError.jsx";
 import StaredLabel from '@/components/common/StaredLabel';
 import FormField from '@/components/common/FormField';
@@ -64,7 +64,6 @@ const Signup = () => {
 
             navigate(`/auth/signup/verify?email=${email}`);
         } catch (error) {
-            console.error(error);
             handleErrors(error, setError);
         }
     };

@@ -4,7 +4,7 @@ import {useQueryClient} from "@tanstack/react-query";
 
 import {Star, ShoppingCart, Minus, Plus} from "lucide-react"
 import {Button} from "@/components/ui/button"
-import {Badge} from "@/components/ui/badge"
+import StatusBadge from "@/components/common/StatusBadge"
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import {Separator} from "@/components/ui/separator"
 import {
@@ -93,14 +93,12 @@ export default function ProductDetails() {
     useEffect(() => {
         if (!isProductError) return;
 
-        console.error(productError);
         toastify(TOAST_TYPE.ERROR, "Failed to show product");
     }, [isProductError, productError]);
 
     useEffect(() => {
         if (!isReviewsError) return;
 
-        console.error(reviewsError);
         toastify(TOAST_TYPE.ERROR, "Failed to show reviews");
     }, [isReviewsError, reviewsError]);
 
@@ -180,16 +178,14 @@ export default function ProductDetails() {
                         <div className="mb-8">
                             <div className="flex items-center gap-3 mb-6">
                                 {product?.categories?.map((category) => (
-                                    <Badge key={category.id} variant="secondary"
-                                           className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-none px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                                    <StatusBadge key={category.id} variant="blueSoft" className="hover:bg-blue-100">
                                         {category.name}
-                                    </Badge>
+                                    </StatusBadge>
                                 ))}
                                 {product?.quantity > 0 && (
-                                    <Badge
-                                        className="bg-emerald-50 text-emerald-700 border-none px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ml-auto">
+                                    <StatusBadge variant="emerald" className="ml-auto">
                                         In Stock
-                                    </Badge>
+                                    </StatusBadge>
                                 )}
                             </div>
 

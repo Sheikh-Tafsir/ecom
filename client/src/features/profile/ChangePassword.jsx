@@ -19,7 +19,7 @@ import {AuthenticatedAxios} from '@/services/http/Axios.js';
 import InputError from '@/components/common/InputError';
 import FormField from '@/components/common/FormField';
 import {TOAST_TYPE} from "@/constants/app.constants";
-import {GLOBAL_ERROR, handleErrors} from '@/utils';
+import {GLOBAL_ERROR, handleErrors} from '@/utils/ErrorUtils';
 import {toastify} from '@/common/toastify.js';
 
 const ChangePasswordSchema = z.object({
@@ -58,7 +58,6 @@ const ChangePassword = () => {
                 navigate("/profile", {replace: true});
             }, 500);
         } catch (error) {
-            console.error(error);
             handleErrors(error, setError);
         }
     }

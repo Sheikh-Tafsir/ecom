@@ -16,7 +16,7 @@ import {AuthenticatedAxios} from "@/services/http/Axios";
 import {toastify} from "@/common/toastify.js";
 import InputError from "./InputError";
 import FormField from "./FormField";
-import {GLOBAL_ERROR, handleErrors} from "@/utils";
+import {GLOBAL_ERROR, handleErrors} from "@/utils/ErrorUtils";
 import {useForm} from "react-hook-form";
 import {z} from "zod";
 import {zodResolver} from "@hookform/resolvers/zod";
@@ -112,8 +112,6 @@ export function ReportDialog({module = APP_MODULE.USER, trigger}) {
             reset();
             setOpen(false);
         } catch (error) {
-            console.error("Report download failed:", error);
-
             if (error.response?.data instanceof Blob && error.response.data.type == "application/json") {
                 const text = await error.response.data.text();
                 const errorData = JSON.parse(text);

@@ -13,9 +13,7 @@ import {
 import ProductCard from "./ProductCard"
 import PaginationButton from "@/components/common/PaginationButton"
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay"
-import {PublicAxios} from "@/services/http/Axios"
-import {getSelectValue} from "@/utils"
-import {FIRST_PAGE} from '@/utils/PaginationUtils';
+import {getSelectValue, FIRST_PAGE} from "@/utils/PaginationUtils"
 import {PRODUCT_SORTBY} from "@/constants/product.constants";
 import {TOAST_TYPE} from "@/constants/app.constants";
 import {toastify} from "@/common/toastify.js"
@@ -23,6 +21,7 @@ import {Button} from "@/components/ui/button"
 import SEO from "@/common/SEO";
 import {queryKeys} from "@/services/reactQuery/queryKeys";
 import {useListPage} from "@/hooks/useListPage";
+import {createListFetcher} from "@/services/api";
 
 const ALLOWED_SORT_FIELDS = new Set([
     "createdAt",
@@ -31,21 +30,13 @@ const ALLOWED_SORT_FIELDS = new Set([
     "rating",
 ])
 
-const fetchProducts = async ({queryKey}) => {
-    const [, params] = queryKey;
-
-    const response = await PublicAxios.get("/products", {
-        params: {
-            page: params.page - 1,
-            sort: params.sort,
-            size: params.size,
-            name: params.search || undefined,
-            category: params.category || undefined,
-        },
-    })
-
-    return response.data.data
-}
+const fetchProducts = createListFetcher("/products", {
+    isPublic: true,
+    mapParams: (p) => ({
+        name: p.search || undefined,
+        category: p.category || undefined,
+    }),
+});
 
 const fetchCategories = async () => {
     const response = await PublicAxios.get("/categories")

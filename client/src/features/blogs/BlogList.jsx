@@ -12,27 +12,20 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import PaginationButton from '@/components/common/PaginationButton';
-import {formatDate} from '@/utils';
+import {formatDate} from '@/utils/DateUtils';
 import {FIRST_PAGE} from '@/utils/PaginationUtils';
 import {Search, SortAsc} from 'lucide-react';
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
 import SEO from "@/common/SEO";
-import {AuthenticatedAxios} from "@/services/http/Axios";
 import {queryKeys} from "@/services/reactQuery/queryKeys";
 import {useListPage} from "@/hooks/useListPage";
+import {createListFetcher} from "@/services/api";
 
-const getPublishedBlogs = async ({queryKey}) => {
-    const [, params] = queryKey;
-    const response = await AuthenticatedAxios.get("/blogs/published", {
-        params: {
-            page: params.page - 1,
-            sort: params.sort,
-            size: params.size,
-            search: params.search || undefined,
-        },
-    });
-    return response.data.data;
-};
+const getPublishedBlogs = createListFetcher("/blogs/published", {
+    mapParams: (p) => ({
+        search: p.search || undefined,
+    }),
+});
 
 const ALLOWED_SORT_FIELDS = new Set(["createdAt", "title"]);
 

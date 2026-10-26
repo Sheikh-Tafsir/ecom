@@ -19,7 +19,7 @@ import { ButtonLoading } from '@/components/common/ButtonLoading';
 import { PublicAxios } from '@/services/http/Axios.js';
 import InputError from '@/components/common/InputError';
 import FormField from '@/components/common/FormField';
-import { GLOBAL_ERROR, handleErrors } from '@/utils';
+import { GLOBAL_ERROR, handleErrors } from '@/utils/ErrorUtils';
 
 const ForgetPasswordVerifySchema = z.object({
     otp: z
@@ -60,7 +60,6 @@ const ForgetPasswordVerify = () => {
             reset();
             navigate("/auth/login", { replace: true });
         } catch (error) {
-            console.error(error);
             handleErrors(error, setError);
         }
     }
@@ -75,7 +74,6 @@ const ForgetPasswordVerify = () => {
                 }
             )
         } catch (error) {
-            console.error(error);
             handleErrors(error, setError);
         } finally {
             setIsResendOtpButtonLoading(false);
