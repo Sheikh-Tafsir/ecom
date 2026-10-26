@@ -1,15 +1,11 @@
 const { IS_REQUIRED, lengthValidationMessage } = require('../utils/Messages');
 const { CHAT_TYPE } = require('../utils/Enum');
-const { generateUuidV7 } = require('../utils/UuidUtils');
+const { baseFields, baseOptions } = require('../common/BaseModel');
 
 module.exports = (sequelize, DataTypes) => {
     const Chat = sequelize.define('Chat',
         {
-            id: {
-                type: DataTypes.UUID,
-                primaryKey: true,
-                defaultValue: () => generateUuidV7(),
-            },
+            ...baseFields(DataTypes),
 
             type: {
                 type: DataTypes.ENUM(...Object.values(CHAT_TYPE)),
@@ -59,34 +55,8 @@ module.exports = (sequelize, DataTypes) => {
                 allowNull: true,
                 field: 'last_sender_id'
             },
-
-            createdAt: {
-                type: DataTypes.DATE,
-                allowNull: false,
-                defaultValue: DataTypes.NOW,
-                field: 'created_at'
-            },
-
-            updatedAt: {
-                type: DataTypes.DATE,
-                allowNull: false,
-                defaultValue: DataTypes.NOW,
-                onUpdate: DataTypes.NOW,
-                field: 'updated_at'
-            },
-
-            version: {
-                type: DataTypes.INTEGER,
-                allowNull: false,
-                defaultValue: 0,
-            }
         },
-        {
-            tableName: 'chats',
-            timestamps: true,
-            createdAt: 'created_at',
-            updatedAt: 'updated_at',
-        }
+        baseOptions('chats')
     );
 
     Chat.associate = models => {

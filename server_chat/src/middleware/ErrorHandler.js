@@ -1,8 +1,9 @@
 const {SOMETHING_WENT_WRONG, NOT_FOUND, FORBIDDEN_ACCESS} = require("../utils/Messages");
 const {errorResponse, multipleErrorResponse} = require("../utils/ResponseUtils");
+const {logger} = require("../config/logger");
 
 const ErrorHandler = (err, req, res, next) => {
-    console.error('ErrorHandler caught:', err);
+    logger.error('ErrorHandler caught:', err);
 
     res.set({
         'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -37,4 +38,4 @@ const ErrorHandler = (err, req, res, next) => {
     return errorResponse(res, SOMETHING_WENT_WRONG, err.status)
 };
 
-module.exports = ErrorHandler 
+module.exports = ErrorHandler

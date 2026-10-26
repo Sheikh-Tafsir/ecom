@@ -30,7 +30,7 @@ When a single VPS is no longer enough.
 | Managed database (RDS/Cloud SQL) | High | Medium | Automated backups, failover, scaling | Self-hosted PostgreSQL requires manual HA. Managed services handle replication, failover, and backups. |
 | Scale Chat Server horizontally | Medium | Low | More concurrent WebSocket connections | Socket.IO Redis adapter already configured for multi-node. Add sticky sessions at the load balancer. |
 | Separate Redis instances by concern | Medium | Medium | Isolation — cache eviction doesn't affect pub/sub | One Redis for caching (volatile-lru), one for pub/sub + presence (no eviction). Prevents cache pressure from evicting pub/sub keys. Security keys (revocation, OTP) should move to a `noeviction` instance earlier — see audit F-49. |
-| Add observability stack | Medium | High | Visibility into performance and errors | Prometheus + Grafana for metrics. Structured JSON logs are already in place. Add Jaeger/Zipkin for distributed tracing across Gateway → Server → Chat. |
+| Add distributed tracing (Jaeger/Zipkin) | Medium | High | End-to-end request visibility across services | Prometheus + Grafana moved to current tasks (`.context/tasks.md`). At multi-server scale, add Jaeger or Zipkin for distributed tracing across Gateway → Server → Chat to diagnose cross-service latency. |
 
 ---
 

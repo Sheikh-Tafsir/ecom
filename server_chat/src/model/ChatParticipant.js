@@ -1,15 +1,11 @@
 const { IS_REQUIRED, ALREADY_EXISTS } = require('../utils/Messages');
 const { CHAT_MEMBER_TYPE } = require('../utils/Enum');
-const { generateUuidV7 } = require('../utils/UuidUtils');
+const { baseFields, baseOptions } = require('../common/BaseModel');
 
 module.exports = (sequelize, DataTypes) => {
     const ChatParticipant = sequelize.define('ChatParticipant',
         {
-            id: {
-                type: DataTypes.UUID,
-                primaryKey: true,
-                defaultValue: () => generateUuidV7(),
-            },
+            ...baseFields(DataTypes),
 
             chatId: {
                 type: DataTypes.UUID,
@@ -55,33 +51,8 @@ module.exports = (sequelize, DataTypes) => {
                 allowNull: true,
                 field: 'last_seen'
             },
-
-            createdAt: {
-                type: DataTypes.DATE,
-                allowNull: false,
-                defaultValue: DataTypes.NOW,
-                field: 'created_at'
-            },
-
-            updatedAt: {
-                type: DataTypes.DATE,
-                allowNull: false,
-                defaultValue: DataTypes.NOW,
-                onUpdate: DataTypes.NOW,
-                field: 'updated_at'
-            },
-
-            version: {
-                type: DataTypes.INTEGER,
-                allowNull: false,
-                defaultValue: 0,
-            }
         },
-        {
-            tableName: 'chat_participants',
-            timestamps: true,
-            createdAt: 'created_at',
-            updatedAt: 'updated_at',
+        baseOptions('chat_participants', {
             indexes: [
                 {
                     unique: true,
@@ -89,7 +60,7 @@ module.exports = (sequelize, DataTypes) => {
                     msg: ALREADY_EXISTS
                 }
             ]
-        }
+        })
     );
 
     // Define associations

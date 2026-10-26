@@ -1,4 +1,4 @@
-const { ApiMessageResponse } = require("../utils/Utils");
+const { buildErrorResponse } = require("../utils/ResponseUtils");
 const { isValidUuid } = require("../utils/UuidUtils");
 
 module.exports = function ValidateUuidParams(...paramNames) {
@@ -6,7 +6,7 @@ module.exports = function ValidateUuidParams(...paramNames) {
         for (const name of paramNames) {
             const rawValue = req.params[name];
             if (!isValidUuid(rawValue)) {
-                return res.status(400).json(ApiMessageResponse(`${name} must be a valid UUID.`));
+                return res.status(400).json(buildErrorResponse(`${name} must be a valid UUID.`));
             }
         }
         next();

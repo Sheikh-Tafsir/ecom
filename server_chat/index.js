@@ -7,14 +7,13 @@ const rateLimit = require('express-rate-limit');
 require("dotenv").config();
 const { logger, endStartupPhase } = require("./src/config/logger"); 
 
-// const {CorsMiddleware} = require("./src/middleware/CorsMiddleware");
 const TrimInput = require("./src/middleware/TrimInput");
 const ErrorHandler = require("./src/middleware/ErrorHandler");
 
 const SocketHandler = require("./src/sockets/socketHandlers")
 
 const ChatController = require("./src/controller/ChatController");
-const CommonController = require("./src/controller/CommonController");
+const UploadController = require("./src/controller/UploadController");
 const { specs, swaggerUi } = require("./src/config/swagger");
 
 const app = express();
@@ -74,7 +73,7 @@ app.get('/chats/v3/api-docs', (req, res) => {
 });
 
 app.use("/chats", ChatController);
-app.use("/common", CommonController);
+app.use("/uploads", UploadController);
 
 app.use(ErrorHandler);
 

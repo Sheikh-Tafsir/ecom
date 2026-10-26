@@ -1,5 +1,6 @@
 const {FORBIDDEN_ACCESS} = require('../utils/Messages');
 const {errorResponse} = require("../utils/ResponseUtils");
+const {logger} = require("../config/logger");
 
 const AuthorizationMiddleware = (...requiredPermissions) => {
     return async (req, res, next) => {
@@ -15,7 +16,7 @@ const AuthorizationMiddleware = (...requiredPermissions) => {
 
             next();
         } catch (error) {
-            console.error("Permission check failed", error);
+            logger.error("Permission check failed", error);
             return errorResponse(res, "Internal error during authorization", 500);
         }
     };

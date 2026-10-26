@@ -58,5 +58,6 @@ CREATE TABLE IF NOT EXISTS blocked_users
     blocked_user_id UUID        NOT NULL,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    version         INT                  DEFAULT 0,
     CONSTRAINT uq_blocked_users UNIQUE (user_id, blocked_user_id)
 );

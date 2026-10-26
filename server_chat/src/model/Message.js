@@ -1,15 +1,11 @@
-const { IS_REQUIRED} = require('../utils/Messages');
+const { IS_REQUIRED } = require('../utils/Messages');
 const { CONTENT_TYPE } = require('../utils/Enum');
-const { generateUuidV7 } = require('../utils/UuidUtils');
+const { baseFields, baseOptions } = require('../common/BaseModel');
 
 module.exports = (sequelize, DataTypes) => {
     const Message = sequelize.define('Message',
         {
-            id: {
-                type: DataTypes.UUID,
-                primaryKey: true,
-                defaultValue: () => generateUuidV7(),
-            },
+            ...baseFields(DataTypes),
 
             chatId: {
                 type: DataTypes.UUID,
@@ -46,34 +42,8 @@ module.exports = (sequelize, DataTypes) => {
                     notNull: { msg: IS_REQUIRED },
                 },
             },
-
-            createdAt: {
-                type: DataTypes.DATE,
-                allowNull: false,
-                defaultValue: DataTypes.NOW,
-                field: 'created_at'
-            },
-
-            updatedAt: {
-                type: DataTypes.DATE,
-                allowNull: false,
-                defaultValue: DataTypes.NOW,
-                onUpdate: DataTypes.NOW,
-                field: 'updated_at'
-            },
-
-            version: {
-                type: DataTypes.INTEGER,
-                allowNull: false,
-                defaultValue: 0,
-            }
         },
-        {
-            tableName: 'messages',
-            timestamps: true,
-            createdAt: 'created_at',
-            updatedAt: 'updated_at',
-        }
+        baseOptions('messages')
     );
 
     // Define associations

@@ -1,6 +1,8 @@
 const Redis = require('ioredis');
 require('dotenv').config();
 
+const { logger } = require('./logger');
+
 // Create Redis connection
 const redisOptions = process.env.REDIS_URL || {
     host: process.env.REDIS_HOST,
@@ -10,20 +12,11 @@ const redisOptions = process.env.REDIS_URL || {
 
 const RedisConfig = new Redis(redisOptions);
 
-
-RedisConfig.on('connect', () => console.info('✅ Redis connected'));
-RedisConfig.on('ready', () => console.info('⚡ Redis ready to use'));
-RedisConfig.on('reconnecting', () => console.info('🔁 Redis reconnecting...'));
-RedisConfig.on('error', (err) => console.error('❌ Redis error:', err));
-RedisConfig.on('end', () => console.info('🔌 Redis connection closed'));
-
-RedisConfig.getAsync = async (key) => {
-    return await RedisConfig.get(key);
-};
-
-RedisConfig.setAsync = async (key, value) => {
-    return await RedisConfig.set(key, value);
-};
+RedisConfig.on('connect', () => logger.info('✅ Redis connected'));
+RedisConfig.on('ready', () => logger.info('⚡ Redis ready to use'));
+RedisConfig.on('reconnecting', () => logger.info('🔁 Redis reconnecting...'));
+RedisConfig.on('error', (err) => logger.error('❌ Redis error:', err));
+RedisConfig.on('end', () => logger.info('🔌 Redis connection closed'));
 
 // Close Redis connection when the application exits
 process.on('exit', () => {
@@ -34,7 +27,7 @@ process.on('exit', () => {
     } catch (e) {
         // Ignore during process termination
     }
-    console.info('Redis connection closed');
+    logger.info('Redis connection closed');
 });
 
 module.exports = RedisConfig;

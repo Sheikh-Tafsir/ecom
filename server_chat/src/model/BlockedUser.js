@@ -1,14 +1,11 @@
 const { IS_REQUIRED, ALREADY_EXISTS } = require('../utils/Messages');
-const { generateUuidV7 } = require('../utils/UuidUtils');
+const { baseFields, baseOptions } = require('../common/BaseModel');
 
 module.exports = (sequelize, DataTypes) => {
     const BlockedUser = sequelize.define('BlockedUser',
         {
-            id: {
-                type: DataTypes.UUID,
-                primaryKey: true,
-                defaultValue: () => generateUuidV7(),
-            },
+            ...baseFields(DataTypes),
+
             userId: {
                 type: DataTypes.UUID,
                 allowNull: false,
@@ -17,6 +14,7 @@ module.exports = (sequelize, DataTypes) => {
                     notNull: { msg: IS_REQUIRED },
                 },
             },
+
             blockedUserId: {
                 type: DataTypes.UUID,
                 allowNull: false,
@@ -25,25 +23,8 @@ module.exports = (sequelize, DataTypes) => {
                     notNull: { msg: IS_REQUIRED },
                 },
             },
-            createdAt: {
-                type: DataTypes.DATE,
-                allowNull: false,
-                defaultValue: DataTypes.NOW,
-                field: 'created_at'
-            },
-            updatedAt: {
-                type: DataTypes.DATE,
-                allowNull: false,
-                defaultValue: DataTypes.NOW,
-                onUpdate: DataTypes.NOW,
-                field: 'updated_at'
-            },
         },
-        {
-            tableName: 'blocked_users',
-            timestamps: true,
-            createdAt: 'created_at',
-            updatedAt: 'updated_at',
+        baseOptions('blocked_users', {
             indexes: [
                 {
                     unique: true,
@@ -51,7 +32,7 @@ module.exports = (sequelize, DataTypes) => {
                     msg: ALREADY_EXISTS
                 }
             ]
-        }
+        })
     );
 
     return BlockedUser;

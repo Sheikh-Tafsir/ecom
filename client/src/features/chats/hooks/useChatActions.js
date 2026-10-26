@@ -18,7 +18,7 @@ export const useChatActions = (id, userId, updateChatOnMessage, onNewChat) => {
             const formData = new FormData();
             formData.append('image', image);
 
-            const response = await AuthenticatedAxios.post(`/common/upload-image`, formData, {
+            const response = await AuthenticatedAxios.post(`/uploads`, formData, {
                 headers: {'Content-Type': 'multipart/form-data'},
                 timeout: 15000,
             });

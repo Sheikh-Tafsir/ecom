@@ -21,7 +21,6 @@ A microservices-based e-commerce platform. Monorepo with four services behind an
 | Operations runbook / incidents | [docs/runbook.md](./docs/runbook.md) |
 | Personal data & retention    | [docs/privacy-data.md](./docs/privacy-data.md) |
 | End-user guide (by role)     | [docs/user-guide.md](./docs/user-guide.md) |
-| Known issues (audit 2026-10-25) | [docs/audit/2026-10-25-system-audit.md](.context/2026-10-25-system-audit.md) |
 
 ## Architecture Decisions (Why things are the way they are)
 

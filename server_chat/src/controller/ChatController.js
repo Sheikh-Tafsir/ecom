@@ -1,5 +1,5 @@
 const express = require('express');
-const AsyncHandler = require('express-async-handler');
+const AsyncHandler = require('../middleware/AsyncHandler');
 
 const AuthenticationMiddleware = require('../middleware/AuthenticationMiddleware');
 const ValidateUuidParams = require('../middleware/ValidateUuidParams');

@@ -38,7 +38,7 @@ spring:
             - id: chat-service-api
               uri: ${CHAT_SERVICE_URL}
               predicates:
-                - Path=/api/chats/**,/api/common/**
+                - Path=/api/chats/**,/api/uploads/**
               filters:
                 - StripPrefix=1
 

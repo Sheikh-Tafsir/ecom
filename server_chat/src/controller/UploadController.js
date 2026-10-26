@@ -1,10 +1,13 @@
 const express = require('express');
 const AsyncHandler = require('../middleware/AsyncHandler');
 const AuthenticationMiddleware = require('../middleware/AuthenticationMiddleware');
-const Repository = require('../common/Repository');
 const FileUpload = require("../middleware/FileUpload");
 const cloudinary = require('cloudinary').v2;
+const { reduceImageBySize } = require('../utils/ImageUtils');
+const { uploadToCloudinary } = require('../config/CloudinaryConfig');
+const RuntimeError = require('../common/RuntimeError');
 const {ok} = require('../utils/ResponseUtils');
+const {FOUND} = require('../utils/Messages');
 
 const router = express.Router();
 
@@ -12,7 +15,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /common/upload:
+ * /uploads:
  *   post:
  *     summary: Upload an image
  *     tags: [Common]
@@ -38,13 +41,19 @@ const router = express.Router();
  *                 url:
  *                   type: string
  */
-router.post("/upload", AuthenticationMiddleware, FileUpload, AsyncHandler(async (req, res) => {
-    res.status(200).json(await Repository.uploadImage(req.file));
+router.post("", AuthenticationMiddleware, FileUpload, AsyncHandler(async (req, res) => {
+    if (!req.file) {
+        throw new RuntimeError(400, "Image not uploaded");
+    }
+
+    const reducedBuffer = await reduceImageBySize(req.file.buffer);
+    const uploaded = await uploadToCloudinary(reducedBuffer);
+    ok(res, { message: FOUND, data: uploaded.secure_url });
 }));
 
 /**
  * @swagger
- * /common/upload-signature:
+ * /uploads/signature:
  *   post:
  *     summary: Generate a Cloudinary signed upload signature for direct client uploads
  *     tags: [Common]
@@ -63,7 +72,7 @@ router.post("/upload", AuthenticationMiddleware, FileUpload, AsyncHandler(async 
  *       200:
  *         description: Upload signature generated
  */
-router.post("/upload-signature", AuthenticationMiddleware, AsyncHandler(async (req, res) => {
+router.post("/signature", AuthenticationMiddleware, AsyncHandler(async (req, res) => {
     const folder = req.body?.folder || 'chat-images';
     const timestamp = Math.round(Date.now() / 1000);
 

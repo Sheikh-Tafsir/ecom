@@ -1,12 +1,11 @@
-const {isNull} = require("../utils/Utils");
+const { hasValue } = require("../utils/Utils");
 
 const ApiResponse = ({message, data, errors}) => {
     const response = {};
 
-    if (!isNull(message)) response.message = message;
-    if (!isNull(data)) response.data = data;
-    if (!isNull(errors)) response.error = errors;
-
+    if (hasValue(message)) response.message = message;
+    if (hasValue(data)) response.data = data;
+    if (hasValue(errors)) response.error = errors;
 
     return response;
 };
