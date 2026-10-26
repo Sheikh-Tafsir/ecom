@@ -1,6 +1,4 @@
-import React, {useEffect, useMemo, useCallback} from "react";
-import {useNavigate, useSearchParams} from "react-router-dom";
-import {useQuery, keepPreviousData} from "@tanstack/react-query";
+import React, {useEffect, useCallback} from "react";
 import {useForm, Controller} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {z} from "zod";
@@ -33,8 +31,6 @@ import {formatDateAndTime, GLOBAL_ERROR, handleErrors, hasPermission} from '@/ut
 import {
     FIRST_PAGE,
     getQueryString,
-    normalizeQuery,
-    redirectWhenInvalidPage,
     ALL_SELECTED,
     getSelectValue
 } from '@/utils/PaginationUtils';
@@ -57,8 +53,9 @@ import {toastify} from "@/common/toastify.js";
 import {queryClient} from "@/services/reactQuery/queryClient";
 import {useUserStore} from "@/store/useUserStore";
 import {cn} from "@/lib/utils";
-
 import {ReportDialog} from "@/components/common/ReportDialog";
+import {queryKeys} from "@/services/reactQuery/queryKeys";
+import {useListPage} from "@/hooks/useListPage";
 
 const fetchOrders = async ({queryKey}) => {
     const [, params] = queryKey;
@@ -85,24 +82,30 @@ const orderFilterSchema = z.object({
 });
 
 const Orders = () => {
-    const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const queryParams = useMemo(() => Object.fromEntries(searchParams.entries()), [searchParams]);
-
     const {user} = useUserStore();
 
     const defaultStatus = hasPermission(user, PERMISSION.DELIVERY_MAN_ACCESS) ? ORDER_STATUS.SHIPPED : ORDER_STATUS.PENDING;
 
-    const filters = useMemo(
-        () => ({
-            ...normalizeQuery(queryParams, []),
-            productName: queryParams.productName || "",
-            fromDate: queryParams.fromDate || "",
-            toDate: queryParams.toDate || "",
-            status: queryParams.status || defaultStatus,
+    const {
+        items: orders,
+        totalPages,
+        filters,
+        queryParams,
+        query: {isPending: isPageLoading},
+        navigate,
+    } = useListPage({
+        queryKey: (f) => queryKeys.orders.list(f),
+        queryFn: fetchOrders,
+        extraFilters: (qp) => ({
+            productName: qp.productName || "",
+            fromDate: qp.fromDate || "",
+            toDate: qp.toDate || "",
+            status: qp.status || defaultStatus,
         }),
-        [queryParams]
-    );
+        errorMessage: "Failed to show orders",
+        onError: (error) => handleErrors(error, setError),
+    });
+
     const {page, productName, fromDate, toDate, status} = filters;
 
     const {
@@ -121,32 +124,6 @@ const Orders = () => {
             status: defaultStatus
         },
     });
-
-    const {
-        data,
-        isPending: isPageLoading,
-        isError,
-        error,
-    } = useQuery({
-        queryKey: ["orders", filters],
-        queryFn: fetchOrders,
-        placeholderData: keepPreviousData,
-    });
-
-    const orders = data?.content ?? [];
-    const totalPages = data?.totalPages ?? FIRST_PAGE;
-
-    useEffect(() => {
-        if (isError) {
-            console.error("error:", error);
-            handleErrors(error, setError);
-            toastify(TOAST_TYPE.ERROR, "Failed to show orders")
-        }
-    }, [error, isError]);
-
-    useEffect(() => {
-        redirectWhenInvalidPage({page, totalPages, navigate, queryParams})
-    }, [page, totalPages, navigate, queryParams])
 
     useEffect(() => {
         reset({
@@ -183,7 +160,6 @@ const Orders = () => {
             await queryClient.invalidateQueries({queryKey: ["orders"]});
             toastify(TOAST_TYPE.SUCCESS, `Updated order with ID ${id} status changed to ${status}`)
         } catch (error) {
-            console.error(error);
             toastify(TOAST_TYPE.ERROR,
                 error.response?.data?.errors?.global?.[0] || error.response?.data?.message || "Failed to update order")
         }
@@ -196,7 +172,6 @@ const Orders = () => {
             await queryClient.invalidateQueries({queryKey: ["orders"]});
             toastify(TOAST_TYPE.SUCCESS, `Cancelled order with ID ${id}`)
         } catch (error) {
-            console.error(error);
             toastify(TOAST_TYPE.ERROR, error.response?.data?.errors?.global?.[0] || error.response?.data?.message || "Failed to update order")
         }
     }

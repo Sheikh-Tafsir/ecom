@@ -1,5 +1,3 @@
-import {isEmptyArray} from "@/utils/Utils.js";
-
 export const FIRST_PAGE = 1
 export const DEFAULT_PAGE_SIZE = 24
 export const DEFAULT_SORT_BY = "createdAt"
@@ -39,14 +37,18 @@ export const parseSize = (size) => {
     return Math.min(MAX_PAGE_SIZE, s);
 };
 
-export const parseSort = (sort = DEFAULT_SORT, allowedSortFields= []) => {
-    if (isEmptyArray(allowedSortFields)) {
+export const parseSort = (sort = DEFAULT_SORT, allowedSortFields = []) => {
+    const fields = allowedSortFields instanceof Set
+        ? allowedSortFields
+        : new Set(allowedSortFields);
+
+    if (fields.size === 0) {
         return DEFAULT_SORT;
     }
 
     const [field, order] = sort.split(",")
 
-    return allowedSortFields.has(field)
+    return fields.has(field)
         ? `${field},${order == "ASC" ? "ASC" : DEFAULT_SORT_ORDER}`
         : DEFAULT_SORT;
 }

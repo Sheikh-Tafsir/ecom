@@ -1,6 +1,5 @@
-import {useEffect, useMemo, useState} from "react";
-import {useNavigate, useSearchParams} from "react-router-dom";
-import {keepPreviousData, useQuery, useMutation, useQueryClient} from "@tanstack/react-query";
+import {useMemo, useState} from "react";
+import {keepPreviousData, useMutation, useQueryClient} from "@tanstack/react-query";
 import {Pencil, User as UserIcon, Shield, Filter} from "lucide-react";
 
 import {
@@ -36,14 +35,7 @@ import {formatDate} from "@/utils/DateUtils";
 import {APP_MODULE, TOAST_TYPE, ALERT_TYPE} from "@/constants/app.constants";
 import {ROLE_PREFIX, USER_ROLE, PERMISSION} from "@/constants/auth.constants";
 import {USER_STATUS} from "@/constants/user.constants";
-import {
-    FIRST_PAGE,
-    checkAllSelected,
-    redirectWhenInvalidPage,
-    updateQueryWhenParamChange,
-    getSelectValue,
-    normalizeQuery
-} from "@/utils/PaginationUtils.js";
+import {getSelectValue} from "@/utils/PaginationUtils.js";
 import {hasPermission} from "@/utils";
 import {toastify} from "@/common/toastify.js";
 import {cn} from "@/lib/utils";
@@ -51,6 +43,7 @@ import {cn} from "@/lib/utils";
 import {ReportDialog} from "@/components/common/ReportDialog";
 import {useUserStore} from "@/store/useUserStore";
 import {queryKeys} from "@/services/reactQuery/queryKeys";
+import {useListPage} from "@/hooks/useListPage";
 
 const ALLOWED_SORT_FIELDS = new Set([
     "createdAt",
@@ -66,8 +59,8 @@ const fetchUsers = async ({queryKey}) => {
             sort: params.sort,
             size: params.size,
             name: params.search || undefined,
-            role: checkAllSelected(params.role),
-            status: checkAllSelected(params.status),
+            role: params.role && params.role !== "__all__" ? params.role : undefined,
+            status: params.status && params.status !== "__all__" ? params.status : undefined,
         },
     })
 
@@ -79,35 +72,30 @@ const updateUserStatusService = async (id, status) => {
 }
 
 const Users = () => {
-    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const {user: currentUser} = useUserStore();
 
-    const [searchParams] = useSearchParams();
-    const queryParams = useMemo(() => Object.fromEntries(searchParams.entries()), [searchParams])
-
-    const filters = useMemo(
-        () => ({
-            ...normalizeQuery(queryParams, ALLOWED_SORT_FIELDS),
-            role: queryParams.role || "",
-            status: queryParams.status || "",
-            search: queryParams.search || "",
-        }),
-        [queryParams]
-    );
-    const {page, role, status} = filters
-    const [selectedUser, setSelectedUser] = useState(null);
-
     const {
-        data, isPending: isPageLoading, isError, error,
-    } = useQuery({
-        queryKey: queryKeys.users.list(filters),
+        items: users,
+        totalPages,
+        filters,
+        query: {isPending: isPageLoading},
+        updateQuery,
+        navigate,
+    } = useListPage({
+        queryKey: (f) => queryKeys.users.list(f),
         queryFn: fetchUsers,
-        placeholderData: keepPreviousData,
+        allowedSortFields: ALLOWED_SORT_FIELDS,
+        extraFilters: (qp) => ({
+            role: qp.role || "",
+            status: qp.status || "",
+            search: qp.search || "",
+        }),
+        errorMessage: "Failed to load users",
     });
 
-    const users = data?.content || [];
-    const totalPages = data?.totalPages || FIRST_PAGE;
+    const {role, status} = filters;
+    const [selectedUser, setSelectedUser] = useState(null);
 
     const handleEditUser = (user) => {
         navigate(`/users/${user.id}`, {state: {user}});
@@ -119,8 +107,7 @@ const Users = () => {
             toastify(TOAST_TYPE.SUCCESS, `User status updated to ${status}`)
             queryClient.invalidateQueries({queryKey: queryKeys.users.all});
         },
-        onError: (error) => {
-            console.error("Error changing user status:", error);
+        onError: () => {
             toastify(TOAST_TYPE.ERROR, "Failed to change user status")
         }
     });
@@ -129,22 +116,6 @@ const Users = () => {
         if (!selectedUser) return;
         statusMutation.mutate({id: selectedUser.id, status: USER_STATUS.SUSPENDED});
     };
-
-    const updateQuery = (newParams) => {
-        updateQueryWhenParamChange({queryParams, newParams, navigate})
-    };
-
-    // Page validation (safe)
-    useEffect(() => {
-        redirectWhenInvalidPage({page, totalPages, navigate, queryParams})
-    }, [page, totalPages, navigate, queryParams])
-
-    useEffect(() => {
-        if (isError) {
-            console.error(error);
-            toastify(TOAST_TYPE.ERROR, "Failed to load users");
-        }
-    }, [error, isError]);
 
     return (
         <div className="bg-slate-50 min-h-screen">

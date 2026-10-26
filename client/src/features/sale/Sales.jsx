@@ -1,11 +1,9 @@
 import React, {useEffect, useMemo, useCallback} from "react";
-import {useNavigate, useSearchParams} from "react-router-dom";
-import {useQuery, keepPreviousData} from "@tanstack/react-query";
 import {Filter, TrendingUp, DollarSign, Package, BarChart3, PieChart} from "lucide-react";
 import {useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {z} from "zod";
-import {Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Cell} from "recharts";
+import {Bar, BarChart, CartesianGrid, XAxis, YAxis, Cell} from "recharts";
 
 import {
     Table,
@@ -21,7 +19,7 @@ import PaginationButton from "@/components/common/PaginationButton";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
 
 import {formatDate, GLOBAL_ERROR, handleErrors} from "@/utils";
-import {FIRST_PAGE, getQueryString, normalizeQuery, redirectWhenInvalidPage} from '@/utils/PaginationUtils';
+import {FIRST_PAGE, getQueryString} from '@/utils/PaginationUtils';
 
 import FormField from "@/components/common/FormField";
 import {
@@ -37,7 +35,6 @@ import {Button} from "@/components/ui/button";
 import InputError from "@/components/common/InputError";
 import {APP_MODULE, TOAST_TYPE} from "@/constants/app.constants";
 import {toastify} from "@/common/toastify.js";
-import {cn} from "@/lib/utils";
 import {
     ChartContainer,
     ChartTooltip,
@@ -45,6 +42,8 @@ import {
 } from "@/components/ui/chart";
 
 import {ReportDialog} from "@/components/common/ReportDialog";
+import {queryKeys} from "@/services/reactQuery/queryKeys";
+import {useListPage} from "@/hooks/useListPage";
 
 const fetchSales = async ({queryKey}) => {
     const [, params] = queryKey;
@@ -69,20 +68,26 @@ const saleFilterSchema = z.object({
 });
 
 export default function Sales() {
-    const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const queryParams = useMemo(() => Object.fromEntries(searchParams.entries()), [searchParams]);
-
-    const filters = useMemo(
-        () => ({
-            ...normalizeQuery(queryParams, []),
-            productName: queryParams.productName || "",
-            fromDate: queryParams.fromDate || "",
-            toDate: queryParams.toDate || "",
+    const {
+        items: sales,
+        totalPages,
+        filters,
+        queryParams,
+        query: {isPending: isPageLoading},
+        navigate,
+    } = useListPage({
+        queryKey: (f) => queryKeys.sales.list(f),
+        queryFn: fetchSales,
+        extraFilters: (qp) => ({
+            productName: qp.productName || "",
+            fromDate: qp.fromDate || "",
+            toDate: qp.toDate || "",
         }),
-        [queryParams]
-    );
-    const {page, productName, fromDate, toDate} = filters;
+        errorMessage: "Failed to show sales",
+        onError: (error) => handleErrors(error, setError),
+    });
+
+    const {productName, fromDate, toDate} = filters;
 
     const {
         register,
@@ -98,24 +103,6 @@ export default function Sales() {
             toDate: "",
         },
     });
-
-    const {
-        data,
-        isPending: isPageLoading,
-        isError,
-        error,
-    } = useQuery({
-        queryKey: ["sales", filters],
-        queryFn: fetchSales,
-        placeholderData: keepPreviousData,
-    });
-
-    const sales = data?.content ?? [];
-    const totalPages = data?.totalPages ?? FIRST_PAGE;
-
-    useEffect(() => {
-        redirectWhenInvalidPage({page, totalPages, navigate, queryParams})
-    }, [page, totalPages, navigate, queryParams])
 
     useEffect(() => {
         reset({
@@ -140,14 +127,6 @@ export default function Sales() {
         },
         [navigate, queryParams]
     );
-
-    useEffect(() => {
-        if (isError) {
-            console.error(error);
-            handleErrors(error, setError);
-            toastify(TOAST_TYPE.ERROR, "Failed to show sales")
-        }
-    }, [error, isError]);
 
     // Dashboard Calculations
     const stats = useMemo(() => {

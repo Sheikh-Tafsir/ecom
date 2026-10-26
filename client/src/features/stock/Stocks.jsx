@@ -1,6 +1,4 @@
-import {useEffect, useMemo, useCallback} from 'react';
-import {useNavigate, useSearchParams} from 'react-router-dom';
-import {keepPreviousData, useQuery} from "@tanstack/react-query";
+import {useEffect, useCallback} from 'react';
 import {Filter, ArrowRight, Database} from "lucide-react";
 import {useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
@@ -28,18 +26,15 @@ import PaginationButton from '@/components/common/PaginationButton.jsx';
 import PageLoadingOverlay from '@/components/common/pageLoadingOverlay/PageLoadingOverlay.jsx';
 import {
     FIRST_PAGE,
-    redirectWhenInvalidPage,
-    normalizeQuery,
-    formatDateAndTime,
     getQueryString,
-    GLOBAL_ERROR,
-    handleErrors
-} from '@/utils/index.js';
+} from '@/utils/PaginationUtils';
+import {formatDateAndTime, GLOBAL_ERROR, handleErrors} from '@/utils/index.js';
 import {Button} from '@/components/ui/button.jsx';
 import {TOAST_TYPE} from "@/constants/app.constants";
 import InputError from "@/components/common/InputError";
 import {toastify} from '@/common/toastify.js';
 import {queryKeys} from "@/services/reactQuery/queryKeys";
+import {useListPage} from "@/hooks/useListPage";
 
 const fetchStocks = async ({queryKey}) => {
     const [, params] = queryKey
@@ -65,19 +60,26 @@ const stockFilterSchema = z.object({
 });
 
 const Stocks = () => {
-    const navigate = useNavigate();
+    const {
+        items: stocks,
+        totalPages,
+        filters,
+        queryParams,
+        query: {isPending: isPageLoading},
+        navigate,
+    } = useListPage({
+        queryKey: (f) => queryKeys.stocks.list(f),
+        queryFn: fetchStocks,
+        extraFilters: (qp) => ({
+            productName: qp.productName || "",
+            fromDate: qp.fromDate || "",
+            toDate: qp.toDate || "",
+        }),
+        errorMessage: "Failed to load stocks",
+        onError: (error) => handleErrors(error, setError),
+    });
 
-    const [searchParams] = useSearchParams()
-    const queryParams = useMemo(() => Object.fromEntries(searchParams.entries()), [searchParams])
-
-    const filters = useMemo(() => ({
-        ...normalizeQuery(queryParams, []),
-        productName: queryParams.productName || "",
-        fromDate: queryParams.fromDate || "",
-        toDate: queryParams.toDate || "",
-    }), [queryParams]);
-
-    const {page, productName, fromDate, toDate} = filters;
+    const {productName, fromDate, toDate} = filters;
 
     const {
         register,
@@ -93,24 +95,6 @@ const Stocks = () => {
             toDate: "",
         },
     });
-
-    const {
-        data,
-        isPending: isPageLoading,
-        isError,
-        error
-    } = useQuery({
-        queryKey: queryKeys.stocks.list(filters),
-        queryFn: fetchStocks,
-        placeholderData: keepPreviousData,
-    })
-
-    const stocks = data?.content || [];
-    const totalPages = data?.totalPages || FIRST_PAGE;
-
-    useEffect(() => {
-        redirectWhenInvalidPage({page, totalPages, navigate, queryParams})
-    }, [page, totalPages, navigate, queryParams]);
 
     useEffect(() => {
         reset({
@@ -135,14 +119,6 @@ const Stocks = () => {
         },
         [navigate, queryParams]
     );
-
-    useEffect(() => {
-        if (isError) {
-            console.error(error);
-            handleErrors(error, setError);
-            toastify(TOAST_TYPE.ERROR, "Failed to load stocks")
-        }
-    }, [error, isError]);
 
     return (
         <div className="bg-slate-50 min-h-screen">

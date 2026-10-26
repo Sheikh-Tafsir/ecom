@@ -1,13 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, {useEffect, useMemo} from 'react';
 import DOMPurify from 'dompurify';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { AuthenticatedAxios } from "@/services/http/Axios";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import { 
+import {useForm, Controller} from 'react-hook-form';
+import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {
     Select,
     SelectContent,
     SelectItem,
@@ -15,53 +12,85 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import PaginationButton from '@/components/common/PaginationButton';
-import { formatDate } from '@/utils';
-import { FIRST_PAGE } from '@/utils/PaginationUtils';
-import { Search, SortAsc } from 'lucide-react';
+import {formatDate} from '@/utils';
+import {FIRST_PAGE} from '@/utils/PaginationUtils';
+import {Search, SortAsc} from 'lucide-react';
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
 import SEO from "@/common/SEO";
+import {AuthenticatedAxios} from "@/services/http/Axios";
+import {queryKeys} from "@/services/reactQuery/queryKeys";
+import {useListPage} from "@/hooks/useListPage";
 
-const getPublishedBlogs = async (params) => {
-    const response = await AuthenticatedAxios.get("/blogs/published", { params });
+const getPublishedBlogs = async ({queryKey}) => {
+    const [, params] = queryKey;
+    const response = await AuthenticatedAxios.get("/blogs/published", {
+        params: {
+            page: params.page - 1,
+            sort: params.sort,
+            size: params.size,
+            search: params.search || undefined,
+        },
+    });
     return response.data.data;
 };
 
+const ALLOWED_SORT_FIELDS = new Set(["createdAt", "title"]);
+
 const BLOG_SORTBY = [
-    { label: "Newest First", value: "createdAt,DESC" },
-    { label: "Oldest First", value: "createdAt,ASC" },
-    { label: "Title: A-Z", value: "title,ASC" },
-    { label: "Title: Z-A", value: "title,DESC" },
+    {label: "Newest First", value: "createdAt,DESC"},
+    {label: "Oldest First", value: "createdAt,ASC"},
+    {label: "Title: A-Z", value: "title,ASC"},
+    {label: "Title: Z-A", value: "title,DESC"},
 ];
 
 const BlogList = () => {
-    const navigate = useNavigate();
-    const [searchParams, setSearchParams] = useSearchParams();
-    const page = parseInt(searchParams.get('page') || FIRST_PAGE);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [sortBy, setSortBy] = useState(BLOG_SORTBY[0].value);
-
-    const { data, isLoading } = useQuery({
-        queryKey: ['blogs', 'published', { page, searchTerm, sortBy }],
-        queryFn: () => {
-            const [sort, direction] = sortBy.split(',');
-            return getPublishedBlogs({ 
-                page: page - 1, 
-                search: searchTerm,
-                sort: `${sort},${direction}`
-            });
-        },
-        placeholderData: keepPreviousData
+    const {
+        items: posts,
+        totalPages,
+        filters,
+        query: {isPending: isLoading},
+        updateQuery,
+        navigate,
+    } = useListPage({
+        queryKey: (f) => queryKeys.blogs.list(f),
+        queryFn: getPublishedBlogs,
+        allowedSortFields: ALLOWED_SORT_FIELDS,
+        extraFilters: (qp) => ({
+            search: qp.search || "",
+        }),
+        errorMessage: "Failed to load articles",
     });
 
-    const posts = data?.content || [];
-    const totalPages = data?.totalPages || FIRST_PAGE;
+    const {search, sort} = filters;
 
-    const handleSortChange = (value) => {
-        setSortBy(value);
-        // Reset to first page on sort change
-        searchParams.set('page', FIRST_PAGE);
-        setSearchParams(searchParams);
-    };
+    const {control, watch, reset} = useForm({
+        defaultValues: {
+            search: "",
+            sort: BLOG_SORTBY[0].value,
+        },
+    });
+
+    const watchedSearch = watch("search");
+
+    // Sync form ← URL
+    useEffect(() => {
+        reset({search, sort});
+    }, [search, sort, reset]);
+
+    // Debounced search → URL
+    useEffect(() => {
+        const trimmed = watchedSearch.trim();
+        if (trimmed == search) return;
+
+        const timer = setTimeout(() => {
+            updateQuery({
+                search: trimmed || undefined,
+                page: FIRST_PAGE,
+            });
+        }, 400);
+
+        return () => clearTimeout(timer);
+    }, [watchedSearch, search, updateQuery]);
 
     return (
         <div className="container mx-auto py-10 px-4 relative min-h-[600px]">
@@ -81,35 +110,52 @@ const BlogList = () => {
                 <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
                     <div className="relative w-full sm:w-64">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <Input 
-                            placeholder="Search articles..." 
-                            className="pl-10 font-bold"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                        <Controller
+                            name="search"
+                            control={control}
+                            render={({field}) => (
+                                <Input
+                                    placeholder="Search articles..."
+                                    className="pl-10 font-bold"
+                                    {...field}
+                                />
+                            )}
                         />
                     </div>
 
-                    <Select value={sortBy} onValueChange={handleSortChange}>
-                        <SelectTrigger className="w-full sm:w-48 font-bold">
-                            <div className="flex items-center gap-2">
-                                <SortAsc className="w-4 h-4" />
-                                <SelectValue placeholder="Sort By" />
-                            </div>
-                        </SelectTrigger>
-                        <SelectContent>
-                            {BLOG_SORTBY.map((option) => (
-                                <SelectItem key={option.value} value={option.value} className="font-medium">
-                                    {option.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                    <Controller
+                        name="sort"
+                        control={control}
+                        render={({field}) => (
+                            <Select
+                                value={field.value}
+                                onValueChange={(val) => {
+                                    field.onChange(val);
+                                    updateQuery({sort: val});
+                                }}
+                            >
+                                <SelectTrigger className="w-full sm:w-48 font-bold">
+                                    <div className="flex items-center gap-2">
+                                        <SortAsc className="w-4 h-4" />
+                                        <SelectValue placeholder="Sort By" />
+                                    </div>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {BLOG_SORTBY.map((option) => (
+                                        <SelectItem key={option.value} value={option.value} className="font-medium">
+                                            {option.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
+                    />
                 </div>
             </div>
 
             {!isLoading && posts.length == 0 ? (
                 <div className="text-center py-20 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
-                    <p className="text-slate-500 font-bold">No articles found{searchTerm ? ` for "${searchTerm}"` : ''}.</p>
+                    <p className="text-slate-500 font-bold">No articles found{search ? ` for "${search}"` : ''}.</p>
                 </div>
             ) : (
                 <>

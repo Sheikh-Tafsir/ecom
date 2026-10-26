@@ -1,7 +1,6 @@
-import {useEffect, useMemo} from "react"
+import {useEffect} from "react"
 import {Search} from "lucide-react"
-import {useQuery, keepPreviousData} from "@tanstack/react-query"
-import {useNavigate, useSearchParams} from "react-router-dom"
+import {useQuery} from "@tanstack/react-query"
 import {useForm, Controller} from "react-hook-form"
 import {zodResolver} from "@hookform/resolvers/zod"
 import {z} from "zod"
@@ -16,18 +15,14 @@ import PaginationButton from "@/components/common/PaginationButton"
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay"
 import {PublicAxios} from "@/services/http/Axios"
 import {getSelectValue} from "@/utils"
-import {
-    FIRST_PAGE,
-    getQueryString,
-    normalizeQuery,
-    redirectWhenInvalidPage,
-    updateQueryWhenParamChange
-} from '@/utils/PaginationUtils';
+import {FIRST_PAGE} from '@/utils/PaginationUtils';
 import {PRODUCT_SORTBY} from "@/constants/product.constants";
 import {TOAST_TYPE} from "@/constants/app.constants";
 import {toastify} from "@/common/toastify.js"
 import {Button} from "@/components/ui/button"
 import SEO from "@/common/SEO";
+import {queryKeys} from "@/services/reactQuery/queryKeys";
+import {useListPage} from "@/hooks/useListPage";
 
 const ALLOWED_SORT_FIELDS = new Set([
     "createdAt",
@@ -64,19 +59,26 @@ const productFilterSchema = z.object({
 });
 
 export default function Products() {
-    const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const queryParams = useMemo(() => Object.fromEntries(searchParams.entries()), [searchParams]);
-
-    const filters = useMemo(
-        () => ({
-            ...normalizeQuery(queryParams, ALLOWED_SORT_FIELDS),
-            search: queryParams.search || "",
-            category: queryParams.category || "",
+    const {
+        items: products,
+        totalPages,
+        totalElements,
+        filters,
+        query: {isPending: isProductsLoading},
+        updateQuery,
+        navigate,
+    } = useListPage({
+        queryKey: (f) => queryKeys.products.list(f),
+        queryFn: fetchProducts,
+        allowedSortFields: ALLOWED_SORT_FIELDS,
+        extraFilters: (qp) => ({
+            search: qp.search || "",
+            category: qp.category || "",
         }),
-        [queryParams]
-    );
-    const {page, sort, search, category} = filters
+        errorMessage: "Failed to show products",
+    });
+
+    const {page, sort, search, category} = filters;
 
     const {
         register,
@@ -108,69 +110,30 @@ export default function Products() {
         if (trimmed == search) return;
 
         const timer = setTimeout(() => {
-            updateQueryWhenParamChange({
-                queryParams,
-                newParams: {
-                    search: trimmed || undefined,
-                    page: FIRST_PAGE,
-                },
-                navigate,
+            updateQuery({
+                search: trimmed || undefined,
+                page: FIRST_PAGE,
             });
         }, 400);
 
         return () => clearTimeout(timer)
-    }, [watchedSearch, search, queryParams, navigate])
+    }, [watchedSearch, search, updateQuery])
 
 
     const {
         data: categories = [],
         isFetching: isCategoriesLoading,
         isError: isCategoriesError,
-        error: categoriesError,
     } = useQuery({
         queryKey: ["categories"],
         queryFn: fetchCategories,
     })
 
-    const {
-        data: productData,
-        isPending: isProductsLoading,
-        isError: isProductsError,
-        error: productsError,
-    } = useQuery({
-        queryKey: ["products", filters],
-        queryFn: fetchProducts,
-        placeholderData: keepPreviousData,
-    })
-
-    const products = productData?.content ?? []
-    const totalPages = productData?.totalPages ?? FIRST_PAGE
-
-    useEffect(() => {
-        redirectWhenInvalidPage({page, totalPages, navigate, queryParams})
-    }, [page, totalPages, navigate, queryParams])
-
-    const updateQuery = (newParams) => {
-        updateQueryWhenParamChange({
-            queryParams,
-            newParams,
-            navigate,
-        });
-    };
-
     useEffect(() => {
         if (!isCategoriesError) return;
 
-        console.error(categoriesError);
         toastify(TOAST_TYPE.ERROR, "Failed to show categories");
-    }, [isCategoriesError, categoriesError]);
-
-    useEffect(() => {
-        if (!isProductsError) return;
-
-        console.error(productsError);
-        toastify(TOAST_TYPE.ERROR, "Failed to show products");
-    }, [isProductsError, productsError]);
+    }, [isCategoriesError]);
 
     return (
         <div className="min-h-screen">
@@ -194,7 +157,7 @@ export default function Products() {
                         className="flex items-center bg-white px-4 py-2 rounded-2xl border border-slate-100 shadow-sm h-fit">
                         <span
                             className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-r border-slate-100 pr-3 mr-3">Results</span>
-                        <span className="text-sm font-black text-blue-600">{productData?.totalElements || 0}</span>
+                        <span className="text-sm font-black text-blue-600">{totalElements}</span>
                     </div>
                 </div>
 

@@ -2,6 +2,10 @@ export const queryKeys = {
     banners: {
         all: ['banners'],
     },
+    blogs: {
+        all: ['blogs'],
+        list: (filters) => ['blogs', { ...filters }],
+    },
     categories: {
         all: ['categories'],
     },
@@ -28,6 +32,14 @@ export const queryKeys = {
     roles: {
         all: ['roles'],
         detail: (id) => ['roles', id],
+    },
+    sales: {
+        all: ['sales'],
+        list: (filters) => ['sales', { ...filters }],
+    },
+    stockItems: {
+        all: ['stockItems'],
+        list: (filters) => ['stockItems', { ...filters }],
     },
     stocks: {
         all: ['stock'],
