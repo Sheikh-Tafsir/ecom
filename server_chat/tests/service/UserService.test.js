@@ -1,8 +1,8 @@
 const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert');
 const axios = require('axios');
-const RedisConfig = require('../config/RedisConfig');
-const UserService = require('./UserService');
+const RedisConfig = require('../../src/config/RedisConfig');
+const UserService = require('../../src/service/UserService');
 
 describe('UserService Unit Tests', () => {
     let originalRedisGet;

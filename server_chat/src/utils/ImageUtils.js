@@ -1,6 +1,6 @@
 const sharp = require('sharp');
 
-const allowedImageTypes = ['image/jpg', 'image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
 const reduceImageBySize = async (imageBuffer) => {
   const originalSizeKB = Buffer.byteLength(imageBuffer) / 1024;

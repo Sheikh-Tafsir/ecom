@@ -1,5 +1,5 @@
 const { IS_REQUIRED, ALREADY_EXISTS } = require('../utils/Messages');
-const { baseFields, baseOptions } = require('../common/BaseModel');
+const { baseFields, baseOptions } = require('./BaseModel');
 
 module.exports = (sequelize, DataTypes) => {
     const MessageReceipt = sequelize.define('MessageReceipt',

@@ -3,10 +3,10 @@ const assert = require('node:assert');
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const { EventEmitter } = require('node:events');
-const RedisConfig = require('../config/RedisConfig');
-const ChatService = require('../service/ChatService');
-const { initNotificationSubscriber, closeNotificationSubscriber } = require('./socketNotificationHandler');
-const socketConnectionHandler = require('./socketConnectionHandler');
+const RedisConfig = require('../../src/config/RedisConfig');
+const ChatService = require('../../src/service/ChatService');
+const { initNotificationSubscriber, closeNotificationSubscriber } = require('../../src/sockets/socketNotificationHandler');
+const socketConnectionHandler = require('../../src/sockets/socketConnectionHandler');
 
 // Stub ChatService to avoid database connections in unit tests
 ChatService.findAllChatParticipantsByUserId = async () => [];

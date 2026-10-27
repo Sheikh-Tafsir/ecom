@@ -1,5 +1,5 @@
 const {ACCESS_TOKEN_REQUIRED, ACCESS_TOKEN_INVALID} = require("../utils/Messages");
-const {isAccessTokenValid} = require("../service/JwtService");
+const {parseAccessToken} = require("../service/JwtService");
 const RedisConfig = require("../config/RedisConfig");
 const {logger} = require("../config/logger");
 
@@ -19,24 +19,11 @@ const socketAuthMiddleware = async (socket, next) => {
             return next(error);
         }
 
-        const user = isAccessTokenValid(token);
+        const user = parseAccessToken(token);
         const jti = user.jti;
 
-        // Enforce mandatory JTI claim presence for defense-in-depth security
-        if (!jti) {
-            logger.warn("Access token lacks a mandatory JTI claim for socket connection");
-            // Use "Unauthorized" so client connect_error handler triggers token refresh retry
-            const error = new Error("Unauthorized");
-            error.data = {
-                status: 401,
-                error: ACCESS_TOKEN_INVALID
-            };
-            return next(error);
-        }
-
         // Check if token JTI is blacklisted/revoked in Redis
-        const revokedTokensPrefix = process.env.REVOKED_TOKENS_PREFIX || 'v1:revokedAccessTokens::';
-        const cacheKey = `${revokedTokensPrefix}${jti}`;
+        const cacheKey = `${process.env.REVOKED_TOKENS_PREFIX}${jti}`;
 
         try {
             const isBlacklisted = await RedisConfig.get(cacheKey);

@@ -1,7 +1,7 @@
 const express = require('express');
 const AsyncHandler = require('../middleware/AsyncHandler');
 const AuthenticationMiddleware = require('../middleware/AuthenticationMiddleware');
-const FileUpload = require("../middleware/FileUpload");
+const UploadMiddleware = require("../middleware/UploadMiddleware");
 const cloudinary = require('cloudinary').v2;
 const { reduceImageBySize } = require('../utils/ImageUtils');
 const { uploadToCloudinary } = require('../config/CloudinaryConfig');
@@ -41,7 +41,7 @@ const router = express.Router();
  *                 url:
  *                   type: string
  */
-router.post("", AuthenticationMiddleware, FileUpload, AsyncHandler(async (req, res) => {
+router.post("", AuthenticationMiddleware, UploadMiddleware, AsyncHandler(async (req, res) => {
     if (!req.file) {
         throw new RuntimeError(400, "Image not uploaded");
     }

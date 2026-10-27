@@ -13,6 +13,10 @@ const {
 const sendMessage = async (senderId, body) => {
     const {chatId, receiverId, content, contentType, tempId} = body;
 
+    if (!content) {
+        throw new RuntimeError(400, "Message content cannot be empty.");
+    }
+
     const t = await sequelize.transaction();
 
     try {

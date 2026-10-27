@@ -1,6 +1,6 @@
 const { IS_REQUIRED } = require('../utils/Messages');
 const { CONTENT_TYPE } = require('../utils/Enum');
-const { baseFields, baseOptions } = require('../common/BaseModel');
+const { baseFields, baseOptions } = require('./BaseModel');
 
 module.exports = (sequelize, DataTypes) => {
     const Message = sequelize.define('Message',

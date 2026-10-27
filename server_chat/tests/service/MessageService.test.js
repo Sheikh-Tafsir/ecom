@@ -1,8 +1,8 @@
 const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert');
-const { sendMessage } = require('./MessageService');
-const sequelize = require('../config/SequelizeConfig');
-const { ChatParticipant, Chat, Message, MessageReceipt } = require('../model');
+const { sendMessage } = require('../../src/service/MessageService');
+const sequelize = require('../../src/config/SequelizeConfig');
+const { ChatParticipant, Chat, Message, MessageReceipt } = require('../../src/model');
 
 describe('MessageService Authorization', () => {
     let testChat;
@@ -65,7 +65,7 @@ describe('MessageService Authorization', () => {
             await sequelize.close();
         } catch (e) {}
         try {
-            const RedisConfig = require('../config/RedisConfig');
+            const RedisConfig = require('../../src/config/RedisConfig');
             RedisConfig.disconnect();
         } catch (e) {}
     });

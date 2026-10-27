@@ -1,6 +1,6 @@
 const { IS_REQUIRED, lengthValidationMessage } = require('../utils/Messages');
 const { CHAT_TYPE } = require('../utils/Enum');
-const { baseFields, baseOptions } = require('../common/BaseModel');
+const { baseFields, baseOptions } = require('./BaseModel');
 
 module.exports = (sequelize, DataTypes) => {
     const Chat = sequelize.define('Chat',

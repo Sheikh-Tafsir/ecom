@@ -1,20 +1,51 @@
 const jwt = require('jsonwebtoken');
 const { randomUUID } = require('crypto');
 
-const isAccessTokenValid = (token) => {
-    return jwt.verify(
+/**
+ * Verifies a JWT token and enforces mandatory JTI claim presence.
+ * @param {string} token - The JWT token
+ * @param {Buffer} secret - The signing secret
+ * @returns {object} The decoded JWT payload
+ * @throws {Error} If the token is invalid, expired, or lacks a JTI claim
+ */
+const verifyToken = (token, secret) => {
+    const decoded = jwt.verify(
         token,
-        Buffer.from(process.env.ACCESS_TOKEN_SECRET, "utf8"),
+        secret,
         { algorithms: ['HS256', 'HS384', 'HS512'] }
     );
+
+    if (!decoded.jti) {
+        throw new Error("Token lacks mandatory JTI claim");
+    }
+
+    return decoded;
+}
+
+const parseAccessToken = (token) => {
+    return verifyToken(token, Buffer.from(process.env.ACCESS_TOKEN_SECRET, "utf8"));
+}
+
+const isAccessTokenValid = (token) => {
+    try {
+        parseAccessToken(token);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+const parseRefreshToken = (token) => {
+    return verifyToken(token, Buffer.from(process.env.REFRESH_TOKEN_SECRET, "utf8"));
 }
 
 const isRefreshTokenValid = (token) => {
-    return jwt.verify(
-        token,
-        Buffer.from(process.env.REFRESH_TOKEN_SECRET, "utf8"),
-        { algorithms: ['HS256', 'HS384', 'HS512'] }
-    );
+    try {
+        parseRefreshToken(token);
+        return true;
+    } catch {
+        return false;
+    }
 }
 
 const generateAccessToken = (user) => {
@@ -68,7 +99,9 @@ const getExpirationFromRefreshToken = (token) => {
 }
 
 module.exports = {
+    parseAccessToken,
     isAccessTokenValid,
+    parseRefreshToken,
     isRefreshTokenValid,
     generateAccessToken,
     generateRefreshToken,

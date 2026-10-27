@@ -251,7 +251,7 @@ router.get('', AuthenticationMiddleware, AsyncHandler(async (req, res) => {
 }));
 
 // POST /chats/:id/view
-router.post('/:id/view', ValidateNumericParams('id'), AuthenticationMiddleware, AsyncHandler(async (req, res) => {
+router.post('/:id/view', ValidateUuidParams('id'), AuthenticationMiddleware, AsyncHandler(async (req, res) => {
     await ChatService.seenChatMessage(req.params?.id, req.body, req.user?.id);
     created(res, { message: CREATED });
 }));
@@ -262,7 +262,7 @@ module.exports = router;
 **Rules:**
 - Every route handler wrapped in `AsyncHandler` — no try/catch in controllers.
 - `AuthenticationMiddleware` before every protected route.
-- Use numeric param middleware (`ValidateNumericParams`) for all `/:id` routes.
+- Use UUID param middleware (`ValidateUuidParams`) for all `/:id` routes.
 - Respond via `ok()` / `created()` from `ResponseUtils` — never `res.json()` directly.
 - Use message constants from `utils/Messages` — no hardcoded strings.
 

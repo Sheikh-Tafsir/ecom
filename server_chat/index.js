@@ -8,6 +8,7 @@ require("dotenv").config();
 const { logger, endStartupPhase } = require("./src/config/logger"); 
 
 const TrimInput = require("./src/middleware/TrimInput");
+const NotFoundHandler = require("./src/middleware/NotFoundHandler");
 const ErrorHandler = require("./src/middleware/ErrorHandler");
 
 const SocketHandler = require("./src/sockets/socketHandlers")
@@ -25,7 +26,7 @@ const apiLimiter = rateLimit({
     max: 100,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { error: 'Too many requests, please try again later.' }
+    message: { error: { global: 'Too many requests, please try again later.' } }
 });
 
 app.use(
@@ -75,6 +76,7 @@ app.get('/chats/v3/api-docs', (req, res) => {
 app.use("/chats", ChatController);
 app.use("/uploads", UploadController);
 
+app.use(NotFoundHandler);
 app.use(ErrorHandler);
 
 const server = http.createServer(app);

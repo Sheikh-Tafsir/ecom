@@ -1,6 +1,6 @@
 const { IS_REQUIRED, ALREADY_EXISTS } = require('../utils/Messages');
 const { CHAT_MEMBER_TYPE } = require('../utils/Enum');
-const { baseFields, baseOptions } = require('../common/BaseModel');
+const { baseFields, baseOptions } = require('./BaseModel');
 
 module.exports = (sequelize, DataTypes) => {
     const ChatParticipant = sequelize.define('ChatParticipant',

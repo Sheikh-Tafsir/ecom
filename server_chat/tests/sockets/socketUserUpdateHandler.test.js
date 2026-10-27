@@ -3,8 +3,8 @@ const assert = require('node:assert');
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const { EventEmitter } = require('node:events');
-const RedisConfig = require('../config/RedisConfig');
-const { initUserUpdateSubscriber, closeUserUpdateSubscriber, USER_UPDATES_CHANNEL } = require('./socketUserUpdateHandler');
+const RedisConfig = require('../../src/config/RedisConfig');
+const { initUserUpdateSubscriber, closeUserUpdateSubscriber, USER_UPDATES_CHANNEL } = require('../../src/sockets/socketUserUpdateHandler');
 
 test('User Update Subscriber - evicts cache on user-updates message', async (t) => {
     const mockSubClient = new EventEmitter();

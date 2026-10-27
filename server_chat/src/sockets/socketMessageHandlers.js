@@ -8,6 +8,7 @@ const RedisConfig = require('../config/RedisConfig');
 const {logger} = require('../config/logger');
 const BlockService = require('../service/BlockService');
 const ChatService = require('../service/ChatService');
+const TrimInput = require('../middleware/TrimInput');
 
 const MAX_MESSAGE_LENGTH = 4096;
 
@@ -62,6 +63,9 @@ const setupMessageHandlers = (io, socket) => {
                 socket.emit('error', { message: 'Rate limit exceeded. Slow down.' });
                 return ack(buildErrorResponse("Rate limit exceeded. Slow down."));
             }
+
+            // Centralized trim & nullification of input
+            TrimInput.sanitize(reqBody);
 
             // --- Content length validation (M-7) ---
             const content = reqBody?.content;

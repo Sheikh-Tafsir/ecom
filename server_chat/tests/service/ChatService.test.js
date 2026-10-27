@@ -1,10 +1,10 @@
 const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert');
-const ChatService = require('./ChatService');
-const UserService = require('./UserService');
-const { Chat, ChatParticipant, Message } = require('../model');
-const RedisConfig = require('../config/RedisConfig');
-const sequelize = require('../config/SequelizeConfig');
+const ChatService = require('../../src/service/ChatService');
+const UserService = require('../../src/service/UserService');
+const { Chat, ChatParticipant, Message } = require('../../src/model');
+const RedisConfig = require('../../src/config/RedisConfig');
+const sequelize = require('../../src/config/SequelizeConfig');
 
 describe('ChatService Unit Tests (Hydration & Decoupling)', () => {
     let originalChatParticipantFindAll;

@@ -1,33 +1,47 @@
-const sanitize = (obj) => {
-    if (!obj || typeof obj !== 'object') return;
+/**
+ * Recursively trims all strings in an object or array.
+ * Converts empty strings or whitespace-only strings to null.
+ *
+ * @param {object|array} obj
+ * @param {number} depth
+ * @returns {object|array}
+ */
+const sanitize = (obj, depth = 0) => {
+    if (!obj || typeof obj !== 'object' || depth > 10) return obj;
 
-    for (const key of Object.keys(obj)) {
-        const value = obj[key];
-
-        if (typeof value === 'string') {
-            const trimmed = value.trim();
-            obj[key] = trimmed || null;
-        } else if (Array.isArray(value)) {
-            for (let i = 0; i < value.length; i++) {
-                if (typeof value[i] === 'string') {
-                    const trimmed = value[i].trim();
-                    value[i] = trimmed || null;
-                } else if (value[i] && typeof value[i] === 'object') {
-                    sanitize(value[i]);
-                }
+    if (Array.isArray(obj)) {
+        for (let i = 0; i < obj.length; i++) {
+            const item = obj[i];
+            if (typeof item === 'string') {
+                const trimmed = item.trim();
+                obj[i] = trimmed.length > 0 ? trimmed : null;
+            } else if (item && typeof item === 'object') {
+                sanitize(item, depth + 1);
             }
-        } else if (value && typeof value === 'object') {
-            sanitize(value);
+        }
+    } else {
+        for (const key of Object.keys(obj)) {
+            const value = obj[key];
+            if (typeof value === 'string') {
+                const trimmed = value.trim();
+                obj[key] = trimmed.length > 0 ? trimmed : null;
+            } else if (value && typeof value === 'object') {
+                sanitize(value, depth + 1);
+            }
         }
     }
+
+    return obj;
 };
 
 const TrimInput = (req, res, next) => {
-    sanitize(req.body);
-    sanitize(req.query);
-    sanitize(req.params);
+    if (req.body) sanitize(req.body);
+    if (req.query) sanitize(req.query);
+    if (req.params) sanitize(req.params);
 
     next();
 };
+
+TrimInput.sanitize = sanitize;
 
 module.exports = TrimInput;

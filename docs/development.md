@@ -28,12 +28,15 @@ cd client && npm install && npm run dev
 ```bash
 # Server unit + integration tests
 cd server && ./gradlew test
+
+# Chat Server tests
+cd server_chat && npm test
 ```
 
 | Layer        | Tooling                     | Convention                              |
 |--------------|-----------------------------|-----------------------------------------|
 | Server       | JUnit 5 + Mockito           | BDD naming: `givenX_whenY_thenZ`        |
-| Chat Server  | Focus on `service/` layer   | e.g., `MessageService.test.js`          |
+| Chat Server  | Node test runner (`node:test`) | `tests/` mirroring `src/` (e.g., `tests/service/MessageService.test.js`) |
 | Client       | (Vite / ESLint for now)     | Strict ESLint: hook deps, unused imports|
 
 - **Mandatory** unit tests for all `@Service` logic in the Main Server.
