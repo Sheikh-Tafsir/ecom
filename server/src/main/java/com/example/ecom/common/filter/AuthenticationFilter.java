@@ -86,18 +86,20 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     /**
      * Checks whether the token's JTI (JWT ID) has been individually blacklisted
      * (e.g. after an explicit logout).
+     * JTI presence is guaranteed by {@code JwtService.parseAccessTokenClaims()}.
      *
      * @return true if the request was handled (revoked or passed through for logout), false to continue
      */
     private boolean isJtiRevoked(Claims claims,
-                                  HttpServletRequest request,
-                                  HttpServletResponse response,
-                                  FilterChain chain) throws IOException, ServletException {
+                                 HttpServletRequest request,
+                                 HttpServletResponse response,
+                                 FilterChain chain) throws IOException, ServletException {
+
         Cache cache = getRevocationCache();
         if (cache == null) return false;
 
         String jti = claims.getId();
-        if (!StringUtils.hasText(jti) || cache.get(jti) == null) return false;
+        if (cache.get(jti) == null) return false;
 
         log.warn("Access token JTI: {} is revoked/blacklisted", jti);
         SecurityContextHolder.clearContext();
@@ -112,9 +114,10 @@ public class AuthenticationFilter extends OncePerRequestFilter {
      * @return true if the request was handled (revoked or passed through for logout), false to continue
      */
     private boolean isUserSessionRevoked(Claims claims,
-                                          HttpServletRequest request,
-                                          HttpServletResponse response,
-                                          FilterChain chain) throws IOException, ServletException {
+                                         HttpServletRequest request,
+                                         HttpServletResponse response,
+                                         FilterChain chain) throws IOException, ServletException {
+
         Cache cache = getRevocationCache();
         if (cache == null) return false;
 
@@ -142,9 +145,10 @@ public class AuthenticationFilter extends OncePerRequestFilter {
      * so the server can still revoke the refresh token. For all other requests, writes a 401.
      */
     private void passOrReject(HttpServletRequest request,
-                               HttpServletResponse response,
-                               FilterChain chain,
-                               String message) throws IOException, ServletException {
+                              HttpServletResponse response,
+                              FilterChain chain,
+                              String message) throws IOException, ServletException {
+
         if (isLogoutRequest(request)) {
             chain.doFilter(request, response);
         } else {

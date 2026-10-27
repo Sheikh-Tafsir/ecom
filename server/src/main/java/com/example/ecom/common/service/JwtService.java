@@ -7,6 +7,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
@@ -101,16 +102,32 @@ public class JwtService {
         return parseClaims(token, refreshTokenSecret).getExpiration();
     }
 
+    /**
+     * Parses and validates an access token.
+     *
+     * @throws JwtException if the token is invalid, expired, or lacks a JTI claim
+     */
     public Claims parseAccessTokenClaims(String token) {
         return parseClaims(token, accessTokenSecret);
     }
 
+    /**
+     * Parses and validates a JWT token, enforcing mandatory JTI claim presence.
+     *
+     * @throws JwtException if the token is invalid, expired, or lacks a JTI claim
+     */
     private Claims parseClaims(String token, Key secretKey) {
-        return Jwts.parserBuilder()
+        Claims claims = Jwts.parserBuilder()
                 .setSigningKey(secretKey)
                 .setAllowedClockSkewSeconds(60)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+
+        if (!StringUtils.hasText(claims.getId())) {
+            throw new JwtException("Token lacks mandatory JTI claim");
+        }
+
+        return claims;
     }
 }

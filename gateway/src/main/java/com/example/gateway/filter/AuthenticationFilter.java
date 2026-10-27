@@ -84,12 +84,6 @@ public class AuthenticationFilter implements WebFilter {
             Claims claims = jwtService.parseAccessTokenClaims(token);
             String jti = claims.getId();
 
-            // Enforce JTI claim presence for defense-in-depth security
-            if (!StringUtils.hasText(jti)) {
-                log.warn("Access token lacks a mandatory JTI (JWT ID) claim");
-                return ResponseUtils.error(exchange, HttpStatus.UNAUTHORIZED, "Access token lacks mandatory JTI claim");
-            }
-
             // 1. Check local cache first to avoid Redis traffic
             Boolean cachedStatus = blacklistStatusCache.getIfPresent(jti);
             if (cachedStatus != null) {
