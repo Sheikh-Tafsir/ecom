@@ -8,6 +8,7 @@ import {
     AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Skeleton } from "@/components/ui/skeleton";
+import {queryKeys} from "@/services/reactQuery/queryKeys";
 
 const getAllFaqs = async () => {
     const response = await PublicAxios.get("/faqs");
@@ -16,7 +17,7 @@ const getAllFaqs = async () => {
 
 const Faqs = () => {
     const { data: faqs, isLoading } = useQuery({
-        queryKey: ['faqs'],
+        queryKey: queryKeys.faqs.all,
         queryFn: getAllFaqs
     });
 

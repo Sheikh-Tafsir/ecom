@@ -8,6 +8,7 @@ const ChatService = require('../service/ChatService');
 const BlockService = require('../service/BlockService');
 const {FOUND} = require("../utils/Messages");
 const {ok, created} = require("../utils/ResponseUtils");
+const {userRoom} = require('../constants/room.constants');
 
 const router = express.Router();
 
@@ -295,8 +296,8 @@ router.post('/users/:userId/block',
         if (io) {
             const {USER_BLOCKED_EVENT} = require('../sockets/socketEvents');
             const payload = {userId: req.user.id, blocked: true};
-            io.to(`user_${req.params.userId}`).emit(USER_BLOCKED_EVENT, payload);
-            io.to(`user_${req.user.id}`).emit(USER_BLOCKED_EVENT, payload);
+            io.to(userRoom(req.params.userId)).emit(USER_BLOCKED_EVENT, payload);
+            io.to(userRoom(req.user.id)).emit(USER_BLOCKED_EVENT, payload);
         }
 
         ok(res, {message: 'User blocked successfully'});
@@ -333,8 +334,8 @@ router.delete('/users/:userId/block',
         if (io) {
             const {USER_BLOCKED_EVENT} = require('../sockets/socketEvents');
             const payload = {userId: req.user.id, blocked: false};
-            io.to(`user_${req.params.userId}`).emit(USER_BLOCKED_EVENT, payload);
-            io.to(`user_${req.user.id}`).emit(USER_BLOCKED_EVENT, payload);
+            io.to(userRoom(req.params.userId)).emit(USER_BLOCKED_EVENT, payload);
+            io.to(userRoom(req.user.id)).emit(USER_BLOCKED_EVENT, payload);
         }
 
         ok(res, {message: 'User unblocked successfully'});

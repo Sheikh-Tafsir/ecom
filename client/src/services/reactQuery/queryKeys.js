@@ -9,6 +9,10 @@ export const queryKeys = {
     categories: {
         all: ['categories'],
     },
+    chats: {
+        all: ['chats'],
+        selected: (id) => ['selected_chat', id],
+    },
     faqs: {
         all: ['faqs'],
     },
@@ -46,6 +50,8 @@ export const queryKeys = {
         list: (filters) => ['stock', { ...filters }],
         detail: (id) => ['stock', id],
     },
+    // Alias: some components use queryKeys.stock (singular)
+    get stock() { return this.stocks; },
     users: {
         all: ['users'],
         list: (filters) => ['users', { ...filters }],

@@ -1,6 +1,7 @@
 const multer = require('multer');
 const { allowedImageTypes } = require('../utils/ImageUtils');
 const RuntimeError = require('../common/RuntimeError');
+const { UPLOAD_FIELD_NAME } = require('../constants/chat.constants');
 const MAX_SIZE = 5 * 1024 * 1024;
 
 const upload = multer({
@@ -17,4 +18,4 @@ const upload = multer({
 });
 
 // Export the single-file middleware so it can be used directly in route definitions
-module.exports = upload.single('image');
+module.exports = upload.single(UPLOAD_FIELD_NAME);

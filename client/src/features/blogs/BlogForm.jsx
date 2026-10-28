@@ -16,6 +16,7 @@ import { DialogFooter } from "@/components/ui/dialog";
 import InputError from '@/components/common/InputError';
 import FormField from '@/components/common/FormField';
 import {GLOBAL_ERROR} from '@/utils/ErrorUtils';
+import {BLOG_STATUS} from "@/constants/blog.constants";
 
 const modules = {
     toolbar: [
@@ -83,8 +84,8 @@ const BlogForm = ({ register, control, errors, isPending, editingPost, onSubmit 
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="DRAFT">DRAFT</SelectItem>
-                                    <SelectItem value="PUBLISHED">PUBLISHED</SelectItem>
+                                    <SelectItem value={BLOG_STATUS.DRAFT}>DRAFT</SelectItem>
+                                    <SelectItem value={BLOG_STATUS.PUBLISHED}>PUBLISHED</SelectItem>
                                 </SelectContent>
                             </Select>
                         )}

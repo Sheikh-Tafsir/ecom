@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import {toastify} from '@/common/toastify';
 import {TOAST_TYPE} from "@/constants/app.constants";
+import {queryKeys} from "@/services/reactQuery/queryKeys";
 import {Image as ImageIcon, Plus} from 'lucide-react';
 import {handleErrors} from "@/utils/ErrorUtils";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
@@ -67,14 +68,14 @@ const BannerManager = () => {
     });
 
     const {data: banners, isLoading: isPageLoading} = useQuery({
-        queryKey: ['banners'],
+        queryKey: queryKeys.banners.all,
         queryFn: getAllBanners
     });
 
     const createMutation = useMutation({
         mutationFn: createBanner,
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['banners']});
+            queryClient.invalidateQueries({queryKey: queryKeys.banners.all});
             toastify(TOAST_TYPE.SUCCESS, "Banner created successfully");
             setIsDialogOpen(false);
             reset();
@@ -85,7 +86,7 @@ const BannerManager = () => {
     const updateMutation = useMutation({
         mutationFn: ({id, data}) => updateBanner(id, data),
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['banners']});
+            queryClient.invalidateQueries({queryKey: queryKeys.banners.all});
             toastify(TOAST_TYPE.SUCCESS, "Banner updated successfully");
             setIsDialogOpen(false);
             setEditingBanner(null);
@@ -97,7 +98,7 @@ const BannerManager = () => {
     const deleteMutation = useMutation({
         mutationFn: deleteBanner,
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['banners']});
+            queryClient.invalidateQueries({queryKey: queryKeys.banners.all});
             toastify(TOAST_TYPE.SUCCESS, "Banner deleted successfully");
         }
     });

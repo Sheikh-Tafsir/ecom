@@ -1,8 +1,6 @@
 const RedisConfig = require('../config/RedisConfig');
 const { logger } = require('../config/logger');
-
-const USER_UPDATES_CHANNEL = 'ecom:user-updates';
-const USER_CACHE_PREFIX = 'cache:user:';
+const { USER_UPDATES_CHANNEL, USER_CACHE_PREFIX } = require('../constants/redis.constants');
 
 let subClient = null;
 

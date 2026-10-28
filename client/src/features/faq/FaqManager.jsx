@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import {toastify} from '@/common/toastify';
 import {TOAST_TYPE} from "@/constants/app.constants";
+import {queryKeys} from "@/services/reactQuery/queryKeys";
 import {HelpCircle, Plus} from 'lucide-react';
 import {handleErrors} from "@/utils/ErrorUtils";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
@@ -61,14 +62,14 @@ const FaqManager = () => {
     });
 
     const {data: faqs = [], isLoading: isPageLoading} = useQuery({
-        queryKey: ['faqs'],
+        queryKey: queryKeys.faqs.all,
         queryFn: getAllFaqs
     });
 
     const createMutation = useMutation({
         mutationFn: createFaq,
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['faqs']});
+            queryClient.invalidateQueries({queryKey: queryKeys.faqs.all});
             toastify(TOAST_TYPE.SUCCESS, "FAQ created successfully");
             setIsDialogOpen(false);
             reset();
@@ -79,7 +80,7 @@ const FaqManager = () => {
     const updateMutation = useMutation({
         mutationFn: ({id, data}) => updateFaq(id, data),
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['faqs']});
+            queryClient.invalidateQueries({queryKey: queryKeys.faqs.all});
             toastify(TOAST_TYPE.SUCCESS, "FAQ updated successfully");
             setIsDialogOpen(false);
             setEditingFaq(null);
@@ -91,7 +92,7 @@ const FaqManager = () => {
     const deleteMutation = useMutation({
         mutationFn: deleteFaq,
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['faqs']});
+            queryClient.invalidateQueries({queryKey: queryKeys.faqs.all});
             toastify(TOAST_TYPE.SUCCESS, "FAQ deleted successfully");
         }
     });

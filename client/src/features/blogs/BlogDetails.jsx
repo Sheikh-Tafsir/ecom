@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, User, Calendar } from "lucide-react";
 import { formatDate } from '@/utils/DateUtils';
 import NotFound from '@/features/NotFound';
+import {BLOG_STATUS} from "@/constants/blog.constants";
 import StatusBadge from '@/components/common/StatusBadge';
 import SEO from "@/common/SEO";
 
@@ -81,7 +82,7 @@ const BlogDetails = () => {
                     <h1 className="text-4xl md:text-5xl font-bold text-slate-900 tracking-tighter leading-tight">
                         {post.title}
                     </h1>
-                    {post.status === 'DRAFT' && (
+                    {post.status === BLOG_STATUS.DRAFT && (
                         <StatusBadge variant="amber" className="h-fit mt-2">
                             Draft Preview
                         </StatusBadge>

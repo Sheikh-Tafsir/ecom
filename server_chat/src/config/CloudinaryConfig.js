@@ -1,4 +1,5 @@
 const cloudinary = require('cloudinary').v2;
+const { CLOUDINARY_CHAT_FOLDER } = require('../constants/chat.constants');
 
 require('dotenv').config()
 
@@ -11,7 +12,7 @@ cloudinary.config({
 const uploadToCloudinary = async (buffer) => {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      { folder: 'chat-images' },
+      { folder: CLOUDINARY_CHAT_FOLDER },
       (error, result) => {
         if (error) return reject(error);
         resolve(result);

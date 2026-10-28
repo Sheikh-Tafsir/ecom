@@ -1,8 +1,8 @@
 const RedisConfig = require('../config/RedisConfig');
 const { logger } = require('../config/logger');
 const { NOTIFICATION_EVENT } = require('./socketEvents');
-
-const NOTIFICATION_CHANNEL = 'ecom:notifications';
+const { NOTIFICATION_CHANNEL } = require('../constants/redis.constants');
+const { userRoom, permRoom, ADMIN_ROOM } = require('../constants/room.constants');
 
 let subClient = null;
 
@@ -44,7 +44,7 @@ const initNotificationSubscriber = (io) => {
 
             // 1. Direct to user
             if (recipientId) {
-                io.to(`user_${recipientId}`).emit(NOTIFICATION_EVENT, notificationData);
+                io.to(userRoom(recipientId)).emit(NOTIFICATION_EVENT, notificationData);
                 handled = true;
             }
 
@@ -54,7 +54,7 @@ const initNotificationSubscriber = (io) => {
             if (Array.isArray(targetPermissions) && targetPermissions.length > 0) {
                 targetPermissions.forEach(perm => {
                     const permStr = typeof perm === 'object' && perm ? (perm.value || perm.name || String(perm)) : String(perm);
-                    io.to(`perm_${permStr}`).emit(NOTIFICATION_EVENT, notificationData);
+                    io.to(permRoom(permStr)).emit(NOTIFICATION_EVENT, notificationData);
                 });
                 handled = true;
             }
@@ -63,10 +63,10 @@ const initNotificationSubscriber = (io) => {
             if (!handled && recipientType) {
                 const normalizedRecipientType = String(recipientType).toUpperCase();
                 if (normalizedRecipientType === 'USER' && recipientId) {
-                    io.to(`user_${recipientId}`).emit(NOTIFICATION_EVENT, notificationData);
+                    io.to(userRoom(recipientId)).emit(NOTIFICATION_EVENT, notificationData);
                     handled = true;
                 } else if (normalizedRecipientType === 'ADMIN') {
-                    io.to('admin_room').emit(NOTIFICATION_EVENT, notificationData);
+                    io.to(ADMIN_ROOM).emit(NOTIFICATION_EVENT, notificationData);
                     handled = true;
                 }
             }

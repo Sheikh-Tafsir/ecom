@@ -9,20 +9,19 @@ const {logger} = require('../config/logger');
 const BlockService = require('../service/BlockService');
 const ChatService = require('../service/ChatService');
 const TrimInput = require('../middleware/TrimInput');
-
-const MAX_MESSAGE_LENGTH = 4096;
-
-// Per-user Redis-backed sliding window rate limiter: max 20 messages per 10 seconds
-// Key: ratelimit:msg:<userId> — stored as a Redis counter with a 10-second TTL window
-const MESSAGE_RATE_LIMIT = 20;
-const MESSAGE_RATE_WINDOW_SEC = 10;
-
-// Fallback: in-memory per-socket counter used when Redis is unavailable
-const FALLBACK_RATE_LIMIT = 5;
-const FALLBACK_RATE_WINDOW_MS = 1000;
+const {CHAT_TYPE} = require('../utils/Enum');
+const {RATE_LIMIT_PREFIX} = require('../constants/redis.constants');
+const {userRoom} = require('../constants/room.constants');
+const {
+    MAX_MESSAGE_LENGTH,
+    MESSAGE_RATE_LIMIT,
+    MESSAGE_RATE_WINDOW_SEC,
+    FALLBACK_RATE_LIMIT,
+    FALLBACK_RATE_WINDOW_MS,
+} = require('../constants/chat.constants');
 
 async function isRateLimitedRedis(userId) {
-    const key = `ratelimit:msg:${userId}`;
+    const key = `${RATE_LIMIT_PREFIX}${userId}`;
     const count = await RedisConfig.incr(key);
     if (count === 1) {
         // First message in this window — set expiry
@@ -83,7 +82,7 @@ const setupMessageHandlers = (io, socket) => {
             } else if (reqBody?.chatId) {
                 // Existing chat — only block in DMs, not groups
                 const chatType = await ChatService.getChatType(reqBody.chatId);
-                if (chatType === 'direct') {
+                if (chatType === CHAT_TYPE.DIRECT) {
                     const participants = await ChatService.findChatParticipantsByChatId(reqBody.chatId);
                     const otherUser = participants.find(p => p.userId !== user.id);
                     if (otherUser && await BlockService.isBlocked(user.id, otherUser.userId)) {
@@ -126,7 +125,7 @@ const setupMessageHandlers = (io, socket) => {
                 chatUpdate.tempId = reqBody.tempId;
             }
             for (const p of participants) {
-                io.to(`user_${p.userId}`).emit(CHAT_UPDATED_EVENT, ApiResponse({
+                io.to(userRoom(p.userId)).emit(CHAT_UPDATED_EVENT, ApiResponse({
                     message: RECEIVED,
                     data: chatUpdate,
                 }));

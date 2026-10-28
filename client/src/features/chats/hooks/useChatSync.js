@@ -2,6 +2,7 @@ import {useEffect, useCallback, useRef} from 'react';
 import {useQueryClient} from '@tanstack/react-query';
 import {useUserStore} from '@/store/useUserStore';
 import {AuthenticatedAxios} from "@/services/http/Axios.js";
+import {queryKeys} from "@/services/reactQuery/queryKeys";
 import {
     MESSAGE_RECEIVE_EVENT,
     JOIN_CHAT_EVENT,
@@ -29,7 +30,7 @@ export const useChatSync = (id, userId, onPresenceReceived) => {
         if (!newMessage.content) return;
         if (newMessage.chatId != id) return; // Only process messages for the active chat
 
-        queryClient.setQueryData(['selected_chat', id], (oldData) => {
+        queryClient.setQueryData(queryKeys.chats.selected(id), (oldData) => {
             if (!oldData || !oldData.pages || oldData.pages.length === 0) return oldData;
 
             const pages = [...oldData.pages];
@@ -110,7 +111,7 @@ export const useChatSync = (id, userId, onPresenceReceived) => {
 
             const isViewingThisChat = update.chatId == id;
 
-            queryClient.setQueryData(['chats'], (oldChats = []) => {
+            queryClient.setQueryData(queryKeys.chats.all, (oldChats = []) => {
                 if (!Array.isArray(oldChats)) {
                     oldChats = [];
                 }
@@ -118,7 +119,7 @@ export const useChatSync = (id, userId, onPresenceReceived) => {
                 const currentChat = oldChats.find(chat => chat?.id == update.chatId);
                 if (!currentChat) {
                     // New chat or not in cache — refetch
-                    queryClient.invalidateQueries(['chats']);
+                    queryClient.invalidateQueries(queryKeys.chats.all);
                     return oldChats;
                 }
 
@@ -143,7 +144,7 @@ export const useChatSync = (id, userId, onPresenceReceived) => {
             // If the sender sent a message via another tab/device and the chat is active,
             // reconcile using tempId to replace the optimistic message
             if (update.chatId == id && update.lastSenderId == userId && update.tempId) {
-                queryClient.setQueryData(['selected_chat', id], (oldData) => {
+                queryClient.setQueryData(queryKeys.chats.selected(id), (oldData) => {
                     if (!oldData?.pages?.length) return oldData;
 
                     const pages = [...oldData.pages];
@@ -163,8 +164,8 @@ export const useChatSync = (id, userId, onPresenceReceived) => {
             }
         };
 
-        const handleGroupCreationResponse = () => queryClient.invalidateQueries(['chats']);
-        const handleUpdateResponse = () => queryClient.invalidateQueries(['chats']);
+        const handleGroupCreationResponse = () => queryClient.invalidateQueries(queryKeys.chats.all);
+        const handleUpdateResponse = () => queryClient.invalidateQueries(queryKeys.chats.all);
 
         socket.on(MESSAGE_RECEIVE_EVENT, handleReceiveMessage);
         socket.on(CHAT_UPDATED_EVENT, handleChatUpdated);
@@ -198,7 +199,7 @@ export const useChatSync = (id, userId, onPresenceReceived) => {
 
             try {
                 // 1. Refresh chat list (unread counts, last messages, ordering)
-                queryClient.invalidateQueries(['chats']);
+                queryClient.invalidateQueries(queryKeys.chats.all);
 
                 // 2. Rejoin the active chat room after reconnect
                 if (id) {
@@ -214,9 +215,9 @@ export const useChatSync = (id, userId, onPresenceReceived) => {
 
                 // 3. If a chat is currently open, fetch missed messages
                 if (id) {
-                    const cachedData = queryClient.getQueryData(['selected_chat', id]);
+                    const cachedData = queryClient.getQueryData(queryKeys.chats.selected(id));
                     if (!cachedData?.pages?.length) {
-                        queryClient.invalidateQueries(['selected_chat', id]);
+                        queryClient.invalidateQueries(queryKeys.chats.selected(id));
                         return;
                     }
 
@@ -226,7 +227,7 @@ export const useChatSync = (id, userId, onPresenceReceived) => {
                     const lastMessage = messages[messages.length - 1];
 
                     if (!lastMessage?.id || lastMessage.isTemporary) {
-                        queryClient.invalidateQueries(['selected_chat', id]);
+                        queryClient.invalidateQueries(queryKeys.chats.selected(id));
                         return;
                     }
 
@@ -241,12 +242,12 @@ export const useChatSync = (id, userId, onPresenceReceived) => {
 
                     if (missedData.pagination?.hasMore) {
                         // Too many missed messages — full refetch is cleaner
-                        queryClient.invalidateQueries(['selected_chat', id]);
+                        queryClient.invalidateQueries(queryKeys.chats.selected(id));
                         return;
                     }
 
                     // Append missed messages with ID-based deduplication
-                    queryClient.setQueryData(['selected_chat', id], (oldData) => {
+                    queryClient.setQueryData(queryKeys.chats.selected(id), (oldData) => {
                         if (!oldData?.pages?.length) return oldData;
 
                         const pages = [...oldData.pages];
@@ -266,7 +267,7 @@ export const useChatSync = (id, userId, onPresenceReceived) => {
                 }
             } catch (err) {
                 // Fallback: invalidate to trigger fresh fetches
-                if (id) queryClient.invalidateQueries(['selected_chat', id]);
+                if (id) queryClient.invalidateQueries(queryKeys.chats.selected(id));
             } finally {
                 syncInProgressRef.current = false;
             }
@@ -284,10 +285,10 @@ export const useChatSync = (id, userId, onPresenceReceived) => {
 
         const markMessagesAsSeen = async () => {
             try {
-                queryClient.setQueryData(['chats'], (oldChats = []) => {
+                queryClient.setQueryData(queryKeys.chats.all, (oldChats = []) => {
                     const currentChat = oldChats.find(chat => String(chat.id) === String(id));
                     if (!currentChat) {
-                        queryClient.invalidateQueries(['chats']);
+                        queryClient.invalidateQueries(queryKeys.chats.all);
                         return oldChats;
                     }
 

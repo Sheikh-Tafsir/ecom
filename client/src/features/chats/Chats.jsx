@@ -20,6 +20,7 @@ import {useTypingIndicator} from './hooks/useTypingIndicator';
 import {useBlockUser} from './hooks/useBlockUser';
 import {toastify} from '@/common/toastify.js';
 import {cn} from '@/lib/utils';
+import {queryKeys} from "@/services/reactQuery/queryKeys";
 
 const Chat = () => {
     const {id} = useParams();
@@ -59,7 +60,7 @@ const Chat = () => {
         setSearchedUser(null);
         setNewChat(null);
         navigate(`/chats/${chatId}`, {replace: true});
-        queryClient.invalidateQueries(['selected_chat', chatId]);
+        queryClient.invalidateQueries(queryKeys.chats.selected(chatId));
     }, [navigate, queryClient]);
 
     const {handleSendMessage, handleGroupManagementRequest} = useChatActions(

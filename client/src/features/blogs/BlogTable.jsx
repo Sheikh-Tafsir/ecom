@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { formatDate } from '@/utils/DateUtils';
 import StatusBadge from '@/components/common/StatusBadge';
+import {BLOG_STATUS} from "@/constants/blog.constants";
 
 const BlogTable = ({ posts, handleEdit, deleteMutation }) => {
     return (
@@ -39,7 +40,7 @@ const BlogTable = ({ posts, handleEdit, deleteMutation }) => {
                             <span className="text-xs font-bold text-slate-500">{formatDate(post.publishedAt || post.createdAt)}</span>
                         </TableCell>
                         <TableCell className="px-6 py-4 text-center">
-                            <StatusBadge variant={post.status == 'PUBLISHED' ? 'emerald' : 'amber'}>
+                            <StatusBadge variant={post.status == BLOG_STATUS.PUBLISHED ? 'emerald' : 'amber'}>
                                 {post.status}
                             </StatusBadge>
                         </TableCell>

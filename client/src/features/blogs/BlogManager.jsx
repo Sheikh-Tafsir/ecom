@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/select";
 import {toastify} from '@/common/toastify';
 import {TOAST_TYPE} from "@/constants/app.constants";
+import {BLOG_STATUS} from "@/constants/blog.constants";
+import {queryKeys} from "@/services/reactQuery/queryKeys";
 import {FileText, Plus, ArrowLeft, SortAsc} from 'lucide-react';
 import {handleErrors} from "@/utils/ErrorUtils";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
@@ -34,7 +36,7 @@ const blogSchema = z.object({
     content: z.string().min(1, "Content is required"),
     author: z.string().optional(),
     imageUrl: z.string().url("Must be a valid URL").or(z.string().length(0)).optional(),
-    status: z.enum(['DRAFT', 'PUBLISHED']).default('DRAFT')
+    status: z.enum([BLOG_STATUS.DRAFT, BLOG_STATUS.PUBLISHED]).default(BLOG_STATUS.DRAFT)
 });
 
 const getAllBlogs = async (params) => {
@@ -79,7 +81,7 @@ const BlogManager = () => {
             content: '',
             author: '',
             imageUrl: '',
-            status: 'DRAFT'
+            status: BLOG_STATUS.DRAFT
         }
     });
 
@@ -100,7 +102,7 @@ const BlogManager = () => {
     const createMutation = useMutation({
         mutationFn: createBlog,
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['blogs']});
+            queryClient.invalidateQueries({queryKey: queryKeys.blogs.all});
             toastify(TOAST_TYPE.SUCCESS, "Blog post created successfully");
             setIsDialogOpen(false);
             reset();
@@ -111,7 +113,7 @@ const BlogManager = () => {
     const updateMutation = useMutation({
         mutationFn: ({id, data}) => updateBlog(id, data),
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['blogs']});
+            queryClient.invalidateQueries({queryKey: queryKeys.blogs.all});
             toastify(TOAST_TYPE.SUCCESS, "Blog post updated successfully");
             setIsDialogOpen(false);
             setEditingPost(null);
@@ -123,7 +125,7 @@ const BlogManager = () => {
     const deleteMutation = useMutation({
         mutationFn: deleteBlog,
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['blogs']});
+            queryClient.invalidateQueries({queryKey: queryKeys.blogs.all});
             toastify(TOAST_TYPE.SUCCESS, "Blog post deleted successfully");
         }
     });
@@ -143,7 +145,7 @@ const BlogManager = () => {
                 content: '',
                 author: '',
                 imageUrl: '',
-                status: 'DRAFT'
+                status: BLOG_STATUS.DRAFT
             });
         }
     }, [editingPost, reset]);

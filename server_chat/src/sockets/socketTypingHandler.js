@@ -4,6 +4,7 @@ const {TYPING_EVENT, TYPING_BROADCAST_EVENT} = require('./socketEvents');
 const {getRoom} = require('./socketRoomManager');
 const ChatService = require('../service/ChatService');
 const BlockService = require('../service/BlockService');
+const {CHAT_TYPE} = require('../utils/Enum');
 
 const TYPING_THROTTLE_PREFIX = 'typing:';
 const TYPING_THROTTLE_TTL = 2; // seconds
@@ -28,7 +29,7 @@ const setupTypingHandler = (io, socket) => {
 
             // Block check for DMs: don't broadcast typing to a blocked user
             const chatType = await ChatService.getChatType(chatId);
-            if (chatType === 'direct') {
+            if (chatType === CHAT_TYPE.DIRECT) {
                 const participants = await ChatService.findChatParticipantsByChatId(chatId);
                 const otherUser = participants.find(p => p.userId !== user.id);
                 if (otherUser && await BlockService.isBlocked(user.id, otherUser.userId)) {

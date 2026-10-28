@@ -1,6 +1,7 @@
 import {useMemo} from 'react';
 import {useQuery, useInfiniteQuery} from '@tanstack/react-query';
 import {AuthenticatedAxios} from "@/services/http/Axios.js";
+import {queryKeys} from "@/services/reactQuery/queryKeys";
 
 export const useChatData = (id) => {
     const fetchChatList = async () => {
@@ -9,7 +10,7 @@ export const useChatData = (id) => {
     };
 
     const {data: chats = [], isLoading: isChatsLoading} = useQuery({
-        queryKey: ['chats'],
+        queryKey: queryKeys.chats.all,
         queryFn: fetchChatList,
     });
 
@@ -31,7 +32,7 @@ export const useChatData = (id) => {
         hasNextPage,
         isFetchingNextPage
     } = useInfiniteQuery({
-        queryKey: ['selected_chat', id],
+        queryKey: queryKeys.chats.selected(id),
         queryFn: fetchSelectedChat,
         enabled: !!id,
         getNextPageParam: (lastPage) => {

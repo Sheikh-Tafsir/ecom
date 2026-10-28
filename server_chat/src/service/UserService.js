@@ -2,9 +2,8 @@ const axios = require('axios');
 const RedisConfig = require('../config/RedisConfig');
 const { logger } = require('../config/logger');
 
+const {USER_CACHE_TTL, USER_CACHE_PREFIX} = require('../constants/redis.constants');
 const MAIN_SERVICE_URL = process.env.MAIN_SERVICE_URL;
-const USER_CACHE_TTL = 600; // 10 minutes in seconds
-const USER_CACHE_PREFIX = 'cache:user:';
 
 /**
  * Fetch multiple users by their IDs with Redis caching and HTTP hydration.

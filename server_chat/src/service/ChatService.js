@@ -6,9 +6,7 @@ const {NOT_FOUND} = require('../utils/Messages');
 const {CHAT_TYPE, CHAT_MEMBER_TYPE} = require('../utils/Enum');
 const RuntimeError = require('../common/RuntimeError');
 const { generateUuidV7 } = require('../utils/UuidUtils');
-
-const CHAT_LIST_DEFAULT_SIZE = 15;
-const CHAT_MESSAGE_DEFAULT_SIZE = 15;
+const { CHAT_LIST_DEFAULT_SIZE, CHAT_MESSAGE_DEFAULT_SIZE } = require('../constants/chat.constants');
 
 /* =========================
    LOOKUPS / REPOSITORY

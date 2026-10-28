@@ -49,7 +49,7 @@ const ChangePassword = () => {
 
     const handleChangePassword = async (data) => {
         try {
-            await AuthenticatedAxios.put(`password`, data)
+            await AuthenticatedAxios.put(`/profile/password`, data)
 
             toastify(TOAST_TYPE.SUCCESS, "Password changed successfully");
             reset();

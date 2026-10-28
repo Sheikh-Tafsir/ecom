@@ -2,10 +2,8 @@ const RedisConfig = require('../config/RedisConfig');
 const {logger} = require('../config/logger');
 const {USER_PRESENCE_EVENT, PRESENCE_QUERY_EVENT} = require('./socketEvents');
 const {findContactUserIds} = require('../service/ChatService');
-
-const PRESENCE_PREFIX = 'presence:';
-const LAST_SEEN_PREFIX = 'presence:lastseen:';
-const PRESENCE_TTL = 120; // seconds
+const {PRESENCE_PREFIX, LAST_SEEN_PREFIX, PRESENCE_TTL} = require('../constants/redis.constants');
+const {userRoom} = require('../constants/room.constants');
 
 /**
  * Track user coming online.
@@ -25,7 +23,7 @@ const trackConnect = async (io, socket) => {
             // User just came online — broadcast to contacts
             const contactIds = await findContactUserIds(userId);
             for (const contactId of contactIds) {
-                io.to(`user_${contactId}`).emit(USER_PRESENCE_EVENT, {
+                io.to(userRoom(contactId)).emit(USER_PRESENCE_EVENT, {
                     userId,
                     online: true,
                 });
@@ -56,7 +54,7 @@ const trackDisconnect = async (io, socket) => {
 
             const contactIds = await findContactUserIds(userId);
             for (const contactId of contactIds) {
-                io.to(`user_${contactId}`).emit(USER_PRESENCE_EVENT, {
+                io.to(userRoom(contactId)).emit(USER_PRESENCE_EVENT, {
                     userId,
                     online: false,
                     lastSeen,
