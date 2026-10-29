@@ -21,6 +21,8 @@ A microservices-based e-commerce platform. Monorepo with four services behind an
 | Operations runbook / incidents | [docs/runbook.md](./docs/runbook.md) |
 | Personal data & retention    | [docs/privacy-data.md](./docs/privacy-data.md) |
 | End-user guide (by role)     | [docs/user-guide.md](./docs/user-guide.md) |
+| Security testing (SAST/SCA/DAST) | [docs/security-testing.md](./docs/security-testing.md) |
+| Load testing (k6)            | [docs/load-testing.md](./docs/load-testing.md) |
 
 ## Architecture Decisions (Why things are the way they are)
 

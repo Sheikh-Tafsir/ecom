@@ -41,6 +41,8 @@ cd server_chat && npm test
 
 - **Mandatory** unit tests for all `@Service` logic in the Main Server.
 - Never skip tests when changing `@Service` or `@Repository` code.
+- For security testing (SAST, SCA, DAST, OWASP ZAP), see [security-testing.md](./security-testing.md).
+- For load testing (k6), see [load-testing.md](./load-testing.md).
 
 ## Coding Conventions
 

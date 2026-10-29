@@ -66,3 +66,7 @@ certs/
 
 # Local dev override (LAN access, has machine-specific IP)
 docker-compose.override.yml
+
+# Security scanning outputs and local DAST configs
+zap-reports/
+zap-config.yaml

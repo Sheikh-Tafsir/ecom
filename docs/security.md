@@ -136,17 +136,19 @@ Object-level checks live in the services (e.g. `OrderService.findById/cancel`, `
 - Redis requires password auth (`REDIS_PASSWORD` env var, `--requirepass` flag).
 - Database backup files are AES-256-CBC encrypted at rest (`BACKUP_ENCRYPTION_KEY`). **Change this before production deployment.**
 - `BACKUP_ENCRYPTION_KEY` default value in `.env` (`change-me-before-production`) must be replaced before any production deployment.
-- **Docker networks** are plain bridges (none is `internal: true`); isolation relies on which networks each service joins and on only nginx publishing ports.
+- **Docker networks:** `backend` and `data` are `internal: true` — containers on these networks cannot initiate outbound internet connections. Only the `frontend` network allows internet access. The `server`, `chat-server` (for Cloudinary uploads), and `db-backup` (for Google Drive sync) services are additionally on `frontend` to reach external APIs (bKash, SMTP, Cloudinary, Google OAuth, Supabase, Google Drive).
 - **`env_file: .env`** is attached to most services, so every such container receives every secret in `.env`. Prefer per-service `environment:` entries.
 - **Image contents**: services that `COPY . .` (chat-server) need a `.dockerignore` excluding `.env`, `node_modules`, `logs`.
+- **Security headers** at nginx proxy level: HSTS (`max-age=63072000; includeSubDomains`), `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` — applied to all proxied responses.
+- **X-Forwarded-For** is set to `$remote_addr` (overwrite, not append) at `nginx-proxy` — prevents clients from spoofing their IP for rate limiting.
 
 ### Actuator & API Docs Exposure
 
 | Service | Exposed endpoints | Who can reach them |
 |---|---|---|
-| Gateway | `health` (details always), `info`, `metrics`, `prometheus`, `refresh` — no prod override | `/actuator/**` is `permitAll` and nginx forwards `/actuator` → **public**; `POST /actuator/refresh` requires `X-Internal-Service-Key` |
+| Gateway | `health` (details always), `info`, `metrics`, `prometheus`, `refresh` — no prod override | Only `/actuator/health` is routed through nginx; all other actuator paths return 404 at proxy. `POST /actuator/refresh` requires `X-Internal-Service-Key`. Prometheus metrics are accessible only from the internal Docker network. |
 | Main Server (prod profile) | `health` (no details), `prometheus` | Via gateway `/api/actuator/**` → any authenticated user |
-| Swagger / `/v3/api-docs` | Disabled in the prod profile on both Spring services | — |
+| Swagger / `/v3/api-docs` | Disabled in the prod profile on both Spring services; additionally blocked at nginx proxy (returns 404) | — |
 
 ---
 
@@ -168,7 +170,7 @@ Object-level checks live in the services (e.g. `OrderService.findById/cancel`, `
 | Unauthorized API access         | Gateway `AuthenticationFilter` + `@PreAuthorize` RBAC  |
 | Cross-site data leakage         | Same-origin via Nginx proxy; CORS at Gateway as defense-in-depth |
 | Duplicate payments              | Idempotency key + Redis atomic lock                     |
-| IP-based abuse / DDoS           | Bucket4j rate limiting per IP with Redis backing        |
+| IP-based abuse / DDoS           | Bucket4j rate limiting per IP with Redis backing; X-Forwarded-For overwritten (not appended) at proxy |
 | WebSocket abuse                 | `socketAuthMiddleware` + 20 msgs / 10 s per user (Redis), room-membership checks |
 | Log credential exposure         | `LoggingFilter` masks sensitive fields                  |
 | Backup data breach              | AES-256-CBC encryption at rest                          |
