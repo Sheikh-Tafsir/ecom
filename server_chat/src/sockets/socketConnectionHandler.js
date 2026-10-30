@@ -12,8 +12,27 @@ const socketConnectionHandler = async (io, socket) => {
     socket.join(userRoom(user.id));
     logger.info(`Connected: ${user?.name} (Socket ID: ${socket.id})`);
 
+    // Join admin room if user has administrative permissions
+    const permissions = Array.isArray(user?.permissions)
+        ? user.permissions
+        : (user?.permissions ? [user.permissions] : []);
+    if (permissions.includes(Permission.ADMIN_ACCESS) || permissions.includes(Permission.SUPER_ADMIN_ACCESS)) {
+        socket.join(ADMIN_ROOM);
+    }
+
+    // Join permission rooms dynamically for permission-based broadcasts
+    permissions.forEach(perm => {
+        if (perm) {
+            socket.join(permRoom(perm));
+        }
+    });
+
     // Track user presence in Redis
-    await trackConnect(io, socket);
+    try {
+        await trackConnect(io, socket);
+    } catch (err) {
+        logger.warn(`Failed to track presence on connect for ${user.id}:`, err.message);
+    }
 
     // Refresh the user cache from JWT claims on every connect.
     // This keeps user name/email fresh without an HTTP call to the main server.
@@ -41,21 +60,6 @@ const socketConnectionHandler = async (io, socket) => {
     } catch (err) {
         logger.warn(`Failed to refresh user cache from JWT for ${user.id}:`, err.message);
     }
-
-    // Join admin room if user has administrative permissions
-    const permissions = Array.isArray(user?.permissions)
-        ? user.permissions
-        : (user?.permissions ? [user.permissions] : []);
-    if (permissions.includes(Permission.ADMIN_ACCESS) || permissions.includes(Permission.SUPER_ADMIN_ACCESS)) {
-        socket.join(ADMIN_ROOM);
-    }
-
-    // Join permission rooms dynamically for permission-based broadcasts
-    permissions.forEach(perm => {
-        if (perm) {
-            socket.join(permRoom(perm));
-        }
-    });
 
     // Chat rooms are joined on demand via 'join-chat' event (hybrid architecture).
     // No DB query or bulk room joins needed on connect.

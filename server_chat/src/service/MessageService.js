@@ -13,12 +13,9 @@ const {
 } = require('./ChatService');
 const BlockService = require('./BlockService');
 const RateLimiterService = require('./RateLimiterService');
-const { MESSAGE_RECEIVE_EVENT, CHAT_UPDATED_EVENT } = require('../sockets/socketEvents');
-const { getRoom } = require('../sockets/socketRoomManager');
-const { userRoom } = require('../constants/room.constants');
+const RealtimeService = require('./RealtimeService');
 const { MAX_MESSAGE_LENGTH } = require('../constants/chat.constants');
 const { CHAT_TYPE } = require('../utils/Enum');
-const { RECEIVED } = require('../utils/Messages');
 const { logger } = require('../config/logger');
 
 const sendMessage = async (senderId, body) => {
@@ -166,33 +163,11 @@ const processAndSendMessage = async (user, body, io = null) => {
         messageData.tempId = tempId;
     }
 
-    // 5. Real-time broadcast via Socket.IO
+    // 5. Real-time broadcast via RealtimeService
     if (io) {
-        // Active chat room broadcast
-        const roomId = getRoom(message.chatId);
-        io.to(roomId).emit(MESSAGE_RECEIVE_EVENT, ApiResponse({
-            message: RECEIVED,
-            data: messageData,
-        }));
-
-        // Participant sidebar updates
-        const chatUpdate = {
-            chatId: message.chatId,
-            lastMessage: messageData.content,
-            lastSenderId: messageData.senderId,
-            lastSent: messageData.createdAt,
-            lastSentId: messageData.id,
-            contentType: messageData.contentType,
-            ...(tempId ? { tempId } : {}),
-        };
-
-        for (const p of participants) {
-            io.to(userRoom(p.userId)).emit(CHAT_UPDATED_EVENT, ApiResponse({
-                message: RECEIVED,
-                data: chatUpdate,
-            }));
-        }
+        RealtimeService.init(io);
     }
+    RealtimeService.notifyMessageSent(message.chatId, messageData, participants);
 
     logger.info(`Message sent from ${user?.name || userId} (${userId}) in chat ${message.chatId}`);
 

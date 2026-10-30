@@ -3,6 +3,7 @@ const { createAdapter } = require('@socket.io/redis-adapter');
 const RedisConfig = require('../config/RedisConfig'); // Assuming RedisConfig is already an instance of ioredis
 
 const { logger } = require('../config/logger');
+const RealtimeService = require('../service/RealtimeService');
 const socketAuthMiddleware = require('./socketAuthMiddleware');
 const socketConnectionHandler = require('./socketConnectionHandler');
 const socketMessageHandlers = require('./socketMessageHandlers');
@@ -20,6 +21,7 @@ module.exports = (server) => {
         : {};
 
     const io = socketIO(server, socketOptions);
+    RealtimeService.init(io);
 
     // Setup Redis Adapter for horizontal scaling
     const pubClient = RedisConfig.duplicate();

@@ -7,6 +7,7 @@ const ValidateUuidParams = require('../middleware/ValidateUuidParams');
 const ChatService = require('../service/ChatService');
 const BlockService = require('../service/BlockService');
 const MessageService = require('../service/MessageService');
+const RealtimeService = require('../service/RealtimeService');
 const {FOUND, SENT} = require("../utils/Messages");
 const {ok, created} = require("../utils/ResponseUtils");
 
@@ -250,16 +251,7 @@ router.post("/:id/view", ValidateUuidParams('id'), AuthenticationMiddleware, Asy
     const userId = req.user?.id;
     await ChatService.seenChatMessage(chatId, req.body, userId);
 
-    const io = req.app.get('io');
-    if (io) {
-        const { getRoom } = require('../sockets/socketRoomManager');
-        const { MESSAGES_SEEN_EVENT } = require('../sockets/socketEvents');
-        io.to(getRoom(chatId)).emit(MESSAGES_SEEN_EVENT, {
-            chatId,
-            userId,
-            lastSeen: req.body.lastSeen,
-        });
-    }
+    RealtimeService.notifyMessagesSeen(chatId, userId, req.body.lastSeen);
 
     created(res, {message: FOUND});
 }));
@@ -310,11 +302,9 @@ router.post("/:id/view", ValidateUuidParams('id'), AuthenticationMiddleware, Asy
  *         description: Rate limit exceeded
  */
 router.post("/:id/messages", ValidateUuidParams('id'), AuthenticationMiddleware, AsyncHandler(async (req, res) => {
-    const io = req.app.get('io');
     const messageData = await MessageService.processAndSendMessage(
         req.user,
-        { ...req.body, chatId: req.params.id },
-        io
+        { ...req.body, chatId: req.params.id }
     );
     created(res, { message: SENT, data: messageData });
 }));
@@ -361,11 +351,9 @@ router.post("/:id/messages", ValidateUuidParams('id'), AuthenticationMiddleware,
  *         description: Rate limit exceeded
  */
 router.post("/messages", AuthenticationMiddleware, AsyncHandler(async (req, res) => {
-    const io = req.app.get('io');
     const messageData = await MessageService.processAndSendMessage(
         req.user,
-        req.body,
-        io
+        req.body
     );
     created(res, { message: SENT, data: messageData });
 }));
@@ -398,13 +386,7 @@ router.post('/users/:userId/block',
         await BlockService.blockUser(req.user.id, req.params.userId);
 
         // Notify both users in real-time (multi-tab/device sync)
-        const io = req.app.get('io');
-        if (io) {
-            const {USER_BLOCKED_EVENT} = require('../sockets/socketEvents');
-            const payload = {userId: req.user.id, blocked: true};
-            io.to(userRoom(req.params.userId)).emit(USER_BLOCKED_EVENT, payload);
-            io.to(userRoom(req.user.id)).emit(USER_BLOCKED_EVENT, payload);
-        }
+        RealtimeService.notifyUserBlocked(req.user.id, req.params.userId, true);
 
         ok(res, {message: 'User blocked successfully'});
     })
@@ -436,13 +418,7 @@ router.delete('/users/:userId/block',
         await BlockService.unblockUser(req.user.id, req.params.userId);
 
         // Notify both users in real-time (multi-tab/device sync)
-        const io = req.app.get('io');
-        if (io) {
-            const {USER_BLOCKED_EVENT} = require('../sockets/socketEvents');
-            const payload = {userId: req.user.id, blocked: false};
-            io.to(userRoom(req.params.userId)).emit(USER_BLOCKED_EVENT, payload);
-            io.to(userRoom(req.user.id)).emit(USER_BLOCKED_EVENT, payload);
-        }
+        RealtimeService.notifyUserBlocked(req.user.id, req.params.userId, false);
 
         ok(res, {message: 'User unblocked successfully'});
     })

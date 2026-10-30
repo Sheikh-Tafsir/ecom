@@ -1,12 +1,16 @@
 const RedisConfig = require('../config/RedisConfig');
 const { logger } = require('../config/logger');
+const RealtimeService = require('../service/RealtimeService');
 const { NOTIFICATION_EVENT } = require('./socketEvents');
 const { NOTIFICATION_CHANNEL } = require('../constants/redis.constants');
-const { userRoom, permRoom, ADMIN_ROOM } = require('../constants/room.constants');
 
 let subClient = null;
 
 const initNotificationSubscriber = (io) => {
+    if (io) {
+        RealtimeService.init(io);
+    }
+
     if (subClient) {
         return subClient;
     }
@@ -44,7 +48,7 @@ const initNotificationSubscriber = (io) => {
 
             // 1. Direct to user
             if (recipientId) {
-                io.to(userRoom(recipientId)).emit(NOTIFICATION_EVENT, notificationData);
+                RealtimeService.emitToUser(recipientId, NOTIFICATION_EVENT, notificationData);
                 handled = true;
             }
 
@@ -54,7 +58,7 @@ const initNotificationSubscriber = (io) => {
             if (Array.isArray(targetPermissions) && targetPermissions.length > 0) {
                 targetPermissions.forEach(perm => {
                     const permStr = typeof perm === 'object' && perm ? (perm.value || perm.name || String(perm)) : String(perm);
-                    io.to(permRoom(permStr)).emit(NOTIFICATION_EVENT, notificationData);
+                    RealtimeService.emitToPermission(permStr, NOTIFICATION_EVENT, notificationData);
                 });
                 handled = true;
             }
@@ -63,10 +67,10 @@ const initNotificationSubscriber = (io) => {
             if (!handled && recipientType) {
                 const normalizedRecipientType = String(recipientType).toUpperCase();
                 if (normalizedRecipientType === 'USER' && recipientId) {
-                    io.to(userRoom(recipientId)).emit(NOTIFICATION_EVENT, notificationData);
+                    RealtimeService.emitToUser(recipientId, NOTIFICATION_EVENT, notificationData);
                     handled = true;
                 } else if (normalizedRecipientType === 'ADMIN') {
-                    io.to(ADMIN_ROOM).emit(NOTIFICATION_EVENT, notificationData);
+                    RealtimeService.emitToAdmins(NOTIFICATION_EVENT, notificationData);
                     handled = true;
                 }
             }

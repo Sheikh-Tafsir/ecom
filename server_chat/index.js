@@ -12,6 +12,7 @@ const NotFoundHandler = require("./src/middleware/NotFoundHandler");
 const ErrorHandler = require("./src/middleware/ErrorHandler");
 
 const SocketHandler = require("./src/sockets/socketHandlers")
+const RealtimeService = require("./src/service/RealtimeService");
 
 const ChatController = require("./src/controller/ChatController");
 const UploadController = require("./src/controller/UploadController");
@@ -81,6 +82,7 @@ app.use(ErrorHandler);
 
 const server = http.createServer(app);
 const io = SocketHandler(server);
+RealtimeService.init(io);
 app.set('io', io);
 
 const initDb = require("./src/config/initDb");

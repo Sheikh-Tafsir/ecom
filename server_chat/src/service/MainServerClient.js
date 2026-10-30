@@ -8,10 +8,16 @@ const { logger } = require('../config/logger');
  * base URL configuration, timeouts, and error handling for inter-service communication.
  */
 class MainServerClient {
-    constructor() {
-        this.baseUrl = process.env.MAIN_SERVICE_URL;
-        this.internalServiceKey = process.env.INTERNAL_SERVICE_KEY;
-        this.defaultTimeoutMs = 5000;
+    get baseUrl() {
+        return process.env.MAIN_SERVICE_URL;
+    }
+
+    get internalServiceKey() {
+        return process.env.INTERNAL_SERVICE_KEY;
+    }
+
+    get defaultTimeoutMs() {
+        return 5000;
     }
 
     /**

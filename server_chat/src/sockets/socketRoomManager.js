@@ -1,11 +1,16 @@
 const {ChatParticipant} = require('../model');
 const ApiResponse = require('../common/ApiResponse');
-const {chatRoom, userRoom} = require('../constants/room.constants');
+const RealtimeService = require('../service/RealtimeService');
+const {chatRoom} = require('../constants/room.constants');
 
 // Alias for backward compatibility — existing consumers import getRoom
 const getRoom = chatRoom;
 
 const handleGroupMessage = async (io, chatId, eventName) => {
+    if (io) {
+        RealtimeService.init(io);
+    }
+
     const participants = await ChatParticipant.findAll({
         where: {chatId},
         attributes: ['userId'],
@@ -13,12 +18,11 @@ const handleGroupMessage = async (io, chatId, eventName) => {
     });
 
     // Group events (create/update) are sidebar-level — emit to each participant's personal room
-    for (const participant of participants) {
-        io.to(userRoom(participant.userId)).emit(eventName, ApiResponse({
-            message: "Group event",
-            data: chatId
-        }));
-    }
+    const userIds = participants.map(p => p.userId);
+    RealtimeService.emitToUsers(userIds, eventName, ApiResponse({
+        message: "Group event",
+        data: chatId
+    }));
 };
 
 module.exports = {

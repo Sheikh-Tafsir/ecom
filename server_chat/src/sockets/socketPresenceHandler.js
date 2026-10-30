@@ -1,15 +1,18 @@
 const PresenceService = require('../service/PresenceService');
-const { USER_PRESENCE_EVENT, PRESENCE_QUERY_EVENT } = require('./socketEvents');
+const RealtimeService = require('../service/RealtimeService');
+const { PRESENCE_QUERY_EVENT } = require('./socketEvents');
 const { findContactUserIds } = require('../service/ChatService');
-const { userRoom } = require('../constants/room.constants');
 const { logger } = require('../config/logger');
 
 /**
  * Track user coming online.
  * Delegates presence storage to PresenceService.
- * If user just came online, broadcasts presence to active contacts.
+ * If user just came online, broadcasts presence to active contacts via RealtimeService.
  */
 const trackConnect = async (io, socket) => {
+    if (io) {
+        RealtimeService.init(io);
+    }
     const userId = socket.user?.id;
     const socketId = socket.id;
 
@@ -17,12 +20,7 @@ const trackConnect = async (io, socket) => {
     if (isNewlyOnline) {
         // User just came online — broadcast to contacts
         const contactIds = await findContactUserIds(userId);
-        for (const contactId of contactIds) {
-            io.to(userRoom(contactId)).emit(USER_PRESENCE_EVENT, {
-                userId,
-                online: true,
-            });
-        }
+        RealtimeService.notifyPresence(contactIds, userId, true);
     }
 };
 
@@ -32,19 +30,16 @@ const trackConnect = async (io, socket) => {
  * If user went fully offline (no other active sockets), broadcasts offline event with lastSeen.
  */
 const trackDisconnect = async (io, socket) => {
+    if (io) {
+        RealtimeService.init(io);
+    }
     const userId = socket.user?.id;
     const socketId = socket.id;
 
     const { isNowOffline, lastSeen } = await PresenceService.removeConnection(userId, socketId);
     if (isNowOffline) {
         const contactIds = await findContactUserIds(userId);
-        for (const contactId of contactIds) {
-            io.to(userRoom(contactId)).emit(USER_PRESENCE_EVENT, {
-                userId,
-                online: false,
-                lastSeen,
-            });
-        }
+        RealtimeService.notifyPresence(contactIds, userId, false, lastSeen);
     }
 };
 
@@ -76,21 +71,16 @@ const setupPresenceHandler = (io, socket) => {
  * Runs every 60s. Prevents zombie presence entries if EXPIRE was missed.
  */
 const startPresenceHeartbeat = (io) => {
+    if (io) {
+        RealtimeService.init(io);
+    }
     const interval = setInterval(async () => {
         try {
-            const sockets = await io.fetchSockets();
-            const activeUserIds = new Set();
+            const activeUserIds = await RealtimeService.getConnectedUserIds();
 
-            for (const s of sockets) {
-                const userId = s.user?.id;
-                if (userId) {
-                    activeUserIds.add(userId);
-                }
-            }
-
-            if (activeUserIds.size > 0) {
-                await PresenceService.refreshHeartbeat(Array.from(activeUserIds));
-                logger.info(`Presence heartbeat: refreshed TTL for ${activeUserIds.size} users`);
+            if (activeUserIds.length > 0) {
+                await PresenceService.refreshHeartbeat(activeUserIds);
+                logger.info(`Presence heartbeat: refreshed TTL for ${activeUserIds.length} users`);
             }
         } catch (err) {
             logger.error('Presence heartbeat failed:', err.message);
