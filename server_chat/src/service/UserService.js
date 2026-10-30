@@ -1,5 +1,5 @@
 const axios = require('axios');
-const RedisConfig = require('../config/RedisConfig');
+const CacheService = require('./CacheService');
 const { logger } = require('../config/logger');
 
 const {USER_CACHE_TTL, USER_CACHE_PREFIX} = require('../constants/redis.constants');
@@ -21,17 +21,16 @@ const getUsersBatch = async (userIds = [], token) => {
     const userMap = {};
     const missingIds = [];
 
-    // 1. Check Redis cache for each user
+    // 1. Check cache for each user
     for (const id of uniqueIds) {
-        try {
-            const cached = await RedisConfig.get(`${USER_CACHE_PREFIX}${id}`);
-            if (cached) {
+        const cached = await CacheService.get(`${USER_CACHE_PREFIX}${id}`);
+        if (cached) {
+            try {
                 userMap[id] = JSON.parse(cached);
-            } else {
+            } catch {
                 missingIds.push(id);
             }
-        } catch (err) {
-            logger.warn(`Redis cache get failed for user ${id}:`, err.message);
+        } else {
             missingIds.push(id);
         }
     }
@@ -70,17 +69,12 @@ const getUsersBatch = async (userIds = [], token) => {
                         };
                         userMap[user.id] = profile;
 
-                        // Cache user profile in Redis
-                        try {
-                            await RedisConfig.set(
-                                `${USER_CACHE_PREFIX}${user.id}`,
-                                JSON.stringify(profile),
-                                'EX',
-                                USER_CACHE_TTL
-                            );
-                        } catch (redisErr) {
-                            logger.warn(`Redis cache set failed for user ${user.id}:`, redisErr.message);
-                        }
+                        // Cache user profile
+                        await CacheService.set(
+                            `${USER_CACHE_PREFIX}${user.id}`,
+                            JSON.stringify(profile),
+                            USER_CACHE_TTL
+                        );
                     }
                 }
             }
@@ -100,16 +94,11 @@ const getUsersBatch = async (userIds = [], token) => {
             };
 
             // Negative caching with short TTL to prevent cache penetration
-            try {
-                await RedisConfig.set(
-                    `${USER_CACHE_PREFIX}${id}`,
-                    JSON.stringify(userMap[id]),
-                    'EX',
-                    60
-                );
-            } catch (negErr) {
-                logger.warn(`Redis cache set failed for fallback user ${id}:`, negErr.message);
-            }
+            await CacheService.set(
+                `${USER_CACHE_PREFIX}${id}`,
+                JSON.stringify(userMap[id]),
+                60
+            );
         }
     }
 

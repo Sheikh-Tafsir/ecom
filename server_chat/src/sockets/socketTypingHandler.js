@@ -1,4 +1,4 @@
-const RedisConfig = require('../config/RedisConfig');
+const CacheService = require('../service/CacheService');
 const {logger} = require('../config/logger');
 const {TYPING_EVENT, TYPING_BROADCAST_EVENT} = require('./socketEvents');
 const {getRoom} = require('./socketRoomManager');
@@ -22,9 +22,9 @@ const setupTypingHandler = (io, socket) => {
             // Auth check: only broadcast if the user has joined this chat room (zero DB cost)
             if (!socket.rooms.has(roomId)) return;
 
-            // Redis throttle: NX ensures only one event per 2 seconds per user per chat
+            // Cache throttle: NX ensures only one event per 2 seconds per user per chat
             const throttleKey = `${TYPING_THROTTLE_PREFIX}${chatId}:${user.id}`;
-            const set = await RedisConfig.set(throttleKey, '1', 'EX', TYPING_THROTTLE_TTL, 'NX');
+            const set = await CacheService.set(throttleKey, '1', 'EX', TYPING_THROTTLE_TTL, 'NX');
             if (!set) return; // Throttled
 
             // Block check for DMs: don't broadcast typing to a blocked user

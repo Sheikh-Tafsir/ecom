@@ -1,5 +1,5 @@
 const {logger} = require('../config/logger');
-const RedisConfig = require('../config/RedisConfig');
+const CacheService = require('../service/CacheService');
 const {trackConnect, trackDisconnect} = require('./socketPresenceHandler');
 const {Permission} = require('../utils/Enum');
 const {USER_CACHE_PREFIX, USER_CACHE_TTL} = require('../constants/redis.constants');
@@ -15,7 +15,7 @@ const socketConnectionHandler = async (io, socket) => {
     // Track user presence in Redis
     await trackConnect(io, socket);
 
-    // Refresh the Redis user cache from JWT claims on every connect.
+    // Refresh the user cache from JWT claims on every connect.
     // This keeps user name/email fresh without an HTTP call to the main server.
     // Staleness window = JWT access token TTL (15 min) — acceptable for chat display names.
     try {
@@ -27,16 +27,15 @@ const socketConnectionHandler = async (io, socket) => {
         };
 
         // Merge with existing cache to preserve fields not in JWT (e.g. image)
-        const existingRaw = await RedisConfig.get(`${USER_CACHE_PREFIX}${user.id}`);
+        const existingRaw = await CacheService.get(`${USER_CACHE_PREFIX}${user.id}`);
         if (existingRaw) {
             const existing = JSON.parse(existingRaw);
             profile.image = existing.image || null;
         }
 
-        await RedisConfig.set(
+        await CacheService.set(
             `${USER_CACHE_PREFIX}${user.id}`,
             JSON.stringify(profile),
-            'EX',
             USER_CACHE_TTL
         );
     } catch (err) {

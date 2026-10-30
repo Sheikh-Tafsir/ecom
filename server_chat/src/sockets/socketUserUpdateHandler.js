@@ -1,4 +1,4 @@
-const RedisConfig = require('../config/RedisConfig');
+const CacheService = require('../service/CacheService');
 const { logger } = require('../config/logger');
 const { USER_UPDATES_CHANNEL, USER_CACHE_PREFIX } = require('../constants/redis.constants');
 
@@ -7,7 +7,7 @@ let subClient = null;
 /**
  * Subscribes to the `ecom:user-updates` Redis pub/sub channel.
  * When the main server publishes a userId (after update/delete/ban),
- * this handler evicts that user's cached profile from Redis so the
+ * this handler evicts that user's cached profile so the
  * next chat request fetches fresh data from the API.
  */
 const initUserUpdateSubscriber = () => {
@@ -15,7 +15,7 @@ const initUserUpdateSubscriber = () => {
         return subClient;
     }
 
-    subClient = RedisConfig.duplicate();
+    subClient = CacheService.getUnderlyingClient().duplicate();
 
     subClient.on('error', (err) => {
         logger.error('❌ Redis User-Update SubClient error:', err);
@@ -34,13 +34,9 @@ const initUserUpdateSubscriber = () => {
             return;
         }
 
-        try {
-            const cacheKey = `${USER_CACHE_PREFIX}${userId}`;
-            await RedisConfig.del(cacheKey);
-            logger.info(`Evicted chat user cache for user ${userId}`);
-        } catch (err) {
-            logger.warn(`Failed to evict chat user cache for ${userId}: ${err.message}`);
-        }
+        const cacheKey = `${USER_CACHE_PREFIX}${userId}`;
+        await CacheService.del(cacheKey);
+        logger.info(`Evicted chat user cache for user ${userId}`);
     });
 
     return subClient;

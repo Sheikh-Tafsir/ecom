@@ -1,6 +1,6 @@
 const {ACCESS_TOKEN_REQUIRED, ACCESS_TOKEN_INVALID} = require("../utils/Messages");
 const {parseAccessToken} = require("../service/JwtService");
-const RedisConfig = require("../config/RedisConfig");
+const CacheService = require("../service/CacheService");
 const {logger} = require("../config/logger");
 
 const socketAuthMiddleware = async (socket, next) => {
@@ -22,11 +22,11 @@ const socketAuthMiddleware = async (socket, next) => {
         const user = parseAccessToken(token);
         const jti = user.jti;
 
-        // Check if token JTI is blacklisted/revoked in Redis
+        // Check if token JTI is blacklisted/revoked in cache
         const cacheKey = `${process.env.REVOKED_TOKENS_PREFIX}${jti}`;
 
         try {
-            const isBlacklisted = await RedisConfig.get(cacheKey);
+            const isBlacklisted = await CacheService.getOrThrow(cacheKey);
             if (isBlacklisted) {
                 logger.warn(`Access token JTI: ${jti} is revoked/blacklisted for socket connection`);
                 // Use "Unauthorized" so client connect_error handler triggers token refresh retry
@@ -37,10 +37,9 @@ const socketAuthMiddleware = async (socket, next) => {
                 };
                 return next(error);
             }
-        } catch (redisErr) {
+        } catch (cacheErr) {
             // Fail closed: deny socket connection when we cannot verify token revocation status.
-            // Allowing a potentially revoked token through is a security risk.
-            logger.error(`Redis error checking revoked tokens blacklist for JTI ${jti} (socket):`, redisErr.message);
+            logger.error(`Cache error checking revoked tokens blacklist for JTI ${jti} (socket):`, cacheErr.message);
 
             const error = new Error('Service temporarily unavailable — unable to verify token status');
             error.data = {
