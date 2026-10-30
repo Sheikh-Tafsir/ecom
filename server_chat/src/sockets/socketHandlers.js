@@ -1,6 +1,6 @@
 const socketIO = require('socket.io');
 const { createAdapter } = require('@socket.io/redis-adapter');
-const RedisConfig = require('../config/RedisConfig'); // Assuming RedisConfig is already an instance of ioredis
+const PubSubService = require('../service/PubSubService');
 
 const { logger } = require('../config/logger');
 const RealtimeService = require('../service/RealtimeService');
@@ -24,12 +24,7 @@ module.exports = (server) => {
     RealtimeService.init(io);
 
     // Setup Redis Adapter for horizontal scaling
-    const pubClient = RedisConfig.duplicate();
-    const subClient = RedisConfig.duplicate();
-
-    pubClient.on('error', (err) => logger.error('❌ Redis PubClient error:', err));
-    subClient.on('error', (err) => logger.error('❌ Redis SubClient error:', err));
-
+    const { pubClient, subClient } = PubSubService.createAdapterClients();
     io.adapter(createAdapter(pubClient, subClient));
 
     // Start presence heartbeat to refresh TTLs
