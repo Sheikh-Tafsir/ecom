@@ -61,8 +61,8 @@ dependencies {
 // --- Security Analysis ---
 
 spotbugs {
-    effort = com.github.spotbugs.snom.Effort.MAX
-    reportLevel = com.github.spotbugs.snom.Confidence.HIGH
+    effort = com.github.spotbugs.snom.Effort.valueOf('MAX')
+    reportLevel = com.github.spotbugs.snom.Confidence.valueOf('HIGH')
 }
 
 dependencyCheck {
