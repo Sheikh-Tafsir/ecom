@@ -1,10 +1,10 @@
 const ChatService = require('../service/ChatService');
+const PresenceService = require('../service/PresenceService');
 const {JOIN_CHAT_EVENT, LEAVE_CHAT_EVENT} = require('./socketEvents');
 const {getRoom} = require('./socketRoomManager');
 const {buildErrorResponse} = require('../utils/ResponseUtils');
 const {isValidUuid} = require('../utils/UuidUtils');
 const {logger} = require('../config/logger');
-const {getPresence} = require('./socketPresenceHandler');
 
 const setupChatRoomHandlers = (io, socket) => {
     const user = socket.user;
@@ -29,7 +29,7 @@ const setupChatRoomHandlers = (io, socket) => {
             // Fetch presence for chat participants to include in the ack
             const participants = await ChatService.findChatParticipantsByChatId(chatId);
             const participantUserIds = participants.map(p => p.userId).filter(uid => uid !== user.id);
-            const presence = await getPresence(participantUserIds);
+            const presence = await PresenceService.getUsersPresence(participantUserIds);
             ack?.({success: true, presence});
         } catch (err) {
             logger.warn(`${user.name} failed to join chat ${chatId}: ${err.message}`);
