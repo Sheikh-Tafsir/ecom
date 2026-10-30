@@ -2,6 +2,7 @@ const {Op, Sequelize} = require('sequelize');
 const sequelize = require('../config/SequelizeConfig');
 const {Chat, ChatParticipant, Message} = require('../model');
 const UserService = require('./UserService');
+const BlockService = require('./BlockService');
 const {NOT_FOUND} = require('../utils/Messages');
 const {CHAT_TYPE, CHAT_MEMBER_TYPE} = require('../utils/Enum');
 const RuntimeError = require('../common/RuntimeError');
@@ -395,14 +396,22 @@ const seenChatMessage = async (chatId, body, userId) => {
 ========================= */
 
 const createGroup = async (body, user) => {
+    if (!body?.users?.length || body.users.length < 2) {
+        throw new RuntimeError(400, "Need at least 2 users");
+    }
+
+    // Block check: creator cannot add users they've blocked (or who blocked them)
+    for (const u of body.users) {
+        const targetUserId = typeof u === 'object' && u ? (u.id || u.userId) : u;
+        if (targetUserId && await BlockService.isBlocked(user.id, targetUserId)) {
+            throw new RuntimeError(403, "Cannot create group — a blocked user is included.");
+        }
+    }
+
     const t = await sequelize.transaction();
 
     try {
-        if (!body.users?.length || body.users.length < 2) {
-            throw new RuntimeError(400, "Need at least 2 users");
-        }
-
-        const name = buildGroupName(user, body.users);
+        const name = body.name || buildGroupName(user, body.users);
 
         const chat = await Chat.create(
             {id: generateUuidV7(), name, type: CHAT_TYPE.GROUP},
@@ -441,6 +450,14 @@ const updateGroup = async (body, user) => {
 
     if (!users?.length) {
         throw new RuntimeError(400, "At least one user is required to add");
+    }
+
+    // Block check: updater cannot add users they've blocked (or who blocked them)
+    for (const u of users) {
+        const targetUserId = typeof u === 'object' && u ? (u.id || u.userId) : u;
+        if (targetUserId && await BlockService.isBlocked(user.id, targetUserId)) {
+            throw new RuntimeError(403, "Cannot add a blocked user to the group.");
+        }
     }
 
     const t = await sequelize.transaction();

@@ -154,4 +154,30 @@ describe('RealtimeService Unit Tests', () => {
         const userIds = await RealtimeService.getConnectedUserIds();
         assert.deepStrictEqual(userIds, ['user-1', 'user-2']);
     });
+
+    it('should manage socket room joining, leaving, and check membership', () => {
+        const joinedRooms = new Set();
+        const mockSocket = {
+            rooms: joinedRooms,
+            join: (r) => joinedRooms.add(r),
+            leave: (r) => joinedRooms.delete(r),
+            to: (room) => ({
+                emit: (event, payload) => {
+                    emittedEvents.push({ target: room, event, payload });
+                }
+            })
+        };
+
+        RealtimeService.joinChatRoom(mockSocket, 'chat-abc');
+        assert.ok(mockSocket.rooms.has('chat_chat-abc'));
+        assert.strictEqual(RealtimeService.isSocketInChatRoom(mockSocket, 'chat-abc'), true);
+
+        RealtimeService.broadcastToChatExcept(mockSocket, 'chat-abc', 'typing', { user: 'me' });
+        assert.strictEqual(emittedEvents.length, 1);
+        assert.strictEqual(emittedEvents[0].target, 'chat_chat-abc');
+        assert.strictEqual(emittedEvents[0].event, 'typing');
+
+        RealtimeService.leaveChatRoom(mockSocket, 'chat-abc');
+        assert.strictEqual(RealtimeService.isSocketInChatRoom(mockSocket, 'chat-abc'), false);
+    });
 });

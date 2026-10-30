@@ -2,6 +2,7 @@ const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert');
 const ChatService = require('../../src/service/ChatService');
 const UserService = require('../../src/service/UserService');
+const BlockService = require('../../src/service/BlockService');
 const { Chat, ChatParticipant, Message } = require('../../src/model');
 const RedisConfig = require('../../src/config/RedisConfig');
 const sequelize = require('../../src/config/SequelizeConfig');
@@ -140,5 +141,46 @@ describe('ChatService Unit Tests (Hydration & Decoupling)', () => {
         const otherP = result.participants.find(p => p.userId === 'user-other');
         assert.strictEqual(otherP.name, 'Other User');
         assert.strictEqual(otherP.image, 'https://example.com/other.png');
+    });
+
+    it('createGroup rejects if fewer than 2 users are provided', async () => {
+        await assert.rejects(
+            async () => ChatService.createGroup({ users: [{ id: 'user-2' }] }, { id: 'user-1' }),
+            /Need at least 2 users/
+        );
+    });
+
+    it('createGroup rejects if any user is blocked', async () => {
+        const originalIsBlocked = BlockService.isBlocked;
+        BlockService.isBlocked = async (u1, u2) => u2 === 'user-blocked';
+
+        try {
+            await assert.rejects(
+                async () => ChatService.createGroup(
+                    { users: [{ id: 'user-2' }, { id: 'user-blocked' }] },
+                    { id: 'user-1' }
+                ),
+                /Cannot create group — a blocked user is included/
+            );
+        } finally {
+            BlockService.isBlocked = originalIsBlocked;
+        }
+    });
+
+    it('updateGroup rejects if any user to add is blocked', async () => {
+        const originalIsBlocked = BlockService.isBlocked;
+        BlockService.isBlocked = async (u1, u2) => u2 === 'user-blocked';
+
+        try {
+            await assert.rejects(
+                async () => ChatService.updateGroup(
+                    { chatId: 'chat-1', users: [{ id: 'user-blocked' }] },
+                    { id: 'user-1' }
+                ),
+                /Cannot add a blocked user to the group/
+            );
+        } finally {
+            BlockService.isBlocked = originalIsBlocked;
+        }
     });
 });

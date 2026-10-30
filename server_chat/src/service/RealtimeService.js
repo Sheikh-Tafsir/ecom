@@ -205,6 +205,74 @@ class RealtimeService {
         this.emitToUsers(contactIds, USER_PRESENCE_EVENT, payload);
     }
 
+    /**
+     * Broadcast group event (creation, update) to all group participants' personal rooms.
+     * @param {string} chatId
+     * @param {string} eventName
+     */
+    async notifyGroupEvent(chatId, eventName) {
+        if (!chatId || !eventName) return;
+        const { ChatParticipant } = require('../model');
+        const participants = await ChatParticipant.findAll({
+            where: { chatId },
+            attributes: ['userId'],
+            raw: true,
+        });
+
+        const userIds = participants.map(p => p.userId);
+        this.emitToUsers(userIds, eventName, ApiResponse({
+            message: "Group event",
+            data: chatId,
+        }));
+    }
+
+    /* =========================================================================
+     * SOCKET ROOM MANAGEMENT
+     * ========================================================================= */
+
+    /**
+     * Join a socket to a chat room.
+     * @param {import('socket.io').Socket} socket
+     * @param {string} chatId
+     */
+    joinChatRoom(socket, chatId) {
+        if (!socket || !chatId) return;
+        socket.join(chatRoom(chatId));
+    }
+
+    /**
+     * Remove a socket from a chat room.
+     * @param {import('socket.io').Socket} socket
+     * @param {string} chatId
+     */
+    leaveChatRoom(socket, chatId) {
+        if (!socket || !chatId) return;
+        socket.leave(chatRoom(chatId));
+    }
+
+    /**
+     * Check if a socket has joined a chat room.
+     * @param {import('socket.io').Socket} socket
+     * @param {string} chatId
+     * @returns {boolean}
+     */
+    isSocketInChatRoom(socket, chatId) {
+        if (!socket || !socket.rooms || !chatId) return false;
+        return socket.rooms.has(chatRoom(chatId));
+    }
+
+    /**
+     * Broadcast an event to a chat room excluding the sender socket.
+     * @param {import('socket.io').Socket} socket
+     * @param {string} chatId
+     * @param {string} event
+     * @param {any} payload
+     */
+    broadcastToChatExcept(socket, chatId, event, payload) {
+        if (!socket || !chatId) return;
+        socket.to(chatRoom(chatId)).emit(event, payload);
+    }
+
     /* =========================================================================
      * CONNECTION & SOCKET QUERIES
      * ========================================================================= */

@@ -358,6 +358,90 @@ router.post("/messages", AuthenticationMiddleware, AsyncHandler(async (req, res)
     created(res, { message: SENT, data: messageData });
 }));
 
+// ==================== Group Chats (HTTP) ====================
+
+/**
+ * @swagger
+ * /chats/groups:
+ *   post:
+ *     summary: Create a new group chat via HTTP
+ *     tags: [Chats]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - users
+ *             properties:
+ *               name:
+ *                 type: string
+ *               users:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *     responses:
+ *       201:
+ *         description: Group created successfully
+ *       400:
+ *         description: Invalid input or fewer than 2 users
+ *       403:
+ *         description: Cannot create group with a blocked user
+ */
+router.post("/groups", AuthenticationMiddleware, AsyncHandler(async (req, res) => {
+    const response = await ChatService.createGroup(req.body, req.user);
+    const { GROUP_CREATE_RESPONSE_EVENT } = require('../sockets/socketEvents');
+    await RealtimeService.notifyGroupEvent(response.chatId, GROUP_CREATE_RESPONSE_EVENT);
+    created(res, { message: "Group created successfully", data: response.chatId });
+}));
+
+/**
+ * @swagger
+ * /chats/groups/{id}/participants:
+ *   post:
+ *     summary: Add participants to a group chat via HTTP
+ *     tags: [Chats]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - users
+ *             properties:
+ *               users:
+ *                 type: array
+ *     responses:
+ *       200:
+ *         description: Participants added successfully
+ *       400:
+ *         description: Invalid input or user list empty
+ *       403:
+ *         description: Not an admin or blocked user included
+ */
+router.post("/groups/:id/participants", ValidateUuidParams('id'), AuthenticationMiddleware, AsyncHandler(async (req, res) => {
+    const response = await ChatService.updateGroup({ ...req.body, chatId: req.params.id }, req.user);
+    const { GROUP_UPDATE_RESPONSE_EVENT } = require('../sockets/socketEvents');
+    await RealtimeService.notifyGroupEvent(response.chatId, GROUP_UPDATE_RESPONSE_EVENT);
+    ok(res, { message: "Group updated successfully", data: response.chatId });
+}));
+
 // ==================== Block / Unblock ====================
 
 /**

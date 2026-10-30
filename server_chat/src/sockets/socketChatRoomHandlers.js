@@ -1,12 +1,15 @@
 const ChatService = require('../service/ChatService');
 const PresenceService = require('../service/PresenceService');
+const RealtimeService = require('../service/RealtimeService');
 const {JOIN_CHAT_EVENT, LEAVE_CHAT_EVENT} = require('./socketEvents');
-const {getRoom} = require('./socketRoomManager');
 const {buildErrorResponse} = require('../utils/ResponseUtils');
 const {isValidUuid} = require('../utils/UuidUtils');
 const {logger} = require('../config/logger');
 
 const setupChatRoomHandlers = (io, socket) => {
+    if (io) {
+        RealtimeService.init(io);
+    }
     const user = socket.user;
 
     /**
@@ -22,9 +25,8 @@ const setupChatRoomHandlers = (io, socket) => {
             // Verify user is authorized to access this chat
             await ChatService.checkChatParticipant(chatId, user.id);
 
-            const roomId = getRoom(chatId);
-            socket.join(roomId);
-            logger.info(`${user.name} joined room ${roomId}`);
+            RealtimeService.joinChatRoom(socket, chatId);
+            logger.info(`${user.name} joined chat ${chatId}`);
 
             // Fetch presence for chat participants to include in the ack
             const participants = await ChatService.findChatParticipantsByChatId(chatId);
@@ -47,9 +49,8 @@ const setupChatRoomHandlers = (io, socket) => {
                 return ack?.(buildErrorResponse('Chat ID required'));
             }
 
-            const roomId = getRoom(chatId);
-            socket.leave(roomId);
-            logger.info(`${user.name} left room ${roomId}`);
+            RealtimeService.leaveChatRoom(socket, chatId);
+            logger.info(`${user.name} left chat ${chatId}`);
 
             ack?.({success: true});
         } catch (err) {
