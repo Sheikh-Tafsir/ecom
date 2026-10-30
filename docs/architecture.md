@@ -118,17 +118,17 @@ Client → Gateway (JWT validation) → Server/Chat Server → PostgreSQL/Redis 
 ```
 Every hop re-verifies the JWT (Gateway, Main Server, Chat Server). The full authentication sequence diagram is in [security.md → JWT Validation Flow](./security.md#jwt-validation-flow).
 
-### Real-time Chat (Hybrid Socket Architecture)
+### Real-time Chat (Hybrid Architecture)
 ```
-Client ──WS──▶ Gateway ──/socket.io/**──▶ Chat Server
-                                               │
-                                          PostgreSQL (persist message in transaction)
-                                               │
-                                    ┌──────────┴──────────┐
-                                    ▼                     ▼
-                       emit receive-message        emit chat-updated
-                       to chat_${chatId}           to each user_${participantId}
-                       (Active conversation)       (Sidebar preview & unread badge)
+Client ──HTTP POST /api/chats/:id/messages──▶ Gateway ──▶ Chat Server
+                                                            │
+                                                       PostgreSQL (persist message in transaction)
+                                                            │
+                                                 ┌──────────┴──────────┐
+                                                 ▼                     ▼
+                                     emit message-receive        emit chat-updated
+                                     to chat_${chatId}           to each user_${participantId}
+                                     (Active conversation)       (Sidebar preview & unread badge)
 ```
 
 - **Room Architecture:** Clients join their personal room `user_${userId}` on connect (for notifications & sidebar updates), and dynamically join/leave active rooms `chat_${chatId}` via `join-chat` and `leave-chat` events when selecting conversations.

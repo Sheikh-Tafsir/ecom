@@ -97,12 +97,20 @@ Standard `page` + `size` query params used for admin list endpoints.
 | PATCH  | `/api/v1/orders/:id/status`   | Update order status (admin)   |
 
 ### Chat & Media
-| Method | Path                            | Description                                          |
-|--------|---------------------------------|------------------------------------------------------|
-| GET    | `/chats`                        | List user conversations (with unread counts)         |
-| GET    | `/chats/:id`                    | Messages with cursor pagination (forward/backward)   |
-| POST   | `/chats/:id/view`               | Mark messages as seen (`{ lastSeen: ISO }`)          |
-| POST   | `/common/upload-signature`      | Generate signed Cloudinary signature for direct upload|
+| Method | Path                               | Description                                           |
+|--------|------------------------------------|-------------------------------------------------------|
+| GET    | `/chats`                           | List user conversations (with unread counts)          |
+| GET    | `/chats/:id`                       | Messages with cursor pagination (forward/backward)    |
+| POST   | `/chats/:id/messages`              | Send message to existing chat via HTTP                |
+| POST   | `/chats/messages`                  | Send message or start direct chat via HTTP            |
+| POST   | `/chats/groups`                    | Create a new group chat via HTTP                      |
+| POST   | `/chats/groups/:id/participants`   | Add participants to a group chat via HTTP             |
+| POST   | `/chats/:id/view`                  | Mark messages as seen (`{ lastSeen: ISO }`)           |
+| POST   | `/chats/users/:userId/block`       | Block a user                                          |
+| DELETE | `/chats/users/:userId/block`       | Unblock a user                                        |
+| GET    | `/chats/users/:userId/block-status`| Get block status between current user and target user |
+| POST   | `/uploads`                         | Direct server-side image upload                       |
+| POST   | `/uploads/signature`               | Generate signed Cloudinary signature for direct upload|
 
 ### Payments
 | Method | Path                      | Description                              |
@@ -128,23 +136,24 @@ Notifications are pushed over the authenticated Socket.IO connection. The Main S
 
 | Event | Payload | Description |
 | :--- | :--- | :--- |
-| `send-message` | `{ chatId?, receiverId?, content, contentType, tempId }` | Send message (acknowledges with `{ chatId }`) |
+| `send-message` | `{ chatId?, receiverId?, content, contentType, tempId }` | Send message (WebSocket fallback; HTTP REST preferred) |
 | `join-chat` | `{ chatId }` | Join active room `chat_${chatId}` (ack returns `{ success, presence }`) |
 | `leave-chat` | `{ chatId }` | Leave active room `chat_${chatId}` |
 | `typing` | `{ chatId }` | Emit typing indicator (throttled to 1 event / 2s) |
 | `presence-query` | `{ userIds: [...] }` | Bulk query presence for specific users |
-| `group-create-request` | `{ users, chatId }` | Create a new group chat |
-| `group-update-request` | `{ users, chatId }` | Add participants to group (admin only) |
+| `group-create-request` | `{ users, chatId }` | Create a new group chat (WebSocket fallback; HTTP REST preferred) |
+| `group-update-request` | `{ users, chatId }` | Add participants to group (WebSocket fallback; HTTP REST preferred) |
 
 ### Server ➜ Client
 
 | Event | Payload | Room / Scope | Description |
 | :--- | :--- | :--- | :--- |
-| `receive-message` | `{ data: { id, content, chatId, senderId, ... } }` | `chat_${chatId}` | Full message broadcast to active chat viewers |
+| `message-receive` | `{ data: { id, content, chatId, senderId, ... } }` | `chat_${chatId}` | Full message broadcast to active chat viewers |
 | `chat-updated` | `{ data: { chatId, lastMessage, lastSenderId, ... } }` | `user_${participantId}` | Lightweight sidebar preview & unread badge bump |
-| `messages-seen` | `{ data: { chatId, userId, lastSeen } }` | `user_${participantId}` | Real-time seen receipt broadcast |
+| `messages-seen` | `{ data: { chatId, userId, lastSeen } }` | `chat_${chatId}` | Real-time seen receipt broadcast |
 | `user-presence` | `{ userId, online, lastSeen }` | `user_${contactId}` | Real-time online/offline presence change |
 | `user-typing` | `{ chatId, userId, userName }` | `chat_${chatId}` | Typing notification (excludes sender) |
+| `user-blocked` | `{ userId, blocked }` | `user_${participantId}` | Real-time block state update |
 | `group-create-response` | `{ data: chatId }` | `user_${participantId}` | Signal to refresh sidebar chat list |
 | `group-update-response` | `{ data: chatId }` | `user_${participantId}` | Signal to refresh sidebar chat list |
 
