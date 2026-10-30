@@ -21,6 +21,8 @@ import static com.example.ecom.common.utils.CacheConstants.CACHE_OTPS;
 @RequiredArgsConstructor
 public class OtpService {
 
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     @Value("${rate-limit.otp.max-tries:3}")
     private int maxTries;
 
@@ -88,8 +90,7 @@ public class OtpService {
     }
 
     private int generateOtpValue() {
-        SecureRandom secureRandom = new SecureRandom();
-        return 100000 + secureRandom.nextInt(900000);
+        return 100000 + SECURE_RANDOM.nextInt(900000);
     }
 
     private void deleteOtp(OtpType type, String email) {

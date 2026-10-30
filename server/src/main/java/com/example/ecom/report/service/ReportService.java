@@ -30,7 +30,7 @@ public abstract class ReportService {
             DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").withZone(ZoneOffset.UTC);
 
     public void writeCsv(OutputStream outputStream, ReportCreateRequest request) {
-        PrintWriter writer = new PrintWriter(outputStream);
+        PrintWriter writer = new PrintWriter(new java.io.OutputStreamWriter(outputStream, java.nio.charset.StandardCharsets.UTF_8));
 
         writer.println(String.join(",", getHeaders()));
 

@@ -143,7 +143,7 @@ public class OrderService {
 
         restoreOrderStock(order);
 
-        User actor = userDetails != null ? userService.findByIdHelper(userDetails.getId()) : order.getUser();
+        User actor = userService.findByIdHelper(userDetails.getId());
         recordStatusChange(order, OrderStatus.PENDING, OrderStatus.CANCELLED, actor, "Order cancelled by customer");
         order.setStatus(OrderStatus.CANCELLED);
 
@@ -185,7 +185,7 @@ public class OrderService {
             restoreOrderStock(order);
         }
 
-        User actor = userDetails != null ? userService.findByIdHelper(userDetails.getId()) : null;
+        User actor = userService.findByIdHelper(userDetails.getId());
         recordStatusChange(order, oldStatus, status, actor, "Status updated to " + status.getValue());
         order.setStatus(status);
 

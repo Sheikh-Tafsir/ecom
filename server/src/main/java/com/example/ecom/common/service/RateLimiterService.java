@@ -124,7 +124,7 @@ public class RateLimiterService {
 
     private boolean tryConsume(String key, BucketConfiguration config) {
         if (proxyManager.isPresent()) {
-            Bucket bucket = proxyManager.get().builder().build(key.getBytes(), config);
+            Bucket bucket = proxyManager.get().builder().build(key.getBytes(java.nio.charset.StandardCharsets.UTF_8), config);
             return bucket.tryConsume(1);
         }
 
