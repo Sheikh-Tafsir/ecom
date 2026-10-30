@@ -63,7 +63,6 @@ const initNotificationSubscriber = (io) => {
 
 const closeNotificationSubscriber = async () => {
     PubSubService.unsubscribe(NOTIFICATION_CHANNEL, handleNotificationMessage);
-    await PubSubService.close();
 };
 
 module.exports = {

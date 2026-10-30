@@ -27,7 +27,7 @@ import static org.springframework.util.StringUtils.hasText;
 @Order(Ordered.HIGHEST_PRECEDENCE + 2)
 public class IpRateLimiterFilter implements WebFilter {
 
-    private static final String AUTH_PATH = "/auth";
+    private static final String AUTH_PATH = "/api/auth";
 
     private final RateLimiterService rateLimiterService;
 

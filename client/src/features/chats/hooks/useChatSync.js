@@ -105,9 +105,16 @@ export const useChatSync = (id, userId, onPresenceReceived) => {
 
         // Lightweight sidebar update — arrives via personal user room for ALL participants.
         // Updates the chat list preview without the full message payload.
+        // For the sender's own messages, the HTTP response path in useChatActions already
+        // updates the sidebar — skip the WS update to avoid a redundant re-render race.
         const handleChatUpdated = (response) => {
             const update = response.data;
             if (!update?.chatId) return;
+
+            const isOwnSentMessage = update.lastSenderId == userId;
+
+            // Skip sidebar update for own messages — useChatActions handles it via HTTP response
+            if (isOwnSentMessage) return;
 
             const isViewingThisChat = update.chatId == id;
 
@@ -123,16 +130,14 @@ export const useChatSync = (id, userId, onPresenceReceived) => {
                     return oldChats;
                 }
 
-                const isOwnSentMessage = update.lastSenderId == userId;
-
                 const updatedChat = {
                     ...currentChat,
                     lastMessage: update.lastMessage,
                     lastSent: update.lastSent,
                     lastSentId: update.lastSentId,
                     lastSenderId: update.lastSenderId,
-                    // Do not increment if own message OR if currently viewing this chat
-                    unreadMessage: (isOwnSentMessage || isViewingThisChat)
+                    // Do not increment if currently viewing this chat
+                    unreadMessage: isViewingThisChat
                         ? 0
                         : (currentChat.unreadMessage || 0) + 1,
                 };
@@ -140,28 +145,6 @@ export const useChatSync = (id, userId, onPresenceReceived) => {
                 const filteredChats = oldChats.filter(chat => chat?.id != update.chatId);
                 return [updatedChat, ...filteredChats];
             });
-
-            // If the sender sent a message via another tab/device and the chat is active,
-            // reconcile using tempId to replace the optimistic message
-            if (update.chatId == id && update.lastSenderId == userId && update.tempId) {
-                queryClient.setQueryData(queryKeys.chats.selected(id), (oldData) => {
-                    if (!oldData?.pages?.length) return oldData;
-
-                    const pages = [...oldData.pages];
-                    const firstPage = {...pages[0]};
-                    const messages = firstPage.messages || [];
-
-                    const updatedMessages = messages.map(msg => {
-                        if (msg.tempId && msg.tempId == update.tempId) {
-                            return {...msg, id: update.lastSentId, isTemporary: false};
-                        }
-                        return msg;
-                    });
-
-                    pages[0] = {...firstPage, messages: updatedMessages};
-                    return {...oldData, pages};
-                });
-            }
         };
 
         const handleGroupCreationResponse = () => queryClient.invalidateQueries(queryKeys.chats.all);

@@ -10,19 +10,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.nio.charset.StandardCharsets;
-import java.security.Key;
 import java.time.Duration;
 import java.util.Date;
 import java.util.UUID;
 
+import javax.crypto.SecretKey;
+
 @Service
 public class JwtService {
 
-    private final Key accessTokenSecret;
+    private final SecretKey accessTokenSecret;
 
     public final long accessTokenValidity;
 
-    private final Key refreshTokenSecret;
+    private final SecretKey refreshTokenSecret;
 
     public final long refreshTokenValidity;
 
@@ -39,15 +40,15 @@ public class JwtService {
 
     public String generateAccessToken(User user) {
         return Jwts.builder()
-                .setSubject(user.getId().toString())
-                .setId(UUID.randomUUID().toString())
+                .subject(user.getId().toString())
+                .id(UUID.randomUUID().toString())
                 .claim("id", user.getId())
                 .claim("name", user.getName())
                 .claim("email", user.getEmail())
                 .claim("status", user.getStatus())
                 .claim("permissions", user.getPermissionValues())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + Duration.ofSeconds(accessTokenValidity).toMillis()))
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + Duration.ofSeconds(accessTokenValidity).toMillis()))
                 .signWith(accessTokenSecret)
                 .compact();
     }
@@ -60,10 +61,10 @@ public class JwtService {
         String jti = UUID.randomUUID().toString();
 
         return Jwts.builder()
-                .setSubject(user.getId().toString())
-                .setId(jti)
-                .setIssuedAt(new Date())
-                .setExpiration(expiration)
+                .subject(user.getId().toString())
+                .id(jti)
+                .issuedAt(new Date())
+                .expiration(expiration)
                 .signWith(refreshTokenSecret)
                 .compact();
     }
@@ -116,13 +117,13 @@ public class JwtService {
      *
      * @throws JwtException if the token is invalid, expired, or lacks a JTI claim
      */
-    private Claims parseClaims(String token, Key secretKey) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(secretKey)
-                .setAllowedClockSkewSeconds(60)
+    private Claims parseClaims(String token, SecretKey secretKey) {
+        Claims claims = Jwts.parser()
+                .verifyWith(secretKey)
+                .clockSkewSeconds(60)
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
 
         if (!StringUtils.hasText(claims.getId())) {
             throw new JwtException("Token lacks mandatory JTI claim");

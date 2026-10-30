@@ -76,6 +76,7 @@ test('Notification Subscriber - USER notification routing', async (t) => {
         assert.strictEqual(emitted[0].payload.createdAt, '2026-10-15T10:00:00.000Z');
     } finally {
         await closeNotificationSubscriber();
+        await PubSubService.close();
         restore();
     }
 });
@@ -106,6 +107,7 @@ test('Notification Subscriber - ADMIN notification routing', async (t) => {
         assert.strictEqual(emitted[0].payload.createdAt, '2026-10-15T10:05:00.000Z');
     } finally {
         await closeNotificationSubscriber();
+        await PubSubService.close();
         restore();
     }
 });
@@ -134,6 +136,7 @@ test('Notification Subscriber - Fallback createdAt when not provided', async (t)
         assert.strictEqual(typeof emitted[0].payload.createdAt, 'string');
     } finally {
         await closeNotificationSubscriber();
+        await PubSubService.close();
         restore();
     }
 });
@@ -153,6 +156,7 @@ test('Notification Subscriber - Error resilience with invalid JSON', async (t) =
         assert.strictEqual(emitted.length, 0);
     } finally {
         await closeNotificationSubscriber();
+        await PubSubService.close();
         restore();
     }
 });
@@ -171,6 +175,7 @@ test('Notification Subscriber - Ignores messages on other channels', async (t) =
         assert.strictEqual(emitted.length, 0);
     } finally {
         await closeNotificationSubscriber();
+        await PubSubService.close();
         restore();
     }
 });
@@ -280,6 +285,7 @@ test('Notification Subscriber - targetPermissions routing', async (t) => {
         assert.strictEqual(emitted[0].payload.message, '5 pending orders');
     } finally {
         await closeNotificationSubscriber();
+        await PubSubService.close();
         restore();
     }
 });

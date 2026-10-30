@@ -4,6 +4,16 @@ const RuntimeError = require('../common/RuntimeError');
 const { logger } = require('../config/logger');
 
 /**
+ * Allowed Cloudinary folder names for upload signatures.
+ * Prevents user-controlled folder injection into arbitrary paths.
+ */
+const ALLOWED_FOLDERS = new Set([
+    'chat-images',
+    'chat-files',
+    'profile-images',
+]);
+
+/**
  * StorageService — Abstract File & Image Storage Layer
  *
  * Encapsulates file compression, direct uploads, and signature generation,
@@ -41,6 +51,9 @@ class StorageService {
      * @returns {Object}
      */
     generateUploadSignature(folder = 'chat-images') {
+        if (!ALLOWED_FOLDERS.has(folder)) {
+            throw new RuntimeError(400, `Invalid upload folder: '${folder}'. Allowed: ${[...ALLOWED_FOLDERS].join(', ')}`);
+        }
         try {
             return generateUploadSignature(folder);
         } catch (err) {
