@@ -29,7 +29,8 @@ const ChatMessages = ({
                           emitTyping,
                           blockStatus,
                           toggleBlock,
-                          isBlockLoading
+                          isBlockLoading,
+                          isSending
                       }) => {
 
     const {user} = useUserStore();
@@ -190,9 +191,16 @@ const ChatMessages = ({
                                 isMe ? "text-blue-100" : "text-slate-400"
                             )}>
                                 {message.createdAt ? format(new Date(message.createdAt), 'HH:mm') : '-'}
-                                {isMe && message.isTemporary && (
+                                {isMe && message.isTemporary && !message.failed && (
                                     <span
-                                        className="w-2 h-2 rounded-full border border-blue-200 border-t-transparent animate-spin"/>
+                                        className="w-2 h-2 rounded-full border border-blue-200 border-t-transparent animate-spin ml-1"/>
+                                )}
+                                {isMe && message.failed && (
+                                    <span
+                                        className="text-[10px] text-red-200 font-semibold ml-1 cursor-default"
+                                        title="Failed to send">
+                                        Failed
+                                    </span>
                                 )}
                             </div>
                         </div>
@@ -342,13 +350,17 @@ const ChatMessages = ({
                                 <Button
                                     type="submit"
                                     size="icon"
-                                    disabled={!newMessage.trim() && !newImage}
+                                    disabled={(!newMessage.trim() && !newImage) || isSending}
                                     className={cn(
                                         "h-10 w-10 rounded-xl transition-all duration-200 flex-shrink-0 mb-1 mr-1",
-                                        (newMessage.trim() || newImage) ? "bg-blue-600 hover:bg-blue-700 shadow-md translate-y-0" : "bg-slate-200 text-slate-400 translate-y-1"
+                                        (newMessage.trim() || newImage) && !isSending ? "bg-blue-600 hover:bg-blue-700 shadow-md translate-y-0" : "bg-slate-200 text-slate-400 translate-y-1"
                                     )}
                                 >
-                                    <Send className="h-4 w-4"/>
+                                    {isSending ? (
+                                        <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"/>
+                                    ) : (
+                                        <Send className="h-4 w-4"/>
+                                    )}
                                 </Button>
                             </form>
                             )}

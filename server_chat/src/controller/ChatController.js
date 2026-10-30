@@ -6,9 +6,9 @@ const ValidateUuidParams = require('../middleware/ValidateUuidParams');
 
 const ChatService = require('../service/ChatService');
 const BlockService = require('../service/BlockService');
-const {FOUND} = require("../utils/Messages");
+const MessageService = require('../service/MessageService');
+const {FOUND, SENT} = require("../utils/Messages");
 const {ok, created} = require("../utils/ResponseUtils");
-const {userRoom} = require('../constants/room.constants');
 
 const router = express.Router();
 
@@ -262,6 +262,112 @@ router.post("/:id/view", ValidateUuidParams('id'), AuthenticationMiddleware, Asy
     }
 
     created(res, {message: FOUND});
+}));
+
+// ==================== Send Message (HTTP) ====================
+
+/**
+ * @swagger
+ * /chats/{id}/messages:
+ *   post:
+ *     summary: Send a message in an existing chat via HTTP
+ *     tags: [Chats]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: The chat ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - content
+ *             properties:
+ *               content:
+ *                 type: string
+ *               contentType:
+ *                 type: string
+ *                 enum: [text, image, file]
+ *                 default: text
+ *               tempId:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Message sent successfully
+ *       400:
+ *         description: Empty message or exceeds limit
+ *       403:
+ *         description: User is blocked or not a participant
+ *       429:
+ *         description: Rate limit exceeded
+ */
+router.post("/:id/messages", ValidateUuidParams('id'), AuthenticationMiddleware, AsyncHandler(async (req, res) => {
+    const io = req.app.get('io');
+    const messageData = await MessageService.processAndSendMessage(
+        req.user,
+        { ...req.body, chatId: req.params.id },
+        io
+    );
+    created(res, { message: SENT, data: messageData });
+}));
+
+/**
+ * @swagger
+ * /chats/messages:
+ *   post:
+ *     summary: Send a message (existing chat or new direct conversation) via HTTP
+ *     tags: [Chats]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - content
+ *             properties:
+ *               chatId:
+ *                 type: string
+ *                 format: uuid
+ *               receiverId:
+ *                 type: string
+ *                 format: uuid
+ *               content:
+ *                 type: string
+ *               contentType:
+ *                 type: string
+ *                 enum: [text, image, file]
+ *                 default: text
+ *               tempId:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Message sent successfully
+ *       400:
+ *         description: Empty message or invalid payload
+ *       403:
+ *         description: User is blocked
+ *       429:
+ *         description: Rate limit exceeded
+ */
+router.post("/messages", AuthenticationMiddleware, AsyncHandler(async (req, res) => {
+    const io = req.app.get('io');
+    const messageData = await MessageService.processAndSendMessage(
+        req.user,
+        req.body,
+        io
+    );
+    created(res, { message: SENT, data: messageData });
 }));
 
 // ==================== Block / Unblock ====================

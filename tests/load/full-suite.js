@@ -184,6 +184,12 @@ export function chatActivity(data) {
                 `${BASE_URL}/api/chats/${chatId}`,
                 { ...params, tags: { name: 'chat_messages' } }
             );
+
+            http.post(
+                `${BASE_URL}/api/chats/${chatId}/messages`,
+                JSON.stringify({ content: 'k6 load test message', contentType: 'text' }),
+                { ...params, tags: { name: 'chat_send' } }
+            );
         }
     } catch (_) {}
 

@@ -63,7 +63,7 @@ const Chat = () => {
         queryClient.invalidateQueries(queryKeys.chats.selected(chatId));
     }, [navigate, queryClient]);
 
-    const {handleSendMessage, handleGroupManagementRequest} = useChatActions(
+    const {handleSendMessage, handleGroupManagementRequest, isSending} = useChatActions(
         id,
         user?.id,
         updateChatOnMessage,
@@ -175,6 +175,7 @@ const Chat = () => {
                     blockStatus={blockStatus}
                     toggleBlock={toggleBlock}
                     isBlockLoading={isBlockLoading}
+                    isSending={isSending}
                 />
             </div>
 

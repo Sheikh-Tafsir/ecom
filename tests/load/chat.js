@@ -41,6 +41,7 @@ export const options = {
     thresholds: {
         'http_req_duration{name:chat_list}': ['p(95)<500'],
         'http_req_duration{name:chat_messages}': ['p(95)<500'],
+        'http_req_duration{name:chat_send}': ['p(95)<500'],
         'http_req_failed': ['rate<0.05'],
     },
 };
@@ -81,6 +82,14 @@ export default function (data) {
             { ...params, tags: { name: 'chat_messages' } }
         );
         checkApiResponse(msgsRes, 'chat_messages');
+
+        // --- Send message via HTTP ---
+        const sendRes = http.post(
+            `${BASE_URL}/api/chats/${chatId}/messages`,
+            JSON.stringify({ content: 'Load test message via HTTP', contentType: 'text' }),
+            { ...params, tags: { name: 'chat_send' } }
+        );
+        checkApiResponse(sendRes, 'chat_send', 201);
 
         // --- Mark as viewed ---
         const viewRes = http.post(

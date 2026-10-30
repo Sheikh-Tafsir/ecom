@@ -33,7 +33,7 @@ const ErrorHandler = (err, req, res, next) => {
     }
 
     if (err.status === 403) {
-        return errorResponse(res, FORBIDDEN_ACCESS, err.status)
+        return errorResponse(res, err.message || FORBIDDEN_ACCESS, err.status)
     }
 
     if (err.status === 404) {
@@ -42,6 +42,10 @@ const ErrorHandler = (err, req, res, next) => {
 
     if (err.status === 422) {
         return errorResponse(res, err.message, err.status)
+    }
+
+    if (err.status === 429) {
+        return errorResponse(res, err.message || "Too many requests. Please slow down.", 429)
     }
 
     if (err.status === 503) {
