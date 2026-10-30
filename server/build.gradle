@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.5.13'
+    id 'org.springframework.boot' version '3.5.15'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'com.github.spotbugs' version '6.0.26'
     id 'org.owasp.dependencycheck' version '11.1.1'
@@ -96,7 +96,7 @@ dependencies {
 
 spotbugs {
     effort = com.github.spotbugs.snom.Effort.MAX
-    reportLevel = com.github.spotbugs.snom.Confidence.MEDIUM
+    reportLevel = com.github.spotbugs.snom.Confidence.HIGH
 }
 
 dependencyCheck {

@@ -78,15 +78,15 @@ fi
 # ------------------------------------------------------------------------------
 # Test 2: Gateway -> Chat Server Reverse Proxy
 # ------------------------------------------------------------------------------
-printf "${BOLD}[2/8] Gateway -> Chat Server: Reverse Proxy Routing (/chats/v3/api-docs)${NC}\n"
-RESPONSE=$(curl -s -w "\n%{http_code}" --max-time 5 "$GATEWAY_URL/chats/v3/api-docs" 2>/dev/null || printf "\n000")
+printf "${BOLD}[2/8] Gateway -> Chat Server: Reverse Proxy Routing (/api/chats/v3/api-docs)${NC}\n"
+RESPONSE=$(curl -s -w "\n%{http_code}" --max-time 5 "$GATEWAY_URL/api/chats/v3/api-docs" 2>/dev/null || printf "\n000")
 HTTP_CODE=$(printf "%s" "$RESPONSE" | tail -n1)
 BODY=$(printf "%s" "$RESPONSE" | sed '$d')
 
 if [ "$HTTP_CODE" -eq 200 ]; then
-    pass "GET /chats/v3/api-docs returned 200 OK (Chat Server reachable via Gateway)"
+    pass "GET /api/chats/v3/api-docs returned 200 OK (Chat Server reachable via Gateway)"
 else
-    fail "GET /chats/v3/api-docs returned HTTP $HTTP_CODE" "Response: $BODY"
+    fail "GET /api/chats/v3/api-docs returned HTTP $HTTP_CODE" "Response: $BODY"
 fi
 
 # ------------------------------------------------------------------------------
@@ -109,11 +109,11 @@ fi
 # ------------------------------------------------------------------------------
 # Test 4: Security & Authentication Filter Enforcement
 # ------------------------------------------------------------------------------
-printf "${BOLD}[4/8] Security Filter: Unauthenticated Request Rejection (/users/me)${NC}\n"
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$GATEWAY_URL/users/me" 2>/dev/null || printf "000")
+printf "${BOLD}[4/8] Security Filter: Unauthenticated Request Rejection (/api/users)${NC}\n"
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$GATEWAY_URL/api/users" 2>/dev/null || printf "000")
 
 if [ "$HTTP_CODE" -eq 401 ]; then
-    pass "GET /users/me correctly rejected with 401 Unauthorized (JWT filter active)"
+    pass "GET /api/users correctly rejected with 401 Unauthorized (JWT filter active)"
 else
     fail "Security enforcement check failed. Expected 401, got $HTTP_CODE" "Protected route did not reject unauthenticated request"
 fi

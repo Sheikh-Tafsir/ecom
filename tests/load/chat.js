@@ -24,7 +24,7 @@
  */
 
 import http from 'k6/http';
-import { check, sleep } from 'k6';
+import { sleep } from 'k6';
 import { BASE_URL, loginUsers, getVuToken, authHeaders, checkApiResponse } from './helpers.js';
 
 const TEST_EMAIL = __ENV.TEST_EMAIL || 'loadtest@example.com';
@@ -97,9 +97,7 @@ export default function (data) {
             JSON.stringify({ lastSeen: new Date().toISOString() }),
             { ...params, tags: { name: 'chat_view' } }
         );
-        check(viewRes, {
-            'view 200': (r) => r.status === 200,
-        });
+        checkApiResponse(viewRes, 'chat_view');
     }
 
     sleep(Math.random() * 3 + 3);

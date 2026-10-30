@@ -62,7 +62,7 @@ dependencies {
 
 spotbugs {
     effort = com.github.spotbugs.snom.Effort.MAX
-    reportLevel = com.github.spotbugs.snom.Confidence.MEDIUM
+    reportLevel = com.github.spotbugs.snom.Confidence.HIGH
 }
 
 dependencyCheck {
