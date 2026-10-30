@@ -206,20 +206,13 @@ class RealtimeService {
     }
 
     /**
-     * Broadcast group event (creation, update) to all group participants' personal rooms.
+     * Broadcast group event to all specified user personal rooms.
      * @param {string} chatId
      * @param {string} eventName
+     * @param {string[]} userIds - Pre-fetched participant user IDs
      */
-    async notifyGroupEvent(chatId, eventName) {
-        if (!chatId || !eventName) return;
-        const { ChatParticipant } = require('../model');
-        const participants = await ChatParticipant.findAll({
-            where: { chatId },
-            attributes: ['userId'],
-            raw: true,
-        });
-
-        const userIds = participants.map(p => p.userId);
+    notifyGroupEvent(chatId, eventName, userIds = []) {
+        if (!chatId || !eventName || userIds.length === 0) return;
         this.emitToUsers(userIds, eventName, ApiResponse({
             message: "Group event",
             data: chatId,

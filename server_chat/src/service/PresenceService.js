@@ -9,10 +9,6 @@ const { logger } = require('../config/logger');
  * last-seen status, shielding socket handlers from raw Redis data structures.
  */
 class PresenceService {
-    constructor() {
-        this.client = CacheService.getUnderlyingClient();
-    }
-
     /**
      * Track a socket connection for a user.
      * @param {string} userId - User ID
@@ -24,10 +20,10 @@ class PresenceService {
 
         try {
             const key = `${PRESENCE_PREFIX}${userId}`;
-            await this.client.sadd(key, socketId);
-            await this.client.expire(key, PRESENCE_TTL);
+            await CacheService.sadd(key, socketId);
+            await CacheService.expire(key, PRESENCE_TTL);
 
-            const count = await this.client.scard(key);
+            const count = await CacheService.scard(key);
             return {
                 isNewlyOnline: count === 1,
                 activeSocketCount: count,
@@ -49,13 +45,13 @@ class PresenceService {
 
         try {
             const key = `${PRESENCE_PREFIX}${userId}`;
-            await this.client.srem(key, socketId);
-            const count = await this.client.scard(key);
+            await CacheService.srem(key, socketId);
+            const count = await CacheService.scard(key);
 
             if (count === 0) {
                 const lastSeen = new Date().toISOString();
-                await this.client.set(`${LAST_SEEN_PREFIX}${userId}`, lastSeen);
-                await this.client.del(key);
+                await CacheService.set(`${LAST_SEEN_PREFIX}${userId}`, lastSeen);
+                await CacheService.del(key);
                 return { isNowOffline: true, lastSeen };
             }
 
@@ -75,7 +71,7 @@ class PresenceService {
         if (!Array.isArray(userIds) || userIds.length === 0) return {};
 
         try {
-            const pipeline = this.client.pipeline();
+            const pipeline = CacheService.pipeline();
             for (const uid of userIds) {
                 pipeline.scard(`${PRESENCE_PREFIX}${uid}`);
                 pipeline.get(`${LAST_SEEN_PREFIX}${uid}`);
@@ -113,7 +109,7 @@ class PresenceService {
         if (!Array.isArray(userIds) || userIds.length === 0) return 0;
 
         try {
-            const pipeline = this.client.pipeline();
+            const pipeline = CacheService.pipeline();
             for (const userId of userIds) {
                 pipeline.expire(`${PRESENCE_PREFIX}${userId}`, PRESENCE_TTL);
             }

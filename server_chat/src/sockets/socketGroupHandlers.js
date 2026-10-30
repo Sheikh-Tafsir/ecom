@@ -11,9 +11,6 @@ const { buildErrorResponse } = require("../utils/ResponseUtils");
 const { logger } = require('../config/logger');
 
 const setupGroupHandlers = (io, socket) => {
-    if (io) {
-        RealtimeService.init(io);
-    }
     const user = socket.user;
 
     socket.on(GROUP_CREATE_REQUEST_EVENT, async (reqBody, ack) => {
@@ -28,7 +25,14 @@ const setupGroupHandlers = (io, socket) => {
                 }));
             }
 
-            await RealtimeService.notifyGroupEvent(response.chatId, GROUP_CREATE_RESPONSE_EVENT);
+            const { ChatParticipant } = require('../model');
+            const participants = await ChatParticipant.findAll({
+                where: { chatId: response.chatId },
+                attributes: ['userId'],
+                raw: true,
+            });
+            const userIds = participants.map(p => p.userId);
+            RealtimeService.notifyGroupEvent(response.chatId, GROUP_CREATE_RESPONSE_EVENT, userIds);
         } catch (err) {
             if (typeof ack === 'function') {
                 ack(buildErrorResponse(err.message));
@@ -48,7 +52,14 @@ const setupGroupHandlers = (io, socket) => {
                 }));
             }
 
-            await RealtimeService.notifyGroupEvent(response.chatId, GROUP_UPDATE_RESPONSE_EVENT);
+            const { ChatParticipant } = require('../model');
+            const participants = await ChatParticipant.findAll({
+                where: { chatId: response.chatId },
+                attributes: ['userId'],
+                raw: true,
+            });
+            const userIds = participants.map(p => p.userId);
+            RealtimeService.notifyGroupEvent(response.chatId, GROUP_UPDATE_RESPONSE_EVENT, userIds);
         } catch (err) {
             if (typeof ack === 'function') {
                 ack(buildErrorResponse(err.message));

@@ -22,7 +22,6 @@ const initUserUpdateSubscriber = () => {
 
 const closeUserUpdateSubscriber = async () => {
     PubSubService.unsubscribe(USER_UPDATES_CHANNEL, handleUserUpdateMessage);
-    await PubSubService.close();
 };
 
 module.exports = {

@@ -8,6 +8,7 @@ const ChatService = require('../service/ChatService');
 const BlockService = require('../service/BlockService');
 const MessageService = require('../service/MessageService');
 const RealtimeService = require('../service/RealtimeService');
+const RuntimeError = require('../common/RuntimeError');
 const {FOUND, SENT} = require("../utils/Messages");
 const {ok, created} = require("../utils/ResponseUtils");
 
@@ -253,7 +254,7 @@ router.post("/:id/view", ValidateUuidParams('id'), AuthenticationMiddleware, Asy
 
     RealtimeService.notifyMessagesSeen(chatId, userId, req.body.lastSeen);
 
-    created(res, {message: FOUND});
+    ok(res, {message: 'Messages marked as seen'});
 }));
 
 // ==================== Send Message (HTTP) ====================
@@ -351,6 +352,14 @@ router.post("/:id/messages", ValidateUuidParams('id'), AuthenticationMiddleware,
  *         description: Rate limit exceeded
  */
 router.post("/messages", AuthenticationMiddleware, AsyncHandler(async (req, res) => {
+    // Validate UUID format for optional body IDs
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (req.body.chatId && !uuidRegex.test(req.body.chatId)) {
+        throw new RuntimeError(400, 'Invalid chatId format');
+    }
+    if (req.body.receiverId && !uuidRegex.test(req.body.receiverId)) {
+        throw new RuntimeError(400, 'Invalid receiverId format');
+    }
     const messageData = await MessageService.processAndSendMessage(
         req.user,
         req.body
@@ -396,8 +405,15 @@ router.post("/messages", AuthenticationMiddleware, AsyncHandler(async (req, res)
  */
 router.post("/groups", AuthenticationMiddleware, AsyncHandler(async (req, res) => {
     const response = await ChatService.createGroup(req.body, req.user);
+    const { ChatParticipant } = require('../model');
+    const participants = await ChatParticipant.findAll({
+        where: { chatId: response.chatId },
+        attributes: ['userId'],
+        raw: true,
+    });
+    const userIds = participants.map(p => p.userId);
     const { GROUP_CREATE_RESPONSE_EVENT } = require('../sockets/socketEvents');
-    await RealtimeService.notifyGroupEvent(response.chatId, GROUP_CREATE_RESPONSE_EVENT);
+    RealtimeService.notifyGroupEvent(response.chatId, GROUP_CREATE_RESPONSE_EVENT, userIds);
     created(res, { message: "Group created successfully", data: response.chatId });
 }));
 
@@ -437,8 +453,15 @@ router.post("/groups", AuthenticationMiddleware, AsyncHandler(async (req, res) =
  */
 router.post("/groups/:id/participants", ValidateUuidParams('id'), AuthenticationMiddleware, AsyncHandler(async (req, res) => {
     const response = await ChatService.updateGroup({ ...req.body, chatId: req.params.id }, req.user);
+    const { ChatParticipant } = require('../model');
+    const participants = await ChatParticipant.findAll({
+        where: { chatId: response.chatId },
+        attributes: ['userId'],
+        raw: true,
+    });
+    const userIds = participants.map(p => p.userId);
     const { GROUP_UPDATE_RESPONSE_EVENT } = require('../sockets/socketEvents');
-    await RealtimeService.notifyGroupEvent(response.chatId, GROUP_UPDATE_RESPONSE_EVENT);
+    RealtimeService.notifyGroupEvent(response.chatId, GROUP_UPDATE_RESPONSE_EVENT, userIds);
     ok(res, { message: "Group updated successfully", data: response.chatId });
 }));
 

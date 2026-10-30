@@ -58,7 +58,6 @@ const initNotificationSubscriber = (io) => {
     if (io) {
         RealtimeService.init(io);
     }
-
     return PubSubService.subscribe(NOTIFICATION_CHANNEL, handleNotificationMessage);
 };
 

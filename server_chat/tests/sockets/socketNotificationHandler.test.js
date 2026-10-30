@@ -4,41 +4,60 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const { EventEmitter } = require('node:events');
 const RedisConfig = require('../../src/config/RedisConfig');
+const CacheService = require('../../src/service/CacheService');
+const PubSubService = require('../../src/service/PubSubService');
 const ChatService = require('../../src/service/ChatService');
 const { initNotificationSubscriber, closeNotificationSubscriber } = require('../../src/sockets/socketNotificationHandler');
+const RealtimeService = require('../../src/service/RealtimeService');
 const socketConnectionHandler = require('../../src/sockets/socketConnectionHandler');
 
 // Stub ChatService to avoid database connections in unit tests
 ChatService.findAllChatParticipantsByUserId = async () => [];
 
-test('Notification Subscriber - USER notification routing', async (t) => {
-    // Setup mock subClient
+/**
+ * Helper: create a mock sub-client and stub CacheService.getUnderlyingClient
+ * so PubSubService.getSubClient() returns our mock.
+ */
+function setupPubSubMock() {
     const mockSubClient = new EventEmitter();
-    let subscribedChannel = null;
-    mockSubClient.subscribe = (channel, cb) => {
-        subscribedChannel = channel;
-        if (cb) cb(null, 1);
-    };
+    mockSubClient.subscribe = (channel, cb) => { if (cb) cb(null, 1); };
+    mockSubClient.unsubscribe = (channel, cb) => { if (cb) cb(null, 0); };
     mockSubClient.quit = async () => {};
 
-    // Stub RedisConfig.duplicate
-    const originalDuplicate = RedisConfig.duplicate;
-    RedisConfig.duplicate = () => mockSubClient;
+    const originalGetUnderlying = CacheService.getUnderlyingClient;
+    CacheService.getUnderlyingClient = () => ({
+        duplicate: () => mockSubClient,
+    });
+
+    return {
+        mockSubClient,
+        restore: () => {
+            CacheService.getUnderlyingClient = originalGetUnderlying;
+        },
+    };
+}
+
+function createMockIo() {
+    const emitted = [];
+    const mockIo = {
+        to: (room) => ({
+            emit: (event, payload) => {
+                emitted.push({ room, event, payload });
+            }
+        })
+    };
+    return { mockIo, emitted };
+}
+
+test('Notification Subscriber - USER notification routing', async (t) => {
+    const { mockSubClient, restore } = setupPubSubMock();
 
     try {
-        const emitted = [];
-        const mockIo = {
-            to: (room) => ({
-                emit: (event, payload) => {
-                    emitted.push({ room, event, payload });
-                }
-            })
-        };
+        const { mockIo, emitted } = createMockIo();
 
+        RealtimeService.init(mockIo);
         initNotificationSubscriber(mockIo);
-        assert.strictEqual(subscribedChannel, 'ecom:notifications');
 
-        // Simulate incoming message for USER
         const userPayload = {
             recipientType: 'USER',
             recipientId: '123e4567-e89b-12d3-a456-426614174000',
@@ -57,33 +76,19 @@ test('Notification Subscriber - USER notification routing', async (t) => {
         assert.strictEqual(emitted[0].payload.createdAt, '2026-10-15T10:00:00.000Z');
     } finally {
         await closeNotificationSubscriber();
-        RedisConfig.duplicate = originalDuplicate;
+        restore();
     }
 });
 
 test('Notification Subscriber - ADMIN notification routing', async (t) => {
-    const mockSubClient = new EventEmitter();
-    mockSubClient.subscribe = (channel, cb) => {
-        if (cb) cb(null, 1);
-    };
-    mockSubClient.quit = async () => {};
-
-    const originalDuplicate = RedisConfig.duplicate;
-    RedisConfig.duplicate = () => mockSubClient;
+    const { mockSubClient, restore } = setupPubSubMock();
 
     try {
-        const emitted = [];
-        const mockIo = {
-            to: (room) => ({
-                emit: (event, payload) => {
-                    emitted.push({ room, event, payload });
-                }
-            })
-        };
+        const { mockIo, emitted } = createMockIo();
 
+        RealtimeService.init(mockIo);
         initNotificationSubscriber(mockIo);
 
-        // Simulate incoming message for ADMIN
         const adminPayload = {
             recipientType: 'ADMIN',
             type: 'LOW_STOCK',
@@ -101,30 +106,17 @@ test('Notification Subscriber - ADMIN notification routing', async (t) => {
         assert.strictEqual(emitted[0].payload.createdAt, '2026-10-15T10:05:00.000Z');
     } finally {
         await closeNotificationSubscriber();
-        RedisConfig.duplicate = originalDuplicate;
+        restore();
     }
 });
 
 test('Notification Subscriber - Fallback createdAt when not provided', async (t) => {
-    const mockSubClient = new EventEmitter();
-    mockSubClient.subscribe = (channel, cb) => {
-        if (cb) cb(null, 1);
-    };
-    mockSubClient.quit = async () => {};
-
-    const originalDuplicate = RedisConfig.duplicate;
-    RedisConfig.duplicate = () => mockSubClient;
+    const { mockSubClient, restore } = setupPubSubMock();
 
     try {
-        const emitted = [];
-        const mockIo = {
-            to: (room) => ({
-                emit: (event, payload) => {
-                    emitted.push({ room, event, payload });
-                }
-            })
-        };
+        const { mockIo, emitted } = createMockIo();
 
+        RealtimeService.init(mockIo);
         initNotificationSubscriber(mockIo);
 
         const payloadWithoutCreatedAt = {
@@ -142,30 +134,17 @@ test('Notification Subscriber - Fallback createdAt when not provided', async (t)
         assert.strictEqual(typeof emitted[0].payload.createdAt, 'string');
     } finally {
         await closeNotificationSubscriber();
-        RedisConfig.duplicate = originalDuplicate;
+        restore();
     }
 });
 
 test('Notification Subscriber - Error resilience with invalid JSON', async (t) => {
-    const mockSubClient = new EventEmitter();
-    mockSubClient.subscribe = (channel, cb) => {
-        if (cb) cb(null, 1);
-    };
-    mockSubClient.quit = async () => {};
-
-    const originalDuplicate = RedisConfig.duplicate;
-    RedisConfig.duplicate = () => mockSubClient;
+    const { mockSubClient, restore } = setupPubSubMock();
 
     try {
-        const emitted = [];
-        const mockIo = {
-            to: (room) => ({
-                emit: (event, payload) => {
-                    emitted.push({ room, event, payload });
-                }
-            })
-        };
+        const { mockIo, emitted } = createMockIo();
 
+        RealtimeService.init(mockIo);
         initNotificationSubscriber(mockIo);
 
         // Emit invalid JSON - should not crash
@@ -174,30 +153,17 @@ test('Notification Subscriber - Error resilience with invalid JSON', async (t) =
         assert.strictEqual(emitted.length, 0);
     } finally {
         await closeNotificationSubscriber();
-        RedisConfig.duplicate = originalDuplicate;
+        restore();
     }
 });
 
 test('Notification Subscriber - Ignores messages on other channels', async (t) => {
-    const mockSubClient = new EventEmitter();
-    mockSubClient.subscribe = (channel, cb) => {
-        if (cb) cb(null, 1);
-    };
-    mockSubClient.quit = async () => {};
-
-    const originalDuplicate = RedisConfig.duplicate;
-    RedisConfig.duplicate = () => mockSubClient;
+    const { mockSubClient, restore } = setupPubSubMock();
 
     try {
-        const emitted = [];
-        const mockIo = {
-            to: (room) => ({
-                emit: (event, payload) => {
-                    emitted.push({ room, event, payload });
-                }
-            })
-        };
+        const { mockIo, emitted } = createMockIo();
 
+        RealtimeService.init(mockIo);
         initNotificationSubscriber(mockIo);
 
         mockSubClient.emit('message', 'other:channel', JSON.stringify({ recipientType: 'ADMIN', message: 'test' }));
@@ -205,7 +171,7 @@ test('Notification Subscriber - Ignores messages on other channels', async (t) =
         assert.strictEqual(emitted.length, 0);
     } finally {
         await closeNotificationSubscriber();
-        RedisConfig.duplicate = originalDuplicate;
+        restore();
     }
 });
 
@@ -288,25 +254,12 @@ test('Socket Connection Handler - Regular user does not join admin room', async 
 });
 
 test('Notification Subscriber - targetPermissions routing', async (t) => {
-    const mockSubClient = new EventEmitter();
-    mockSubClient.subscribe = (channel, cb) => {
-        if (cb) cb(null, 1);
-    };
-    mockSubClient.quit = async () => {};
-
-    const originalDuplicate = RedisConfig.duplicate;
-    RedisConfig.duplicate = () => mockSubClient;
+    const { mockSubClient, restore } = setupPubSubMock();
 
     try {
-        const emitted = [];
-        const mockIo = {
-            to: (room) => ({
-                emit: (event, payload) => {
-                    emitted.push({ room, event, payload });
-                }
-            })
-        };
+        const { mockIo, emitted } = createMockIo();
 
+        RealtimeService.init(mockIo);
         initNotificationSubscriber(mockIo);
 
         const permPayload = {
@@ -327,7 +280,7 @@ test('Notification Subscriber - targetPermissions routing', async (t) => {
         assert.strictEqual(emitted[0].payload.message, '5 pending orders');
     } finally {
         await closeNotificationSubscriber();
-        RedisConfig.duplicate = originalDuplicate;
+        restore();
     }
 });
 

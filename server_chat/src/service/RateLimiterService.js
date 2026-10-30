@@ -8,8 +8,22 @@ const {
 } = require('../constants/chat.constants');
 const { logger } = require('../config/logger');
 
+// Process-local fallback limits
+const FALLBACK_MAX_ENTRIES = 10000;
+
 // Process-local fallback counter map (used when Redis/cache is temporarily offline)
 const fallbackMemoryMap = new Map();
+
+// Periodic cleanup: remove stale entries every 30 seconds to prevent memory leaks
+const _cleanupInterval = setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of fallbackMemoryMap) {
+        if (now - entry.resetTime > FALLBACK_RATE_WINDOW_MS * 2) {
+            fallbackMemoryMap.delete(key);
+        }
+    }
+}, 30_000);
+_cleanupInterval.unref();
 
 /**
  * RateLimiterService — Manages rate limits across domain actions.
@@ -42,6 +56,12 @@ class RateLimiterService {
      * @private
      */
     _isMemoryLimited(userId) {
+        // Evict oldest entries if map exceeds max size
+        if (fallbackMemoryMap.size >= FALLBACK_MAX_ENTRIES && !fallbackMemoryMap.has(userId)) {
+            const firstKey = fallbackMemoryMap.keys().next().value;
+            fallbackMemoryMap.delete(firstKey);
+        }
+
         const now = Date.now();
         const entry = fallbackMemoryMap.get(userId);
 

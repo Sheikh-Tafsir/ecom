@@ -1,6 +1,6 @@
 const MainServerClient = require('./MainServerClient');
 const CacheService = require('./CacheService');
-const { USER_CACHE_TTL, USER_CACHE_PREFIX } = require('../constants/redis.constants');
+const { USER_CACHE_TTL, USER_CACHE_NEGATIVE_TTL, USER_CACHE_PREFIX } = require('../constants/redis.constants');
 
 /**
  * Fetch multiple users by their IDs with Redis caching and HTTP hydration.
@@ -68,7 +68,7 @@ const getUsersBatch = async (userIds = [], token) => {
             await CacheService.set(
                 `${USER_CACHE_PREFIX}${id}`,
                 JSON.stringify(userMap[id]),
-                60
+                USER_CACHE_NEGATIVE_TTL
             );
         }
     }

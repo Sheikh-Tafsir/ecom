@@ -18,7 +18,7 @@ const { MAX_MESSAGE_LENGTH } = require('../constants/chat.constants');
 const { CHAT_TYPE } = require('../utils/Enum');
 const { logger } = require('../config/logger');
 
-const sendMessage = async (senderId, body) => {
+const sendMessage = async (senderId, body, prefetchedParticipants = null) => {
     const {chatId, receiverId, content, contentType, tempId} = body;
 
     if (!content) {
@@ -63,7 +63,7 @@ const sendMessage = async (senderId, body) => {
         );
 
         // Create delivery receipts in the same transaction
-        const participants = await findChatParticipantsByChatId(chat.id);
+        const participants = prefetchedParticipants || await findChatParticipantsByChatId(chat.id);
         const now = new Date();
         const receipts = participants
             .filter(p => String(p.userId) !== String(senderId))
@@ -134,6 +134,7 @@ const processAndSendMessage = async (user, body, io = null) => {
     }
 
     // 3. Block checks
+    let prefetchedParticipants = null;
     if (receiverId) {
         if (await BlockService.isBlocked(userId, receiverId)) {
             throw new RuntimeError(403, "Cannot send message — user is blocked.");
@@ -141,8 +142,8 @@ const processAndSendMessage = async (user, body, io = null) => {
     } else if (chatId) {
         const chatType = await getChatType(chatId);
         if (chatType === CHAT_TYPE.DIRECT) {
-            const participants = await findChatParticipantsByChatId(chatId);
-            const otherUser = participants.find(p => String(p.userId) !== String(userId));
+            prefetchedParticipants = await findChatParticipantsByChatId(chatId);
+            const otherUser = prefetchedParticipants.find(p => String(p.userId) !== String(userId));
             if (otherUser && await BlockService.isBlocked(userId, otherUser.userId)) {
                 throw new RuntimeError(403, "Cannot send message — user is blocked.");
             }
@@ -156,7 +157,7 @@ const processAndSendMessage = async (user, body, io = null) => {
         content: content.trim(),
         contentType,
         tempId,
-    });
+    }, prefetchedParticipants);
 
     const messageData = message.toJSON ? message.toJSON() : message;
     if (tempId) {

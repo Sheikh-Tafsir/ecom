@@ -19,7 +19,7 @@ const setupMessageHandlers = (io, socket) => {
         try {
             TrimInput.sanitize(reqBody);
 
-            const messageData = await MessageService.processAndSendMessage(user, reqBody, io);
+            const messageData = await MessageService.processAndSendMessage(user, reqBody);
 
             if (typeof ack === 'function') {
                 ack(ApiResponse({

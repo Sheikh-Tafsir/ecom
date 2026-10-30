@@ -10,9 +10,6 @@ const { logger } = require('../config/logger');
  * If user just came online, broadcasts presence to active contacts via RealtimeService.
  */
 const trackConnect = async (io, socket) => {
-    if (io) {
-        RealtimeService.init(io);
-    }
     const userId = socket.user?.id;
     const socketId = socket.id;
 
@@ -30,9 +27,6 @@ const trackConnect = async (io, socket) => {
  * If user went fully offline (no other active sockets), broadcasts offline event with lastSeen.
  */
 const trackDisconnect = async (io, socket) => {
-    if (io) {
-        RealtimeService.init(io);
-    }
     const userId = socket.user?.id;
     const socketId = socket.id;
 
@@ -71,9 +65,6 @@ const setupPresenceHandler = (io, socket) => {
  * Runs every 60s. Prevents zombie presence entries if EXPIRE was missed.
  */
 const startPresenceHeartbeat = (io) => {
-    if (io) {
-        RealtimeService.init(io);
-    }
     const interval = setInterval(async () => {
         try {
             const activeUserIds = await RealtimeService.getConnectedUserIds();

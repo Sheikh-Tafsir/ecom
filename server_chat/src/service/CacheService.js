@@ -76,22 +76,92 @@ class CacheService {
 
     /**
      * Atomically increment a counter key and set an expiration window on initial creation.
-     * Used for rate limiting and sliding counters.
+     * Uses a Lua script to guarantee INCR + EXPIRE happen in a single round-trip.
      * @param {string} key
      * @param {number} windowSeconds
      * @returns {Promise<number>}
      */
     async incrementWithExpiry(key, windowSeconds) {
         try {
-            const count = await RedisConfig.incr(key);
-            if (count === 1) {
-                await RedisConfig.expire(key, windowSeconds);
-            }
-            return count;
+            const result = await RedisConfig.eval(
+                `local c = redis.call('INCR', KEYS[1])
+             if c == 1 then redis.call('EXPIRE', KEYS[1], ARGV[1]) end
+             return c`,
+                1, key, windowSeconds
+            );
+            return result;
         } catch (err) {
             logger.warn(`Cache increment failed for key "${key}":`, err.message);
             throw err;
         }
+    }
+
+    /**
+     * Add one or more members to a Redis set.
+     * @param {string} key
+     * @param {...string} members
+     * @returns {Promise<number>} Number of new members added
+     */
+    async sadd(key, ...members) {
+        try {
+            return await RedisConfig.sadd(key, ...members);
+        } catch (err) {
+            logger.warn(`Cache sadd failed for key "${key}":`, err.message);
+            return 0;
+        }
+    }
+
+    /**
+     * Remove one or more members from a Redis set.
+     * @param {string} key
+     * @param {...string} members
+     * @returns {Promise<number>} Number of members removed
+     */
+    async srem(key, ...members) {
+        try {
+            return await RedisConfig.srem(key, ...members);
+        } catch (err) {
+            logger.warn(`Cache srem failed for key "${key}":`, err.message);
+            return 0;
+        }
+    }
+
+    /**
+     * Get the number of members in a Redis set.
+     * @param {string} key
+     * @returns {Promise<number>}
+     */
+    async scard(key) {
+        try {
+            return await RedisConfig.scard(key);
+        } catch (err) {
+            logger.warn(`Cache scard failed for key "${key}":`, err.message);
+            return 0;
+        }
+    }
+
+    /**
+     * Set a key's TTL in seconds.
+     * @param {string} key
+     * @param {number} seconds
+     * @returns {Promise<number>} 1 if set, 0 if key doesn't exist
+     */
+    async expire(key, seconds) {
+        try {
+            return await RedisConfig.expire(key, seconds);
+        } catch (err) {
+            logger.warn(`Cache expire failed for key "${key}":`, err.message);
+            return 0;
+        }
+    }
+
+    /**
+     * Create a pipelined batch of commands for atomic execution.
+     * Callers chain Redis commands on the returned pipeline, then call .exec().
+     * @returns {import('ioredis').Pipeline}
+     */
+    pipeline() {
+        return RedisConfig.pipeline();
     }
 
     /**
@@ -103,7 +173,9 @@ class CacheService {
     }
 
     /**
-     * Direct access to underlying client for infrastructure components (Pub/Sub duplicate).
+     * Direct access to underlying Redis client for infrastructure-layer components
+     * that require operations beyond this abstraction (Pub/Sub duplicate connections,
+     * Socket.IO adapter wiring). Domain-layer code should use CacheService methods instead.
      * @returns {import('ioredis').Redis}
      */
     getUnderlyingClient() {
