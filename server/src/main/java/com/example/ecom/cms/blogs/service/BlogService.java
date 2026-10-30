@@ -43,7 +43,7 @@ public class BlogService {
                 .map(BlogResponse::new);
     }
 
-    @Cacheable(value = CACHE_BLOGS, key = "#title", condition = "#userDetails == null")
+    @Cacheable(value = CACHE_BLOGS, key = "#title", condition = "#userDetails == null", sync = true)
     public BlogResponse findByTitle(String title, CustomUserDetails userDetails) {
         Blogs post = blogRepository.findByTitle(title)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "BlogPost", title)));

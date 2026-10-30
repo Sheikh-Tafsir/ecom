@@ -27,7 +27,7 @@ public class BannerService {
 
     private final MessageService messageService;
 
-    @Cacheable(value = CACHE_BANNERS)
+    @Cacheable(value = CACHE_BANNERS, sync = true)
     public List<BannerResponse> findAllActive() {
         return bannerRepository.findAllByActiveTrueOrderByDisplayOrderAsc()
                 .stream()

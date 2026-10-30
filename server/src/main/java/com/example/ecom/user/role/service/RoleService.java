@@ -30,7 +30,7 @@ public class RoleService {
 
     @PreAuthorize("hasAnyAuthority(T(com.example.ecom.common.enums.Permission).ADMIN_ACCESS.getValue()," +
             "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
-    @Cacheable(value = CACHE_ROLES)
+    @Cacheable(value = CACHE_ROLES, sync = true)
     public List<RoleResponse> findAll() {
         return roleRepository.findAll()
                 .stream()
@@ -39,7 +39,7 @@ public class RoleService {
     }
 
     @PreAuthorize("hasAuthority(T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
-    @Cacheable(value = CACHE_ROLE, key = "#id")
+    @Cacheable(value = CACHE_ROLE, key = "#id", sync = true)
     public RoleResponse findById(UUID id) {
         return new RoleResponse(findByIdHelper(id));
     }

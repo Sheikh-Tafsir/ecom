@@ -85,7 +85,7 @@ public class UserService {
 
     @PreAuthorize("hasAnyAuthority(T(com.example.ecom.common.enums.Permission).ADMIN_ACCESS.getValue()," +
             "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
-    @Cacheable(value = CacheConstants.CACHE_USER, key = "#id")
+    @Cacheable(value = CacheConstants.CACHE_USER, key = "#id", sync = true)
     public UserResponse findById(UUID id) {
         return new UserResponse(findByIdHelper(id));
     }

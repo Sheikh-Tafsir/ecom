@@ -85,7 +85,7 @@ public class ProductService {
     @PostAuthorize("returnObject.status != T(com.example.ecom.common.enums.ProductStatus).DISCONTINUED || " +
             "hasAnyAuthority(T(com.example.ecom.common.enums.Permission).ADMIN_ACCESS.getValue(), " +
             "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
-    @Cacheable(value = CACHE_PRODUCTS, key = "#id")
+    @Cacheable(value = CACHE_PRODUCTS, key = "#id", sync = true)
     public ProductResponse findById(UUID id) {
         Product product = productRepository.findDetailsById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Product", id)));
@@ -111,7 +111,7 @@ public class ProductService {
     }
 
     @PreAuthorize("hasAuthority(T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
-    @Cacheable(value = CACHE_PRODUCTS_EDIT, key = "#id")
+    @Cacheable(value = CACHE_PRODUCTS_EDIT, key = "#id", sync = true)
     public ProductEditResponse findEditById(UUID id) {
         Product product = findEditByIdHelper(id);
 

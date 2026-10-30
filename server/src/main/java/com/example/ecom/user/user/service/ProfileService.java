@@ -38,7 +38,7 @@ public class ProfileService {
 
     private final AuthTokenService authTokenService;
 
-    @Cacheable(value = CACHE_PROFILE, key = "#userDetails.id")
+    @Cacheable(value = CACHE_PROFILE, key = "#userDetails.id", sync = true)
     public ProfileResponse getProfile(CustomUserDetails userDetails) {
         User user = userService.findByIdHelper(userDetails.getId());
         return new ProfileResponse(user, null);

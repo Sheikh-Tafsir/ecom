@@ -26,7 +26,7 @@ public class CategoryService {
 
     private final MessageService messageService;
 
-    @Cacheable(value = CACHE_CATEGORIES)
+    @Cacheable(value = CACHE_CATEGORIES, sync = true)
     public List<Category> findAll() {
         return categoryRepository.findAll();
     }

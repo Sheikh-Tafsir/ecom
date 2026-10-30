@@ -27,7 +27,7 @@ public class FaqService {
 
     private final MessageService messageService;
 
-    @Cacheable(value = CACHE_FAQS)
+    @Cacheable(value = CACHE_FAQS, sync = true)
     public List<FaqResponse> findAll() {
         return faqRepository.findAllByOrderByDisplayOrderAsc()
                 .stream()
