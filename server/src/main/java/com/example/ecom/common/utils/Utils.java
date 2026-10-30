@@ -20,6 +20,8 @@ import java.util.Collections;
 
 public final class Utils {
 
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     public static final int MAX_PAGE_SIZE = 24;
 
     public static final int MAX_SEARCH_SIZE = 5;
@@ -64,9 +66,8 @@ public final class Utils {
     }
 
     public static String generateSecureRandomPassword() {
-        SecureRandom secureRandom = new SecureRandom();
         byte[] randomBytes = new byte[32];
-        secureRandom.nextBytes(randomBytes);
+        SECURE_RANDOM.nextBytes(randomBytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
     }
 
