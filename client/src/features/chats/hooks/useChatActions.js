@@ -1,18 +1,12 @@
 import {useState, useCallback} from 'react';
 import {useQueryClient} from '@tanstack/react-query';
-import {useUserStore} from '@/store/useUserStore';
 import {AuthenticatedAxios} from "@/services/http/Axios.js";
 import {REGULAR_ACTION, TOAST_TYPE} from "@/constants/app.constants";
 import {CONTENT_TYPE} from "@/constants/chat.constants";
 import {toastify} from '@/common/toastify.js';
 import {queryKeys} from "@/services/reactQuery/queryKeys";
-import {
-    GROUP_CREATE_REQUEST_EVENT,
-    GROUP_UPDATE_REQUEST_EVENT
-} from "@/services/realtime/socketEvents.js";
 
 export const useChatActions = (id, userId, updateChatOnMessage, onNewChat) => {
-    const socket = useUserStore(state => state.socket);
     const queryClient = useQueryClient();
     const [isSending, setIsSending] = useState(false);
 
@@ -154,20 +148,25 @@ export const useChatActions = (id, userId, updateChatOnMessage, onNewChat) => {
     }, [id, isSending, userId, updateChatLocally, updateChatOnMessage, onNewChat, queryClient]);
 
     const handleGroupManagementRequest = useCallback(async (users, action, onSuccess) => {
-        if (!socket) return;
-
-        socket.emit(action == REGULAR_ACTION.CREATE ? GROUP_CREATE_REQUEST_EVENT : GROUP_UPDATE_REQUEST_EVENT, {
-            users,
-            chatId: id
-        }, (acknowledgment) => {
-            if (acknowledgment.error) {
-                toastify(TOAST_TYPE.ERROR, acknowledgment.error);
-                return;
+        try {
+            let res;
+            if (action === REGULAR_ACTION.CREATE) {
+                res = await AuthenticatedAxios.post('/chats/groups', { users });
+            } else {
+                res = await AuthenticatedAxios.post(`/chats/groups/${id}/participants`, { users });
             }
 
-            onSuccess(acknowledgment);
-        });
-    }, [id, socket]);
+            if (onSuccess && typeof onSuccess === 'function') {
+                onSuccess(res.data);
+            }
+        } catch (err) {
+            const errorMsg = err.response?.data?.error?.global ||
+                             err.response?.data?.message ||
+                             err.message ||
+                             'Failed to update group';
+            toastify(TOAST_TYPE.ERROR, errorMsg);
+        }
+    }, [id]);
 
     return {handleSendMessage, handleGroupManagementRequest, updateChatLocally, isSending};
 };
