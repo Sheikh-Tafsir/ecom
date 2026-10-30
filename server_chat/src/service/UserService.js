@@ -1,9 +1,6 @@
-const axios = require('axios');
+const MainServerClient = require('./MainServerClient');
 const CacheService = require('./CacheService');
-const { logger } = require('../config/logger');
-
-const {USER_CACHE_TTL, USER_CACHE_PREFIX} = require('../constants/redis.constants');
-const MAIN_SERVICE_URL = process.env.MAIN_SERVICE_URL;
+const { USER_CACHE_TTL, USER_CACHE_PREFIX } = require('../constants/redis.constants');
 
 /**
  * Fetch multiple users by their IDs with Redis caching and HTTP hydration.
@@ -35,65 +32,39 @@ const getUsersBatch = async (userIds = [], token) => {
         }
     }
 
-    // 2. Fetch missing users from Main Server via internal HTTP POST
+    // 2. Fetch missing users from Main Server via MainServerClient
     if (missingIds.length > 0) {
-        try {
-            const headers = {
-                'Content-Type': 'application/json'
-            };
-            if (process.env.INTERNAL_SERVICE_KEY) {
-                headers['X-Internal-Service-Key'] = process.env.INTERNAL_SERVICE_KEY;
-            }
-            if (token) {
-                headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-            }
+        const remoteUsers = await MainServerClient.fetchUsersBatch(missingIds, token);
+        for (const user of remoteUsers) {
+            if (user && user.id) {
+                const profile = {
+                    id: user.id,
+                    name: user.name || "User",
+                    image: user.image || null,
+                    email: user.email || null,
+                };
+                userMap[user.id] = profile;
 
-            const response = await axios.post(
-                `${MAIN_SERVICE_URL}/internal/users/batch`,
-                missingIds,
-                {
-                    headers,
-                    timeout: 5000
-                }
-            );
-
-            const responseData = response.data?.data || response.data;
-            if (Array.isArray(responseData)) {
-                for (const user of responseData) {
-                    if (user && user.id) {
-                        const profile = {
-                            id: user.id,
-                            name: user.name || "User",
-                            image: user.image || null,
-                            email: user.email || null
-                        };
-                        userMap[user.id] = profile;
-
-                        // Cache user profile
-                        await CacheService.set(
-                            `${USER_CACHE_PREFIX}${user.id}`,
-                            JSON.stringify(profile),
-                            USER_CACHE_TTL
-                        );
-                    }
-                }
+                // Cache user profile
+                await CacheService.set(
+                    `${USER_CACHE_PREFIX}${user.id}`,
+                    JSON.stringify(profile),
+                    USER_CACHE_TTL
+                );
             }
-        } catch (httpErr) {
-            logger.warn(`Failed to fetch users batch from Main Server (${MAIN_SERVICE_URL}/internal/users/batch):`, httpErr.message);
         }
     }
 
-    // 3. Ensure fallback default for any user not resolved
+    // 3. Ensure fallback default for any user not resolved (negative caching)
     for (const id of uniqueIds) {
         if (!userMap[id]) {
             userMap[id] = {
                 id,
                 name: "User",
                 image: null,
-                email: null
+                email: null,
             };
 
-            // Negative caching with short TTL to prevent cache penetration
             await CacheService.set(
                 `${USER_CACHE_PREFIX}${id}`,
                 JSON.stringify(userMap[id]),
@@ -119,5 +90,5 @@ const getUserById = async (userId, token) => {
 
 module.exports = {
     getUsersBatch,
-    getUserById
+    getUserById,
 };
