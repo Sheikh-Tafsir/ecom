@@ -113,7 +113,7 @@ public class RateLimiterService {
                 .build());
 
         if (proxyManager.isPresent()) {
-            return Mono.fromFuture(proxyManager.get().asAsync().builder().build(key.getBytes(), config).tryConsume(1))
+            return Mono.fromFuture(proxyManager.get().asAsync().builder().build(key.getBytes(java.nio.charset.StandardCharsets.UTF_8), config).tryConsume(1))
                     .onErrorResume(e -> {
                         log.warn("Distributed rate limiter error for key {}, falling back to local: {}", key, e.getMessage());
                         Bucket bucket = localBuckets.get(key, k -> Bucket.builder().addLimit(config.getBandwidths()[0]).build());
