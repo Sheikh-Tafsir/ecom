@@ -1,6 +1,6 @@
 package com.example.ecom.cms.banner.model;
-import com.example.ecom.common.model.AuditableEntity;
 
+import com.example.ecom.common.model.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

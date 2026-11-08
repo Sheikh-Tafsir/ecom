@@ -4,7 +4,6 @@ import com.example.ecom.auth.dto.TokenDto;
 import com.example.ecom.auth.validator.AuthValidator;
 import com.example.ecom.user.user.dto.ChangePasswordRequest;
 import com.example.ecom.user.user.dto.UpdateProfileRequest;
-import com.example.ecom.auth.service.AuthService;
 import com.example.ecom.user.user.dto.ProfileResponse;
 import com.example.ecom.user.user.service.ProfileService;
 import com.example.ecom.user.user.validator.ProfileUpdateRequestValidator;

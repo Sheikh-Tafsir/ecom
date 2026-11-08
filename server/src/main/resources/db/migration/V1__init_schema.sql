@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS order_history (
     order_id            UUID        NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
     from_status         VARCHAR(50),
     to_status           VARCHAR(50) NOT NULL,
-    changed_by_user_id  UUID        REFERENCES users(id),
+    changed_by_id  UUID        REFERENCES users(id),
     comment             VARCHAR(500),
     created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

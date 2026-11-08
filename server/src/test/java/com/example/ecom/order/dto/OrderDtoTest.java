@@ -5,9 +5,6 @@ import com.example.ecom.order.enums.PaymentMethod;
 import com.example.ecom.order.model.Order;
 import com.example.ecom.order.model.OrderItem;
 import com.example.ecom.order.model.OrderStatusHistory;
-import com.example.ecom.product.product.model.Product;
-import com.example.ecom.product.product.model.ProductImage;
-import com.example.ecom.user.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -147,25 +144,22 @@ class OrderDtoTest {
 
             OrderStatusHistoryResponse response = new OrderStatusHistoryResponse(
                     historyId, OrderStatus.PENDING, OrderStatus.ACCEPTED,
-                    changedById, "Admin User", "Approved", now
+                    changedById, "Approved", now
             );
 
             assertEquals(historyId, response.id());
             assertEquals(OrderStatus.PENDING, response.fromStatus());
             assertEquals(OrderStatus.ACCEPTED, response.toStatus());
-            assertEquals(changedById, response.changedByUserId());
-            assertEquals("Admin User", response.changedByUserName());
+            assertEquals(changedById, response.changedById());
             assertEquals("Approved", response.comment());
             assertEquals(now, response.createdAt());
         }
 
         @Test
-        @DisplayName("Construction from OrderStatusHistory entity with changedBy user")
+        @DisplayName("Construction from OrderStatusHistory entity with changedById")
         void constructor_fromEntityWithUser_setsFields() {
             UUID historyId = UUID.fromString("01927d6e-5ecf-7ffa-4acd-304152637485");
-            User adminUser = new User();
-            adminUser.setId(UUID.fromString("01927d6e-6fdf-70fa-3ace-415263748596"));
-            adminUser.setName("Super Admin");
+            UUID adminUserId = UUID.fromString("01927d6e-6fdf-70fa-3ace-415263748596");
 
             Order order = new Order();
             order.setId(orderId);
@@ -175,7 +169,7 @@ class OrderDtoTest {
             history.setOrder(order);
             history.setFromStatus(OrderStatus.ACCEPTED);
             history.setToStatus(OrderStatus.SHIPPED);
-            history.setChangedBy(adminUser);
+            history.setChangedById(adminUserId);
             history.setComment("Dispatched via courier");
             history.setCreatedAt(now);
 
@@ -184,27 +178,25 @@ class OrderDtoTest {
             assertEquals(historyId, response.id());
             assertEquals(OrderStatus.ACCEPTED, response.fromStatus());
             assertEquals(OrderStatus.SHIPPED, response.toStatus());
-            assertEquals(adminUser.getId(), response.changedByUserId());
-            assertEquals("Super Admin", response.changedByUserName());
+            assertEquals(adminUserId, response.changedById());
             assertEquals("Dispatched via courier", response.comment());
             assertEquals(now, response.createdAt());
         }
 
         @Test
-        @DisplayName("Construction from OrderStatusHistory entity without changedBy shows System")
+        @DisplayName("Construction from OrderStatusHistory entity without changedById")
         void constructor_fromEntityWithoutUser_showsSystem() {
             OrderStatusHistory history = new OrderStatusHistory();
             history.setId(UUID.fromString("01927d6e-70ef-71fa-2acf-526374859607"));
             history.setFromStatus(OrderStatus.PENDING);
             history.setToStatus(OrderStatus.REJECTED);
-            history.setChangedBy(null);
+            history.setChangedById(null);
             history.setComment("Auto-rejected after timeout");
             history.setCreatedAt(now);
 
             OrderStatusHistoryResponse response = new OrderStatusHistoryResponse(history);
 
-            assertNull(response.changedByUserId());
-            assertEquals("System", response.changedByUserName());
+            assertNull(response.changedById());
         }
     }
 
@@ -216,21 +208,15 @@ class OrderDtoTest {
         @DisplayName("Construction from OrderItem entity maps all fields")
         void constructor_fromEntity_setsAllFields() {
             UUID itemId = UUID.fromString("01927d6e-81ff-72fa-1ad0-637485960718");
-            Product product = new Product();
-            product.setId(productId);
-            product.setName("Wireless Mouse");
-            product.setPrice(new BigDecimal("49.99"));
-
-            ProductImage image = new ProductImage();
-            image.setImage("https://cdn.example.com/mouse.jpg");
-            product.addImage(image);
 
             Order order = new Order();
             order.setId(orderId);
 
             OrderItem item = new OrderItem();
             item.setId(itemId);
-            item.setProduct(product);
+            item.setProductId(productId);
+            item.setProductName("Wireless Mouse");
+            item.setProductImage("https://cdn.example.com/mouse.jpg");
             item.setOrder(order);
             item.setQuantity(3);
             item.setUnitPrice(new BigDecimal("49.99"));
@@ -248,19 +234,16 @@ class OrderDtoTest {
         }
 
         @Test
-        @DisplayName("Construction from OrderItem with no images sets productImage to null")
+        @DisplayName("Construction from OrderItem with no productImage sets null")
         void constructor_fromEntityNoImages_productImageNull() {
-            Product product = new Product();
-            product.setId(productId);
-            product.setName("Keyboard");
-            product.setPrice(new BigDecimal("79.99"));
-
             Order order = new Order();
             order.setId(orderId);
 
             OrderItem item = new OrderItem();
             item.setId(UUID.fromString("01927d6e-920f-73fa-0ad1-748596071829"));
-            item.setProduct(product);
+            item.setProductId(productId);
+            item.setProductName("Keyboard");
+            item.setProductImage(null);
             item.setOrder(order);
             item.setQuantity(1);
             item.setUnitPrice(new BigDecimal("79.99"));
@@ -285,15 +268,12 @@ class OrderDtoTest {
     class OrderListResponseTest {
 
         @Test
-        @DisplayName("Construction from Order entity with user maps all fields")
+        @DisplayName("Construction from Order entity maps all fields")
         void constructor_fromEntityWithUser_setsAllFields() {
-            User user = new User();
-            user.setId(userId);
-            user.setName("Bob Customer");
-
             Order order = new Order();
             order.setId(orderId);
-            order.setUser(user);
+            order.setUserId(userId);
+            order.setName("Bob Customer");
             order.setTotalPrice(new BigDecimal("750.00"));
             order.setStatus(OrderStatus.SHIPPED);
             order.setPaymentMethod(PaymentMethod.BKASH);
@@ -315,18 +295,17 @@ class OrderDtoTest {
         }
 
         @Test
-        @DisplayName("Construction from Order entity without user sets null userId and userName")
+        @DisplayName("Construction from Order entity without userId sets null userId")
         void constructor_fromEntityWithoutUser_nullUserFields() {
             Order order = new Order();
             order.setId(orderId);
-            order.setUser(null);
+            order.setUserId(null);
             order.setTotalPrice(new BigDecimal("100.00"));
             order.setStatus(OrderStatus.PENDING);
 
             OrderListResponse response = new OrderListResponse(order);
 
             assertNull(response.getUserId());
-            assertNull(response.getUserName());
         }
     }
 
@@ -337,18 +316,11 @@ class OrderDtoTest {
         @Test
         @DisplayName("Construction from Order entity with items and histories maps all fields")
         void constructor_fromEntityComplete_setsAllFields() {
-            User user = new User();
-            user.setId(userId);
-            user.setName("Charlie Buyer");
-
-            Product product = new Product();
-            product.setId(productId);
-            product.setName("Monitor");
-            product.setPrice(new BigDecimal("500.00"));
+            ProductDto productDto = new ProductDto(productId, "Monitor", null, new BigDecimal("500.00"), 1);
 
             Order order = new Order();
             order.setId(orderId);
-            order.setUser(user);
+            order.setUserId(userId);
             order.setName("Charlie Buyer");
             order.setPhone("01798765432");
             order.setAddress("456 Oak Ave, Chittagong");
@@ -358,13 +330,13 @@ class OrderDtoTest {
             order.setCreatedAt(now);
             order.setUpdatedAt(now);
             order.setIdempotencyKey("idem-key-test");
-            order.addItem(product, 1);
+            order.addItem(productDto);
 
             OrderStatusHistory history = new OrderStatusHistory();
             history.setId(UUID.fromString("01927d6e-a31f-74fa-9ad2-859607182930"));
             history.setFromStatus(OrderStatus.PENDING);
             history.setToStatus(OrderStatus.DELIVERED);
-            history.setChangedBy(null);
+            history.setChangedById(null);
             history.setCreatedAt(now);
             order.getStatusHistories().add(history);
 
@@ -385,11 +357,11 @@ class OrderDtoTest {
         }
 
         @Test
-        @DisplayName("Construction from Order entity without user and without histories")
+        @DisplayName("Construction from Order entity without userId and without histories")
         void constructor_fromEntityMinimal_handlesNulls() {
             Order order = new Order();
             order.setId(orderId);
-            order.setUser(null);
+            order.setUserId(null);
             order.setStatusHistories(null);
             order.setName("Guest");
             order.setPhone("01700000000");
@@ -399,7 +371,7 @@ class OrderDtoTest {
             OrderResponse response = new OrderResponse(order);
 
             assertNull(response.getUserId());
-            assertNull(response.getUserName());
+            assertEquals("Guest", response.getUserName());
             assertNull(response.getStatusHistories());
         }
     }

@@ -1,11 +1,10 @@
 package com.example.ecom.product.stock.service;
 
 import com.example.ecom.common.dto.DateRangeDto;
-import com.example.ecom.order.model.Order;
 import com.example.ecom.product.product.model.Product;
+import com.example.ecom.product.sale.model.Sale;
 import com.example.ecom.product.stock.model.Stock;
 import com.example.ecom.product.stock.model.StockItem;
-import com.example.ecom.product.sale.model.Sale;
 import com.example.ecom.common.service.IdempotencyService;
 import com.example.ecom.common.service.MessageService;
 import com.example.ecom.product.product.service.ProductService;
@@ -177,7 +176,13 @@ public class StockService {
 
     // -- helpers --
     @Transactional
-    public void consume(Product product, int quantityToConsume, Order order) {
+    public void consume(UUID productId, int quantityToConsume, UUID orderId) {
+        Product product = productService.findByIdHelper(productId);
+        consume(product, quantityToConsume, orderId);
+    }
+
+    @Transactional
+    public void consume(Product product, int quantityToConsume, UUID orderId) {
         List<StockItem> stockItems = stockItemRepository.findAvailableByProductIdOrderByOldest(product.getId());
 
         List<Sale> sales = new ArrayList<>();
@@ -193,7 +198,7 @@ public class StockService {
             item.setRemaining(available - consumed);
             quantityToConsume -= consumed;
 
-            sales.add(saleService.add(product, order, consumed, product.getPrice().subtract(item.getPurchasePrice())));
+            sales.add(saleService.add(product, orderId, consumed, product.getPrice().subtract(item.getPurchasePrice())));
         }
 
         if (quantityToConsume > 0) {

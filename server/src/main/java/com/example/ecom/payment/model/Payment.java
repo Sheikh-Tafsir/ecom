@@ -1,8 +1,7 @@
 package com.example.ecom.payment.model;
-import com.example.ecom.common.model.AuditableEntity;
-import com.example.ecom.order.model.Order;
 
 import com.example.ecom.payment.enums.PaymentStatus;
+import com.example.ecom.common.model.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

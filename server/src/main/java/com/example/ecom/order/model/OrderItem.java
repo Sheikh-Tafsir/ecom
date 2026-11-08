@@ -1,7 +1,6 @@
 package com.example.ecom.order.model;
-import com.example.ecom.common.model.BaseEntity;
-import com.example.ecom.product.product.model.Product;
 
+import com.example.ecom.order.dto.ProductDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -26,9 +25,14 @@ public class OrderItem {
     @Column(updatable = false, nullable = false)
     private UUID id;
 
-    @ManyToOne
-    @JoinColumn(name = "product_id")
-    private Product product;
+    @Column(name = "product_id", nullable = false)
+    private UUID productId;
+
+    @Column(name = "product_name")
+    private String productName;
+
+    @Column(name = "product_image")
+    private String productImage;
 
     private int quantity;
 
@@ -38,11 +42,13 @@ public class OrderItem {
     @JoinColumn(name = "order_id")
     private Order order;
 
-    public OrderItem(Product product, int quantity, Order order) {
-        this.product = product;
+    public OrderItem(ProductDto product, int quantity, Order order) {
+        this.productId = product.id();
+        this.productName = product.name();
+        this.productImage = product.image();
         this.quantity = quantity;
         this.order = order;
-        this.unitPrice = product.getPrice();
+        this.unitPrice = product.price();
     }
 
     public BigDecimal getSubtotal() {

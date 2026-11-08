@@ -32,6 +32,6 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .map(SimpleGrantedAuthority::new)
                 .toList();
 
-        return new CustomUserDetails(user.getId(), user.getEmail(), user.isEnabled(), authorities);
+        return new CustomUserDetails(user.getId(), user.getName(), user.getEmail(), user.isEnabled(), authorities);
     }
 }

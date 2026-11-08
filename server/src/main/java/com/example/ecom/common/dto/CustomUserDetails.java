@@ -15,21 +15,29 @@ public class CustomUserDetails implements UserDetails {
 
     private final UUID id;
 
+    private final String name;
+
     private final String email;
 
     private final boolean active;
 
     private final Collection<? extends GrantedAuthority> authorities;
 
-    public CustomUserDetails(UUID id, String email, boolean active, Collection<? extends GrantedAuthority> authorities) {
+    public CustomUserDetails(UUID id, String name, String email, boolean active, Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
+        this.name = name;
         this.email = email;
         this.active = active;
         this.authorities = authorities != null ? authorities : List.of();
     }
 
+    public CustomUserDetails(UUID id, String email, boolean active, Collection<? extends GrantedAuthority> authorities) {
+        this(id, null, email, active, authorities);
+    }
+
     public CustomUserDetails(Claims claims) {
         this.id = UUID.fromString(claims.getSubject());
+        this.name = claims.get("name", String.class);
         this.email = claims.get("email", String.class);
         this.active = "Active".equalsIgnoreCase(claims.get("status", String.class));
 
@@ -40,7 +48,6 @@ public class CustomUserDetails implements UserDetails {
                 .map(SimpleGrantedAuthority::new)
                 .toList();
     }
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;

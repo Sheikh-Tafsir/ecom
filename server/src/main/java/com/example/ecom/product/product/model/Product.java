@@ -1,9 +1,9 @@
 package com.example.ecom.product.product.model;
-import com.example.ecom.common.model.AuditableEntity;
-import com.example.ecom.product.category.model.Category;
-import com.example.ecom.product.review.model.Review;
 
+import com.example.ecom.product.review.model.Review;
+import com.example.ecom.product.category.model.Category;
 import com.example.ecom.product.product.enums.ProductStatus;
+import com.example.ecom.common.model.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

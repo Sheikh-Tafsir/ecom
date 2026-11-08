@@ -1,8 +1,8 @@
-package com.example.ecom.product.sale.dto;
+package com.example.ecom.sale.dto;
 
-import com.example.ecom.order.model.Order;
 import com.example.ecom.product.product.model.Product;
 import com.example.ecom.product.product.model.ProductImage;
+import com.example.ecom.product.sale.dto.SaleResponse;
 import com.example.ecom.product.sale.model.Sale;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

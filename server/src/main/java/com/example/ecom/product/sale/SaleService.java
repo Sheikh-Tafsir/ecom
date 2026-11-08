@@ -1,7 +1,6 @@
 package com.example.ecom.product.sale;
 
 import com.example.ecom.common.dto.DateRangeDto;
-import com.example.ecom.order.model.Order;
 import com.example.ecom.product.product.model.Product;
 import com.example.ecom.product.sale.model.Sale;
 import com.example.ecom.product.sale.dto.SaleResponse;
@@ -35,10 +34,10 @@ public class SaleService {
     }
 
     @Transactional
-    public Sale add(Product product, Order order, int quantity, BigDecimal unitProfit) {
+    public Sale add(Product product, UUID orderId, int quantity, BigDecimal unitProfit) {
         Sale sale = new Sale();
         sale.setProduct(product);
-        sale.setOrder(order);
+        sale.setOrderId(orderId);
         sale.setQuantity(quantity);
         sale.setProfit(unitProfit.multiply(BigDecimal.valueOf(quantity)));
 

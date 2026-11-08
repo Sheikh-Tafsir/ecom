@@ -1,11 +1,9 @@
 package com.example.ecom.product.stock.service;
 
-import com.example.ecom.order.model.Order;
 import com.example.ecom.product.product.model.Product;
+import com.example.ecom.product.sale.model.Sale;
 import com.example.ecom.product.stock.model.Stock;
 import com.example.ecom.product.stock.model.StockItem;
-import com.example.ecom.product.sale.model.Sale;
-import com.example.ecom.user.user.model.User;
 import com.example.ecom.common.service.IdempotencyService;
 import com.example.ecom.common.service.MessageService;
 import com.example.ecom.product.product.service.ProductService;
@@ -282,9 +280,6 @@ class StockServiceTest {
     @Test
     @DisplayName("consume should consume stock from oldest items first and create sales")
     void consume_sufficientStock_consumesAndCreatesSales() {
-        Order order = new Order();
-        order.setId(ORDER_ID);
-
         StockItem item1 = new StockItem();
         item1.setId(ITEM_ID);
         item1.setProduct(product);
@@ -302,10 +297,10 @@ class StockServiceTest {
 
         Sale sale1 = new Sale();
         Sale sale2 = new Sale();
-        when(saleService.add(eq(product), eq(order), eq(5), any(BigDecimal.class))).thenReturn(sale1);
-        when(saleService.add(eq(product), eq(order), eq(3), any(BigDecimal.class))).thenReturn(sale2);
+        when(saleService.add(eq(product), eq(ORDER_ID), eq(5), any(BigDecimal.class))).thenReturn(sale1);
+        when(saleService.add(eq(product), eq(ORDER_ID), eq(3), any(BigDecimal.class))).thenReturn(sale2);
 
-        stockService.consume(product, 8, order);
+        stockService.consume(product, 8, ORDER_ID);
 
         assertEquals(0, item1.getRemaining());
         assertEquals(7, item2.getRemaining());
@@ -315,9 +310,6 @@ class StockServiceTest {
     @Test
     @DisplayName("consume should throw ValidationException when stock is insufficient")
     void consume_insufficientStock_throwsValidationException() {
-        Order order = new Order();
-        order.setId(ORDER_ID);
-
         StockItem item1 = new StockItem();
         item1.setId(ITEM_ID);
         item1.setProduct(product);
@@ -326,22 +318,19 @@ class StockServiceTest {
 
         when(stockItemRepository.findAvailableByProductIdOrderByOldest(PRODUCT_ID))
                 .thenReturn(List.of(item1));
-        when(saleService.add(eq(product), eq(order), eq(3), any(BigDecimal.class))).thenReturn(new Sale());
+        when(saleService.add(eq(product), eq(ORDER_ID), eq(3), any(BigDecimal.class))).thenReturn(new Sale());
 
-        assertThrows(ValidationException.class, () -> stockService.consume(product, 10, order));
+        assertThrows(ValidationException.class, () -> stockService.consume(product, 10, ORDER_ID));
         verify(stockItemRepository).findAvailableByProductIdOrderByOldest(PRODUCT_ID);
     }
 
     @Test
     @DisplayName("consume should not create sales when no items are consumed")
     void consume_zeroQuantity_noSalesCreated() {
-        Order order = new Order();
-        order.setId(ORDER_ID);
-
         when(stockItemRepository.findAvailableByProductIdOrderByOldest(PRODUCT_ID))
                 .thenReturn(List.of());
 
-        stockService.consume(product, 0, order);
+        stockService.consume(product, 0, ORDER_ID);
 
         verify(saleService, never()).createAll(any());
     }

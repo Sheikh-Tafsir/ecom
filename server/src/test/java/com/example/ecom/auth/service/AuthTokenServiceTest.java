@@ -2,6 +2,7 @@ package com.example.ecom.auth.service;
 
 import com.example.ecom.user.user.enums.UserRefreshTokenStatus;
 import com.example.ecom.auth.repository.UserRefreshTokenRepository;
+import com.example.ecom.user.user.model.UserRefreshToken;
 import com.example.ecom.common.service.JwtService;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,7 +77,7 @@ class AuthTokenServiceTest {
         request.setCookies(new Cookie("refreshToken", "my-refresh-token-jwt"));
         MockHttpServletResponse response = new MockHttpServletResponse();
 
-        com.example.ecom.user.user.model.UserRefreshToken tokenRecord = new com.example.ecom.user.user.model.UserRefreshToken();
+        UserRefreshToken tokenRecord = new UserRefreshToken();
         tokenRecord.setJti("refresh-jti-888");
         tokenRecord.setStatus(UserRefreshTokenStatus.ACTIVE);
 

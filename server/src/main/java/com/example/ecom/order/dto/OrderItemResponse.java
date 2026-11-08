@@ -1,7 +1,6 @@
 package com.example.ecom.order.dto;
 
 import com.example.ecom.order.model.OrderItem;
-import com.example.ecom.product.product.model.ProductImage;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,12 +23,11 @@ public class OrderItemResponse {
 
     public OrderItemResponse(OrderItem item) {
         id = item.getId();
-        orderId = item.getOrder().getId();
-        productId = item.getProduct().getId();
-        productName = item.getProduct().getName();
-        productImage = item.getProduct().getImages().stream()
-                .findFirst().map(ProductImage::getImage).orElse(null);
-        productPrice = item.getProduct().getPrice();
+        orderId = item.getOrder() != null ? item.getOrder().getId() : null;
+        productId = item.getProductId();
+        productName = item.getProductName();
+        productImage = item.getProductImage();
+        productPrice = item.getUnitPrice();
         quantity = item.getQuantity();
         subtotal = item.getSubtotal();
     }

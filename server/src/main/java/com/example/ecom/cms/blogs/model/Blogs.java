@@ -1,7 +1,7 @@
 package com.example.ecom.cms.blogs.model;
-import com.example.ecom.common.model.AuditableEntity;
 
 import com.example.ecom.cms.blogs.enums.BlogPostStatus;
+import com.example.ecom.common.model.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

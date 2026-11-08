@@ -27,10 +27,8 @@ public class OrderListResponse {
 
     public OrderListResponse(Order order) {
         id = order.getId();
-        if (order.getUser() != null) {
-            userId = order.getUser().getId();
-            userName = order.getUser().getName();
-        }
+        userId = order.getUserId();
+        userName = order.getName();
         totalPrice = order.getTotalPrice();
         status = order.getStatus();
         paymentMethod = order.getPaymentMethod();

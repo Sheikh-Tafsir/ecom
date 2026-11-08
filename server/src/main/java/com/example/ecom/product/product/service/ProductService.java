@@ -198,6 +198,11 @@ public class ProductService {
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Product", id)));
     }
 
+    public void decreaseForOrder(UUID productId, int quantity) {
+        Product product = findByIdHelper(productId);
+        decreaseForOrder(product, quantity);
+    }
+
     @Caching(evict = {
             @CacheEvict(value = CACHE_PRODUCTS, key = "#product.id"),
             @CacheEvict(value = CACHE_PRODUCTS_EDIT, key = "#product.id")
@@ -231,6 +236,11 @@ public class ProductService {
 
         productRepository.save(product);
         return product;
+    }
+
+    public void increaseQuantity(UUID productId, int quantityChange) {
+        Product product = findByIdHelper(productId);
+        increaseQuantity(product, quantityChange);
     }
 
     @Caching(evict = {

@@ -1,5 +1,4 @@
 package com.example.ecom.product.category.model;
-import com.example.ecom.common.model.AuditableEntity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

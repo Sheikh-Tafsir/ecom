@@ -12,8 +12,7 @@ import java.util.UUID;
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, UUID> {
 
-    @EntityGraph(attributePaths = {"user"})
     Page<Review> findAllByProduct_Id(UUID productId, Pageable pageable);
 
-    boolean existsByUser_IdAndProduct_Id(UUID userId, UUID productId);
+    boolean existsByUserIdAndProduct_Id(UUID userId, UUID productId);
 }

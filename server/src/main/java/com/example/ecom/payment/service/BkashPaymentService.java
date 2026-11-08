@@ -1,17 +1,15 @@
 package com.example.ecom.payment.service;
 
 import com.example.ecom.payment.config.BkashConfigProperties;
+import com.example.ecom.order.service.OrderService;
 import com.example.ecom.payment.enums.PaymentStatus;
 import com.example.ecom.payment.model.Payment;
 import com.example.ecom.payment.dto.CreatePaymentRequest;
 import com.example.ecom.payment.dto.CreatePaymentResponse;
 import com.example.ecom.payment.repository.PaymentRepository;
 import com.example.ecom.order.model.Order;
-import com.example.ecom.order.model.OrderItem;
-import com.example.ecom.order.repository.OrderRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,20 +20,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.example.ecom.common.dto.CustomUserDetails;
-import com.example.ecom.order.enums.OrderStatus;
-import org.springframework.security.access.AccessDeniedException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import static com.example.ecom.common.enums.Permission.ADMIN_ACCESS;
-import static com.example.ecom.common.enums.Permission.SUPER_ADMIN_ACCESS;
-import static com.example.ecom.common.utils.SecurityUtil.hasPermission;
-import static com.example.ecom.common.utils.SecurityUtil.isOwner;
-import static com.example.ecom.common.utils.SecurityUtil.throwAccessException;
 
 @Slf4j
 @Service
@@ -47,7 +36,7 @@ public class BkashPaymentService implements PaymentService {
     private final WebClient bkashWebClient;
     private final ObjectMapper objectMapper;
     private final PaymentRepository paymentRepository;
-    private final OrderRepository orderRepository;
+    private final OrderService orderService;
 
     /**
      * Step 1: Create a payment and return the bKash payment URL
@@ -55,13 +44,7 @@ public class BkashPaymentService implements PaymentService {
     @Override
     @Transactional
     public String create(CreatePaymentRequest request, CustomUserDetails userDetails) {
-        Order order = orderRepository.findById(request.orderId())
-                .orElseThrow(() -> new EntityNotFoundException("Order not found with id: " + request.orderId()));
-
-        if (userDetails != null && !isOwner(order.getUser().getId(), userDetails)
-                && !hasPermission(List.of(SUPER_ADMIN_ACCESS.getValue(), ADMIN_ACCESS.getValue()), userDetails)) {
-            throwAccessException(order.getUser().getId(), userDetails.getId(), "Order", order.getId());
-        }
+        Order order = orderService.findByIdHelper(request.orderId(), userDetails);
 
         if (order.isPaid()) {
             throw new ValidationException("Order is already paid");
@@ -71,11 +54,7 @@ public class BkashPaymentService implements PaymentService {
             throw new ValidationException("Cannot pay for cancelled or rejected order");
         }
 
-        for (OrderItem item : order.getItems()) {
-            if (item.getProduct().getQuantity() < item.getQuantity()) {
-                throw new ValidationException("Insufficient stock for product: " + item.getProduct().getName());
-            }
-        }
+        orderService.validateStockForPayment(order);
 
         HttpHeaders headers = authHeaders();
 

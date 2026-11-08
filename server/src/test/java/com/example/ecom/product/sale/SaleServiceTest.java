@@ -1,9 +1,10 @@
-package com.example.ecom.product.sale;
+package com.example.ecom.sale;
 
-import com.example.ecom.order.model.Order;
 import com.example.ecom.product.product.model.Product;
-import com.example.ecom.product.sale.model.Sale;
+import com.example.ecom.product.sale.SaleRepository;
+import com.example.ecom.product.sale.SaleService;
 import com.example.ecom.product.sale.dto.SaleResponse;
+import com.example.ecom.product.sale.model.Sale;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,7 +44,6 @@ class SaleServiceTest {
     private static final UUID SALE_ID = UUID.fromString("c3c3c3c3-d4d4-e5e5-f6f6-a7a7a7a7a7a7");
 
     private Product product;
-    private Order order;
 
     @BeforeEach
     void setUp() {
@@ -52,9 +52,6 @@ class SaleServiceTest {
         product.setName("Bluetooth Speaker");
         product.setPrice(new BigDecimal("49.99"));
         product.setImages(new HashSet<>());
-
-        order = new Order();
-        order.setId(ORDER_ID);
     }
 
     @Test
@@ -63,7 +60,7 @@ class SaleServiceTest {
         Sale sale = new Sale();
         sale.setId(SALE_ID);
         sale.setProduct(product);
-        sale.setOrder(order);
+        sale.setOrderId(ORDER_ID);
         sale.setQuantity(3);
         sale.setProfit(new BigDecimal("45.00"));
         sale.setCreatedAt(Instant.now());
@@ -103,11 +100,11 @@ class SaleServiceTest {
     void add_validInputs_returnsSaleWithCorrectFields() {
         BigDecimal unitProfit = new BigDecimal("15.00");
 
-        Sale result = saleService.add(product, order, 3, unitProfit);
+        Sale result = saleService.add(product, ORDER_ID, 3, unitProfit);
 
         assertNotNull(result);
         assertEquals(product, result.getProduct());
-        assertEquals(order, result.getOrder());
+        assertEquals(ORDER_ID, result.getOrderId());
         assertEquals(3, result.getQuantity());
         assertEquals(new BigDecimal("45.00"), result.getProfit());
     }
@@ -117,7 +114,7 @@ class SaleServiceTest {
     void add_singleQuantity_profitEqualsUnitProfit() {
         BigDecimal unitProfit = new BigDecimal("10.50");
 
-        Sale result = saleService.add(product, order, 1, unitProfit);
+        Sale result = saleService.add(product, ORDER_ID, 1, unitProfit);
 
         assertEquals(new BigDecimal("10.50"), result.getProfit());
     }
@@ -127,7 +124,7 @@ class SaleServiceTest {
     void add_zeroQuantity_profitIsZero() {
         BigDecimal unitProfit = new BigDecimal("15.00");
 
-        Sale result = saleService.add(product, order, 0, unitProfit);
+        Sale result = saleService.add(product, ORDER_ID, 0, unitProfit);
 
         assertEquals(new BigDecimal("0.00"), result.getProfit());
         assertEquals(0, result.getQuantity());
@@ -138,7 +135,7 @@ class SaleServiceTest {
     void add_negativeUnitProfit_computesNegativeProfit() {
         BigDecimal unitProfit = new BigDecimal("-5.00");
 
-        Sale result = saleService.add(product, order, 2, unitProfit);
+        Sale result = saleService.add(product, ORDER_ID, 2, unitProfit);
 
         assertEquals(new BigDecimal("-10.00"), result.getProfit());
     }

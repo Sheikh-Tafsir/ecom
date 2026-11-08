@@ -1,5 +1,4 @@
 package com.example.ecom.product.product.model;
-import com.example.ecom.common.model.BaseEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
