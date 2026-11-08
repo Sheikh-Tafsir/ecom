@@ -12,6 +12,6 @@ import java.util.UUID;
 @Repository
 public interface OrderStatusHistoryRepository extends JpaRepository<OrderStatusHistory, UUID> {
 
-    @Query("SELECT osh FROM OrderStatusHistory osh LEFT JOIN FETCH osh.changedBy WHERE osh.order.id = :orderId ORDER BY osh.createdAt ASC")
+    @Query("SELECT osh FROM OrderStatusHistory osh WHERE osh.order.id = :orderId ORDER BY osh.createdAt ASC")
     List<OrderStatusHistory> findByOrderIdOrderByCreatedAtAsc(@Param("orderId") UUID orderId);
 }

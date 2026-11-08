@@ -5,6 +5,7 @@ import com.example.ecom.cms.blogs.enums.BlogPostStatus;
 import com.example.ecom.cms.blogs.model.Blogs;
 import com.example.ecom.cms.faq.model.Faq;
 import com.example.ecom.common.enums.Permission;
+import com.example.ecom.order.dto.ProductDto;
 import com.example.ecom.order.enums.OrderStatus;
 import com.example.ecom.order.enums.PaymentMethod;
 import com.example.ecom.order.model.Order;
@@ -176,11 +177,11 @@ class CommonModelTest {
         @Test
         @DisplayName("addItem adds a new item and calculates total")
         void addItem_newProduct_addsItemAndCalculatesTotal() {
-            Product product = new Product();
-            product.setId(UUID.fromString("01927d6c-b42f-75fa-9abc-637485960718"));
-            product.setPrice(new BigDecimal("150.00"));
+            ProductDto productDto = new ProductDto(
+                    UUID.fromString("01927d6c-b42f-75fa-9abc-637485960718"),
+                    "Test Product", null, new BigDecimal("150.00"), 2);
 
-            order.addItem(product, 2);
+            order.addItem(productDto);
 
             assertEquals(1, order.getItems().size());
             assertEquals(new BigDecimal("300.00"), order.getTotalPrice());
@@ -189,12 +190,12 @@ class CommonModelTest {
         @Test
         @DisplayName("addItem increases quantity for existing product")
         void addItem_existingProduct_increasesQuantity() {
-            Product product = new Product();
-            product.setId(UUID.fromString("01927d6c-c53f-76fa-8abd-748596071829"));
-            product.setPrice(new BigDecimal("100.00"));
+            UUID productId = UUID.fromString("01927d6c-c53f-76fa-8abd-748596071829");
+            ProductDto productDto1 = new ProductDto(productId, "Test Product", null, new BigDecimal("100.00"), 2);
+            ProductDto productDto2 = new ProductDto(productId, "Test Product", null, new BigDecimal("100.00"), 3);
 
-            order.addItem(product, 2);
-            order.addItem(product, 3);
+            order.addItem(productDto1);
+            order.addItem(productDto2);
 
             assertEquals(1, order.getItems().size());
             OrderItem item = order.getItems().iterator().next();
@@ -205,16 +206,15 @@ class CommonModelTest {
         @Test
         @DisplayName("addItem with multiple different products calculates total correctly")
         void addItem_multipleProducts_calculatesCorrectTotal() {
-            Product product1 = new Product();
-            product1.setId(UUID.fromString("01927d6c-d64f-77fa-7abe-859607182930"));
-            product1.setPrice(new BigDecimal("50.00"));
+            ProductDto productDto1 = new ProductDto(
+                    UUID.fromString("01927d6c-d64f-77fa-7abe-859607182930"),
+                    "Product 1", null, new BigDecimal("50.00"), 3);
+            ProductDto productDto2 = new ProductDto(
+                    UUID.fromString("01927d6c-e75f-78fa-6abf-960718293041"),
+                    "Product 2", null, new BigDecimal("200.00"), 1);
 
-            Product product2 = new Product();
-            product2.setId(UUID.fromString("01927d6c-e75f-78fa-6abf-960718293041"));
-            product2.setPrice(new BigDecimal("200.00"));
-
-            order.addItem(product1, 3);
-            order.addItem(product2, 1);
+            order.addItem(productDto1);
+            order.addItem(productDto2);
 
             assertEquals(2, order.getItems().size());
             assertEquals(new BigDecimal("350.00"), order.getTotalPrice());
@@ -223,11 +223,9 @@ class CommonModelTest {
         @Test
         @DisplayName("Setters update all order fields")
         void setters_allFields_updateCorrectly() {
-            User user = new User();
-            user.setId(UUID.fromString("01927d6c-f86f-79fa-5ac0-071829304152"));
-            user.setName("John Doe");
+            UUID userId = UUID.fromString("01927d6c-f86f-79fa-5ac0-071829304152");
 
-            order.setUser(user);
+            order.setUserId(userId);
             order.setName("Jane Doe");
             order.setPhone("01712345678");
             order.setAddress("123 Main St, Dhaka");
@@ -236,7 +234,7 @@ class CommonModelTest {
             order.setPaid(true);
             order.setIdempotencyKey("idem-key-12345");
 
-            assertEquals(user, order.getUser());
+            assertEquals(userId, order.getUserId());
             assertEquals("Jane Doe", order.getName());
             assertEquals("01712345678", order.getPhone());
             assertEquals("123 Main St, Dhaka", order.getAddress());
@@ -254,13 +252,13 @@ class CommonModelTest {
         @Test
         @DisplayName("Constructor with product, quantity, order sets unitPrice from product")
         void constructor_withProductAndOrder_setsUnitPrice() {
-            Product product = new Product();
-            product.setPrice(new BigDecimal("99.99"));
+            ProductDto productDto = new ProductDto(
+                    UUID.randomUUID(), "Test Product", "img.jpg", new BigDecimal("99.99"), 3);
             Order order = new Order();
 
-            OrderItem item = new OrderItem(product, 3, order);
+            OrderItem item = new OrderItem(productDto, 3, order);
 
-            assertEquals(product, item.getProduct());
+            assertEquals(productDto.id(), item.getProductId());
             assertEquals(3, item.getQuantity());
             assertEquals(order, item.getOrder());
             assertEquals(new BigDecimal("99.99"), item.getUnitPrice());
@@ -300,20 +298,19 @@ class CommonModelTest {
     class OrderStatusHistoryModelTest {
 
         @Test
-        @DisplayName("Custom constructor sets order, fromStatus, toStatus, changedBy, comment")
+        @DisplayName("Custom constructor sets order, fromStatus, toStatus, changedById, comment")
         void constructor_withAllFields_setsCorrectly() {
             Order order = new Order();
-            User user = new User();
-            user.setName("Admin User");
+            UUID userId = UUID.randomUUID();
 
             OrderStatusHistory history = new OrderStatusHistory(
-                    order, OrderStatus.PENDING, OrderStatus.ACCEPTED, user, "Order approved"
+                    order, OrderStatus.PENDING, OrderStatus.ACCEPTED, userId, "Order approved"
             );
 
             assertEquals(order, history.getOrder());
             assertEquals(OrderStatus.PENDING, history.getFromStatus());
             assertEquals(OrderStatus.ACCEPTED, history.getToStatus());
-            assertEquals(user, history.getChangedBy());
+            assertEquals(userId, history.getChangedById());
             assertEquals("Order approved", history.getComment());
         }
 
@@ -325,7 +322,7 @@ class CommonModelTest {
             assertNull(history.getOrder());
             assertNull(history.getFromStatus());
             assertNull(history.getToStatus());
-            assertNull(history.getChangedBy());
+            assertNull(history.getChangedById());
             assertNull(history.getComment());
         }
     }
@@ -579,15 +576,17 @@ class CommonModelTest {
         @DisplayName("Setters and getters work for all fields")
         void gettersSetters_allFields_workCorrectly() {
             Review review = new Review();
-            User user = new User();
+            UUID userId = UUID.randomUUID();
             Product product = new Product();
 
-            review.setUser(user);
+            review.setUserId(userId);
+            review.setUserName("Test User");
             review.setProduct(product);
             review.setRating(5);
             review.setComment("Excellent product!");
 
-            assertEquals(user, review.getUser());
+            assertEquals(userId, review.getUserId());
+            assertEquals("Test User", review.getUserName());
             assertEquals(product, review.getProduct());
             assertEquals(5, review.getRating());
             assertEquals("Excellent product!", review.getComment());
@@ -604,19 +603,19 @@ class CommonModelTest {
             Sale sale = new Sale();
             UUID id = UUID.fromString("01927d6d-4dbf-7efa-0ac5-526374859607");
             Product product = new Product();
-            Order order = new Order();
+            UUID orderId = UUID.randomUUID();
             Instant now = Instant.now();
 
             sale.setId(id);
             sale.setProduct(product);
-            sale.setOrder(order);
+            sale.setOrderId(orderId);
             sale.setQuantity(5);
             sale.setProfit(new BigDecimal("250.00"));
             sale.setCreatedAt(now);
 
             assertEquals(id, sale.getId());
             assertEquals(product, sale.getProduct());
-            assertEquals(order, sale.getOrder());
+            assertEquals(orderId, sale.getOrderId());
             assertEquals(5, sale.getQuantity());
             assertEquals(new BigDecimal("250.00"), sale.getProfit());
             assertEquals(now, sale.getCreatedAt());

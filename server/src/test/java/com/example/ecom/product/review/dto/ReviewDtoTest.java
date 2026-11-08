@@ -2,7 +2,6 @@ package com.example.ecom.product.review.dto;
 
 import com.example.ecom.product.product.model.Product;
 import com.example.ecom.product.review.model.Review;
-import com.example.ecom.user.user.model.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -54,21 +53,18 @@ class ReviewDtoTest {
     class ReviewResponseTest {
 
         @Test
-        @DisplayName("Construction from Review entity with user maps all fields")
+        @DisplayName("Construction from Review entity with user info maps all fields")
         void constructor_fromEntityWithUser_setsAllFields() {
             UUID reviewId = UUID.fromString("01927d71-097f-7afa-9ade-071829304152");
             Instant now = Instant.parse("2025-07-10T14:30:00Z");
-
-            User user = new User();
-            user.setName("Alex Reviewer");
-            user.setImage("https://cdn.example.com/alex.jpg");
 
             Product product = new Product();
             product.setName("Laptop Stand");
 
             Review review = new Review();
             review.setId(reviewId);
-            review.setUser(user);
+            review.setUserName("Alex Reviewer");
+            review.setUserImage("https://cdn.example.com/alex.jpg");
             review.setProduct(product);
             review.setRating(4);
             review.setComment("Good quality but a bit pricey");
@@ -85,11 +81,12 @@ class ReviewDtoTest {
         }
 
         @Test
-        @DisplayName("Construction from Review entity without user sets null user fields")
+        @DisplayName("Construction from Review entity without user info sets null user fields")
         void constructor_fromEntityWithoutUser_nullUserFields() {
             Review review = new Review();
             review.setId(UUID.fromString("01927d71-1a8f-7bfa-8adf-182930415263"));
-            review.setUser(null);
+            review.setUserName(null);
+            review.setUserImage(null);
             review.setRating(2);
             review.setComment("Bad experience");
             review.setCreatedAt(Instant.now());

@@ -18,19 +18,18 @@ import java.util.UUID;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, UUID> {
 
-    @EntityGraph(attributePaths = {"user", "items", "items.product", "items.product.images", "statusHistories", "statusHistories.changedBy"})
+    @EntityGraph(attributePaths = {"items", "statusHistories"})
     @Query("select o from Order o where o.id = :id")
     Optional<Order> findDetailsById(UUID id);
 
-    @EntityGraph(attributePaths = {"user", "items", "items.product"})
+    @EntityGraph(attributePaths = {"items"})
     @Query("""
             SELECT o FROM Order o
             LEFT JOIN o.items i
-            LEFT JOIN i.product p
-            WHERE (:userId IS NULL OR o.user.id = :userId)
+            WHERE (:userId IS NULL OR o.userId = :userId)
               AND (:statuses IS NULL OR o.status IN :statuses)
               AND o.createdAt BETWEEN :fromDate AND :toDate
-              AND (:productName IS NULL OR LOWER(CAST(p.name AS string)) LIKE LOWER(CONCAT('%', CAST(:productName AS string), '%')))
+              AND (:productName IS NULL OR LOWER(CAST(i.productName AS string)) LIKE LOWER(CONCAT('%', CAST(:productName AS string), '%')))
             ORDER BY o.createdAt ASC
             """)
     Page<Order> findAllByStatus(

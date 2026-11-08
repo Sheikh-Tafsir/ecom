@@ -1,15 +1,17 @@
 package com.example.ecom.order.service;
 
 import com.example.ecom.common.dto.CustomUserDetails;
+import com.example.ecom.common.service.notification.NotificationService;
+import com.example.ecom.order.enums.OrderStatus;
 import com.example.ecom.order.enums.PaymentMethod;
 import com.example.ecom.order.model.Order;
-import com.example.ecom.user.user.model.User;
+import com.example.ecom.product.product.model.Product;
 import com.example.ecom.common.service.IdempotencyService;
 import com.example.ecom.order.dto.CreateOrderRequest;
 import com.example.ecom.order.dto.CreateOrderResponse;
+import com.example.ecom.order.dto.ProductDto;
 import com.example.ecom.order.repository.OrderRepository;
 import com.example.ecom.product.product.service.ProductService;
-import com.example.ecom.user.user.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -30,9 +32,6 @@ class OrderServiceTest {
     private OrderRepository orderRepository;
 
     @Mock
-    private UserService userService;
-
-    @Mock
     private ProductService productService;
 
     @Mock
@@ -48,7 +47,7 @@ class OrderServiceTest {
     private com.example.ecom.product.stock.service.StockService stockService;
 
     @Mock
-    private com.example.ecom.common.service.notification.NotificationService notificationService;
+    private NotificationService notificationService;
 
     @InjectMocks
     private OrderService orderService;
@@ -57,19 +56,19 @@ class OrderServiceTest {
     private static final UUID ORDER_ID  = UUID.fromString("00000000-0000-0000-0000-000000000100");
     private static final UUID PRODUCT_ID = UUID.fromString("00000000-0000-0000-0000-000000000010");
 
+    private CustomUserDetails createUserDetails() {
+        return new CustomUserDetails(USER_ID, "Test User", "test@example.com", true, java.util.List.of());
+    }
+
     @Test
     void createOrder_withNoItems_shouldSaveEmptyOrder() {
         // Arrange
-        User user = new User();
-        user.setId(USER_ID);
-        user.setName("Test User");
-        CustomUserDetails userDetails = new CustomUserDetails(USER_ID, "test@example.com", true, java.util.List.of());
+        CustomUserDetails userDetails = createUserDetails();
 
         CreateOrderRequest request = new CreateOrderRequest(
                 new ArrayList<>(), "Test Receiver", "01234567890", "Test Address 12345", PaymentMethod.CASH_ON_DELIVERY
         );
 
-        when(userService.findByIdHelper(USER_ID)).thenReturn(user);
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
             Order order = invocation.getArgument(0);
             order.setId(ORDER_ID);
@@ -87,12 +86,9 @@ class OrderServiceTest {
     @Test
     void createOrder_withItems_shouldReserveStock() {
         // Arrange
-        User user = new User();
-        user.setId(USER_ID);
-        user.setName("Test User");
-        CustomUserDetails userDetails = new CustomUserDetails(USER_ID, "test@example.com", true, java.util.List.of());
+        CustomUserDetails userDetails = createUserDetails();
 
-        com.example.ecom.product.product.model.Product product = new com.example.ecom.product.product.model.Product();
+        Product product = new Product();
         product.setId(PRODUCT_ID);
         product.setPrice(new java.math.BigDecimal("50.00"));
         product.setQuantity(20);
@@ -104,7 +100,6 @@ class OrderServiceTest {
                 java.util.List.of(itemRequest), "Test Receiver", "01234567890", "Test Address 12345", PaymentMethod.CASH_ON_DELIVERY
         );
 
-        when(userService.findByIdHelper(USER_ID)).thenReturn(user);
         when(productService.findByIdHelper(PRODUCT_ID)).thenReturn(product);
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
             Order order = invocation.getArgument(0);
@@ -117,28 +112,21 @@ class OrderServiceTest {
 
         // Assert
         assertNotNull(response);
-        verify(productService, times(1)).decreaseForOrder(product, 2);
+        verify(productService, times(1)).decreaseForOrder(PRODUCT_ID, 2);
     }
 
     @Test
     void cancelOrder_shouldRestoreStock() {
         // Arrange
-        User user = new User();
-        user.setId(USER_ID);
-        CustomUserDetails userDetails = new CustomUserDetails(USER_ID, "test@example.com", true, java.util.List.of());
-
-        com.example.ecom.product.product.model.Product product = new com.example.ecom.product.product.model.Product();
-        product.setId(PRODUCT_ID);
-        product.setPrice(new java.math.BigDecimal("50.00"));
+        CustomUserDetails userDetails = createUserDetails();
 
         Order order = new Order();
         order.setId(ORDER_ID);
-        order.setUser(user);
-        order.setStatus(com.example.ecom.order.enums.OrderStatus.PENDING);
-        order.addItem(product, 3);
+        order.setUserId(USER_ID);
+        order.setStatus(OrderStatus.PENDING);
+        order.addItem(new ProductDto(PRODUCT_ID, "Product", null, new java.math.BigDecimal("50.00"), 3));
 
         when(orderRepository.findById(ORDER_ID)).thenReturn(java.util.Optional.of(order));
-        when(userService.findByIdHelper(USER_ID)).thenReturn(user);
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
@@ -146,6 +134,6 @@ class OrderServiceTest {
 
         // Assert
         assertNotNull(response);
-        verify(productService, times(1)).increaseQuantity(product, 3);
+        verify(productService, times(1)).increaseQuantity(PRODUCT_ID, 3);
     }
 }

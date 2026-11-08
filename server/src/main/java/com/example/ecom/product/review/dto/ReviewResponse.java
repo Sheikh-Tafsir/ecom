@@ -29,10 +29,8 @@ public class ReviewResponse {
         id = review.getId();
         rating = review.getRating();
         comment = review.getComment();
-        if (review.getUser() != null) {
-            userName = review.getUser().getName();
-            userImage = review.getUser().getImage();
-        }
+        userName = review.getUserName();
+        userImage = review.getUserImage();
         createdAt = review.getCreatedAt();
     }
 

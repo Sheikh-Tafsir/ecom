@@ -1,5 +1,6 @@
 package com.example.ecom.common.service.notification;
 
+import com.example.ecom.common.service.notification.RedisNotificationPublisher;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

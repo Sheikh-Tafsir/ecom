@@ -1,8 +1,6 @@
 package com.example.ecom.product.sale.model;
-import com.example.ecom.common.model.BaseEntity;
-import com.example.ecom.product.product.model.Product;
-import com.example.ecom.order.model.Order;
 
+import com.example.ecom.product.product.model.Product;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -33,9 +31,8 @@ public class Sale {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    @ManyToOne
-    @JoinColumn(name = "order_id")
-    private Order order;
+    @Column(name = "order_id")
+    private UUID orderId;
 
     private int quantity;
 

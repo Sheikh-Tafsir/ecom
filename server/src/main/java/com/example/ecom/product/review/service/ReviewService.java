@@ -52,7 +52,7 @@ public class ReviewService {
 
     @Transactional
     public void create(UUID id, CreateReviewRequest request, CustomUserDetails userDetails) {
-        if (reviewRepository.existsByUser_IdAndProduct_Id(userDetails.getId(), id)) {
+        if (reviewRepository.existsByUserIdAndProduct_Id(userDetails.getId(), id)) {
             throw new IllegalArgumentException("You have already reviewed this product");
         }
 
@@ -78,7 +78,9 @@ public class ReviewService {
         Review review = new Review();
         review.setRating(request.rating());
         review.setComment(request.comment());
-        review.setUser(user);
+        review.setUserId(user.getId());
+        review.setUserName(user.getName());
+        review.setUserImage(user.getImage());
         review.setProduct(product);
 
         reviewRepository.save(review);
@@ -89,8 +91,8 @@ public class ReviewService {
     public void update(UUID id, UpdateReviewRequest request, CustomUserDetails userDetails) {
         Review review = findByIdHelper(id);
 
-        if (!isOwner(review.getUser().getId(), userDetails)) {
-            throwAccessException(review.getUser().getId(), userDetails.getId(), "Review", review.getId());
+        if (!isOwner(review.getUserId(), userDetails)) {
+            throwAccessException(review.getUserId(), userDetails.getId(), "Review", review.getId());
         }
 
         Product product = review.getProduct();
@@ -119,9 +121,9 @@ public class ReviewService {
     @Transactional
     public void delete(UUID id, CustomUserDetails userDetails) {
         Review review = findByIdHelper(id);
-        if (!isOwner(review.getUser().getId(), userDetails)
+        if (!isOwner(review.getUserId(), userDetails)
                 && !hasPermission(List.of(SUPER_ADMIN_ACCESS.getValue(), ADMIN_ACCESS.getValue()), userDetails)) {
-            throwAccessException(review.getUser().getId(), userDetails.getId(), "Review", review.getId());
+            throwAccessException(review.getUserId(), userDetails.getId(), "Review", review.getId());
         }
 
         Product product = review.getProduct();

@@ -10,8 +10,7 @@ public record OrderStatusHistoryResponse(
         UUID id,
         OrderStatus fromStatus,
         OrderStatus toStatus,
-        UUID changedByUserId,
-        String changedByUserName,
+        UUID changedById,
         String comment,
         Instant createdAt
 ) {
@@ -20,8 +19,7 @@ public record OrderStatusHistoryResponse(
                 history.getId(),
                 history.getFromStatus(),
                 history.getToStatus(),
-                history.getChangedBy() != null ? history.getChangedBy().getId() : null,
-                history.getChangedBy() != null ? history.getChangedBy().getName() : "System",
+                history.getChangedById(),
                 history.getComment(),
                 history.getCreatedAt()
         );

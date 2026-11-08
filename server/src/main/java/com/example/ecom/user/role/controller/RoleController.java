@@ -1,6 +1,7 @@
 package com.example.ecom.user.role.controller;
 
 import com.example.ecom.common.dto.ApiResponse;
+import com.example.ecom.common.enums.Permission;
 import com.example.ecom.common.service.MessageService;
 import com.example.ecom.common.utils.ResponseUtils;
 import com.example.ecom.user.role.dto.RoleRequest;
@@ -24,8 +25,8 @@ public class RoleController {
     private final MessageService messageService;
 
     @GetMapping("/permissions")
-    public ResponseEntity<ApiResponse<com.example.ecom.common.enums.Permission[]>> getPermissions() {
-        return ResponseUtils.ok(com.example.ecom.common.enums.Permission.values(), messageService.get("successfully.found", "Permissions"));
+    public ResponseEntity<ApiResponse<Permission[]>> getPermissions() {
+        return ResponseUtils.ok(Permission.values(), messageService.get("successfully.found", "Permissions"));
     }
 
     @GetMapping

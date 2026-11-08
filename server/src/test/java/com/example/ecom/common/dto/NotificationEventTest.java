@@ -1,5 +1,6 @@
 package com.example.ecom.common.dto;
 
+import com.example.ecom.common.dto.NotificationEvent;
 import com.example.ecom.common.enums.NotificationType;
 import com.example.ecom.common.enums.Permission;
 import org.junit.jupiter.api.DisplayName;

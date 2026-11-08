@@ -8,7 +8,6 @@ import com.example.ecom.order.model.Order;
 import com.example.ecom.order.model.OrderItem;
 import com.example.ecom.order.model.OrderStatusHistory;
 import com.example.ecom.product.product.model.Product;
-import com.example.ecom.user.user.model.User;
 import com.example.ecom.common.service.MessageService;
 import com.example.ecom.order.dto.*;
 import com.example.ecom.order.repository.OrderRepository;
@@ -16,8 +15,8 @@ import com.example.ecom.order.dto.CreateOrderResponse;
 import com.example.ecom.order.repository.OrderStatusHistoryRepository;
 import com.example.ecom.product.product.service.ProductService;
 import com.example.ecom.product.stock.service.StockService;
-import com.example.ecom.user.user.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -52,8 +51,6 @@ public class OrderService {
     private final OrderRepository orderRepository;
 
     private final StockService stockService;
-
-    private final UserService userService;
 
     private final NotificationService notificationService;
 
@@ -91,18 +88,30 @@ public class OrderService {
     }
 
     public OrderResponse findById(UUID id, CustomUserDetails userDetails) {
+        return new OrderResponse(findByIdHelper(id, userDetails));
+    }
+
+    public Order findByIdHelper(UUID id, CustomUserDetails userDetails) {
         Order order = orderRepository.findDetailsById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Order", id)));
 
-        boolean isOwner = userDetails != null && order.getUser().getId().equals(userDetails.getId());
+        boolean isOwner = userDetails != null && order.getUserId().equals(userDetails.getId());
         boolean isAdmin = userDetails != null && hasPermission(
                 List.of(ADMIN_ACCESS.getValue(), SUPER_ADMIN_ACCESS.getValue()), userDetails);
 
         if (!isOwner && !isAdmin) {
             throw new AccessDeniedException("Access denied");
         }
+        return order;
+    }
 
-        return new OrderResponse(order);
+    public void validateStockForPayment(Order order) {
+        order.getItems().forEach(item -> {
+            Product product = productService.findByIdHelper(item.getProductId());
+            if (product.getQuantity() < item.getQuantity()) {
+                throw new ValidationException("Insufficient stock for product: " + product.getName());
+            }
+        });
     }
 
     @Transactional
@@ -114,23 +123,20 @@ public class OrderService {
         order.setPaymentMethod(request.paymentMethod());
         order.setIdempotencyKey(idempotencyKey);
 
-        User user = userService.findByIdHelper(userDetails.getId());
         if (isNull(order.getName())) {
-            order.setName(user.getName());
+            order.setName(userDetails.getName());
         }
 
-        order.setUser(user);
+        order.setUserId(userDetails.getId());
         request.items().forEach(itemRequest -> addProduct(order, itemRequest));
 
         // Reserve stock at checkout
-        order.getItems().forEach(item -> productService.decreaseForOrder(item.getProduct(), item.getQuantity()));
+        order.getItems().forEach(item -> productService.decreaseForOrder(item.getProductId(), item.getQuantity()));
 
         Order savedOrder = orderRepository.save(order);
-        recordStatusChange(savedOrder, null, OrderStatus.PENDING, user, "Order created");
+        recordStatusChange(savedOrder, null, OrderStatus.PENDING, userDetails.getId(), "Order created");
 
-        CreateOrderResponse response = new CreateOrderResponse(savedOrder.getId(), savedOrder.getTotalPrice());
-
-        return response;
+        return new CreateOrderResponse(savedOrder.getId(), savedOrder.getTotalPrice());
     }
 
     @Transactional
@@ -141,14 +147,13 @@ public class OrderService {
             throw new IllegalArgumentException("Order is not in pending state");
         }
 
-        if (!isOwner(order.getUser().getId(), userDetails)) {
-            throwAccessException(order.getUser().getId(), userDetails.getId(), "Order", order.getId());
+        if (!isOwner(order.getUserId(), userDetails)) {
+            throwAccessException(order.getUserId(), userDetails.getId(), "Order", order.getId());
         }
 
         restoreOrderStock(order);
 
-        User actor = userService.findByIdHelper(userDetails.getId());
-        recordStatusChange(order, OrderStatus.PENDING, OrderStatus.CANCELLED, actor, "Order cancelled by customer");
+        recordStatusChange(order, OrderStatus.PENDING, OrderStatus.CANCELLED, userDetails.getId(), "Order cancelled by customer");
         order.setStatus(OrderStatus.CANCELLED);
 
         return new OrderResponse(orderRepository.save(order));
@@ -189,8 +194,7 @@ public class OrderService {
             restoreOrderStock(order);
         }
 
-        User actor = userService.findByIdHelper(userDetails.getId());
-        recordStatusChange(order, oldStatus, status, actor, "Status updated to " + status.getValue());
+        recordStatusChange(order, oldStatus, status, userDetails.getId(), "Status updated to " + status.getValue());
         order.setStatus(status);
 
         return new OrderResponse(orderRepository.save(order));
@@ -210,7 +214,7 @@ public class OrderService {
         if (order.getStatus() != OrderStatus.ACCEPTED) {
             consumeStockForAcceptedOrder(order);
             order.setStatus(OrderStatus.ACCEPTED);
-            recordStatusChange(order, oldStatus, OrderStatus.ACCEPTED, order.getUser(), "Accepted upon payment confirmation");
+            recordStatusChange(order, oldStatus, OrderStatus.ACCEPTED, order.getUserId(), "Accepted upon payment confirmation");
         }
         order.setPaid(true);
         orderRepository.save(order);
@@ -220,7 +224,7 @@ public class OrderService {
         java.time.Instant oneDayAgo = java.time.Instant.now().minus(1, java.time.temporal.ChronoUnit.DAYS);
         java.time.Instant twoDaysAgo = java.time.Instant.now().minus(2, java.time.temporal.ChronoUnit.DAYS);
 
-        // 1. Notify admins about orders > 1 days old
+        // 1. Notify admins about orders > 1 day old
         List<Order> ordersToNotify = orderRepository.findAllByStatusAndCreatedAtBefore(OrderStatus.PENDING, oneDayAgo);
         if (!ordersToNotify.isEmpty()) {
             String message = "There are " + ordersToNotify.size() + " orders pending for more than 1 day.";
@@ -239,17 +243,17 @@ public class OrderService {
         });
     }
 
-    private void recordStatusChange(Order order, OrderStatus fromStatus, OrderStatus toStatus, User user, String comment) {
-        com.example.ecom.order.model.OrderStatusHistory history =
-                new com.example.ecom.order.model.OrderStatusHistory(order, fromStatus, toStatus, user, comment);
+    private void recordStatusChange(Order order, OrderStatus fromStatus, OrderStatus toStatus, UUID changedById, String comment) {
+        OrderStatusHistory history = new OrderStatusHistory(order, fromStatus, toStatus, changedById, comment);
         orderStatusHistoryRepository.save(history);
+
         if (order.getStatusHistories() != null) {
             order.getStatusHistories().add(history);
         }
     }
 
     private void restoreOrderStock(Order order) {
-        order.getItems().forEach(item -> productService.increaseQuantity(item.getProduct(), item.getQuantity()));
+        order.getItems().forEach(item -> productService.increaseQuantity(item.getProductId(), item.getQuantity()));
     }
 
     private Order findByIdHelper(UUID id) {
@@ -259,13 +263,17 @@ public class OrderService {
 
     private void addProduct(Order order, CreateOrderItemRequest request) {
         Product product = productService.findByIdHelper(request.productId());
-        order.addItem(product, request.quantity());
+        String firstImage = product.getImages() != null
+                && !product.getImages().isEmpty() ? product.getImages().iterator().next().getImage() : null;
+
+        ProductDto productDto = new ProductDto(product.getId(), product.getName(), firstImage, product.getPrice(), request.quantity());
+        order.addItem(productDto);
     }
 
     private void consumeStockForAcceptedOrder(Order order) {
         // Sort by product ID to prevent deadlock from non-deterministic lock order
         order.getItems().stream()
-            .sorted(Comparator.comparing(item -> item.getProduct().getId()))
-            .forEach(item -> stockService.consume(item.getProduct(), item.getQuantity(), item.getOrder()));
+            .sorted(Comparator.comparing(OrderItem::getProductId))
+            .forEach(item -> stockService.consume(item.getProductId(), item.getQuantity(), order.getId()));
     }
 }

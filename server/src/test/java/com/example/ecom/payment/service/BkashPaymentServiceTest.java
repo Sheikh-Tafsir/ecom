@@ -5,11 +5,8 @@ import com.example.ecom.common.dto.CustomUserDetails;
 import com.example.ecom.order.enums.OrderStatus;
 import com.example.ecom.payment.enums.PaymentStatus;
 import com.example.ecom.order.model.Order;
-import com.example.ecom.order.model.OrderItem;
 import com.example.ecom.payment.model.Payment;
-import com.example.ecom.product.product.model.Product;
-import com.example.ecom.user.user.model.User;
-import com.example.ecom.order.repository.OrderRepository;
+import com.example.ecom.order.service.OrderService;
 import com.example.ecom.payment.dto.CreatePaymentRequest;
 import com.example.ecom.payment.dto.CreatePaymentResponse;
 import com.example.ecom.payment.repository.PaymentRepository;
@@ -36,6 +33,7 @@ import java.util.function.Function;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -58,27 +56,23 @@ class BkashPaymentServiceTest {
     private PaymentRepository paymentRepository;
 
     @Mock
-    private OrderRepository orderRepository;
+    private OrderService orderService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private BkashPaymentService bkashPaymentService;
 
     private Order testOrder;
-    private User orderOwner;
 
     @BeforeEach
     void setUp() {
         bkashPaymentService = new BkashPaymentService(
-                config, tokenService, bkashWebClient, objectMapper, paymentRepository, orderRepository
+                config, tokenService, bkashWebClient, objectMapper, paymentRepository, orderService
         );
-
-        orderOwner = new User();
-        orderOwner.setId(USER_ID);
 
         testOrder = new Order();
         testOrder.setId(ORDER_ID);
-        testOrder.setUser(orderOwner);
+        testOrder.setUserId(USER_ID);
         testOrder.setTotalPrice(new BigDecimal("1500.00"));
         testOrder.setStatus(OrderStatus.PENDING);
         testOrder.setPaid(false);
@@ -92,13 +86,13 @@ class BkashPaymentServiceTest {
     void create_orderNotFound_throwsEntityNotFoundException() {
         CreatePaymentRequest request = new CreatePaymentRequest(USER_ID, ORDER_ID, new BigDecimal("1500.00"), "ref");
 
-        when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.empty());
+        when(orderService.findByIdHelper(eq(ORDER_ID), any())).thenThrow(new EntityNotFoundException("Order not found: " + ORDER_ID));
 
         EntityNotFoundException ex = assertThrows(EntityNotFoundException.class,
                 () -> bkashPaymentService.create(request, null));
 
         assertTrue(ex.getMessage().contains(ORDER_ID.toString()));
-        verify(orderRepository).findById(ORDER_ID);
+        verify(orderService).findByIdHelper(eq(ORDER_ID), any());
     }
 
     @Test
@@ -107,7 +101,7 @@ class BkashPaymentServiceTest {
         testOrder.setPaid(true);
         CreatePaymentRequest request = new CreatePaymentRequest(USER_ID, ORDER_ID, new BigDecimal("1500.00"), "ref");
 
-        when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.of(testOrder));
+        when(orderService.findByIdHelper(eq(ORDER_ID), any())).thenReturn(testOrder);
 
         ValidationException ex = assertThrows(ValidationException.class,
                 () -> bkashPaymentService.create(request, null));
@@ -122,7 +116,7 @@ class BkashPaymentServiceTest {
         testOrder.setStatus(OrderStatus.CANCELLED);
         CreatePaymentRequest request = new CreatePaymentRequest(USER_ID, ORDER_ID, new BigDecimal("1500.00"), "ref");
 
-        when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.of(testOrder));
+        when(orderService.findByIdHelper(eq(ORDER_ID), any())).thenReturn(testOrder);
 
         ValidationException ex = assertThrows(ValidationException.class,
                 () -> bkashPaymentService.create(request, null));
@@ -136,7 +130,7 @@ class BkashPaymentServiceTest {
         testOrder.setStatus(OrderStatus.REJECTED);
         CreatePaymentRequest request = new CreatePaymentRequest(USER_ID, ORDER_ID, new BigDecimal("1500.00"), "ref");
 
-        when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.of(testOrder));
+        when(orderService.findByIdHelper(eq(ORDER_ID), any())).thenReturn(testOrder);
 
         ValidationException ex = assertThrows(ValidationException.class,
                 () -> bkashPaymentService.create(request, null));
@@ -147,18 +141,10 @@ class BkashPaymentServiceTest {
     @Test
     @DisplayName("Should throw ValidationException when product has insufficient stock")
     void create_insufficientStock_throwsValidationException() {
-        Product product = new Product();
-        product.setName("Wireless Mouse");
-        product.setQuantity(2);
-
-        OrderItem orderItem = new OrderItem();
-        orderItem.setProduct(product);
-        orderItem.setQuantity(5); // more than available
-
-        testOrder.setItems(Set.of(orderItem));
-
         CreatePaymentRequest request = new CreatePaymentRequest(USER_ID, ORDER_ID, new BigDecimal("1500.00"), "ref");
-        when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.of(testOrder));
+        when(orderService.findByIdHelper(eq(ORDER_ID), any())).thenReturn(testOrder);
+        doThrow(new ValidationException("Insufficient stock for product: Wireless Mouse"))
+                .when(orderService).validateStockForPayment(testOrder);
 
         ValidationException ex = assertThrows(ValidationException.class,
                 () -> bkashPaymentService.create(request, null));
@@ -173,10 +159,9 @@ class BkashPaymentServiceTest {
         CreatePaymentRequest request = new CreatePaymentRequest(OTHER_USER_ID, ORDER_ID, new BigDecimal("1500.00"), "ref");
 
         CustomUserDetails otherUser = mock(CustomUserDetails.class);
-        when(otherUser.getId()).thenReturn(OTHER_USER_ID);
-        when(otherUser.getAuthorities()).thenReturn(List.of());
 
-        when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.of(testOrder));
+        when(orderService.findByIdHelper(eq(ORDER_ID), any()))
+                .thenThrow(new AccessDeniedException("Access denied"));
 
         assertThrows(AccessDeniedException.class,
                 () -> bkashPaymentService.create(request, otherUser));

@@ -1,8 +1,7 @@
 package com.example.ecom.order.model;
-import com.example.ecom.common.model.AuditableEntity;
-import com.example.ecom.user.user.model.User;
-import com.example.ecom.product.product.model.Product;
 
+import com.example.ecom.common.model.AuditableEntity;
+import com.example.ecom.order.dto.ProductDto;
 import com.example.ecom.order.enums.OrderStatus;
 import com.example.ecom.order.enums.PaymentMethod;
 import jakarta.persistence.*;
@@ -22,9 +21,7 @@ import java.util.*;
 @AllArgsConstructor
 public class Order extends AuditableEntity {
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    private UUID userId;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<OrderItem> items = new HashSet<>();
@@ -60,13 +57,13 @@ public class Order extends AuditableEntity {
         return status == OrderStatus.CANCELLED || status == OrderStatus.REJECTED;
     }
 
-    public void addItem(Product product, int quantity) {
-        OrderItem existingOrderItem = getItem(product.getId());
+    public void addItem(ProductDto product) {
+        OrderItem existingOrderItem = getItem(product.id());
 
         if (existingOrderItem != null) {
-            existingOrderItem.increaseQuantity(quantity);
+            existingOrderItem.increaseQuantity(product.quantity());
         } else {
-            OrderItem item = new OrderItem(product, quantity, this);
+            OrderItem item = new OrderItem(product, product.quantity(), this);
             items.add(item);
         }
 
@@ -75,7 +72,7 @@ public class Order extends AuditableEntity {
 
     private OrderItem getItem(UUID productId) {
         return items.stream()
-                .filter(i -> i.getProduct().getId().equals(productId))
+                .filter(i -> i.getProductId().equals(productId))
                 .findFirst()
                 .orElse(null);
     }

@@ -1,7 +1,6 @@
 package com.example.ecom.product.stock.model;
-import com.example.ecom.common.model.BaseEntity;
-import com.example.ecom.product.product.model.Product;
 
+import com.example.ecom.product.product.model.Product;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

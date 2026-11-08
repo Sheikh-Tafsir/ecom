@@ -1,7 +1,7 @@
 package com.example.ecom.user.user.model;
-import com.example.ecom.common.model.BaseEntity;
 
 import com.example.ecom.user.user.enums.UserRefreshTokenStatus;
+import com.example.ecom.common.model.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

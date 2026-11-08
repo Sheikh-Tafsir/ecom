@@ -1,6 +1,4 @@
 package com.example.ecom.order.model;
-import com.example.ecom.common.model.BaseEntity;
-import com.example.ecom.user.user.model.User;
 
 import com.example.ecom.order.enums.OrderStatus;
 import jakarta.persistence.*;
@@ -40,9 +38,8 @@ public class OrderStatusHistory {
     @Column(name = "to_status", nullable = false)
     private OrderStatus toStatus;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "changed_by_user_id")
-    private User changedBy;
+    @Column(name = "changed_by_id", nullable = false)
+    private UUID changedById;
 
     @Column(length = 500)
     private String comment;
@@ -51,11 +48,11 @@ public class OrderStatusHistory {
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 
-    public OrderStatusHistory(Order order, OrderStatus fromStatus, OrderStatus toStatus, User changedBy, String comment) {
+    public OrderStatusHistory(Order order, OrderStatus fromStatus, OrderStatus toStatus, UUID changedById, String comment) {
         this.order = order;
         this.fromStatus = fromStatus;
         this.toStatus = toStatus;
-        this.changedBy = changedBy;
+        this.changedById = changedById;
         this.comment = comment;
     }
 }

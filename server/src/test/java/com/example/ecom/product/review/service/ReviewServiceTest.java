@@ -11,6 +11,7 @@ import com.example.ecom.product.review.dto.ReviewResponse;
 import com.example.ecom.product.review.dto.UpdateReviewRequest;
 import com.example.ecom.product.review.repository.ReviewRepository;
 import com.example.ecom.user.user.service.UserService;
+import com.example.ecom.common.enums.UserStatus;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -88,7 +89,7 @@ class ReviewServiceTest {
 
         review = new Review();
         review.setId(REVIEW_ID);
-        review.setUser(user);
+        review.setUserId(USER_ID);
         review.setProduct(product);
         review.setRating(4);
         review.setComment("Great laptop for gaming");
@@ -128,7 +129,7 @@ class ReviewServiceTest {
 
         CreateReviewRequest request = new CreateReviewRequest(5, "Amazing product!");
 
-        when(reviewRepository.existsByUser_IdAndProduct_Id(USER_ID, PRODUCT_ID)).thenReturn(false);
+        when(reviewRepository.existsByUserIdAndProduct_Id(USER_ID, PRODUCT_ID)).thenReturn(false);
         when(productService.findByIdHelper(PRODUCT_ID)).thenReturn(product);
         when(userService.findByIdHelper(USER_ID)).thenReturn(user);
         when(cacheManager.getCache(CACHE_PRODUCTS)).thenReturn(mock(Cache.class));
@@ -139,7 +140,7 @@ class ReviewServiceTest {
         assertEquals(1, product.getReviewCount());
         assertEquals(new BigDecimal("5.00"), product.getRating());
         verify(reviewRepository).save(any(Review.class));
-        verify(reviewRepository).existsByUser_IdAndProduct_Id(USER_ID, PRODUCT_ID);
+        verify(reviewRepository).existsByUserIdAndProduct_Id(USER_ID, PRODUCT_ID);
     }
 
     @Test
@@ -150,7 +151,7 @@ class ReviewServiceTest {
 
         CreateReviewRequest request = new CreateReviewRequest(2, "Not great");
 
-        when(reviewRepository.existsByUser_IdAndProduct_Id(USER_ID, PRODUCT_ID)).thenReturn(false);
+        when(reviewRepository.existsByUserIdAndProduct_Id(USER_ID, PRODUCT_ID)).thenReturn(false);
         when(productService.findByIdHelper(PRODUCT_ID)).thenReturn(product);
         when(userService.findByIdHelper(USER_ID)).thenReturn(user);
         when(cacheManager.getCache(CACHE_PRODUCTS)).thenReturn(mock(Cache.class));
@@ -168,7 +169,7 @@ class ReviewServiceTest {
     void create_alreadyReviewed_throwsIllegalArgumentException() {
         CreateReviewRequest request = new CreateReviewRequest(5, "Great!");
 
-        when(reviewRepository.existsByUser_IdAndProduct_Id(USER_ID, PRODUCT_ID)).thenReturn(true);
+        when(reviewRepository.existsByUserIdAndProduct_Id(USER_ID, PRODUCT_ID)).thenReturn(true);
 
         assertThrows(IllegalArgumentException.class, () -> reviewService.create(PRODUCT_ID, request, userDetails));
         verify(reviewRepository, never()).save(any());
@@ -326,7 +327,7 @@ class ReviewServiceTest {
 
         CreateReviewRequest request = new CreateReviewRequest(4, "Good");
 
-        when(reviewRepository.existsByUser_IdAndProduct_Id(USER_ID, PRODUCT_ID)).thenReturn(false);
+        when(reviewRepository.existsByUserIdAndProduct_Id(USER_ID, PRODUCT_ID)).thenReturn(false);
         when(productService.findByIdHelper(PRODUCT_ID)).thenReturn(product);
         when(userService.findByIdHelper(USER_ID)).thenReturn(user);
         when(cacheManager.getCache(CACHE_PRODUCTS)).thenReturn(productCache);
