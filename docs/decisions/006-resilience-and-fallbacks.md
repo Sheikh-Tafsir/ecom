@@ -43,7 +43,7 @@ Adopt an **intentionally polyglot fallback architecture** where each feature's f
 | :--- | :--- | :--- | :--- |
 | **Product & Catalog Cache** | Redis `products::*` | `SimpleCacheErrorHandler` catches exception ➜ queries PostgreSQL directly | Browsing & catalog remain online |
 | **Order Idempotency** | Redis `idempotency:*` lock | `IdempotencyAspect` logs warning ➜ PostgreSQL unique partial index on `orders.idempotency_key` catches duplicates | Double-orders physically impossible |
-| **bKash Payment Tokens** | Redis `bkash:token` | `ResilientCacheService` catches exception ➜ `InMemoryCacheService` (`ConcurrentHashMap`) | Payment token cached locally per instance |
+| **bKash Payment Tokens** | Redis `bkashIdToken`, `bkashRefreshToken` | `ResilientCache` L1/L2 decorator catches exception ➜ Caffeine in-memory fallback | Payment token cached locally per instance |
 | **Chat User Profiles** | Redis `cache:user:*` | `UserService.js` catches error ➜ internal HTTP `POST /internal/users/batch` to Main Server | User avatars/names hydrate without interruption |
 | **Message Rate Limiting** | Redis `ratelimit:msg:*` | `socketMessageHandlers.js` switches to local in-memory sliding window (5 msgs/sec) | Spam prevented without halting messaging |
 | **Online Presence** | Redis `presence:*` Sets | `socketPresenceHandler.js` catches error ➜ presence indicators hide (appear offline) | Chat send/receive functions normally |

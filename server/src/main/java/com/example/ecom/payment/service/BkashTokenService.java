@@ -1,29 +1,31 @@
 package com.example.ecom.payment.service;
 
 import com.example.ecom.common.config.BkashConfigProperties;
-import com.example.ecom.common.service.cache.CacheService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.time.Duration;
 import java.util.Map;
+
+import static com.example.ecom.common.utils.CacheConstants.CACHE_BKASH_ID_TOKEN;
+import static com.example.ecom.common.utils.CacheConstants.CACHE_BKASH_REFRESH_TOKEN;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class BkashTokenService {
 
-    private static final String TOKEN_KEY = "bkash:id_token";
-    private static final String REFRESH_KEY = "bkash:refresh_token";
+    private static final String CACHE_KEY = "token";
 
     private final BkashConfigProperties config;
-    private final CacheService cacheService;
+    private final CacheManager cacheManager;
     private final WebClient bkashWebClient;
     private final ObjectMapper objectMapper;
 
@@ -31,12 +33,12 @@ public class BkashTokenService {
      * Returns a valid id_token, refreshing or re-granting as needed.
      */
     public String getValidToken() {
-        String cached = cacheService.getToken(TOKEN_KEY);
+        String cached = getCachedToken(CACHE_BKASH_ID_TOKEN);
         if (cached != null) {
             return cached;
         }
 
-        String refresh = cacheService.getToken(REFRESH_KEY);
+        String refresh = getCachedToken(CACHE_BKASH_REFRESH_TOKEN);
         if (refresh != null) {
             return refreshToken(refresh);
         }
@@ -103,14 +105,26 @@ public class BkashTokenService {
                 throw new RuntimeException("id_token is missing from response");
             }
 
-            // id_token valid for 1 hour, cache for 55 min to be safe
-            cacheService.putToken(TOKEN_KEY, idToken, Duration.ofMinutes(55));
-            // refresh_token valid for 28 days
-            cacheService.putToken(REFRESH_KEY, refreshToken, Duration.ofDays(27));
+            putCachedToken(CACHE_BKASH_ID_TOKEN, idToken);
+            if (!refreshToken.isEmpty()) {
+                putCachedToken(CACHE_BKASH_REFRESH_TOKEN, refreshToken);
+            }
 
             return idToken;
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse bKash token response", e);
+        }
+    }
+
+    private String getCachedToken(String cacheName) {
+        Cache cache = cacheManager.getCache(cacheName);
+        return cache != null ? cache.get(CACHE_KEY, String.class) : null;
+    }
+
+    private void putCachedToken(String cacheName, String token) {
+        Cache cache = cacheManager.getCache(cacheName);
+        if (cache != null) {
+            cache.put(CACHE_KEY, token);
         }
     }
 

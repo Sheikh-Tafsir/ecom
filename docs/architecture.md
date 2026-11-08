@@ -257,7 +257,7 @@ The platform implements an **intentionally polyglot fallback architecture** (see
 | :--- | :--- | :--- | :--- |
 | **Product & Catalog Cache** | Redis `products::*` | `SimpleCacheErrorHandler` ➜ PostgreSQL | Transparent fallback to DB; zero 500 errors |
 | **Order Idempotency** | Redis `idempotency:*` (30s lock) | `IdempotencyAspect` ➜ PostgreSQL index | Partial unique index `uq_orders_user_idempotency` blocks duplicates |
-| **Payment Tokens (bKash)** | Redis `bkash:token` | `ResilientCacheService` ➜ In-Memory RAM | Token cached per instance via `ConcurrentHashMap` |
+| **Payment Tokens (bKash)** | Redis `bkashIdToken`, `bkashRefreshToken` | `ResilientCache` L1/L2 decorator ➜ Caffeine in-memory | Token cached per instance via Caffeine L1 |
 | **Chat User Profiles** | Redis `cache:user:*` | `UserService.js` ➜ Main Server HTTP API | Calls `POST /internal/users/batch` to fetch from DB |
 | **Chat Rate Limiting** | Redis `ratelimit:msg:*` | Local per-socket sliding window | Limits to 5 msgs/sec in-memory per socket |
 | **Online Presence** | Redis `presence:*` Sets | Graceful degradation | Presence dots hide (offline); messaging is uninterrupted |
@@ -283,7 +283,7 @@ The platform implements an **intentionally polyglot fallback architecture** (see
 - **Database-per-Service (PostgreSQL)** — Independent databases: `postgres` for Main Server (Flyway migrations) and `postgres-chat` for Chat Server (automated DDL initialization). Chat Server resolves user details via internal HTTP (`POST /internal/users/batch`) with Redis multi-tier caching (TTL 10m).
 - **Hybrid Real-Time Rooms** — Personal rooms (`user_${id}`) for notifications and sidebar updates; active conversation rooms (`chat_${id}`) for live messaging and typing indicators.
 - **Dual-Layer Idempotency** — Redis distributed lock for fast concurrency rejection + PostgreSQL unique partial constraint for hard persistence safety.
-- **Interface Decoupling** — Cache, notifications, user cache evictions, and mail delivery decoupled behind interfaces (`CacheService`, `NotificationPublisher`, `UserEventPublisher`, `MailEventPublisher`).
+- **Interface Decoupling** — Notifications, user cache evictions, and mail delivery decoupled behind interfaces (`NotificationPublisher`, `UserEventPublisher`, `MailEventPublisher`). All caching is centralized through Spring's `CacheManager` with an L1/L2 `ResilientCache` decorator.
 - **Redis** — used by all three backend services: Spring Cache (Main Server), Socket.IO adapter pub/sub (Chat Server), rate-limit bucket storage (Gateway + Main Server).
 - **No dedicated sync endpoint for chat** — reconnect recovery uses standard `GET /chats/:id?afterId=` forward pagination.
 - **Timestamps** — always `java.time.Instant` (UTC ISO-8601) on the JVM side. Never `LocalDateTime`.

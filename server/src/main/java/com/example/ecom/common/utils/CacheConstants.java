@@ -9,7 +9,6 @@ public final class CacheConstants {
 
     // --- Entity & Business Caches ---
     public static final String CACHE_USER = "user";
-    public static final String CACHE_USERS = "users";
     public static final String CACHE_PROFILE = "profile";
     public static final String CACHE_ROLE = "role";
     public static final String CACHE_ROLES = "roles";
@@ -34,5 +33,9 @@ public final class CacheConstants {
     public static final String CACHE_OTPS = "otps";
     public static final String CACHE_ROTATED_TOKENS = "rotatedTokens";
     public static final String CACHE_REVOKED_ACCESS_TOKENS = "revokedAccessTokens";
+
+    // --- Payment Caches ---
+    public static final String CACHE_BKASH_ID_TOKEN = "bkashIdToken";
+    public static final String CACHE_BKASH_REFRESH_TOKEN = "bkashRefreshToken";
 }
 

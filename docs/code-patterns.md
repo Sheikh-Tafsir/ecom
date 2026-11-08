@@ -182,7 +182,6 @@ Available cache names (from `CacheConstants.java`):
 | Constant                     | Value                   | Purpose                    |
 |------------------------------|-------------------------|----------------------------|
 | `CACHE_USER`                 | `"user"`                | Single user by id          |
-| `CACHE_USERS`                | `"users"`               | User list                  |
 | `CACHE_PROFILE`              | `"profile"`             | User profile               |
 | `CACHE_ROLE`                 | `"role"`                | Single role by id          |
 | `CACHE_ROLES`                | `"roles"`               | Role list                  |
@@ -195,6 +194,8 @@ Available cache names (from `CacheConstants.java`):
 | `CACHE_REVOKED_ACCESS_TOKENS`| `"revokedAccessTokens"` | Token blacklist            |
 | `CACHE_OTPS`                 | `"otps"`                | OTP codes                  |
 | `CACHE_IDEMPOTENCY`          | `"idempotency"`         | Idempotency key store      |
+| `CACHE_BKASH_ID_TOKEN`       | `"bkashIdToken"`        | bKash API id_token (55m)   |
+| `CACHE_BKASH_REFRESH_TOKEN`  | `"bkashRefreshToken"`   | bKash API refresh (27d)    |
 
 ---
 

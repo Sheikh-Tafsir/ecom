@@ -1,5 +1,6 @@
 package com.example.ecom.common.config;
 
+import com.example.ecom.common.cache.ResilientCacheManager;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +23,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static com.example.ecom.common.utils.CacheConstants.*;
@@ -32,26 +34,61 @@ import static org.springframework.data.redis.serializer.RedisSerializationContex
 @Slf4j
 public class CacheConfig implements CachingConfigurer {
 
-    @Value("${app.cache.ttl.default-minutes:5}")
+    @Value("${app.cache.ttl.default-minutes}")
     public int defaultTtl;
 
-    @Value("${app.cache.ttl.idempotency-minutes:60}")
+    @Value("${app.cache.ttl.idempotency-minutes}")
     protected int idempotencyTtl;
 
-    @Value("${app.cache.ttl.otp-minutes:5}")
+    @Value("${app.cache.ttl.otp-minutes}")
     protected int otpTtl;
 
-    @Value("${app.cache.ttl.cms-minutes:10}")
+    @Value("${app.cache.ttl.cms-minutes}")
     protected int cmsTtl;
 
-    @Value("${jwt.access-token.expiration:900}")
+    @Value("${jwt.access-token.expiration}")
     protected int accessTokenValidity;
 
     /**
-     * Principal Engineering Practice: Resilience.
-     * If Redis is down or data is corrupt, log the error and fall back to the Database.
-     * This prevents 500 errors for the end user.
+     * Caches that MUST NOT fall back to in-memory on Redis failure.
+     *
+     * @see <a href="docs/decisions/006-resilience-and-fallbacks.md">ADR 006</a>
      */
+    private static final Set<String> FAIL_CLOSED_CACHES = Set.of(CACHE_IDEMPOTENCY);
+
+    /** Single source of truth for every cache name → TTL mapping. */
+    protected Map<String, Duration> buildTtlMap() {
+        int revokedTokensTtlMinutes = Math.max(1, accessTokenValidity / 60);
+
+        Map<String, Duration> map = new HashMap<>();
+
+        // Entity & Catalog
+        map.put(CACHE_USER, Duration.ofMinutes(10));
+        map.put(CACHE_PROFILE, Duration.ofMinutes(10));
+        map.put(CACHE_PRODUCTS, Duration.ofMinutes(15));
+        map.put(CACHE_PRODUCTS_EDIT, Duration.ofMinutes(15));
+        map.put(CACHE_ROLES, Duration.ofMinutes(30));
+        map.put(CACHE_ROLE, Duration.ofMinutes(30));
+
+        // CMS
+        map.put(CACHE_BANNERS, Duration.ofMinutes(cmsTtl));
+        map.put(CACHE_FAQS, Duration.ofMinutes(cmsTtl));
+        map.put(CACHE_BLOGS, Duration.ofMinutes(cmsTtl));
+        map.put(CACHE_CATEGORIES, Duration.ofMinutes(cmsTtl));
+
+        // Security & System
+        map.put(CACHE_IDEMPOTENCY, Duration.ofMinutes(idempotencyTtl));
+        map.put(CACHE_OTPS, Duration.ofMinutes(otpTtl));
+        map.put(CACHE_ROTATED_TOKENS, Duration.ofMinutes(1));
+        map.put(CACHE_REVOKED_ACCESS_TOKENS, Duration.ofMinutes(revokedTokensTtlMinutes));
+
+        // Payment
+        map.put(CACHE_BKASH_ID_TOKEN, Duration.ofMinutes(55));
+        map.put(CACHE_BKASH_REFRESH_TOKEN, Duration.ofDays(27));
+
+        return map;
+    }
+
     @Override
     public CacheErrorHandler errorHandler() {
         return new SimpleCacheErrorHandler() {
@@ -82,40 +119,31 @@ public class CacheConfig implements CachingConfigurer {
     public class RedisCacheSetup {
 
         @Bean
-        public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory, RedisSerializer<Object> redisSerializer) {
-            RedisCacheConfiguration defaultConfig = buildConfig(defaultTtl, redisSerializer);
+        public CacheManager cacheManager(RedisConnectionFactory connectionFactory, RedisSerializer<Object> redisSerializer) {
+            Map<String, Duration> ttlMap = buildTtlMap();
 
-            Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
+            RedisCacheManager redisManager = buildRedisManager(connectionFactory, redisSerializer, ttlMap);
+            redisManager.afterPropertiesSet();
 
-            cacheConfigurations.put(CACHE_IDEMPOTENCY, buildConfig(idempotencyTtl, redisSerializer));
-            cacheConfigurations.put(CACHE_OTPS, buildConfig(otpTtl, redisSerializer));
+            return new ResilientCacheManager(redisManager, ttlMap,
+                    Duration.ofMinutes(defaultTtl), FAIL_CLOSED_CACHES);
+        }
 
-            RedisCacheConfiguration cmsConfig = buildConfig(cmsTtl, redisSerializer);
-            cacheConfigurations.put(CACHE_BANNERS, cmsConfig);
-            cacheConfigurations.put(CACHE_FAQS, cmsConfig);
-            cacheConfigurations.put(CACHE_BLOGS, cmsConfig);
-            cacheConfigurations.put(CACHE_CATEGORIES, cmsConfig);
-
-            cacheConfigurations.put(CACHE_PRODUCTS, buildConfig(15, redisSerializer));
-            cacheConfigurations.put(CACHE_PRODUCTS_EDIT, buildConfig(15, redisSerializer));
-            cacheConfigurations.put(CACHE_ROLES, buildConfig(30, redisSerializer));
-            cacheConfigurations.put(CACHE_ROLE, buildConfig(30, redisSerializer));
-            cacheConfigurations.put(CACHE_USER, buildConfig(10, redisSerializer));
-            cacheConfigurations.put(CACHE_PROFILE, buildConfig(10, redisSerializer));
-
-            cacheConfigurations.put(CACHE_ROTATED_TOKENS, buildConfig(1, redisSerializer)); // 1 minute
-            int revokedTokensTtlMinutes = Math.max(1, accessTokenValidity / 60);
-            cacheConfigurations.put(CACHE_REVOKED_ACCESS_TOKENS, buildConfig(revokedTokensTtlMinutes, redisSerializer));
+        private RedisCacheManager buildRedisManager(RedisConnectionFactory connectionFactory,
+                                                    RedisSerializer<Object> redisSerializer,
+                                                    Map<String, Duration> ttlMap) {
+            Map<String, RedisCacheConfiguration> configs = new HashMap<>();
+            ttlMap.forEach((name, ttl) -> configs.put(name, buildRedisConfig(ttl, redisSerializer)));
 
             return RedisCacheManager.builder(connectionFactory)
-                    .cacheDefaults(defaultConfig)
-                    .withInitialCacheConfigurations(cacheConfigurations)
+                    .cacheDefaults(buildRedisConfig(Duration.ofMinutes(defaultTtl), redisSerializer))
+                    .withInitialCacheConfigurations(configs)
                     .build();
         }
 
-        private RedisCacheConfiguration buildConfig(int ttlMinutes, RedisSerializer<Object> serializer) {
+        private RedisCacheConfiguration buildRedisConfig(Duration ttl, RedisSerializer<Object> serializer) {
             return RedisCacheConfiguration.defaultCacheConfig()
-                    .entryTtl(Duration.ofMinutes(ttlMinutes))
+                    .entryTtl(ttl)
                     .computePrefixWith(cacheName -> CACHE_VERSION + ":" + cacheName + "::")
                     .serializeKeysWith(fromSerializer(new StringRedisSerializer()))
                     .serializeValuesWith(fromSerializer(serializer));
@@ -128,38 +156,21 @@ public class CacheConfig implements CachingConfigurer {
 
         @Bean
         public CacheManager cacheManager() {
+            Map<String, Duration> ttlMap = buildTtlMap();
+
             CaffeineCacheManager cacheManager = new CaffeineCacheManager();
+            ttlMap.forEach((name, ttl) -> cacheManager.registerCustomCache(name, buildCaffeineCache(ttl)));
 
-            // Standard CMS & Catalog Caches
-            cacheManager.registerCustomCache(CACHE_BANNERS, buildCaffeineCache(cmsTtl));
-            cacheManager.registerCustomCache(CACHE_FAQS, buildCaffeineCache(cmsTtl));
-            cacheManager.registerCustomCache(CACHE_BLOGS, buildCaffeineCache(cmsTtl));
-            cacheManager.registerCustomCache(CACHE_CATEGORIES, buildCaffeineCache(cmsTtl));
-            cacheManager.registerCustomCache(CACHE_PRODUCTS, buildCaffeineCache(15));
-            cacheManager.registerCustomCache(CACHE_PRODUCTS_EDIT, buildCaffeineCache(15));
-            cacheManager.registerCustomCache(CACHE_ROLES, buildCaffeineCache(30));
-            cacheManager.registerCustomCache(CACHE_ROLE, buildCaffeineCache(30));
-            cacheManager.registerCustomCache(CACHE_USER, buildCaffeineCache(10));
-            cacheManager.registerCustomCache(CACHE_PROFILE, buildCaffeineCache(10));
-
-            // System Caches
-            cacheManager.registerCustomCache(CACHE_OTPS, buildCaffeineCache(otpTtl));
-            cacheManager.registerCustomCache(CACHE_IDEMPOTENCY, buildCaffeineCache(idempotencyTtl));
-
-            cacheManager.registerCustomCache(CACHE_ROTATED_TOKENS, buildCaffeineCache(1)); // 1 minute
-            int revokedTokensTtlMinutes = Math.max(1, accessTokenValidity / 60);
-            cacheManager.registerCustomCache(CACHE_REVOKED_ACCESS_TOKENS, buildCaffeineCache(revokedTokensTtlMinutes));
-
-            // Default configuration for any other caches
+            // Default for any other caches
             cacheManager.setCaffeine(Caffeine.newBuilder()
                     .expireAfterWrite(defaultTtl, TimeUnit.MINUTES));
 
             return cacheManager;
         }
 
-        private com.github.benmanes.caffeine.cache.Cache<Object, Object> buildCaffeineCache(int ttlMinutes) {
+        private com.github.benmanes.caffeine.cache.Cache<Object, Object> buildCaffeineCache(Duration ttl) {
             return Caffeine.newBuilder()
-                    .expireAfterWrite(ttlMinutes, TimeUnit.MINUTES)
+                    .expireAfterWrite(ttl)
                     .build();
         }
     }
