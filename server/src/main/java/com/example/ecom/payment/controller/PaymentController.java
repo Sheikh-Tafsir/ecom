@@ -4,7 +4,6 @@ import com.example.ecom.common.annotation.Idempotent;
 import com.example.ecom.payment.config.BkashConfigProperties;
 import com.example.ecom.common.dto.ApiResponse;
 import com.example.ecom.common.utils.ResponseUtils;
-import com.example.ecom.order.service.OrderService;
 import com.example.ecom.payment.dto.CreatePaymentRequest;
 import com.example.ecom.payment.dto.CreatePaymentResponse;
 import com.example.ecom.payment.service.PaymentService;
@@ -32,8 +31,6 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    private final OrderService orderService;
-
     private final BkashConfigProperties config;
 
     /**
@@ -42,7 +39,7 @@ public class PaymentController {
     @Idempotent
     @PostMapping
     public ResponseEntity<ApiResponse<String>> createPayment(@Valid @RequestBody CreatePaymentRequest request,
-                                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         String bkashURL = paymentService.create(request, userDetails);
         return ResponseUtils.ok(bkashURL, "found");
@@ -81,7 +78,7 @@ public class PaymentController {
             CreatePaymentResponse result = paymentService.execute(paymentID);
 
             if ("0000".equals(result.getStatusCode()) && "Completed".equals(result.getTransactionStatus())) {
-                orderService.acceptOrderForPrepayment(orderId);
+                paymentService.acceptOrderForPrepayment(orderId);
                 paymentService.updatePaymentStatus(paymentID, result, true);
 
                 httpResponse.sendRedirect(config.getFrontendSuccessUrl()

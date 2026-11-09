@@ -3,14 +3,14 @@ package com.example.ecom.product.review.service;
 import com.example.ecom.common.dto.CustomUserDetails;
 import com.example.ecom.product.product.model.Product;
 import com.example.ecom.product.review.model.Review;
-import com.example.ecom.user.user.model.User;
+import com.example.ecom.common.client.user.UserClient;
+import com.example.ecom.common.client.user.UserBasicDto;
 import com.example.ecom.common.service.MessageService;
 import com.example.ecom.product.product.service.ProductService;
 import com.example.ecom.product.review.dto.CreateReviewRequest;
 import com.example.ecom.product.review.dto.ReviewResponse;
 import com.example.ecom.product.review.dto.UpdateReviewRequest;
 import com.example.ecom.product.review.repository.ReviewRepository;
-import com.example.ecom.user.user.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.Cache;
@@ -42,7 +42,7 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
 
-    private final UserService userService;
+    private final UserClient userClient;
 
     private final CacheManager cacheManager;
 
@@ -73,14 +73,14 @@ public class ReviewService {
         product.setReviewCount(newReviewCount);
         product.setRating(newAvgRating);
 
-        User user = userService.findByIdHelper(userDetails.getId());
+        UserBasicDto user = userClient.findUserById(userDetails.getId());
 
         Review review = new Review();
         review.setRating(request.rating());
         review.setComment(request.comment());
-        review.setUserId(user.getId());
-        review.setUserName(user.getName());
-        review.setUserImage(user.getImage());
+        review.setUserId(user.id());
+        review.setUserName(user.name());
+        review.setUserImage(user.image());
         review.setProduct(product);
 
         reviewRepository.save(review);

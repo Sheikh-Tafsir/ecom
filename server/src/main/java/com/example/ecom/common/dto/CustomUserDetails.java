@@ -34,7 +34,6 @@ public class CustomUserDetails implements UserDetails {
     public CustomUserDetails(UUID id, String email, boolean active, Collection<? extends GrantedAuthority> authorities) {
         this(id, null, email, active, authorities);
     }
-
     public CustomUserDetails(Claims claims) {
         this.id = UUID.fromString(claims.getSubject());
         this.name = claims.get("name", String.class);

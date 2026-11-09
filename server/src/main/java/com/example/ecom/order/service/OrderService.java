@@ -7,14 +7,16 @@ import com.example.ecom.order.enums.OrderStatus;
 import com.example.ecom.order.model.Order;
 import com.example.ecom.order.model.OrderItem;
 import com.example.ecom.order.model.OrderStatusHistory;
-import com.example.ecom.product.product.model.Product;
 import com.example.ecom.common.service.MessageService;
 import com.example.ecom.order.dto.*;
 import com.example.ecom.order.repository.OrderRepository;
 import com.example.ecom.order.dto.CreateOrderResponse;
 import com.example.ecom.order.repository.OrderStatusHistoryRepository;
-import com.example.ecom.product.product.service.ProductService;
-import com.example.ecom.product.stock.service.StockService;
+import com.example.ecom.common.client.order.OrderItemPaymentDto;
+import com.example.ecom.common.client.order.OrderPaymentDto;
+import com.example.ecom.common.client.product.ProductClient;
+import com.example.ecom.common.client.product.ProductBasicDto;
+import com.example.ecom.common.client.stock.StockClient;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
@@ -44,13 +46,13 @@ import com.example.ecom.common.service.notification.NotificationService;
 @RequiredArgsConstructor
 public class OrderService {
 
-    private final ProductService productService;
+    private final ProductClient productClient;
 
     private final MessageService messageService;
 
     private final OrderRepository orderRepository;
 
-    private final StockService stockService;
+    private final StockClient stockClient;
 
     private final NotificationService notificationService;
 
@@ -87,6 +89,26 @@ public class OrderService {
                 productName, getValidPageable(pageable)).map(OrderListResponse::new);
     }
 
+    // -- Internal methods --
+
+    @Transactional(readOnly = true)
+    public OrderPaymentDto findOrderForPayment(UUID id, UUID userId, boolean isAdmin) {
+        Order order = orderRepository.findDetailsById(id)
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Order", id)));
+
+        boolean isOwner = userId != null && order.getUserId().equals(userId);
+        if (!isOwner && !isAdmin) {
+            throw new AccessDeniedException("Access denied");
+        }
+
+        List<OrderItemPaymentDto> items = order.getItems().stream()
+                .map(item -> new OrderItemPaymentDto(item.getProductId(), item.getQuantity()))
+                .toList();
+
+        return new OrderPaymentDto(order.getId(), order.getUserId(), order.getStatus().name(),
+                order.getTotalPrice(), order.isPaid(), items);
+    }
+
     public OrderResponse findById(UUID id, CustomUserDetails userDetails) {
         return new OrderResponse(findByIdHelper(id, userDetails));
     }
@@ -105,11 +127,17 @@ public class OrderService {
         return order;
     }
 
+    @Transactional(readOnly = true)
+    public void validateStockForPayment(UUID id) {
+        Order order = orderRepository.findDetailsById(id)
+                .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Order", id)));
+        validateStockForPayment(order);
+    }
+
     public void validateStockForPayment(Order order) {
         order.getItems().forEach(item -> {
-            Product product = productService.findByIdHelper(item.getProductId());
-            if (product.getQuantity() < item.getQuantity()) {
-                throw new ValidationException("Insufficient stock for product: " + product.getName());
+            if (!productClient.hasStock(item.getProductId(), item.getQuantity())) {
+                throw new ValidationException("Insufficient stock for product: " + item.getProductName());
             }
         });
     }
@@ -131,7 +159,7 @@ public class OrderService {
         request.items().forEach(itemRequest -> addProduct(order, itemRequest));
 
         // Reserve stock at checkout
-        order.getItems().forEach(item -> productService.decreaseForOrder(item.getProductId(), item.getQuantity()));
+        order.getItems().forEach(item -> productClient.reserveStock(item.getProductId(), item.getQuantity()));
 
         Order savedOrder = orderRepository.save(order);
         recordStatusChange(savedOrder, null, OrderStatus.PENDING, userDetails.getId(), "Order created");
@@ -253,7 +281,7 @@ public class OrderService {
     }
 
     private void restoreOrderStock(Order order) {
-        order.getItems().forEach(item -> productService.increaseQuantity(item.getProductId(), item.getQuantity()));
+        order.getItems().forEach(item -> productClient.releaseStock(item.getProductId(), item.getQuantity()));
     }
 
     private Order findByIdHelper(UUID id) {
@@ -262,11 +290,9 @@ public class OrderService {
     }
 
     private void addProduct(Order order, CreateOrderItemRequest request) {
-        Product product = productService.findByIdHelper(request.productId());
-        String firstImage = product.getImages() != null
-                && !product.getImages().isEmpty() ? product.getImages().iterator().next().getImage() : null;
+        ProductBasicDto product = productClient.findProductById(request.productId());
 
-        ProductDto productDto = new ProductDto(product.getId(), product.getName(), firstImage, product.getPrice(), request.quantity());
+        ProductDto productDto = new ProductDto(product.id(), product.name(), product.firstImage(), product.price(), request.quantity());
         order.addItem(productDto);
     }
 
@@ -274,6 +300,6 @@ public class OrderService {
         // Sort by product ID to prevent deadlock from non-deterministic lock order
         order.getItems().stream()
             .sorted(Comparator.comparing(OrderItem::getProductId))
-            .forEach(item -> stockService.consume(item.getProductId(), item.getQuantity(), order.getId()));
+            .forEach(item -> stockClient.consume(item.getProductId(), item.getQuantity(), order.getId()));
     }
 }
