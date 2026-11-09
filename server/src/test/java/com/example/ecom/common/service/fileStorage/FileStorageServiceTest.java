@@ -11,6 +11,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -31,7 +32,7 @@ class FileStorageServiceTest {
     @DisplayName("uploadFileAsync returns completed future with URL on success")
     void uploadFileAsync_success_returnsUrl() throws Exception {
         fileStorageService.setUploadUrl("https://cdn.example.com/image.jpg");
-        MockMultipartFile file = new MockMultipartFile("image", "photo.jpg", "image/jpeg", "data".getBytes());
+        MockMultipartFile file = new MockMultipartFile("image", "photo.jpg", "image/jpeg", "data".getBytes(StandardCharsets.UTF_8));
 
         CompletableFuture<String> future = fileStorageService.uploadFileAsync(file);
 
@@ -42,7 +43,7 @@ class FileStorageServiceTest {
     @DisplayName("uploadFileAsync returns failed future on IOException")
     void uploadFileAsync_ioError_returnsFailedFuture() {
         fileStorageService.setThrowOnUpload(true);
-        MockMultipartFile file = new MockMultipartFile("image", "photo.jpg", "image/jpeg", "data".getBytes());
+        MockMultipartFile file = new MockMultipartFile("image", "photo.jpg", "image/jpeg", "data".getBytes(StandardCharsets.UTF_8));
 
         CompletableFuture<String> future = fileStorageService.uploadFileAsync(file);
 

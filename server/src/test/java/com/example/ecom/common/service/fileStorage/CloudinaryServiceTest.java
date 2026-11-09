@@ -14,6 +14,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -40,7 +41,7 @@ class CloudinaryServiceTest {
     @Test
     @DisplayName("uploadFile uploads file and returns secure URL")
     void uploadFile_validFile_returnsSecureUrl() throws IOException {
-        MockMultipartFile file = new MockMultipartFile("image", "product.jpg", "image/jpeg", "fake-content".getBytes());
+        MockMultipartFile file = new MockMultipartFile("image", "product.jpg", "image/jpeg", "fake-content".getBytes(StandardCharsets.UTF_8));
         Map<String, Object> uploadResult = Map.of("secure_url", "https://res.cloudinary.com/demo/image/upload/ecom-uploads/abc123.jpg");
 
         when(cloudinary.uploader()).thenReturn(uploader);
@@ -55,7 +56,7 @@ class CloudinaryServiceTest {
     @Test
     @DisplayName("uploadFile propagates IOException on failure")
     void uploadFile_ioError_throwsIOException() throws IOException {
-        MockMultipartFile file = new MockMultipartFile("image", "product.jpg", "image/jpeg", "fake-content".getBytes());
+        MockMultipartFile file = new MockMultipartFile("image", "product.jpg", "image/jpeg", "fake-content".getBytes(StandardCharsets.UTF_8));
 
         when(cloudinary.uploader()).thenReturn(uploader);
         when(uploader.upload(any(byte[].class), anyMap())).thenThrow(new IOException("Connection refused"));

@@ -94,12 +94,16 @@ class IpTrafficControlFilterTest {
     @Test
     @DisplayName("Rejects request with 400 when client IP is missing")
     void doFilter_missingIp_returns400() throws ServletException, IOException {
-        request.setRemoteAddr(null);
-        // X-Real-IP and X-Forwarded-For are also not set, so remoteAddr=null falls through
+        // Use a fresh request without setting remoteAddr headers;
+        // spy it so getRemoteAddr() returns null without passing null to setRemoteAddr
+        MockHttpServletRequest noIpRequest = spy(new MockHttpServletRequest());
+        noIpRequest.setMethod("GET");
+        noIpRequest.setRequestURI("/api/products");
+        doReturn(null).when(noIpRequest).getRemoteAddr();
 
-        filter.doFilterInternal(request, response, filterChain);
+        filter.doFilterInternal(noIpRequest, response, filterChain);
 
-        verify(filterChain, never()).doFilter(request, response);
+        verify(filterChain, never()).doFilter(noIpRequest, response);
         assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatus());
     }
 
