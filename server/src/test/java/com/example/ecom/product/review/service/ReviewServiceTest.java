@@ -3,14 +3,14 @@ package com.example.ecom.product.review.service;
 import com.example.ecom.common.dto.CustomUserDetails;
 import com.example.ecom.product.product.model.Product;
 import com.example.ecom.product.review.model.Review;
-import com.example.ecom.user.user.model.User;
+import com.example.ecom.common.client.user.UserClient;
+import com.example.ecom.common.client.user.UserBasicDto;
 import com.example.ecom.common.service.MessageService;
 import com.example.ecom.product.product.service.ProductService;
 import com.example.ecom.product.review.dto.CreateReviewRequest;
 import com.example.ecom.product.review.dto.ReviewResponse;
 import com.example.ecom.product.review.dto.UpdateReviewRequest;
 import com.example.ecom.product.review.repository.ReviewRepository;
-import com.example.ecom.user.user.service.UserService;
 import com.example.ecom.common.enums.UserStatus;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,7 +53,7 @@ class ReviewServiceTest {
     private ReviewRepository reviewRepository;
 
     @Mock
-    private UserService userService;
+    private UserClient userClient;
 
     @Mock
     private CacheManager cacheManager;
@@ -67,7 +67,6 @@ class ReviewServiceTest {
     private static final UUID REVIEW_ID = UUID.fromString("44444444-4444-4444-4444-444444444444");
 
     private Product product;
-    private User user;
     private Review review;
     private CustomUserDetails userDetails;
 
@@ -80,12 +79,7 @@ class ReviewServiceTest {
         product.setRating(new BigDecimal("4.00"));
         product.setReviewCount(10);
 
-        user = new User();
-        user.setId(USER_ID);
-        user.setName("John Doe");
-        user.setEmail("john.doe@example.com");
-
-        userDetails = new CustomUserDetails(USER_ID, "john.doe@example.com", true, List.of());
+        userDetails = new CustomUserDetails(USER_ID, "John Doe", "john.doe@example.com", true, List.of());
 
         review = new Review();
         review.setId(REVIEW_ID);
@@ -131,7 +125,7 @@ class ReviewServiceTest {
 
         when(reviewRepository.existsByUserIdAndProduct_Id(USER_ID, PRODUCT_ID)).thenReturn(false);
         when(productService.findByIdHelper(PRODUCT_ID)).thenReturn(product);
-        when(userService.findByIdHelper(USER_ID)).thenReturn(user);
+        when(userClient.findUserById(USER_ID)).thenReturn(new UserBasicDto(USER_ID, "John Doe", null));
         when(cacheManager.getCache(CACHE_PRODUCTS)).thenReturn(mock(Cache.class));
         when(cacheManager.getCache(CACHE_PRODUCTS_EDIT)).thenReturn(mock(Cache.class));
 
@@ -153,7 +147,7 @@ class ReviewServiceTest {
 
         when(reviewRepository.existsByUserIdAndProduct_Id(USER_ID, PRODUCT_ID)).thenReturn(false);
         when(productService.findByIdHelper(PRODUCT_ID)).thenReturn(product);
-        when(userService.findByIdHelper(USER_ID)).thenReturn(user);
+        when(userClient.findUserById(USER_ID)).thenReturn(new UserBasicDto(USER_ID, "John Doe", null));
         when(cacheManager.getCache(CACHE_PRODUCTS)).thenReturn(mock(Cache.class));
         when(cacheManager.getCache(CACHE_PRODUCTS_EDIT)).thenReturn(mock(Cache.class));
 
@@ -214,11 +208,7 @@ class ReviewServiceTest {
     @Test
     @DisplayName("update should throw AccessDeniedException when user does not own the review")
     void update_notOwner_throwsAccessDeniedException() {
-        User otherUser = new User();
-        otherUser.setId(USER_ID_OTHER);
-        otherUser.setName("Other User");
-        otherUser.setEmail("other@example.com");
-        CustomUserDetails otherDetails = new CustomUserDetails(USER_ID_OTHER, "other@example.com", true, List.of());
+        CustomUserDetails otherDetails = new CustomUserDetails(USER_ID_OTHER, "Other User", "other@example.com", true, List.of());
 
         UpdateReviewRequest request = new UpdateReviewRequest(5, "Hacked");
 
@@ -278,11 +268,7 @@ class ReviewServiceTest {
     @Test
     @DisplayName("delete should throw AccessDeniedException when non-owner non-admin tries to delete")
     void delete_notOwnerNotAdmin_throwsAccessDeniedException() {
-        User otherUser = new User();
-        otherUser.setId(USER_ID_OTHER);
-        otherUser.setName("Other User");
-        otherUser.setEmail("other@example.com");
-        CustomUserDetails otherDetails = new CustomUserDetails(USER_ID_OTHER, "other@example.com", true, List.of());
+        CustomUserDetails otherDetails = new CustomUserDetails(USER_ID_OTHER, "Other User", "other@example.com", true, List.of());
 
         when(reviewRepository.findById(REVIEW_ID)).thenReturn(Optional.of(review));
 
@@ -329,7 +315,7 @@ class ReviewServiceTest {
 
         when(reviewRepository.existsByUserIdAndProduct_Id(USER_ID, PRODUCT_ID)).thenReturn(false);
         when(productService.findByIdHelper(PRODUCT_ID)).thenReturn(product);
-        when(userService.findByIdHelper(USER_ID)).thenReturn(user);
+        when(userClient.findUserById(USER_ID)).thenReturn(new UserBasicDto(USER_ID, "John Doe", null));
         when(cacheManager.getCache(CACHE_PRODUCTS)).thenReturn(productCache);
         when(cacheManager.getCache(CACHE_PRODUCTS_EDIT)).thenReturn(productEditCache);
 

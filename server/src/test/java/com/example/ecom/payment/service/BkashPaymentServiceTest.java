@@ -2,11 +2,11 @@ package com.example.ecom.payment.service;
 
 import com.example.ecom.payment.config.BkashConfigProperties;
 import com.example.ecom.common.dto.CustomUserDetails;
-import com.example.ecom.order.enums.OrderStatus;
+import com.example.ecom.common.client.order.OrderClient;
+import com.example.ecom.common.client.order.OrderPaymentDto;
+import com.example.ecom.common.enums.Permission;
 import com.example.ecom.payment.enums.PaymentStatus;
-import com.example.ecom.order.model.Order;
 import com.example.ecom.payment.model.Payment;
-import com.example.ecom.order.service.OrderService;
 import com.example.ecom.payment.dto.CreatePaymentRequest;
 import com.example.ecom.payment.dto.CreatePaymentResponse;
 import com.example.ecom.payment.repository.PaymentRepository;
@@ -17,21 +17,20 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -56,27 +55,23 @@ class BkashPaymentServiceTest {
     private PaymentRepository paymentRepository;
 
     @Mock
-    private OrderService orderService;
+    private OrderClient orderClient;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private BkashPaymentService bkashPaymentService;
 
-    private Order testOrder;
+    private OrderPaymentDto testOrderSnapshot;
 
     @BeforeEach
     void setUp() {
         bkashPaymentService = new BkashPaymentService(
-                config, tokenService, bkashWebClient, objectMapper, paymentRepository, orderService
+                config, tokenService, bkashWebClient, objectMapper, paymentRepository, orderClient
         );
 
-        testOrder = new Order();
-        testOrder.setId(ORDER_ID);
-        testOrder.setUserId(USER_ID);
-        testOrder.setTotalPrice(new BigDecimal("1500.00"));
-        testOrder.setStatus(OrderStatus.PENDING);
-        testOrder.setPaid(false);
-        testOrder.setItems(new HashSet<>());
+        testOrderSnapshot = new OrderPaymentDto(
+                ORDER_ID, USER_ID, "PENDING", new BigDecimal("1500.00"), false, new ArrayList<>()
+        );
     }
 
     // ========== create ==========
@@ -86,25 +81,31 @@ class BkashPaymentServiceTest {
     void create_orderNotFound_throwsEntityNotFoundException() {
         CreatePaymentRequest request = new CreatePaymentRequest(USER_ID, ORDER_ID, new BigDecimal("1500.00"), "ref");
 
-        when(orderService.findByIdHelper(eq(ORDER_ID), any())).thenThrow(new EntityNotFoundException("Order not found: " + ORDER_ID));
+        CustomUserDetails userDetails = mock(CustomUserDetails.class);
+        when(userDetails.getId()).thenReturn(USER_ID);
+        when(orderClient.findOrderForPayment(eq(ORDER_ID), eq(USER_ID), anyBoolean()))
+                .thenThrow(new EntityNotFoundException("Order not found: " + ORDER_ID));
 
         EntityNotFoundException ex = assertThrows(EntityNotFoundException.class,
-                () -> bkashPaymentService.create(request, null));
+                () -> bkashPaymentService.create(request, userDetails));
 
         assertTrue(ex.getMessage().contains(ORDER_ID.toString()));
-        verify(orderService).findByIdHelper(eq(ORDER_ID), any());
     }
 
     @Test
     @DisplayName("Should throw ValidationException when order is already paid")
     void create_orderAlreadyPaid_throwsValidationException() {
-        testOrder.setPaid(true);
+        OrderPaymentDto paidOrder = new OrderPaymentDto(
+                ORDER_ID, USER_ID, "PENDING", new BigDecimal("1500.00"), true, new ArrayList<>()
+        );
         CreatePaymentRequest request = new CreatePaymentRequest(USER_ID, ORDER_ID, new BigDecimal("1500.00"), "ref");
 
-        when(orderService.findByIdHelper(eq(ORDER_ID), any())).thenReturn(testOrder);
+        CustomUserDetails userDetails = mock(CustomUserDetails.class);
+        when(userDetails.getId()).thenReturn(USER_ID);
+        when(orderClient.findOrderForPayment(eq(ORDER_ID), eq(USER_ID), anyBoolean())).thenReturn(paidOrder);
 
         ValidationException ex = assertThrows(ValidationException.class,
-                () -> bkashPaymentService.create(request, null));
+                () -> bkashPaymentService.create(request, userDetails));
 
         assertEquals("Order is already paid", ex.getMessage());
         verify(paymentRepository, never()).save(any());
@@ -113,13 +114,17 @@ class BkashPaymentServiceTest {
     @Test
     @DisplayName("Should throw ValidationException when order is cancelled")
     void create_orderCancelled_throwsValidationException() {
-        testOrder.setStatus(OrderStatus.CANCELLED);
+        OrderPaymentDto cancelledOrder = new OrderPaymentDto(
+                ORDER_ID, USER_ID, "CANCELLED", new BigDecimal("1500.00"), false, new ArrayList<>()
+        );
         CreatePaymentRequest request = new CreatePaymentRequest(USER_ID, ORDER_ID, new BigDecimal("1500.00"), "ref");
 
-        when(orderService.findByIdHelper(eq(ORDER_ID), any())).thenReturn(testOrder);
+        CustomUserDetails userDetails = mock(CustomUserDetails.class);
+        when(userDetails.getId()).thenReturn(USER_ID);
+        when(orderClient.findOrderForPayment(eq(ORDER_ID), eq(USER_ID), anyBoolean())).thenReturn(cancelledOrder);
 
         ValidationException ex = assertThrows(ValidationException.class,
-                () -> bkashPaymentService.create(request, null));
+                () -> bkashPaymentService.create(request, userDetails));
 
         assertEquals("Cannot pay for cancelled or rejected order", ex.getMessage());
     }
@@ -127,13 +132,17 @@ class BkashPaymentServiceTest {
     @Test
     @DisplayName("Should throw ValidationException when order is rejected")
     void create_orderRejected_throwsValidationException() {
-        testOrder.setStatus(OrderStatus.REJECTED);
+        OrderPaymentDto rejectedOrder = new OrderPaymentDto(
+                ORDER_ID, USER_ID, "REJECTED", new BigDecimal("1500.00"), false, new ArrayList<>()
+        );
         CreatePaymentRequest request = new CreatePaymentRequest(USER_ID, ORDER_ID, new BigDecimal("1500.00"), "ref");
 
-        when(orderService.findByIdHelper(eq(ORDER_ID), any())).thenReturn(testOrder);
+        CustomUserDetails userDetails = mock(CustomUserDetails.class);
+        when(userDetails.getId()).thenReturn(USER_ID);
+        when(orderClient.findOrderForPayment(eq(ORDER_ID), eq(USER_ID), anyBoolean())).thenReturn(rejectedOrder);
 
         ValidationException ex = assertThrows(ValidationException.class,
-                () -> bkashPaymentService.create(request, null));
+                () -> bkashPaymentService.create(request, userDetails));
 
         assertEquals("Cannot pay for cancelled or rejected order", ex.getMessage());
     }
@@ -142,12 +151,15 @@ class BkashPaymentServiceTest {
     @DisplayName("Should throw ValidationException when product has insufficient stock")
     void create_insufficientStock_throwsValidationException() {
         CreatePaymentRequest request = new CreatePaymentRequest(USER_ID, ORDER_ID, new BigDecimal("1500.00"), "ref");
-        when(orderService.findByIdHelper(eq(ORDER_ID), any())).thenReturn(testOrder);
+
+        CustomUserDetails userDetails = mock(CustomUserDetails.class);
+        when(userDetails.getId()).thenReturn(USER_ID);
+        when(orderClient.findOrderForPayment(eq(ORDER_ID), eq(USER_ID), anyBoolean())).thenReturn(testOrderSnapshot);
         doThrow(new ValidationException("Insufficient stock for product: Wireless Mouse"))
-                .when(orderService).validateStockForPayment(testOrder);
+                .when(orderClient).validateStockForPayment(ORDER_ID);
 
         ValidationException ex = assertThrows(ValidationException.class,
-                () -> bkashPaymentService.create(request, null));
+                () -> bkashPaymentService.create(request, userDetails));
 
         assertTrue(ex.getMessage().contains("Insufficient stock"));
         assertTrue(ex.getMessage().contains("Wireless Mouse"));
@@ -159,12 +171,65 @@ class BkashPaymentServiceTest {
         CreatePaymentRequest request = new CreatePaymentRequest(OTHER_USER_ID, ORDER_ID, new BigDecimal("1500.00"), "ref");
 
         CustomUserDetails otherUser = mock(CustomUserDetails.class);
+        when(otherUser.getId()).thenReturn(OTHER_USER_ID);
 
-        when(orderService.findByIdHelper(eq(ORDER_ID), any()))
+        when(orderClient.findOrderForPayment(eq(ORDER_ID), eq(OTHER_USER_ID), anyBoolean()))
                 .thenThrow(new AccessDeniedException("Access denied"));
 
         assertThrows(AccessDeniedException.class,
                 () -> bkashPaymentService.create(request, otherUser));
+    }
+
+    @Test
+    @DisplayName("Should pass isAdmin=true when admin user pays for another user's order")
+    void create_adminUserCanPayForOtherUserOrder() {
+        UUID adminId = UUID.randomUUID();
+        CreatePaymentRequest request = new CreatePaymentRequest(adminId, ORDER_ID, new BigDecimal("1500.00"), "ref");
+
+        CustomUserDetails adminUser = mock(CustomUserDetails.class);
+        when(adminUser.getId()).thenReturn(adminId);
+        GrantedAuthority authority = new SimpleGrantedAuthority(Permission.ADMIN_ACCESS.getValue());
+        doReturn(List.of(authority)).when(adminUser).getAuthorities();
+
+        when(orderClient.findOrderForPayment(eq(ORDER_ID), eq(adminId), eq(true)))
+                .thenReturn(testOrderSnapshot);
+
+        when(tokenService.getValidToken()).thenReturn("Bearer token");
+        when(config.getAppKey()).thenReturn("appKey");
+        when(config.getBaseUrl()).thenReturn("https://tokenized.sandbox.bka.sh/v2");
+        when(config.getCallbackUrl()).thenReturn("https://example.com/callback");
+
+        @SuppressWarnings("rawtypes")
+        WebClient.RequestBodyUriSpec requestBodyUriSpec = mock(WebClient.RequestBodyUriSpec.class);
+        @SuppressWarnings("rawtypes")
+        WebClient.RequestBodySpec requestBodySpec = mock(WebClient.RequestBodySpec.class);
+        @SuppressWarnings("rawtypes")
+        WebClient.RequestHeadersSpec requestHeadersSpec = mock(WebClient.RequestHeadersSpec.class);
+        WebClient.ResponseSpec responseSpec = mock(WebClient.ResponseSpec.class);
+
+        when(bkashWebClient.post()).thenReturn(requestBodyUriSpec);
+        when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
+        when(requestBodySpec.headers(any())).thenReturn(requestBodySpec);
+        when(requestBodySpec.bodyValue(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(String.class)).thenReturn(Mono.just(
+                "{\"statusCode\":\"0000\",\"bkashURL\":\"https://payment.bkash.com/pay\",\"paymentID\":\"PAY-123\"}"
+        ));
+
+        String paymentUrl = bkashPaymentService.create(request, adminUser);
+
+        assertEquals("https://payment.bkash.com/pay", paymentUrl);
+        verify(orderClient).findOrderForPayment(eq(ORDER_ID), eq(adminId), eq(true));
+        verify(orderClient).validateStockForPayment(ORDER_ID);
+        verify(paymentRepository).save(any(Payment.class));
+    }
+
+    @Test
+    @DisplayName("Should delegate acceptOrderForPrepayment to orderClient")
+    void acceptOrderForPrepayment_delegatesToOrderClient() {
+        bkashPaymentService.acceptOrderForPrepayment(ORDER_ID);
+
+        verify(orderClient).acceptOrderForPrepayment(ORDER_ID);
     }
 
     // ========== getOrderIdByPaymentId ==========

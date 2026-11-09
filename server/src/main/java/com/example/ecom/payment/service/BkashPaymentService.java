@@ -1,13 +1,13 @@
 package com.example.ecom.payment.service;
 
 import com.example.ecom.payment.config.BkashConfigProperties;
-import com.example.ecom.order.service.OrderService;
+import com.example.ecom.common.client.order.OrderClient;
+import com.example.ecom.common.client.order.OrderPaymentDto;
 import com.example.ecom.payment.enums.PaymentStatus;
 import com.example.ecom.payment.model.Payment;
 import com.example.ecom.payment.dto.CreatePaymentRequest;
 import com.example.ecom.payment.dto.CreatePaymentResponse;
 import com.example.ecom.payment.repository.PaymentRepository;
-import com.example.ecom.order.model.Order;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.ValidationException;
@@ -20,9 +20,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.example.ecom.common.dto.CustomUserDetails;
+import com.example.ecom.common.enums.Permission;
+import com.example.ecom.common.utils.SecurityUtil;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -36,7 +39,7 @@ public class BkashPaymentService implements PaymentService {
     private final WebClient bkashWebClient;
     private final ObjectMapper objectMapper;
     private final PaymentRepository paymentRepository;
-    private final OrderService orderService;
+    private final OrderClient orderClient;
 
     /**
      * Step 1: Create a payment and return the bKash payment URL
@@ -44,9 +47,12 @@ public class BkashPaymentService implements PaymentService {
     @Override
     @Transactional
     public String create(CreatePaymentRequest request, CustomUserDetails userDetails) {
-        Order order = orderService.findByIdHelper(request.orderId(), userDetails);
+        boolean isAdmin = userDetails != null && SecurityUtil.hasPermission(
+                List.of(Permission.ADMIN_ACCESS.getValue(), Permission.SUPER_ADMIN_ACCESS.getValue()), userDetails);
+        UUID userId = userDetails != null ? userDetails.getId() : null;
+        OrderPaymentDto order = orderClient.findOrderForPayment(request.orderId(), userId, isAdmin);
 
-        if (order.isPaid()) {
+        if (order.paid()) {
             throw new ValidationException("Order is already paid");
         }
 
@@ -54,12 +60,12 @@ public class BkashPaymentService implements PaymentService {
             throw new ValidationException("Cannot pay for cancelled or rejected order");
         }
 
-        orderService.validateStockForPayment(order);
+        orderClient.validateStockForPayment(order.id());
 
         HttpHeaders headers = authHeaders();
 
         String merchantInvoiceNumber = "INV-" + UUID.randomUUID().toString().replace("-", "").substring(0, 11).toUpperCase();
-        BigDecimal payableAmount = order.getTotalPrice().setScale(2, RoundingMode.HALF_UP);
+        BigDecimal payableAmount = order.totalPrice().setScale(2, RoundingMode.HALF_UP);
 
         Map<String, Object> body = Map.of(
                 "mode", "0011",          // Checkout URL mode
@@ -105,6 +111,11 @@ public class BkashPaymentService implements PaymentService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse create payment response", e);
         }
+    }
+
+    @Override
+    public void acceptOrderForPrepayment(UUID orderId) {
+        orderClient.acceptOrderForPrepayment(orderId);
     }
 
     @Override

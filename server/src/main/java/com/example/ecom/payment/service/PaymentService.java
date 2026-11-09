@@ -20,5 +20,7 @@ public interface PaymentService {
     UUID getOrderIdByPaymentId(String paymentID);
 
     void updatePaymentStatus(String paymentID, com.example.ecom.payment.dto.CreatePaymentResponse result, boolean success);
+
+    void acceptOrderForPrepayment(UUID orderId);
 }
 
