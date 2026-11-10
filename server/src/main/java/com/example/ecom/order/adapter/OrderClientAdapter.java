@@ -4,6 +4,7 @@ import com.example.ecom.common.client.order.OrderClient;
 import com.example.ecom.common.client.order.OrderPaymentDto;
 import com.example.ecom.order.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -12,6 +13,7 @@ import java.util.UUID;
  * Monolith adapter: implements {@link OrderClient} by delegating to {@link OrderService}.
  * On microservice extraction, this class is removed and replaced by an HTTP proxy.
  */
+@Primary
 @Service
 @RequiredArgsConstructor
 public class OrderClientAdapter implements OrderClient {

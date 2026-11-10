@@ -15,6 +15,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -25,16 +26,25 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.example.ecom.common.utils.RequestUtil;
+import com.example.ecom.common.utils.SecurityUtil;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -58,6 +68,14 @@ public class SecurityConfig {
 
     @Value("${app.internal.service-key}")
     private String internalServiceKey;
+
+    @PostConstruct
+    public void validateInternalServiceKey() {
+        if (internalServiceKey == null || internalServiceKey.isBlank() || internalServiceKey.length() < 32) {
+            throw new IllegalStateException(
+                    "app.internal.service-key must be set and contain at least 32 characters");
+        }
+    }
 
     private final UserDetailsService userDetailsService;
 
@@ -89,14 +107,15 @@ public class SecurityConfig {
                         .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .requestMatchers(PUBLIC_URLS.toArray(new String[0])).permitAll()
 
-                        .requestMatchers("/actuator/refresh").access((authentication, context) -> {
-                            String key = context.getRequest().getHeader("X-Internal-Service-Key");
-                            boolean allowed = key != null && key.equals(internalServiceKey);
-                            return new org.springframework.security.authorization.AuthorizationDecision(allowed);
-                        })
+                        .requestMatchers("/actuator/refresh")
+                            .access((authentication, context)
+                                    -> getAuthorizationDecision(context))
 
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/internal/**").permitAll()
+
+                        .requestMatchers("/internal/**")
+                            .access((authentication, context)
+                                    -> getAuthorizationDecision(context))
 
                         .requestMatchers(HttpMethod.GET, "/products", "/products/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/categories", "/categories/*").permitAll()
@@ -157,5 +176,19 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
+    }
+
+    private AuthorizationDecision getAuthorizationDecision(RequestAuthorizationContext context) {
+        var request = context.getRequest();
+        String key = request.getHeader(SecurityUtil.INTERNAL_SERVICE_KEY_HEADER);
+        boolean allowed = key != null && !key.isBlank()
+                && MessageDigest.isEqual(
+                        key.getBytes(StandardCharsets.UTF_8),
+                        internalServiceKey.getBytes(StandardCharsets.UTF_8));
+        if (!allowed) {
+            log.warn("Unauthorized internal access: URI={}, IP={}, HeaderPresent={}",
+                    request.getRequestURI(), RequestUtil.getClientIp(request), key != null);
+        }
+        return new AuthorizationDecision(allowed);
     }
 }

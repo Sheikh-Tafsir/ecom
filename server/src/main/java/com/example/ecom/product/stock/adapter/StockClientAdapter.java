@@ -3,6 +3,7 @@ package com.example.ecom.product.stock.adapter;
 import com.example.ecom.common.client.stock.StockClient;
 import com.example.ecom.product.stock.service.StockService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -11,6 +12,7 @@ import java.util.UUID;
  * Monolith adapter: implements {@link StockClient} by delegating to {@link StockService}.
  * On microservice extraction, this class is removed and replaced by an HTTP proxy.
  */
+@Primary
 @Service
 @RequiredArgsConstructor
 public class StockClientAdapter implements StockClient {

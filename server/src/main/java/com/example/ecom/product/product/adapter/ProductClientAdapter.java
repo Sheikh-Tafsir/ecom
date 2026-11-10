@@ -6,6 +6,7 @@ import com.example.ecom.product.product.model.Product;
 import com.example.ecom.product.product.model.ProductImage;
 import com.example.ecom.product.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -15,6 +16,7 @@ import java.util.UUID;
  * Monolith adapter: implements {@link ProductClient} by delegating to {@link ProductService}.
  * On microservice extraction, this class is removed and replaced by an HTTP proxy.
  */
+@Primary
 @Service
 @RequiredArgsConstructor
 public class ProductClientAdapter implements ProductClient {

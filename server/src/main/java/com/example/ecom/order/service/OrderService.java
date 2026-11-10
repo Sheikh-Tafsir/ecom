@@ -131,6 +131,7 @@ public class OrderService {
     public void validateStockForPayment(UUID id) {
         Order order = orderRepository.findDetailsById(id)
                 .orElseThrow(() -> new EntityNotFoundException(messageService.get("error.entity.not.found", "Order", id)));
+
         validateStockForPayment(order);
     }
 
