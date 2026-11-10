@@ -2,7 +2,7 @@ package com.example.ecom.product.category.controller;
 
 import com.example.ecom.product.category.dto.CategorySaveRequest;
 import com.example.ecom.common.dto.ApiResponse;
-import com.example.ecom.common.model.Category;
+import com.example.ecom.product.category.model.Category;
 import com.example.ecom.common.service.MessageService;
 import com.example.ecom.common.utils.ResponseUtils;
 import com.example.ecom.product.category.service.CategoryService;

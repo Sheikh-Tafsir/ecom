@@ -1,6 +1,6 @@
 package com.example.ecom.cms.banner.dto;
 
-import com.example.ecom.common.model.Banner;
+import com.example.ecom.cms.banner.model.Banner;
 
 import java.util.UUID;
 

@@ -1,6 +1,6 @@
 package com.example.ecom.cms.banner.repository;
 
-import com.example.ecom.common.model.Banner;
+import com.example.ecom.cms.banner.model.Banner;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;

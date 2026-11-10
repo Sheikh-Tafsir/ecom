@@ -1,6 +1,6 @@
 package com.example.ecom.product.stock.repository;
 
-import com.example.ecom.common.model.Stock;
+import com.example.ecom.product.stock.model.Stock;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;

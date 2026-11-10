@@ -1,6 +1,6 @@
 package com.example.ecom.payment.repository;
 
-import com.example.ecom.common.model.Payment;
+import com.example.ecom.payment.model.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

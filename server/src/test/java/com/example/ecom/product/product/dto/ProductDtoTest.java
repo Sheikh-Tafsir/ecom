@@ -1,9 +1,9 @@
 package com.example.ecom.product.product.dto;
 
-import com.example.ecom.common.enums.ProductStatus;
-import com.example.ecom.common.model.Category;
-import com.example.ecom.common.model.Product;
-import com.example.ecom.common.model.ProductImage;
+import com.example.ecom.product.product.enums.ProductStatus;
+import com.example.ecom.product.category.model.Category;
+import com.example.ecom.product.product.model.Product;
+import com.example.ecom.product.product.model.ProductImage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

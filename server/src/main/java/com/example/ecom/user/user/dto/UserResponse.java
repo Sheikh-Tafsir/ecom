@@ -1,7 +1,7 @@
 package com.example.ecom.user.user.dto;
 
 import com.example.ecom.common.enums.UserStatus;
-import com.example.ecom.common.model.User;
+import com.example.ecom.user.user.model.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

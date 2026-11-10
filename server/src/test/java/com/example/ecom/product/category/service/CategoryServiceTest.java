@@ -1,6 +1,6 @@
 package com.example.ecom.product.category.service;
 
-import com.example.ecom.common.model.Category;
+import com.example.ecom.product.category.model.Category;
 import com.example.ecom.common.service.MessageService;
 import com.example.ecom.product.category.dto.CategorySaveRequest;
 import com.example.ecom.product.category.repository.CategoryRepository;

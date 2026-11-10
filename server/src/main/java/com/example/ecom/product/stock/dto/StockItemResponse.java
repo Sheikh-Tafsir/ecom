@@ -1,6 +1,6 @@
 package com.example.ecom.product.stock.dto;
 
-import com.example.ecom.common.model.StockItem;
+import com.example.ecom.product.stock.model.StockItem;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

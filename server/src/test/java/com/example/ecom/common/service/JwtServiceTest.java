@@ -1,7 +1,7 @@
 package com.example.ecom.common.service;
 
 import com.example.ecom.common.enums.UserStatus;
-import com.example.ecom.common.model.User;
+import com.example.ecom.user.user.model.User;
 import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

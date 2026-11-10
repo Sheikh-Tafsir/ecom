@@ -2,8 +2,8 @@ package com.example.ecom.common.utils;
 
 import com.example.ecom.common.dto.CustomUserDetails;
 import com.example.ecom.common.enums.Permission;
-import com.example.ecom.common.model.Role;
-import com.example.ecom.common.model.User;
+import com.example.ecom.user.user.model.Role;
+import com.example.ecom.user.user.model.User;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;

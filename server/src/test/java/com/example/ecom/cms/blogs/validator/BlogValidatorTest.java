@@ -2,7 +2,7 @@ package com.example.ecom.cms.blogs.validator;
 
 import com.example.ecom.cms.blogs.dto.BlogRequest;
 import com.example.ecom.cms.blogs.repository.BlogRepository;
-import com.example.ecom.common.enums.BlogPostStatus;
+import com.example.ecom.cms.blogs.enums.BlogPostStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

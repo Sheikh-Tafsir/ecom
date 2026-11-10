@@ -1,6 +1,7 @@
 package com.example.ecom.common.serializer;
 
-import com.example.ecom.common.enums.OrderStatus;
+import com.example.ecom.order.enums.OrderStatus;
+import com.example.ecom.order.converter.OrderStatusConverter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

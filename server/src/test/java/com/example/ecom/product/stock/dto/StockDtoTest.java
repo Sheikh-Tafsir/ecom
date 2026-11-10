@@ -1,8 +1,8 @@
 package com.example.ecom.product.stock.dto;
 
-import com.example.ecom.common.model.Product;
-import com.example.ecom.common.model.Stock;
-import com.example.ecom.common.model.StockItem;
+import com.example.ecom.product.product.model.Product;
+import com.example.ecom.product.stock.model.Stock;
+import com.example.ecom.product.stock.model.StockItem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

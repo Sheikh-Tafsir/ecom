@@ -1,6 +1,6 @@
 package com.example.ecom.product.stock.repository;
 
-import com.example.ecom.common.model.StockItem;
+import com.example.ecom.product.stock.model.StockItem;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

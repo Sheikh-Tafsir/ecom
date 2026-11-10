@@ -1,6 +1,6 @@
 package com.example.ecom.payment.service;
 
-import com.example.ecom.common.config.BkashConfigProperties;
+import com.example.ecom.payment.config.BkashConfigProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

@@ -1,7 +1,7 @@
 package com.example.ecom.user.role.service;
 
 import com.example.ecom.common.enums.Permission;
-import com.example.ecom.common.model.Role;
+import com.example.ecom.user.user.model.Role;
 import com.example.ecom.user.role.dto.RoleResponse;
 import com.example.ecom.user.role.repository.RoleRepository;
 import jakarta.persistence.EntityNotFoundException;

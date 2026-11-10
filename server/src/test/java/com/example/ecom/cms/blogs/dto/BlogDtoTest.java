@@ -1,7 +1,7 @@
 package com.example.ecom.cms.blogs.dto;
 
-import com.example.ecom.common.enums.BlogPostStatus;
-import com.example.ecom.common.model.Blogs;
+import com.example.ecom.cms.blogs.enums.BlogPostStatus;
+import com.example.ecom.cms.blogs.model.Blogs;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

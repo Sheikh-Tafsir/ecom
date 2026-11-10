@@ -1,9 +1,9 @@
 package com.example.ecom.order.service;
 
 import com.example.ecom.common.dto.CustomUserDetails;
-import com.example.ecom.common.enums.PaymentMethod;
-import com.example.ecom.common.model.Order;
-import com.example.ecom.common.model.User;
+import com.example.ecom.order.enums.PaymentMethod;
+import com.example.ecom.order.model.Order;
+import com.example.ecom.user.user.model.User;
 import com.example.ecom.common.service.IdempotencyService;
 import com.example.ecom.order.dto.CreateOrderRequest;
 import com.example.ecom.order.dto.CreateOrderResponse;
@@ -48,7 +48,7 @@ class OrderServiceTest {
     private com.example.ecom.product.stock.service.StockService stockService;
 
     @Mock
-    private com.example.ecom.notification.service.NotificationService notificationService;
+    private com.example.ecom.common.service.notification.NotificationService notificationService;
 
     @InjectMocks
     private OrderService orderService;
@@ -92,7 +92,7 @@ class OrderServiceTest {
         user.setName("Test User");
         CustomUserDetails userDetails = new CustomUserDetails(user);
 
-        com.example.ecom.common.model.Product product = new com.example.ecom.common.model.Product();
+        com.example.ecom.product.product.model.Product product = new com.example.ecom.product.product.model.Product();
         product.setId(PRODUCT_ID);
         product.setPrice(new java.math.BigDecimal("50.00"));
         product.setQuantity(20);
@@ -127,14 +127,14 @@ class OrderServiceTest {
         user.setId(USER_ID);
         CustomUserDetails userDetails = new CustomUserDetails(user);
 
-        com.example.ecom.common.model.Product product = new com.example.ecom.common.model.Product();
+        com.example.ecom.product.product.model.Product product = new com.example.ecom.product.product.model.Product();
         product.setId(PRODUCT_ID);
         product.setPrice(new java.math.BigDecimal("50.00"));
 
         Order order = new Order();
         order.setId(ORDER_ID);
         order.setUser(user);
-        order.setStatus(com.example.ecom.common.enums.OrderStatus.PENDING);
+        order.setStatus(com.example.ecom.order.enums.OrderStatus.PENDING);
         order.addItem(product, 3);
 
         when(orderRepository.findById(ORDER_ID)).thenReturn(java.util.Optional.of(order));

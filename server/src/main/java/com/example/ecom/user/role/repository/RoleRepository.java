@@ -1,6 +1,6 @@
 package com.example.ecom.user.role.repository;
 
-import com.example.ecom.common.model.Role;
+import com.example.ecom.user.user.model.Role;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

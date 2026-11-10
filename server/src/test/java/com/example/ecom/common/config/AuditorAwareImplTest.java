@@ -1,7 +1,6 @@
 package com.example.ecom.common.config;
 
 import com.example.ecom.common.dto.CustomUserDetails;
-import com.example.ecom.common.enums.UserStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

@@ -1,6 +1,6 @@
 package com.example.ecom.order.dto;
 
-import com.example.ecom.common.enums.PaymentMethod;
+import com.example.ecom.order.enums.PaymentMethod;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;

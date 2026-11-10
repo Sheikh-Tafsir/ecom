@@ -1,6 +1,6 @@
 package com.example.ecom.common.service;
 
-import com.example.ecom.common.model.User;
+import com.example.ecom.user.user.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;

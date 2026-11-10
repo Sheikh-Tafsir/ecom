@@ -3,7 +3,7 @@ package com.example.ecom.order.controller;
 import com.example.ecom.common.annotation.Idempotent;
 import com.example.ecom.common.dto.ApiResponse;
 import com.example.ecom.common.dto.CustomUserDetails;
-import com.example.ecom.common.enums.OrderStatus;
+import com.example.ecom.order.enums.OrderStatus;
 import com.example.ecom.common.service.MessageService;
 import com.example.ecom.common.utils.ResponseUtils;
 import com.example.ecom.order.dto.*;

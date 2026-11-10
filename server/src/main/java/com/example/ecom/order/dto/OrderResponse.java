@@ -1,8 +1,8 @@
 package com.example.ecom.order.dto;
 
-import com.example.ecom.common.enums.OrderStatus;
-import com.example.ecom.common.enums.PaymentMethod;
-import com.example.ecom.common.model.Order;
+import com.example.ecom.order.enums.OrderStatus;
+import com.example.ecom.order.enums.PaymentMethod;
+import com.example.ecom.order.model.Order;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

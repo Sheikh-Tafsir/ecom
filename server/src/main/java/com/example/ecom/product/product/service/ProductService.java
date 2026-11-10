@@ -2,9 +2,9 @@ package com.example.ecom.product.product.service;
 
 import com.example.ecom.common.dto.CustomUserDetails;
 import com.example.ecom.common.dto.DateRangeDto;
-import com.example.ecom.common.enums.ProductStatus;
-import com.example.ecom.common.model.Product;
-import com.example.ecom.common.model.ProductImage;
+import com.example.ecom.product.product.enums.ProductStatus;
+import com.example.ecom.product.product.model.Product;
+import com.example.ecom.product.product.model.ProductImage;
 import com.example.ecom.common.service.fileStorage.FileStorageService;
 import com.example.ecom.common.service.MessageService;
 import com.example.ecom.common.utils.FileUtils;
@@ -44,7 +44,7 @@ import static com.example.ecom.common.utils.CacheConstants.CACHE_PRODUCTS;
 import static com.example.ecom.common.utils.CacheConstants.CACHE_PRODUCTS_EDIT;
 import static com.example.ecom.common.enums.Permission.ADMIN_ACCESS;
 import static com.example.ecom.common.enums.Permission.SUPER_ADMIN_ACCESS;
-import static com.example.ecom.common.enums.ProductStatus.DISCONTINUED;
+import static com.example.ecom.product.product.enums.ProductStatus.DISCONTINUED;
 import static com.example.ecom.common.utils.DateUtils.resolveDates;
 import static com.example.ecom.common.utils.SecurityUtil.hasPermission;
 import static com.example.ecom.common.utils.Utils.*;
@@ -82,7 +82,7 @@ public class ProductService {
                 .toList();
     }
 
-    @PostAuthorize("returnObject.status != T(com.example.ecom.common.enums.ProductStatus).DISCONTINUED || " +
+    @PostAuthorize("returnObject.status != T(com.example.ecom.product.product.enums.ProductStatus).DISCONTINUED || " +
             "hasAnyAuthority(T(com.example.ecom.common.enums.Permission).ADMIN_ACCESS.getValue(), " +
             "T(com.example.ecom.common.enums.Permission).SUPER_ADMIN_ACCESS.getValue())")
     @Cacheable(value = CACHE_PRODUCTS, key = "#id", sync = true)

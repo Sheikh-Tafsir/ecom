@@ -3,8 +3,12 @@ package com.example.ecom.order.service;
 import com.example.ecom.common.dto.CustomUserDetails;
 import com.example.ecom.common.dto.DateRangeDto;
 import com.example.ecom.common.enums.NotificationType;
-import com.example.ecom.common.enums.OrderStatus;
-import com.example.ecom.common.model.*;
+import com.example.ecom.order.enums.OrderStatus;
+import com.example.ecom.order.model.Order;
+import com.example.ecom.order.model.OrderItem;
+import com.example.ecom.order.model.OrderStatusHistory;
+import com.example.ecom.product.product.model.Product;
+import com.example.ecom.user.user.model.User;
 import com.example.ecom.common.service.MessageService;
 import com.example.ecom.order.dto.*;
 import com.example.ecom.order.repository.OrderRepository;
@@ -34,7 +38,7 @@ import static com.example.ecom.common.utils.SecurityUtil.*;
 import static com.example.ecom.common.utils.Utils.getValidPageable;
 import static com.example.ecom.common.utils.Utils.isNull;
 
-import com.example.ecom.notification.service.NotificationService;
+import com.example.ecom.common.service.notification.NotificationService;
 
 @Slf4j
 @Service
@@ -236,8 +240,8 @@ public class OrderService {
     }
 
     private void recordStatusChange(Order order, OrderStatus fromStatus, OrderStatus toStatus, User user, String comment) {
-        com.example.ecom.common.model.OrderStatusHistory history =
-                new com.example.ecom.common.model.OrderStatusHistory(order, fromStatus, toStatus, user, comment);
+        com.example.ecom.order.model.OrderStatusHistory history =
+                new com.example.ecom.order.model.OrderStatusHistory(order, fromStatus, toStatus, user, comment);
         orderStatusHistoryRepository.save(history);
         if (order.getStatusHistories() != null) {
             order.getStatusHistories().add(history);

@@ -1,6 +1,6 @@
 package com.example.ecom.product.product.dto;
 
-import com.example.ecom.common.model.ProductImage;
+import com.example.ecom.product.product.model.ProductImage;
 import lombok.*;
 
 import java.util.UUID;

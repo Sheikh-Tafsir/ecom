@@ -1,6 +1,6 @@
 package com.example.ecom.order.repository;
 
-import com.example.ecom.common.model.OrderStatusHistory;
+import com.example.ecom.order.model.OrderStatusHistory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

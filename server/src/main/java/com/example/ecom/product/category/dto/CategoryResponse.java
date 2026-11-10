@@ -1,6 +1,6 @@
 package com.example.ecom.product.category.dto;
 
-import com.example.ecom.common.model.Category;
+import com.example.ecom.product.category.model.Category;
 
 import java.util.UUID;
 

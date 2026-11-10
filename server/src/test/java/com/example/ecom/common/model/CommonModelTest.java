@@ -1,6 +1,31 @@
 package com.example.ecom.common.model;
 
-import com.example.ecom.common.enums.*;
+import com.example.ecom.cms.banner.model.Banner;
+import com.example.ecom.cms.blogs.enums.BlogPostStatus;
+import com.example.ecom.cms.blogs.model.Blogs;
+import com.example.ecom.cms.faq.model.Faq;
+import com.example.ecom.common.enums.Permission;
+import com.example.ecom.order.enums.OrderStatus;
+import com.example.ecom.order.enums.PaymentMethod;
+import com.example.ecom.order.model.Order;
+import com.example.ecom.order.model.OrderItem;
+import com.example.ecom.order.model.OrderStatusHistory;
+import com.example.ecom.payment.enums.PaymentStatus;
+import com.example.ecom.payment.model.Payment;
+import com.example.ecom.product.category.model.Category;
+import com.example.ecom.product.product.enums.ProductStatus;
+import com.example.ecom.product.product.model.Product;
+import com.example.ecom.product.product.model.ProductImage;
+import com.example.ecom.product.review.model.Review;
+import com.example.ecom.product.sale.model.Sale;
+import com.example.ecom.product.stock.model.Stock;
+import com.example.ecom.product.stock.model.StockItem;
+import com.example.ecom.user.user.enums.Gender;
+import com.example.ecom.user.user.enums.UserRefreshTokenStatus;
+import com.example.ecom.common.enums.UserStatus;
+import com.example.ecom.user.user.model.Role;
+import com.example.ecom.user.user.model.User;
+import com.example.ecom.user.user.model.UserRefreshToken;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -8,7 +33,6 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 

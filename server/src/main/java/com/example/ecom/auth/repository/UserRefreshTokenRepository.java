@@ -1,7 +1,7 @@
 package com.example.ecom.auth.repository;
 
-import com.example.ecom.common.enums.UserRefreshTokenStatus;
-import com.example.ecom.common.model.UserRefreshToken;
+import com.example.ecom.user.user.enums.UserRefreshTokenStatus;
+import com.example.ecom.user.user.model.UserRefreshToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

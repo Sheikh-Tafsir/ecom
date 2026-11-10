@@ -1,12 +1,16 @@
 package com.example.ecom.product.stock.service;
 
 import com.example.ecom.common.dto.DateRangeDto;
-import com.example.ecom.common.model.*;
+import com.example.ecom.order.model.Order;
+import com.example.ecom.product.product.model.Product;
+import com.example.ecom.product.stock.model.Stock;
+import com.example.ecom.product.stock.model.StockItem;
+import com.example.ecom.product.sale.model.Sale;
 import com.example.ecom.common.service.IdempotencyService;
 import com.example.ecom.common.service.MessageService;
 import com.example.ecom.product.product.service.ProductService;
 import com.example.ecom.product.stock.dto.*;
-import com.example.ecom.sale.SaleService;
+import com.example.ecom.product.sale.SaleService;
 import com.example.ecom.product.stock.repository.StockItemRepository;
 import com.example.ecom.product.stock.repository.StockRepository;
 import jakarta.persistence.EntityNotFoundException;

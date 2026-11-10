@@ -1,7 +1,7 @@
 package com.example.ecom.user.role.dto;
 
 import com.example.ecom.common.enums.Permission;
-import com.example.ecom.common.model.Role;
+import com.example.ecom.user.user.model.Role;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

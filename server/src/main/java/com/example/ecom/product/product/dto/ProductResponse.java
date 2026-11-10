@@ -1,8 +1,8 @@
 package com.example.ecom.product.product.dto;
 
 import com.example.ecom.product.category.dto.CategoryResponse;
-import com.example.ecom.common.enums.ProductStatus;
-import com.example.ecom.common.model.Product;
+import com.example.ecom.product.product.enums.ProductStatus;
+import com.example.ecom.product.product.model.Product;
 import lombok.*;
 
 import java.math.BigDecimal;

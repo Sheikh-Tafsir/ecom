@@ -1,8 +1,13 @@
 package com.example.ecom.order.dto;
 
-import com.example.ecom.common.enums.OrderStatus;
-import com.example.ecom.common.enums.PaymentMethod;
-import com.example.ecom.common.model.*;
+import com.example.ecom.order.enums.OrderStatus;
+import com.example.ecom.order.enums.PaymentMethod;
+import com.example.ecom.order.model.Order;
+import com.example.ecom.order.model.OrderItem;
+import com.example.ecom.order.model.OrderStatusHistory;
+import com.example.ecom.product.product.model.Product;
+import com.example.ecom.product.product.model.ProductImage;
+import com.example.ecom.user.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

@@ -1,7 +1,7 @@
 package com.example.ecom.order.dto;
 
-import com.example.ecom.common.enums.OrderStatus;
-import com.example.ecom.common.model.OrderStatusHistory;
+import com.example.ecom.order.enums.OrderStatus;
+import com.example.ecom.order.model.OrderStatusHistory;
 
 import java.time.Instant;
 import java.util.UUID;

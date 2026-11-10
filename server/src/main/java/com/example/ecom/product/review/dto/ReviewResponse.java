@@ -1,6 +1,6 @@
 package com.example.ecom.product.review.dto;
 
-import com.example.ecom.common.model.Review;
+import com.example.ecom.product.review.model.Review;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

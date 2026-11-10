@@ -1,7 +1,7 @@
 package com.example.ecom.payment.controller;
 
 import com.example.ecom.common.annotation.Idempotent;
-import com.example.ecom.common.config.BkashConfigProperties;
+import com.example.ecom.payment.config.BkashConfigProperties;
 import com.example.ecom.common.dto.ApiResponse;
 import com.example.ecom.common.utils.ResponseUtils;
 import com.example.ecom.order.service.OrderService;

@@ -1,7 +1,7 @@
 package com.example.ecom.order.dto;
 
-import com.example.ecom.common.model.OrderItem;
-import com.example.ecom.common.model.ProductImage;
+import com.example.ecom.order.model.OrderItem;
+import com.example.ecom.product.product.model.ProductImage;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

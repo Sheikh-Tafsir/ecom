@@ -1,9 +1,9 @@
 package com.example.ecom.product.product.service;
 
-import com.example.ecom.common.enums.ProductStatus;
-import com.example.ecom.common.model.Category;
-import com.example.ecom.common.model.Product;
-import com.example.ecom.common.model.ProductImage;
+import com.example.ecom.product.product.enums.ProductStatus;
+import com.example.ecom.product.category.model.Category;
+import com.example.ecom.product.product.model.Product;
+import com.example.ecom.product.product.model.ProductImage;
 import com.example.ecom.common.service.MessageService;
 import com.example.ecom.common.service.fileStorage.FileStorageService;
 import com.example.ecom.product.category.repository.CategoryRepository;

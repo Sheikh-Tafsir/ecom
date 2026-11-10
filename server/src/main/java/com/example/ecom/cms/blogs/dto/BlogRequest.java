@@ -1,6 +1,6 @@
 package com.example.ecom.cms.blogs.dto;
 
-import com.example.ecom.common.enums.BlogPostStatus;
+import com.example.ecom.cms.blogs.enums.BlogPostStatus;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 

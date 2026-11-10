@@ -2,7 +2,7 @@ package com.example.ecom.common.service;
 
 import com.example.ecom.user.user.repository.UserRepository;
 import com.example.ecom.common.dto.CustomUserDetails;
-import com.example.ecom.common.model.User;
+import com.example.ecom.user.user.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;

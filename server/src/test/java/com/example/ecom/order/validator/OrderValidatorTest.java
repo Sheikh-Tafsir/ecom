@@ -2,7 +2,7 @@ package com.example.ecom.order.validator;
 
 import com.example.ecom.order.dto.CreateOrderItemRequest;
 import com.example.ecom.order.dto.CreateOrderRequest;
-import com.example.ecom.common.enums.PaymentMethod;
+import com.example.ecom.order.enums.PaymentMethod;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

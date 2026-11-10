@@ -2,10 +2,10 @@ package com.example.ecom.auth.service;
 
 import com.example.ecom.auth.dto.TokenDto;
 import com.example.ecom.auth.repository.UserRefreshTokenRepository;
-import com.example.ecom.common.enums.UserRefreshTokenStatus;
+import com.example.ecom.user.user.enums.UserRefreshTokenStatus;
 import com.example.ecom.common.exception.InvalidRefreshTokenException;
-import com.example.ecom.common.model.User;
-import com.example.ecom.common.model.UserRefreshToken;
+import com.example.ecom.user.user.model.User;
+import com.example.ecom.user.user.model.UserRefreshToken;
 import com.example.ecom.common.service.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

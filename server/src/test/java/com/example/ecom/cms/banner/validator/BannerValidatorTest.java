@@ -2,7 +2,7 @@ package com.example.ecom.cms.banner.validator;
 
 import com.example.ecom.cms.banner.dto.BannerRequest;
 import com.example.ecom.cms.banner.repository.BannerRepository;
-import com.example.ecom.common.model.Banner;
+import com.example.ecom.cms.banner.model.Banner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

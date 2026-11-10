@@ -2,7 +2,7 @@ package com.example.ecom.cms.faq.service;
 
 import com.example.ecom.cms.faq.dto.FaqRequest;
 import com.example.ecom.cms.faq.dto.FaqResponse;
-import com.example.ecom.common.model.Faq;
+import com.example.ecom.cms.faq.model.Faq;
 import com.example.ecom.cms.faq.repository.FaqRepository;
 import com.example.ecom.common.service.MessageService;
 import jakarta.persistence.EntityNotFoundException;

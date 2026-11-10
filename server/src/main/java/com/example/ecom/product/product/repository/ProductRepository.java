@@ -1,7 +1,7 @@
 package com.example.ecom.product.product.repository;
 
-import com.example.ecom.common.enums.ProductStatus;
-import com.example.ecom.common.model.Product;
+import com.example.ecom.product.product.enums.ProductStatus;
+import com.example.ecom.product.product.model.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;

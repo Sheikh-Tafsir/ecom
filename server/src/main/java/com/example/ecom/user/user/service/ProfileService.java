@@ -2,7 +2,7 @@ package com.example.ecom.user.user.service;
 
 import com.example.ecom.auth.service.AuthTokenService;
 import com.example.ecom.common.dto.CustomUserDetails;
-import com.example.ecom.common.model.User;
+import com.example.ecom.user.user.model.User;
 import com.example.ecom.common.service.fileStorage.FileStorageService;
 import com.example.ecom.user.user.dto.ChangePasswordRequest;
 import com.example.ecom.user.user.dto.ProfileResponse;

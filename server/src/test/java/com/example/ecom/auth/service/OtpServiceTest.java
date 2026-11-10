@@ -2,7 +2,7 @@ package com.example.ecom.auth.service;
 
 import com.example.ecom.auth.dto.Otp;
 import com.example.ecom.auth.enums.OtpType;
-import com.example.ecom.common.model.User;
+import com.example.ecom.user.user.model.User;
 import jakarta.validation.ValidationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

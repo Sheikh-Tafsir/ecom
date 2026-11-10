@@ -1,7 +1,7 @@
 package com.example.ecom.order.repository;
 
-import com.example.ecom.common.enums.OrderStatus;
-import com.example.ecom.common.model.Order;
+import com.example.ecom.order.enums.OrderStatus;
+import com.example.ecom.order.model.Order;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;

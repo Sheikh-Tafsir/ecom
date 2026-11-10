@@ -1,6 +1,6 @@
 package com.example.ecom.cms.faq.dto;
 
-import com.example.ecom.common.model.Faq;
+import com.example.ecom.cms.faq.model.Faq;
 
 import java.util.UUID;
 

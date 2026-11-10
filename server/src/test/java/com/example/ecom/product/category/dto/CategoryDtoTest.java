@@ -1,6 +1,6 @@
 package com.example.ecom.product.category.dto;
 
-import com.example.ecom.common.model.Category;
+import com.example.ecom.product.category.model.Category;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

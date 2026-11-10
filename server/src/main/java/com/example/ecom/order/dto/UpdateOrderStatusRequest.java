@@ -1,6 +1,6 @@
 package com.example.ecom.order.dto;
 
-import com.example.ecom.common.enums.OrderStatus;
+import com.example.ecom.order.enums.OrderStatus;
 import jakarta.validation.constraints.NotNull;
 
 public record UpdateOrderStatusRequest(

@@ -3,7 +3,7 @@ package com.example.ecom.cms.banner.service;
 import com.example.ecom.cms.banner.dto.BannerRequest;
 import com.example.ecom.cms.banner.dto.BannerResponse;
 import com.example.ecom.cms.banner.repository.BannerRepository;
-import com.example.ecom.common.model.Banner;
+import com.example.ecom.cms.banner.model.Banner;
 import com.example.ecom.common.service.MessageService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;

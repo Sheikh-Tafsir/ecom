@@ -1,10 +1,14 @@
 package com.example.ecom.payment.service;
 
-import com.example.ecom.common.config.BkashConfigProperties;
+import com.example.ecom.payment.config.BkashConfigProperties;
 import com.example.ecom.common.dto.CustomUserDetails;
-import com.example.ecom.common.enums.OrderStatus;
-import com.example.ecom.common.enums.PaymentStatus;
-import com.example.ecom.common.model.*;
+import com.example.ecom.order.enums.OrderStatus;
+import com.example.ecom.payment.enums.PaymentStatus;
+import com.example.ecom.order.model.Order;
+import com.example.ecom.order.model.OrderItem;
+import com.example.ecom.payment.model.Payment;
+import com.example.ecom.product.product.model.Product;
+import com.example.ecom.user.user.model.User;
 import com.example.ecom.order.repository.OrderRepository;
 import com.example.ecom.payment.dto.CreatePaymentRequest;
 import com.example.ecom.payment.dto.CreatePaymentResponse;

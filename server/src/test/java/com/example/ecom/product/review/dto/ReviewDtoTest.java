@@ -1,8 +1,8 @@
 package com.example.ecom.product.review.dto;
 
-import com.example.ecom.common.model.Product;
-import com.example.ecom.common.model.Review;
-import com.example.ecom.common.model.User;
+import com.example.ecom.product.product.model.Product;
+import com.example.ecom.product.review.model.Review;
+import com.example.ecom.user.user.model.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

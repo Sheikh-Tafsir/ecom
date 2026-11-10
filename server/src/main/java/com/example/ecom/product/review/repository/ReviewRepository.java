@@ -1,6 +1,6 @@
 package com.example.ecom.product.review.repository;
 
-import com.example.ecom.common.model.Review;
+import com.example.ecom.product.review.model.Review;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;

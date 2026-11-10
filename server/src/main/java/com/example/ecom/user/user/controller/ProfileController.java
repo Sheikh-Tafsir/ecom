@@ -10,7 +10,7 @@ import com.example.ecom.user.user.service.ProfileService;
 import com.example.ecom.user.user.validator.ProfileUpdateRequestValidator;
 import com.example.ecom.common.dto.ApiResponse;
 import com.example.ecom.common.dto.CustomUserDetails;
-import com.example.ecom.common.model.User;
+import com.example.ecom.user.user.model.User;
 import com.example.ecom.common.service.MessageService;
 import com.example.ecom.common.utils.ResponseUtils;
 import jakarta.servlet.http.HttpServletRequest;

@@ -1,6 +1,6 @@
 package com.example.ecom.auth.repository;
 
-import com.example.ecom.common.model.User;
+import com.example.ecom.user.user.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

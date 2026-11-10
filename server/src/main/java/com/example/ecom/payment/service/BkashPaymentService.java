@@ -1,13 +1,13 @@
 package com.example.ecom.payment.service;
 
-import com.example.ecom.common.config.BkashConfigProperties;
-import com.example.ecom.common.enums.PaymentStatus;
-import com.example.ecom.common.model.Payment;
+import com.example.ecom.payment.config.BkashConfigProperties;
+import com.example.ecom.payment.enums.PaymentStatus;
+import com.example.ecom.payment.model.Payment;
 import com.example.ecom.payment.dto.CreatePaymentRequest;
 import com.example.ecom.payment.dto.CreatePaymentResponse;
 import com.example.ecom.payment.repository.PaymentRepository;
-import com.example.ecom.common.model.Order;
-import com.example.ecom.common.model.OrderItem;
+import com.example.ecom.order.model.Order;
+import com.example.ecom.order.model.OrderItem;
 import com.example.ecom.order.repository.OrderRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.example.ecom.common.dto.CustomUserDetails;
-import com.example.ecom.common.enums.OrderStatus;
+import com.example.ecom.order.enums.OrderStatus;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.math.BigDecimal;
