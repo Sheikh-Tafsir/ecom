@@ -14,6 +14,8 @@ import static com.example.ecom.common.utils.Utils.isEmpty;
 
 public final class SecurityUtil {
 
+    public static final String INTERNAL_SERVICE_KEY_HEADER = "X-Internal-Service-Key";
+
     private SecurityUtil() {
     }
 
