@@ -1,7 +1,5 @@
 package com.example.ecom.common.dto;
 
-import com.example.ecom.common.enums.UserStatus;
-import com.example.ecom.user.user.model.User;
 import io.jsonwebtoken.Claims;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
@@ -19,28 +17,26 @@ public class CustomUserDetails implements UserDetails {
 
     private final String email;
 
-    private final UserStatus status;
+    private final boolean active;
 
     private final Collection<? extends GrantedAuthority> authorities;
+
+    public CustomUserDetails(UUID id, String email, boolean active, Collection<? extends GrantedAuthority> authorities) {
+        this.id = id;
+        this.email = email;
+        this.active = active;
+        this.authorities = authorities != null ? authorities : List.of();
+    }
 
     public CustomUserDetails(Claims claims) {
         this.id = UUID.fromString(claims.getSubject());
         this.email = claims.get("email", String.class);
-        this.status = UserStatus.fromValue(claims.get("status", String.class));
+        this.active = "Active".equalsIgnoreCase(claims.get("status", String.class));
 
         List<String> permissions = claims.get("permissions", List.class);
         this.authorities = permissions == null
                 ? List.of()
                 : permissions.stream()
-                .map(SimpleGrantedAuthority::new)
-                .toList();
-    }
-
-    public CustomUserDetails(User user) {
-        this.id = user.getId();
-        this.email = user.getEmail();
-        this.status = user.getStatus();
-        this.authorities = user.getPermissionValues().stream()
                 .map(SimpleGrantedAuthority::new)
                 .toList();
     }
@@ -62,6 +58,6 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return status == UserStatus.ACTIVE;
+        return active;
     }
 }

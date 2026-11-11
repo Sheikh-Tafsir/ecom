@@ -2,7 +2,6 @@ package com.example.ecom.common.config;
 
 import com.example.ecom.common.filter.AuthenticationFilter;
 import com.example.ecom.common.filter.UserTrafficControlFilter;
-import com.example.ecom.common.service.CustomUserDetailsService;
 import com.example.ecom.common.service.JwtService;
 import com.example.ecom.common.service.RateLimiterService;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +14,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -59,7 +59,7 @@ public class SecurityConfig {
     @Value("${app.internal.service-key}")
     private String internalServiceKey;
 
-    private final CustomUserDetailsService userDetailsService;
+    private final UserDetailsService userDetailsService;
 
     private final JwtService jwtService;
 

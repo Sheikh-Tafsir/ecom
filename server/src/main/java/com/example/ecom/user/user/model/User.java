@@ -51,6 +51,10 @@ public class User extends AuditableEntity {
         return status != UserStatus.ACTIVE;
     }
 
+    public boolean isEnabled() {
+        return status == UserStatus.ACTIVE;
+    }
+
     public Set<String> getRoleValues() {
         return roles.stream()
                 .map(Role::getName)

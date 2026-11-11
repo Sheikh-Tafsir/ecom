@@ -1,14 +1,17 @@
-package com.example.ecom.common.service;
+package com.example.ecom.user.user.service;
 
-import com.example.ecom.user.user.repository.UserRepository;
 import com.example.ecom.common.dto.CustomUserDetails;
 import com.example.ecom.user.user.model.User;
+import com.example.ecom.user.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 import static java.util.Objects.isNull;
 
@@ -25,6 +28,10 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("User not found with email: " + email);
         }
 
-        return new CustomUserDetails(user);
+        List<SimpleGrantedAuthority> authorities = user.getPermissionValues().stream()
+                .map(SimpleGrantedAuthority::new)
+                .toList();
+
+        return new CustomUserDetails(user.getId(), user.getEmail(), user.isEnabled(), authorities);
     }
 }

@@ -2,13 +2,12 @@ package com.example.ecom.common.utils;
 
 import com.example.ecom.common.dto.CustomUserDetails;
 import com.example.ecom.common.enums.Permission;
-import com.example.ecom.user.user.model.Role;
-import com.example.ecom.user.user.model.User;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -16,24 +15,21 @@ class SecurityUtilTest {
 
     @Test
     void hasPermission_singlePermission_returnsTrueIfUserHasPermission() {
-        User user = createWithPermission(Permission.ADMIN_ACCESS);
-        CustomUserDetails userDetails = new CustomUserDetails(user);
+        CustomUserDetails userDetails = createUserDetailsWithPermission(Permission.ADMIN_ACCESS);
 
         assertTrue(SecurityUtil.hasPermission(Permission.ADMIN_ACCESS.getValue(), userDetails));
     }
 
     @Test
     void hasPermission_singlePermission_returnsFalseIfUserDoesNotHavePermission() {
-        User user = createWithPermission(Permission.ADMIN_ACCESS);
-        CustomUserDetails userDetails = new CustomUserDetails(user);
+        CustomUserDetails userDetails = createUserDetailsWithPermission(Permission.ADMIN_ACCESS);
 
         assertFalse(SecurityUtil.hasPermission(Permission.SUPER_ADMIN_ACCESS.getValue(), userDetails));
     }
 
     @Test
     void hasPermission_listPermissions_returnsTrueIfUserHasAnyPermission() {
-        User user = createWithPermission(Permission.ADMIN_ACCESS);
-        CustomUserDetails userDetails = new CustomUserDetails(user);
+        CustomUserDetails userDetails = createUserDetailsWithPermission(Permission.ADMIN_ACCESS);
 
         assertTrue(SecurityUtil.hasPermission(
                 List.of(Permission.SUPER_ADMIN_ACCESS.getValue(), Permission.ADMIN_ACCESS.getValue()),
@@ -43,9 +39,7 @@ class SecurityUtilTest {
 
     @Test
     void hasPermission_listPermissions_returnsFalseIfUserHasNoPermission() {
-        User user = new User();
-        user.setRoles(Collections.emptySet());
-        CustomUserDetails userDetails = new CustomUserDetails(user);
+        CustomUserDetails userDetails = createUserDetailsWithPermission(null);
 
         assertFalse(SecurityUtil.hasPermission(
                 List.of(Permission.SUPER_ADMIN_ACCESS.getValue(), Permission.ADMIN_ACCESS.getValue()),
@@ -55,8 +49,7 @@ class SecurityUtilTest {
 
     @Test
     void hasPermission_listPermissions_returnsTrueIfPermissionsListIsEmpty() {
-        User user = createWithPermission(Permission.ADMIN_ACCESS);
-        CustomUserDetails userDetails = new CustomUserDetails(user);
+        CustomUserDetails userDetails = createUserDetailsWithPermission(Permission.ADMIN_ACCESS);
 
         assertTrue(SecurityUtil.hasPermission(Collections.emptyList(), userDetails));
     }
@@ -66,13 +59,16 @@ class SecurityUtilTest {
         assertFalse(SecurityUtil.hasPermission(List.of("READ"), null));
     }
 
-    private User createWithPermission(Permission permission) {
-        Role role = new Role();
-        role.setName("ROLE_TEST");
-        role.setPermissions(Set.of(permission));
+    private CustomUserDetails createUserDetailsWithPermission(Permission permission) {
+        List<SimpleGrantedAuthority> authorities = permission != null
+                ? Collections.singletonList(new SimpleGrantedAuthority(permission.getValue()))
+                : Collections.emptyList();
 
-        User user = new User();
-        user.setRoles(Set.of(role));
-        return user;
+        return new CustomUserDetails(
+                UUID.randomUUID(),
+                "test@example.com",
+                true,
+                authorities
+        );
     }
 }

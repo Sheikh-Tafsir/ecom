@@ -84,7 +84,7 @@ class ReviewServiceTest {
         user.setName("John Doe");
         user.setEmail("john.doe@example.com");
 
-        userDetails = new CustomUserDetails(user);
+        userDetails = new CustomUserDetails(USER_ID, "john.doe@example.com", true, List.of());
 
         review = new Review();
         review.setId(REVIEW_ID);
@@ -217,7 +217,7 @@ class ReviewServiceTest {
         otherUser.setId(USER_ID_OTHER);
         otherUser.setName("Other User");
         otherUser.setEmail("other@example.com");
-        CustomUserDetails otherDetails = new CustomUserDetails(otherUser);
+        CustomUserDetails otherDetails = new CustomUserDetails(USER_ID_OTHER, "other@example.com", true, List.of());
 
         UpdateReviewRequest request = new UpdateReviewRequest(5, "Hacked");
 
@@ -281,7 +281,7 @@ class ReviewServiceTest {
         otherUser.setId(USER_ID_OTHER);
         otherUser.setName("Other User");
         otherUser.setEmail("other@example.com");
-        CustomUserDetails otherDetails = new CustomUserDetails(otherUser);
+        CustomUserDetails otherDetails = new CustomUserDetails(USER_ID_OTHER, "other@example.com", true, List.of());
 
         when(reviewRepository.findById(REVIEW_ID)).thenReturn(Optional.of(review));
 

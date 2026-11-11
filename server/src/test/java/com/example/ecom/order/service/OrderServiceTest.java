@@ -63,7 +63,7 @@ class OrderServiceTest {
         User user = new User();
         user.setId(USER_ID);
         user.setName("Test User");
-        CustomUserDetails userDetails = new CustomUserDetails(user);
+        CustomUserDetails userDetails = new CustomUserDetails(USER_ID, "test@example.com", true, java.util.List.of());
 
         CreateOrderRequest request = new CreateOrderRequest(
                 new ArrayList<>(), "Test Receiver", "01234567890", "Test Address 12345", PaymentMethod.CASH_ON_DELIVERY
@@ -90,7 +90,7 @@ class OrderServiceTest {
         User user = new User();
         user.setId(USER_ID);
         user.setName("Test User");
-        CustomUserDetails userDetails = new CustomUserDetails(user);
+        CustomUserDetails userDetails = new CustomUserDetails(USER_ID, "test@example.com", true, java.util.List.of());
 
         com.example.ecom.product.product.model.Product product = new com.example.ecom.product.product.model.Product();
         product.setId(PRODUCT_ID);
@@ -125,7 +125,7 @@ class OrderServiceTest {
         // Arrange
         User user = new User();
         user.setId(USER_ID);
-        CustomUserDetails userDetails = new CustomUserDetails(user);
+        CustomUserDetails userDetails = new CustomUserDetails(USER_ID, "test@example.com", true, java.util.List.of());
 
         com.example.ecom.product.product.model.Product product = new com.example.ecom.product.product.model.Product();
         product.setId(PRODUCT_ID);

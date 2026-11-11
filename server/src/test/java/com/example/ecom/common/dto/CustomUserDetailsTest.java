@@ -1,15 +1,11 @@
 package com.example.ecom.common.dto;
 
-import com.example.ecom.common.enums.Permission;
-import com.example.ecom.common.enums.UserStatus;
-import com.example.ecom.user.user.model.Role;
-import com.example.ecom.user.user.model.User;
 import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,7 +15,7 @@ import static org.mockito.Mockito.when;
 class CustomUserDetailsTest {
 
     @Test
-    @DisplayName("Construction from Claims sets id, email, status and authorities")
+    @DisplayName("Construction from Claims sets id, email, active and authorities")
     void constructor_fromClaims_setsAllFields() {
         UUID userId = UUID.fromString("01927d6c-1a8f-7bfa-9ab2-c3d4e5f60718");
         Claims claims = mock(Claims.class);
@@ -32,7 +28,7 @@ class CustomUserDetailsTest {
 
         assertEquals(userId, details.getId());
         assertEquals("john.doe@example.com", details.getEmail());
-        assertEquals(UserStatus.ACTIVE, details.getStatus());
+        assertTrue(details.isActive());
         assertEquals(2, details.getAuthorities().size());
         assertEquals(userId.toString(), details.getUsername());
         assertNull(details.getPassword());
@@ -55,30 +51,22 @@ class CustomUserDetailsTest {
     }
 
     @Test
-    @DisplayName("Construction from User entity sets all fields correctly")
-    void constructor_fromUser_setsAllFields() {
+    @DisplayName("Direct constructor sets all fields correctly")
+    void constructor_direct_setsAllFields() {
         UUID userId = UUID.fromString("01927d6c-3caf-7dfa-7ab4-e5f607182930");
-        User user = new User();
-        user.setId(userId);
-        user.setEmail("admin@example.com");
-        user.setStatus(UserStatus.ACTIVE);
+        SimpleGrantedAuthority authority = new SimpleGrantedAuthority("admin:access");
 
-        Role adminRole = new Role();
-        adminRole.setName("ADMIN");
-        adminRole.setPermissions(Set.of(Permission.ADMIN_ACCESS));
-        user.setRoles(Set.of(adminRole));
-
-        CustomUserDetails details = new CustomUserDetails(user);
+        CustomUserDetails details = new CustomUserDetails(userId, "admin@example.com", true, List.of(authority));
 
         assertEquals(userId, details.getId());
         assertEquals("admin@example.com", details.getEmail());
-        assertEquals(UserStatus.ACTIVE, details.getStatus());
+        assertTrue(details.isActive());
         assertEquals(1, details.getAuthorities().size());
         assertTrue(details.isEnabled());
     }
 
     @Test
-    @DisplayName("isEnabled returns false for non-ACTIVE status")
+    @DisplayName("isEnabled returns false for inactive status in claims")
     void isEnabled_suspendedUser_returnsFalse() {
         Claims claims = mock(Claims.class);
         when(claims.getSubject()).thenReturn(UUID.randomUUID().toString());
@@ -89,11 +77,11 @@ class CustomUserDetailsTest {
         CustomUserDetails details = new CustomUserDetails(claims);
 
         assertFalse(details.isEnabled());
-        assertEquals(UserStatus.SUSPENDED, details.getStatus());
+        assertFalse(details.isActive());
     }
 
     @Test
-    @DisplayName("isEnabled returns false for NOT_VERIFIED status")
+    @DisplayName("isEnabled returns false for NOT_VERIFIED status in claims")
     void isEnabled_notVerifiedUser_returnsFalse() {
         Claims claims = mock(Claims.class);
         when(claims.getSubject()).thenReturn(UUID.randomUUID().toString());
@@ -104,7 +92,7 @@ class CustomUserDetailsTest {
         CustomUserDetails details = new CustomUserDetails(claims);
 
         assertFalse(details.isEnabled());
-        assertEquals(UserStatus.NOT_VERIFIED, details.getStatus());
+        assertFalse(details.isActive());
     }
 
     @Test
