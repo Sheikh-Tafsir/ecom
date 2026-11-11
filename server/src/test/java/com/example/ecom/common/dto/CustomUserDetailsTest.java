@@ -125,16 +125,16 @@ class CustomUserDetailsTest {
     }
 
     @Test
-    @DisplayName("Direct constructor sets all fields correctly")
-    void constructor_direct_setsAllFields() {
+    @DisplayName("Direct 5-arg constructor sets all fields correctly")
+    void constructor_directWithAllFields_setsAllFields() {
         UUID userId = UUID.randomUUID();
         SimpleGrantedAuthority authority = new SimpleGrantedAuthority("order:read");
-        CustomUserDetails details = new CustomUserDetails(userId, "John Doe", "john.doe@example.com", UserStatus.ACTIVE, List.of(authority));
+        CustomUserDetails details = new CustomUserDetails(userId, "John Doe", "john.doe@example.com", true, List.of(authority));
 
         assertEquals(userId, details.getId());
         assertEquals("John Doe", details.getName());
         assertEquals("john.doe@example.com", details.getEmail());
-        assertEquals(UserStatus.ACTIVE, details.getStatus());
+        assertTrue(details.isActive());
         assertEquals(1, details.getAuthorities().size());
         assertTrue(details.isEnabled());
     }
@@ -143,7 +143,7 @@ class CustomUserDetailsTest {
     @DisplayName("Direct constructor with null authorities defaults to empty list")
     void constructor_directNullAuthorities_defaultsToEmptyList() {
         UUID userId = UUID.randomUUID();
-        CustomUserDetails details = new CustomUserDetails(userId, "Jane Doe", "jane.doe@example.com", UserStatus.ACTIVE, null);
+        CustomUserDetails details = new CustomUserDetails(userId, "Jane Doe", "jane.doe@example.com", true, null);
 
         assertNotNull(details.getAuthorities());
         assertTrue(details.getAuthorities().isEmpty());
