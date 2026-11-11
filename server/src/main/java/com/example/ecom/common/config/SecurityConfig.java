@@ -7,6 +7,7 @@ import com.example.ecom.common.service.RateLimiterService;
 import lombok.RequiredArgsConstructor;
 import jakarta.servlet.DispatcherType;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -77,8 +78,6 @@ public class SecurityConfig {
         }
     }
 
-    private final UserDetailsService userDetailsService;
-
     private final JwtService jwtService;
 
     @Bean
@@ -95,15 +94,18 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    Optional<UserTrafficControlFilter> userTrafficControlFilter,
-                                                   AuthenticationFilter authenticationFilter) throws Exception {
+                                                   AuthenticationFilter authenticationFilter,
+                                                   Optional<AuthenticationProvider> authenticationProvider) throws Exception {
         http.cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider())
-                .authorizeHttpRequests(auth -> auth
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
+        authenticationProvider.ifPresent(http::authenticationProvider);
+
+        http.authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .requestMatchers(PUBLIC_URLS.toArray(new String[0])).permitAll()
 
@@ -144,7 +146,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationProvider authenticationProvider() {
+    @ConditionalOnBean(UserDetailsService.class)
+    public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder());
         return provider;
