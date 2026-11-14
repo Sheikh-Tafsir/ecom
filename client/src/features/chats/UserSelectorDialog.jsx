@@ -18,6 +18,7 @@ import {Badge} from "@/components/ui/badge"
 import {AuthenticatedAxios} from "@/services/http/Axios";
 import {ButtonLoading} from "@/components/common/ButtonLoading";
 import {REGULAR_ACTION} from "@/constants/app.constants";
+import {img, alt, str} from "@/utils/DisplayUtils";
 
 const UserSelectorDialog = ({isOpen, onClose, preSelecteedUserIds, avoidUserIds, confirmUsersSelection}) => {
     const [open, setOpen] = useState(isOpen);
@@ -73,8 +74,8 @@ const UserSelectorDialog = ({isOpen, onClose, preSelecteedUserIds, avoidUserIds,
     const filteredUsers = users?.filter(
         (user) => {
             const matchesSearch =
-                user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                user.email.toLowerCase().includes(searchTerm.toLowerCase());
+                str(user.name).toLowerCase().includes(searchTerm.toLowerCase()) ||
+                str(user.email).toLowerCase().includes(searchTerm.toLowerCase());
 
             const isAvoided = avoidUserIds?.includes(user.id);
             return matchesSearch && !isAvoided;
@@ -194,7 +195,7 @@ const UserSelectorDialog = ({isOpen, onClose, preSelecteedUserIds, avoidUserIds,
                                     >
                                         <Checkbox checked={isSelected} onCheckedChange={() => handleUserToggle(user)}/>
                                         <Avatar className="h-8 w-8">
-                                            <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name}/>
+                                            <AvatarImage src={img(user.avatar)} alt={alt(user.name)}/>
                                             <AvatarFallback>
                                                 {user.name
                                                     ? user.name.split(" ").map((n) => n[0]).join("")

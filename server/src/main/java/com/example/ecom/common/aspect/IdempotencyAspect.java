@@ -1,6 +1,7 @@
 package com.example.ecom.common.aspect;
 
 import com.example.ecom.common.service.IdempotencyService;
+import com.example.ecom.common.utils.ResponseUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
 
@@ -67,8 +67,7 @@ public class IdempotencyAspect {
         
         String existingHash = idempotencyService.getStoredPayloadHash(idempotencyKey);
         if (existingHash != null && !existingHash.equals(objectHash(requestPayload))) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                    "Idempotency-Key reused with a different request payload");
+            return ResponseUtils.error("Idempotency-Key reused with a different request payload", HttpStatus.UNPROCESSABLE_ENTITY);
         }
 
         Object cachedResponse = idempotencyService.getCachedResponse(idempotencyKey, requestPayload);
@@ -92,7 +91,7 @@ public class IdempotencyAspect {
                     // Another request with same key is in-flight; return cached result or conflict
                     Object cached = idempotencyService.getCachedResponse(idempotencyKey, requestPayload);
                     if (cached != null) return cached;
-                    throw new ResponseStatusException(HttpStatus.CONFLICT, "Request is currently being processed.");
+                    return ResponseUtils.error("Request is currently being processed.", HttpStatus.CONFLICT);
                 }
 
                 redisLockAcquired = true;

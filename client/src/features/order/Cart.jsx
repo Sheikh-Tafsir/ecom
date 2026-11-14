@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { useUserStore } from '@/store/useUserStore';
 import { useCartStore } from "@/store/useCartStore"
+import { price, num, img } from "@/utils/DisplayUtils";
 
 export default function Cart() {
   const { user } = useUserStore();
@@ -59,7 +60,7 @@ export default function Cart() {
                 <div className="flex flex-col sm:flex-row items-center gap-6">
                   <div className="relative w-32 h-32 flex-shrink-0 overflow-hidden rounded-lg bg-slate-50">
                     <img
-                      src={item.image || item.images?.[0] || "/placeholder.svg"}
+                      src={img(item.image || item.images?.[0])}
                       alt={item.name}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
@@ -72,7 +73,7 @@ export default function Cart() {
                           {item.name}
                         </h3>
                       </Link>
-                      <p className="text-xl font-bold text-slate-900">${item.price}</p>
+                      <p className="text-xl font-bold text-slate-900">{price(item.price)}</p>
                     </div>
                     
                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
@@ -96,7 +97,7 @@ export default function Cart() {
                           size="icon"
                           className="h-8 w-8 rounded-lg hover:bg-white hover:shadow-sm"
                           onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                          disabled={item.quantity >= item.stock}
+                          disabled={item.quantity >= num(item.stock)}
                         >
                           <Plus className="h-3 w-3" />
                         </Button>

@@ -22,6 +22,7 @@ import SEO from "@/common/SEO";
 import {queryKeys} from "@/services/reactQuery/queryKeys";
 import {useListPage} from "@/hooks/useListPage";
 import {createListFetcher} from "@/services/api";
+import {PublicAxios} from "@/services/http/Axios";
 
 const ALLOWED_SORT_FIELDS = new Set([
     "createdAt",

@@ -19,6 +19,7 @@ import PaginationButton from "@/components/common/PaginationButton";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
 
 import {formatDate} from "@/utils/DateUtils";
+import {text, num, price} from "@/utils/DisplayUtils";
 import {GLOBAL_ERROR, handleErrors} from "@/utils/ErrorUtils";
 import {FIRST_PAGE, getQueryString} from "@/utils/PaginationUtils";
 
@@ -34,8 +35,7 @@ import {
 import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
 import InputError from "@/components/common/InputError";
-import {APP_MODULE, TOAST_TYPE} from "@/constants/app.constants";
-import {toastify} from "@/common/toastify.js";
+import {APP_MODULE} from "@/constants/app.constants";
 import {
     ChartContainer,
     ChartTooltip,
@@ -386,20 +386,20 @@ export default function Sales() {
                                                                 <TrendingUp className="w-5 h-5 text-blue-600"/>
                                                             </div>
                                                             <span
-                                                                className="font-black text-slate-900 group-hover:text-blue-700 transition-colors">{item.productName}</span>
+                                                                className="font-black text-slate-900 group-hover:text-blue-700 transition-colors">{text(item.productName)}</span>
                                                         </div>
                                                     </TableCell>
                                                     <TableCell className="px-10 py-6 text-center">
                                                         <span
                                                             className="inline-flex items-center px-4 py-1.5 rounded-ml text-[11px] font-black uppercase tracking-widest bg-slate-100 text-slate-700">
-                                                            {item.quantity} units
+                                                            {num(item.quantity)} units
                                                         </span>
                                                     </TableCell>
                                                     <TableCell className="px-10 py-6 text-center">
                                                         <div
                                                             className="flex items-center justify-center gap-1 font-black text-emerald-600">
                                                             <span
-                                                                className="text-lg tracking-tighter">TK{item.profit}</span>
+                                                                className="text-lg tracking-tighter">{price(item.profit, "TK")}</span>
                                                         </div>
                                                     </TableCell>
                                                     <TableCell className="px-10 py-6 text-right">

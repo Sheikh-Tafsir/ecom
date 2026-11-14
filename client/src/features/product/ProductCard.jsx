@@ -11,6 +11,7 @@ import {TOAST_TYPE} from "@/constants/app.constants";
 import {hasPermission} from "@/utils/AuthUtils";
 import {toastify} from "@/common/toastify.js"
 import {useUserStore} from "@/store/useUserStore"
+import {text, num, img, alt} from "@/utils/DisplayUtils";
 
 import {cn} from "@/lib/utils"
 
@@ -43,8 +44,8 @@ const ProductCard = ({product}) => {
                 className="h-[500px] bg-white border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50  overflow-hidden transition-all duration-500 cursor-pointer flex flex-col">
                 <div className="relative aspect-[4/5] overflow-hidden bg-slate-50">
                     <img
-                        src={product.image || "/placeholder.svg"}
-                        alt={product.name}
+                        src={img(product.image)}
+                        alt={alt(product.name)}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         loading="lazy"
                     />
@@ -88,22 +89,22 @@ const ProductCard = ({product}) => {
                     <div className="flex items-center gap-2 mb-3">
                         <div className="flex items-center bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-100">
                             <Star className="h-3 w-3 text-amber-400 fill-current"/>
-                            <span className="text-[10px] font-black text-amber-800 ml-1">{product?.rating || 0}</span>
+                            <span className="text-[10px] font-black text-amber-800 ml-1">{num(product?.rating)}</span>
                         </div>
                         <div className="h-4 w-px bg-slate-100"/>
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            {product.quantity} Left
+                            {num(product.quantity)} Left
                         </span>
                     </div>
 
                     <h3 className="font-semibold text-slate-900 text-lg mb-2 line-clamp-2 leading-tight transition-colors">
-                        {product.name}
+                        {text(product.name, "Unnamed Product")}
                     </h3>
 
                     <div className="flex items-end justify-between gap-4">
                         <div className="flex items-baseline gap-1">
                             <span className="text-sm font-bold text-slate-400">$</span>
-                            <span className="text-2xl font-bold text-slate-900 tracking-tighter">{product.price}</span>
+                            <span className="text-2xl font-bold text-slate-900 tracking-tighter">{num(product.price)}</span>
                         </div>
 
                         <div className="flex flex-wrap justify-end gap-1 max-w-[50%]">

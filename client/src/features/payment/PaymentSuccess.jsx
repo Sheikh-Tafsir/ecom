@@ -4,6 +4,7 @@ import {CheckCircle2, ShoppingBag, ArrowRight, Receipt} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Card, CardContent, CardHeader, CardTitle, CardDescription} from "@/components/ui/card";
 import {Separator} from "@/components/ui/separator";
+import {text, price} from "@/utils/DisplayUtils";
 
 export default function PaymentSuccess() {
     const navigate = useNavigate();
@@ -38,19 +39,19 @@ export default function PaymentSuccess() {
                         
                         <div className="flex justify-between items-center text-sm">
                             <span className="text-slate-500 font-medium">Payment ID</span>
-                            <span className="text-slate-900 font-bold font-mono">{paymentID}</span>
+                            <span className="text-slate-900 font-bold font-mono">{text(paymentID)}</span>
                         </div>
                         
                         <div className="flex justify-between items-center text-sm">
                             <span className="text-slate-500 font-medium">Transaction ID</span>
-                            <span className="text-slate-900 font-bold font-mono">{trxID}</span>
+                            <span className="text-slate-900 font-bold font-mono">{text(trxID)}</span>
                         </div>
                         
                         <Separator className="opacity-50" />
                         
                         <div className="flex justify-between items-center pt-2">
                             <span className="text-slate-800 font-bold">Total Amount Paid</span>
-                            <span className="text-2xl font-bold text-emerald-600 tracking-tighter">৳{amount}</span>
+                            <span className="text-2xl font-bold text-emerald-600 tracking-tighter">{price(amount, "৳")}</span>
                         </div>
                     </div>
 

@@ -26,6 +26,7 @@ import {useQuery} from "@tanstack/react-query"
 import {BackButton} from "@/components/common/BackButton"
 import {getTimeAgo} from "@/utils/DateUtils"
 import {cn} from "@/lib/utils"
+import { text, num, price, img, alt, str } from "@/utils/DisplayUtils";
 
 const fetchOrder = async (id) => {
     const response = await AuthenticatedAxios.get(`/orders/${id}`);
@@ -112,7 +113,7 @@ export default function OrderDetails() {
                                         <AlertCircle className="w-8 h-8 text-red-500"/>
                                     </div>
                                     <h3 className="text-xl font-bold text-slate-900">Order {order?.status}</h3>
-                                    <p className="text-slate-500 mt-2">This order has been {order?.status.toLowerCase()}.
+                                    <p className="text-slate-500 mt-2">This order has been {str(order?.status).toLowerCase()}.
                                         Please contact support if you have any questions.</p>
                                 </div>
                             ) : (
@@ -180,8 +181,8 @@ export default function OrderDetails() {
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Total
                                         Amount</p>
-                                    <p className="text-3xl font-black text-blue-600 tracking-tighter">${order?.totalPrice}</p>
-                                    <p className="text-xs text-slate-500">{order?.paymentMethod}</p>
+                                    <p className="text-3xl font-black text-blue-600 tracking-tighter">{price(order?.totalPrice)}</p>
+                                    <p className="text-xs text-slate-500">{text(order?.paymentMethod)}</p>
                                 </div>
                             </div>
                         </CardContent>
@@ -256,8 +257,8 @@ export default function OrderDetails() {
                                                 <div
                                                     className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-white border border-slate-200 shadow-sm">
                                                     <img
-                                                        src={item.productImage || "/placeholder.svg"}
-                                                        alt={item.productName}
+                                                        src={img(item.productImage)}
+                                                        alt={alt(item.productName)}
                                                         className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500"
                                                     />
                                                 </div>
@@ -266,8 +267,8 @@ export default function OrderDetails() {
                                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Quantity: {item.quantity}</p>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-xl font-black text-slate-900 tracking-tighter">${(item.productPrice * item.quantity).toFixed(2)}</p>
-                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">${item.productPrice} each</p>
+                                                    <p className="text-xl font-black text-slate-900 tracking-tighter">{price(num(item.productPrice) * num(item.quantity))}</p>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{price(item.productPrice)} each</p>
                                                 </div>
                                             </div>
                                         ))}
@@ -288,7 +289,7 @@ export default function OrderDetails() {
                                     <div className="space-y-4">
                                         <div className="flex justify-between items-center">
                                             <span className="text-slate-500 font-medium">Subtotal</span>
-                                            <span className="text-slate-900 font-bold">${order?.orderPrice}</span>
+                                            <span className="text-slate-900 font-bold">{price(order?.orderPrice)}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-emerald-600">
                                             <span className="font-medium">Shipping</span>
@@ -299,7 +300,7 @@ export default function OrderDetails() {
                                         <div className="flex justify-between items-center pt-2">
                                             <span className="text-lg font-bold text-slate-900">Total Price</span>
                                             <span
-                                                className="text-3xl font-black text-blue-600 tracking-tighter">${order?.totalPrice}</span>
+                                                className="text-3xl font-black text-blue-600 tracking-tighter">{price(order?.totalPrice)}</span>
                                         </div>
                                     </div>
 
@@ -326,7 +327,7 @@ export default function OrderDetails() {
                                                     <Clock className="h-5 w-5"/>}
                                             </div>
                                             <div className="space-y-0.5">
-                                                <p className="text-sm font-bold text-slate-800">{order?.paymentMethod}</p>
+                                                <p className="text-sm font-bold text-slate-800">{text(order?.paymentMethod)}</p>
                                                 <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest">
                                                     {order?.paid ? "Transaction verified" : "Pending payment confirmation"}
                                                 </p>

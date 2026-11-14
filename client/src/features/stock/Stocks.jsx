@@ -33,6 +33,7 @@ import {toastify} from '@/common/toastify.js';
 import {queryKeys} from "@/services/reactQuery/queryKeys";
 import {useListPage} from "@/hooks/useListPage";
 import {createListFetcher} from "@/services/api";
+import { price } from "@/utils/DisplayUtils";
 
 const fetchStocks = createListFetcher("/stocks", {
     mapParams: (p) => ({
@@ -214,7 +215,7 @@ const Stocks = () => {
                                                 </TableCell>
                                                 <TableCell className="px-6 py-4">
                                                     <span
-                                                        className="font-semibold text-slate-900">${stock.totalCost}</span>
+                                                        className="font-semibold text-slate-900">{price(stock.totalCost)}</span>
                                                 </TableCell>
                                                 <TableCell className="px-6 py-4">
                                                     <span

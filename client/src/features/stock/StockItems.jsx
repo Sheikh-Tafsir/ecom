@@ -34,6 +34,7 @@ import {cn} from "@/lib/utils";
 import {queryKeys} from "@/services/reactQuery/queryKeys";
 import {useListPage} from "@/hooks/useListPage";
 import {createListFetcher} from "@/services/api";
+import { text } from "@/utils/DisplayUtils";
 
 const fetchStockItems = createListFetcher("/stocks/items", {
     mapParams: (p) => ({
@@ -211,7 +212,7 @@ const StockItems = () => {
                                                         </div>
                                                         <div className="flex flex-col">
                                                             <span
-                                                                className="font-bold text-slate-700">{stockItem.productName}</span>
+                                                                className="font-bold text-slate-700">{text(stockItem.productName)}</span>
                                                             <span
                                                                 className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Purchase Entry</span>
                                                         </div>

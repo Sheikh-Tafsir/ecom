@@ -29,7 +29,7 @@ export const handleErrors = (error, setError) => {
         return;
     }
 
-    handleClientSideGlobalError(error?.message || "Unexpected error occurred.", setError);
+    handleClientSideGlobalError("Something went wrong", setError);
 };
 
 const handleFieldErrors = (errors, setError) => {

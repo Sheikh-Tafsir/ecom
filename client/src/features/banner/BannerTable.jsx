@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from 'lucide-react';
+import { img, text } from '@/utils/DisplayUtils';
 import StatusBadge from '@/components/common/StatusBadge';
 
 const BannerTable = ({ banners, handleEdit, deleteMutation }) => {
@@ -28,12 +29,12 @@ const BannerTable = ({ banners, handleEdit, deleteMutation }) => {
                     <TableRow key={banner.id} className="hover:bg-slate-50 transition-colors">
                         <TableCell className="px-6 py-4">
                             <div className="w-24 h-12 rounded-lg overflow-hidden border border-slate-100">
-                                <img src={banner.imageUrl} alt="" className="w-full h-full object-cover" />
+                                <img src={img(banner.imageUrl)} alt="" className="w-full h-full object-cover" />
                             </div>
                         </TableCell>
                         <TableCell className="px-6 py-4">
                             <div className="flex flex-col">
-                                <span className="font-bold text-slate-900">{banner.title}</span>
+                                <span className="font-bold text-slate-900">{text(banner.title, "Untitled")}</span>
                                 <span className="text-xs text-slate-500 line-clamp-1">{banner?.subtitle}</span>
                             </div>
                         </TableCell>

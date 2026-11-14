@@ -33,6 +33,7 @@ import PaginationSearch from "@/components/common/PaginationSearch";
 import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadingOverlay";
 import {isAdmin} from "@/utils/AuthUtils";
 import {formatDate} from "@/utils/DateUtils";
+import {text} from "@/utils/DisplayUtils";
 import {getSelectValue} from "@/utils/PaginationUtils";
 import {APP_MODULE, TOAST_TYPE, ALERT_TYPE} from "@/constants/app.constants";
 import {ROLE_PREFIX, USER_ROLE} from "@/constants/auth.constants";
@@ -219,9 +220,9 @@ const Users = () => {
                                                         </div>
                                                         <div className="flex flex-col">
                                                             <span
-                                                                className="font-bold text-slate-700">{user.name}</span>
+                                                                className="font-bold text-slate-700">{text(user.name)}</span>
                                                             <span
-                                                                className="text-xs text-slate-400 font-medium">{user.email}</span>
+                                                                className="text-xs text-slate-400 font-medium">{text(user.email)}</span>
                                                         </div>
                                                     </div>
                                                 </TableCell>

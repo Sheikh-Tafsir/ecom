@@ -54,6 +54,7 @@ import {ReportDialog} from "@/components/common/ReportDialog";
 import {queryKeys} from "@/services/reactQuery/queryKeys";
 import {useListPage} from "@/hooks/useListPage";
 import {createListFetcher} from "@/services/api";
+import { text, price } from "@/utils/DisplayUtils";
 
 const ORDER_STATUS_VARIANT = {
     [ORDER_STATUS.PENDING]: "amber",
@@ -313,12 +314,12 @@ const Orders = () => {
                                                             {item.userName?.slice(0, 1)}
                                                         </div>
                                                         <span
-                                                            className="font-bold text-slate-700">{item.userName}</span>
+                                                            className="font-bold text-slate-700">{text(item.userName)}</span>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="px-6 py-4">
                                                     <span
-                                                        className="font-semibold text-slate-900">${item.totalPrice}</span>
+                                                        className="font-semibold text-slate-900">{price(item.totalPrice)}</span>
                                                 </TableCell>
                                                 <TableCell className="px-6 py-4">
                                                     <span
@@ -326,7 +327,7 @@ const Orders = () => {
                                                 </TableCell>
                                                 <TableCell className="px-6 py-4">
                                                     <span
-                                                        className="text-xs font-semibold text-slate-500">{item.paymentMethod}</span>
+                                                        className="text-xs font-semibold text-slate-500">{text(item.paymentMethod)}</span>
                                                 </TableCell>
                                                 <TableCell className="px-6 py-4">
                                                     <span

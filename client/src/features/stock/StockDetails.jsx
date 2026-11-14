@@ -21,6 +21,7 @@ import {TOAST_TYPE} from "@/constants/app.constants";
 import {toastify} from '@/common/toastify.js';
 import {BackButton} from '@/components/common/BackButton';
 import {queryKeys} from "@/services/reactQuery/queryKeys";
+import { text, num } from "@/utils/DisplayUtils";
 
 const fetchStock = async (id) => {
     const response = await AuthenticatedAxios.get(`/stocks/${id}`)
@@ -166,13 +167,13 @@ const StockDetails = () => {
                                         <TableCell className="px-10 py-6">
                                             <div className="flex flex-col">
                                                 <span
-                                                    className="font-bold text-slate-900 text-lg group-hover:text-blue-700 transition-colors">{item.productName}</span>
+                                                    className="font-bold text-slate-900 text-lg group-hover:text-blue-700 transition-colors">{text(item.productName)}</span>
                                             </div>
                                         </TableCell>
                                         <TableCell className="px-10 py-6 text-center">
                                             <span
                                                 className="inline-flex items-center justify-center w-10 h-10 rounded-md bg-slate-100 font-black text-slate-700 text-sm">
-                                                {item.quantity}
+                                                {num(item.quantity)}
                                             </span>
                                         </TableCell>
                                         <TableCell className="px-10 py-6 text-center">
@@ -182,19 +183,19 @@ const StockDetails = () => {
                                                         ? "bg-emerald-50 text-emerald-700"
                                                         : "bg-rose-50 text-rose-700"
                                                 }`}>
-                                                {item.remaining} Left
+                                                {num(item.remaining)} Left
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="px-10 py-6">
                                             <div className="flex items-center gap-1 font-bold text-slate-600">
-                                                <span>{item.purchasePrice}</span>
+                                                <span>{num(item.purchasePrice)}</span>
                                                 <span className="text-[10px] text-slate-400">Tk</span>
                                             </div>
                                         </TableCell>
                                         <TableCell className="px-10 py-6 text-right">
                                             <div className="flex items-center justify-end gap-1">
                                                 <span
-                                                    className="text-lg font-black text-slate-900 tracking-tighter">{item.subtotal}</span>
+                                                    className="text-lg font-black text-slate-900 tracking-tighter">{num(item.subtotal)}</span>
                                                 <span
                                                     className="text-[10px] font-bold text-slate-400 uppercase">Tk</span>
                                             </div>

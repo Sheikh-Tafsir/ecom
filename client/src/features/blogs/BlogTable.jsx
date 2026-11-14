@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { formatDate } from '@/utils/DateUtils';
+import { text } from '@/utils/DisplayUtils';
 import StatusBadge from '@/components/common/StatusBadge';
 import {BLOG_STATUS} from "@/constants/blog.constants";
 
@@ -30,11 +31,11 @@ const BlogTable = ({ posts, handleEdit, deleteMutation }) => {
                     <TableRow key={post.id} className="hover:bg-slate-50 transition-colors">
                         <TableCell className="px-6 py-4">
                             <div className="flex flex-col">
-                                <span className="font-bold text-slate-900 line-clamp-1">{post.title}</span>
+                                <span className="font-bold text-slate-900 line-clamp-1">{text(post.title, "Untitled")}</span>
                             </div>
                         </TableCell>
                         <TableCell className="px-6 py-4">
-                            <span className="font-medium text-slate-600">{post.author || 'Admin'}</span>
+                            <span className="font-medium text-slate-600">{text(post.author, "Admin")}</span>
                         </TableCell>
                         <TableCell className="px-6 py-4">
                             <span className="text-xs font-bold text-slate-500">{formatDate(post.publishedAt || post.createdAt)}</span>

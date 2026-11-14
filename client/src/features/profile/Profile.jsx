@@ -19,6 +19,7 @@ import PageLoadingOverlay from "@/components/common/pageLoadingOverlay/PageLoadi
 import StatusBadge from "@/components/common/StatusBadge";
 import FormField from "@/components/common/FormField";
 
+import {text} from "@/utils/DisplayUtils";
 import {useUserStore} from "@/store/useUserStore";
 import {GLOBAL_ERROR, handleErrors} from "@/utils/ErrorUtils";
 import {TOAST_TYPE, ALERT_TYPE} from "@/constants/app.constants";
@@ -80,6 +81,7 @@ const Profile = () => {
         formState: {errors, isSubmitting},
     } = useForm({
         resolver: zodResolver(ProfileSchema),
+        defaultValues: { name: "", email: "", roles: "" },
     });
 
     const {
@@ -243,7 +245,7 @@ const Profile = () => {
                                                     Address</Label>
                                                 <div
                                                     className="h-12 rounded-xl bg-slate-50 border border-transparent px-4 flex items-center text-slate-500 font-medium text-sm overflow-hidden">
-                                                    {watch("email")}
+                                                    {text(watch("email"), "")}
                                                 </div>
                                             </div>
                                         </div>
@@ -264,7 +266,7 @@ const Profile = () => {
                                                     Role</Label>
                                                 <div
                                                     className="h-12 rounded-xl bg-slate-50 border border-transparent px-4 flex items-center text-slate-500 font-bold text-xs uppercase tracking-widest overflow-hidden">
-                                                    {watch("roles") || "Standard User"}
+                                                    {Array.isArray(watch("roles")) ? watch("roles").join(", ") : text(watch("roles"), "Standard User")}
                                                 </div>
                                             </div>
 

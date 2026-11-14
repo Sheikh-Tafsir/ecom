@@ -25,6 +25,7 @@ import {toastify} from "@/common/toastify.js"
 import ReviewSave from "./ReviewSave";
 import {BackButton} from "@/components/common/BackButton";
 import SEO from "@/common/SEO";
+import {num, img, alt} from "@/utils/DisplayUtils";
 
 const fetchProduct = async (id) => {
     const response = await PublicAxios.get(`/products/${id}`);
@@ -125,7 +126,7 @@ export default function ProductDetails() {
                     "@context": "https://schema.org/",
                     "@type": "Product",
                     "name": product.name,
-                    "image": product.images?.length > 0 ? product.images.map(img => img.image) : (product.image ? [product.image] : []),
+                    "image": product.images?.length > 0 ? product.images.map(i => i.image) : (product.image ? [product.image] : []),
                     "description": product.description || `Buy ${product.name} at Aspire`,
                     "sku": `PROD-${product.id}`,
                     "offers": {
@@ -155,8 +156,8 @@ export default function ProductDetails() {
                                             <div
                                                 className="aspect-[4/5] md:aspect-square flex items-center justify-center overflow-hidden rounded-3xl">
                                                 <img
-                                                    src={image.image || "https://media.istockphoto.com/id/1147544807/vector/thumbnail-image-vector-graphic.jpg?s=1024x1024&w=is&k=20&c=5aen6wD1rsiMZSaVeJ9BWM4GGh5LE_9h97haNpUQN5I="}
-                                                    alt={product.name}
+                                                    src={img(image.image)}
+                                                    alt={alt(product.name)}
                                                     className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
                                                 />
                                             </div>
@@ -204,11 +205,11 @@ export default function ProductDetails() {
                                         ))}
                                     </div>
                                     <span className="text-amber-800 font-black text-sm ml-2">
-                                        {product?.rating || 0}
+                                        {num(product?.rating)}
                                     </span>
                                 </div>
                                 <span className="text-slate-400 font-bold text-sm">
-                                    {product?.reviewCount || 0} customer reviews
+                                    {num(product?.reviewCount)} customer reviews
                                 </span>
                             </div>
 
@@ -229,7 +230,6 @@ export default function ProductDetails() {
                         <Separator className="mb-10 opacity-50"/>
 
                         <div className="space-y-8">
-                            {product?.quantity}
                             {product?.quantity > 0 ? (
                                 <>
                                     <div className="flex items-center justify-between">

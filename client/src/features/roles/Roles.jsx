@@ -125,7 +125,7 @@ const Roles = () => {
                                     </TableCell>
                                 </TableRow>
                             ))}
-                            {roles?.length == 0 && (
+                            {!roles?.length && (
                                 <TableRow>
                                     <TableCell colSpan={3} className="py-20 text-center">
                                         <div className="flex flex-col items-center gap-2 opacity-40">

@@ -28,6 +28,7 @@ import {
 } from "@/utils/idempotencyUtil.js";
 import { toastify } from '@/common/toastify.js';
 import {queryKeys} from "@/services/reactQuery/queryKeys";
+import { img } from "@/utils/DisplayUtils";
 
 const StockItemSchema = z.object({
     productId: z.string(),
@@ -211,7 +212,7 @@ const StockCreate = () => {
                                             >
                                                 <div className="flex">
                                                     <div className='w-[20%] mr-4'>
-                                                        <img src={product.image} alt={""}/>
+                                                        <img src={img(product.image)} alt={""}/>
                                                     </div>
                                                     <div>
                                                         <p className="font-medium mb-1">{product.name}</p>
@@ -252,7 +253,7 @@ const StockCreate = () => {
                                             <div key={field.id}
                                                  className="flex flex-col md:flex-row md:items-center gap-4 p-4 border rounded-lg bg-gray-50 relative group">
                                                 <div className='w-[15%] mr-4'>
-                                                    <img src={items[index]?.image} alt={""}/>
+                                                    <img src={img(items[index]?.image)} alt={""}/>
                                                 </div>
                                                 <div className="flex-grow">
                                                     <p className="font-semibold text-lg">{items[index]?.name}</p>

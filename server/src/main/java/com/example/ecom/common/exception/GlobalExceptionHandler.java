@@ -14,6 +14,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.server.ResponseStatusException;
 
 import static com.example.ecom.common.utils.ResponseUtils.error;
 import static com.example.ecom.common.utils.ResponseUtils.handlerMethodValidationExceptionError;
@@ -45,14 +46,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException ex) {
         log.error("Input values are invalid: {}", ex.getMessage());
-        return error(ex.getMessage(), HttpStatusCode.valueOf(400));
+        return error("Invalid input value", HttpStatusCode.valueOf(400));
     }
 
     // 401
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<?> handleIllegalArgumentException(BadCredentialsException ex) {
         log.error("Authentication credentials invalid: {}", ex.getMessage());
-        return error(ex.getMessage(), HttpStatusCode.valueOf(401));
+        return error("Invalid credentials", HttpStatusCode.valueOf(401));
     }
 
     @ExceptionHandler(InvalidAccessTokenException.class)
@@ -78,7 +79,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<?> handleEntityNotFoundException(EntityNotFoundException ex) {
         log.error("Entity not found: {}", ex.getMessage());
-        return error(ex.getMessage(), HttpStatusCode.valueOf(404));
+        return error("Resource not found", HttpStatusCode.valueOf(404));
     }
 
     @ExceptionHandler(NoResultException.class)
@@ -116,7 +117,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<?> handleValidationException(ValidationException ex) {
         log.error("Validation: {}", ex.getMessage());
-        return error(ex.getMessage(), HttpStatusCode.valueOf(422));
+        return error("Validation failed", HttpStatusCode.valueOf(422));
+    }
+
+    // ResponseStatusException (preserves original status code)
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<?> handleResponseStatusException(ResponseStatusException ex) {
+        log.error("ResponseStatusException: {}", ex.getReason());
+        return error(SOMETHING_WENT_WRONG, ex.getStatusCode());
     }
 
     // 500
