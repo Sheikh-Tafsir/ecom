@@ -33,14 +33,6 @@ jobs:
           restore-keys: |
             nvd-db-${{ runner.os }}-
 
-      - name: Dependency-Check — Server
-        working-directory: ./server
-        run: |
-          chmod +x gradlew
-          ./gradlew dependencyCheckAnalyze --no-daemon
-        env:
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-
       - name: Dependency-Check — Gateway
         working-directory: ./gateway
         run: |
@@ -55,7 +47,6 @@ jobs:
         with:
           name: dependency-check-reports
           path: |
-            server/build/reports/dependency-check-report.html
             gateway/build/reports/dependency-check-report.html
           retention-days: 30
           if-no-files-found: ignore

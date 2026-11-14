@@ -1,0 +1,654 @@
+# Microservice deployment mode.
+#
+# Usage:
+#   docker compose -f docker-compose.micro.yml up -d
+#
+# This replaces the single "server" container with four per-domain services.
+# Infrastructure (postgres, redis, rabbitmq), chat-server, client, nginx-proxy,
+# and gateway are shared with the monolith compose file.
+#
+# The gateway uses the "microservice" Spring profile for per-service routing.
+#
+# NOTE: user-auth-service runs the monolith image but serves as the home for
+# user, cms, and report modules (which don't have their own apps yet).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  postgres-chat:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: ${CHAT_DB_NAME}
+      POSTGRES_USER: ${CHAT_DB_USERNAME}
+      POSTGRES_PASSWORD: ${CHAT_DB_PASSWORD}
+    volumes:
+      - postgres_chat_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${CHAT_DB_USERNAME} -d ${CHAT_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: ["sh", "-c", "redis-server --requirepass \"$REDIS_PASSWORD\" --maxmemory 256mb --maxmemory-policy volatile-lru"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "sh", "-c", "REDISCLI_AUTH=\"$REDIS_PASSWORD\" redis-cli ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - data
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      RABBITMQ_DEFAULT_USER: ${MQ_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${MQ_PASSWORD}
+    volumes:
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - data
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+          cpus: '0.5'
+
+  # ---------------------------------------------------------------------------
+  # User / Auth / CMS / Report service (uses the monolith image for now)
+  # ---------------------------------------------------------------------------
+  user-auth-service:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    expose:
+      - "8081"
+    volumes:
+      - user_auth_logs:/app/logs/server
+      - ./config/server-overrides.properties:/app/config/server-overrides.properties:ro
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${DEPLOYMENT_ENVIRONMENT}
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DRIVER_CLASS=${DB_DRIVER_CLASS}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - MQ_HOST=${MQ_HOST}
+      - MQ_PORT=${MQ_PORT}
+      - MQ_USERNAME=${MQ_USERNAME}
+      - MQ_PASSWORD=${MQ_PASSWORD}
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
+      - REFRESH_TOKEN_NAME=${REFRESH_TOKEN_NAME}
+      - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY}
+      - CORS_ALLOWED_ORIGINS=${CLIENT_URL}
+      - APP_CACHE_STRATEGY=${APP_CACHE_STRATEGY}
+      - MAIL_SMTP_HOST=${MAIL_SMTP_HOST}
+      - MAIL_SMTP_PORT=${MAIL_SMTP_PORT}
+      - MAIL_SMTP_USERNAME=${MAIL_SMTP_USERNAME}
+      - MAIL_SMTP_PASSWORD=${MAIL_SMTP_PASSWORD}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+      - CLOUDINARY_FOLDER=${CLOUDINARY_FOLDER}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_API_KEY=${SUPABASE_API_KEY}
+      - SUPABASE_BUCKET=${SUPABASE_BUCKET}
+      - CLIENT_URL=${CLIENT_URL}
+      - SERVER_URL=${SERVER_URL}
+      - GOOGLE_LOGIN_CLIENT_ID=${GOOGLE_LOGIN_CLIENT_ID}
+      - BKASH_BASE_URL=${BKASH_BASE_URL}
+      - BKASH_APP_KEY=${BKASH_APP_KEY}
+      - BKASH_APP_SECRET=${BKASH_APP_SECRET}
+      - BKASH_USERNAME=${BKASH_USERNAME}
+      - BKASH_PASSWORD=${BKASH_PASSWORD}
+      - BKASH_CALLBACK_URL=${SERVER_URL}/api/payments/bkash/callback
+      - BKASH_FRONTEND_SUCCESS_URL=${CLIENT_URL}/payment-success
+      - BKASH_FRONTEND_FAIL_URL=${CLIENT_URL}/payment-failed
+      - IMAGE_STORAGE_PROVIDER=${IMAGE_STORAGE_PROVIDER}
+      - MAIN_SERVER_PORT=${MAIN_SERVER_PORT}
+      - DEPLOYMENT_ENVIRONMENT=${DEPLOYMENT_ENVIRONMENT}
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8081/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - backend
+      - data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  # ---------------------------------------------------------------------------
+  # Product Service
+  # ---------------------------------------------------------------------------
+  product-service:
+    build:
+      context: ./server
+      dockerfile: apps/product-app/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    expose:
+      - "8081"
+    volumes:
+      - product_logs:/app/logs/server
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${DEPLOYMENT_ENVIRONMENT}
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DRIVER_CLASS=${DB_DRIVER_CLASS}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - MQ_HOST=${MQ_HOST}
+      - MQ_PORT=${MQ_PORT}
+      - MQ_USERNAME=${MQ_USERNAME}
+      - MQ_PASSWORD=${MQ_PASSWORD}
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
+      - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY}
+      - CORS_ALLOWED_ORIGINS=${CLIENT_URL}
+      - APP_CACHE_STRATEGY=${APP_CACHE_STRATEGY}
+      - USER_SERVICE_URL=http://user-auth-service:8081
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+      - CLOUDINARY_FOLDER=${CLOUDINARY_FOLDER}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_API_KEY=${SUPABASE_API_KEY}
+      - SUPABASE_BUCKET=${SUPABASE_BUCKET}
+      - GOOGLE_LOGIN_CLIENT_ID=${GOOGLE_LOGIN_CLIENT_ID}
+      - IMAGE_STORAGE_PROVIDER=${IMAGE_STORAGE_PROVIDER}
+      - MAIN_SERVER_PORT=${MAIN_SERVER_PORT}
+      - DEPLOYMENT_ENVIRONMENT=${DEPLOYMENT_ENVIRONMENT}
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8081/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      user-auth-service:
+        condition: service_healthy
+    networks:
+      - backend
+      - data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  # ---------------------------------------------------------------------------
+  # Order Service
+  # ---------------------------------------------------------------------------
+  order-service:
+    build:
+      context: ./server
+      dockerfile: apps/order-app/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    expose:
+      - "8081"
+    volumes:
+      - order_logs:/app/logs/server
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${DEPLOYMENT_ENVIRONMENT}
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DRIVER_CLASS=${DB_DRIVER_CLASS}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - MQ_HOST=${MQ_HOST}
+      - MQ_PORT=${MQ_PORT}
+      - MQ_USERNAME=${MQ_USERNAME}
+      - MQ_PASSWORD=${MQ_PASSWORD}
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
+      - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY}
+      - CORS_ALLOWED_ORIGINS=${CLIENT_URL}
+      - APP_CACHE_STRATEGY=${APP_CACHE_STRATEGY}
+      - PRODUCT_SERVICE_URL=http://product-service:8081
+      - MAIN_SERVER_PORT=${MAIN_SERVER_PORT}
+      - DEPLOYMENT_ENVIRONMENT=${DEPLOYMENT_ENVIRONMENT}
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8081/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+    networks:
+      - backend
+      - data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  # ---------------------------------------------------------------------------
+  # Payment Service
+  # ---------------------------------------------------------------------------
+  payment-service:
+    build:
+      context: ./server
+      dockerfile: apps/payment-app/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    expose:
+      - "8081"
+    volumes:
+      - payment_logs:/app/logs/server
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${DEPLOYMENT_ENVIRONMENT}
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DRIVER_CLASS=${DB_DRIVER_CLASS}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - MQ_HOST=${MQ_HOST}
+      - MQ_PORT=${MQ_PORT}
+      - MQ_USERNAME=${MQ_USERNAME}
+      - MQ_PASSWORD=${MQ_PASSWORD}
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
+      - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY}
+      - CORS_ALLOWED_ORIGINS=${CLIENT_URL}
+      - APP_CACHE_STRATEGY=${APP_CACHE_STRATEGY}
+      - ORDER_SERVICE_URL=http://order-service:8081
+      - PRODUCT_SERVICE_URL=http://product-service:8081
+      - BKASH_BASE_URL=${BKASH_BASE_URL}
+      - BKASH_APP_KEY=${BKASH_APP_KEY}
+      - BKASH_APP_SECRET=${BKASH_APP_SECRET}
+      - BKASH_USERNAME=${BKASH_USERNAME}
+      - BKASH_PASSWORD=${BKASH_PASSWORD}
+      - BKASH_CALLBACK_URL=${SERVER_URL}/api/payments/bkash/callback
+      - BKASH_FRONTEND_SUCCESS_URL=${CLIENT_URL}/payment-success
+      - BKASH_FRONTEND_FAIL_URL=${CLIENT_URL}/payment-failed
+      - CLIENT_URL=${CLIENT_URL}
+      - SERVER_URL=${SERVER_URL}
+      - MAIN_SERVER_PORT=${MAIN_SERVER_PORT}
+      - DEPLOYMENT_ENVIRONMENT=${DEPLOYMENT_ENVIRONMENT}
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8081/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+    networks:
+      - backend
+      - data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  # ---------------------------------------------------------------------------
+  # Gateway — microservice profile routes to individual services
+  # ---------------------------------------------------------------------------
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:${GATEWAY_PORT:-8080}:8080"
+    volumes:
+      - gateway_logs:/app/logs/gateway
+      - ./config/gateway-overrides.properties:/app/config/gateway-overrides.properties:ro
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      - SPRING_PROFILES_ACTIVE=microservice,${DEPLOYMENT_ENVIRONMENT}
+      - GATEWAY_PORT=8080
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - USER_SERVICE_URL=http://user-auth-service:8081
+      - PRODUCT_SERVICE_URL=http://product-service:8081
+      - ORDER_SERVICE_URL=http://order-service:8081
+      - PAYMENT_SERVICE_URL=http://payment-service:8081
+      - CHAT_SERVICE_URL=http://chat-server:${CHAT_SERVER_PORT}
+      - CHAT_SERVICE_WS_URL=ws://chat-server:${CHAT_SERVER_PORT}
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+      - CORS_ALLOWED_ORIGINS=${CLIENT_URL}
+      - TRUSTED_PROXY_IPS=${TRUSTED_PROXY_IPS}
+      - REVOKED_TOKENS_PREFIX=${REVOKED_TOKENS_PREFIX}
+      - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY}
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      user-auth-service:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+      payment-service:
+        condition: service_healthy
+      chat-server:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - frontend
+      - backend
+      - data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  # ---------------------------------------------------------------------------
+  # Chat Server (unchanged from monolith compose)
+  # ---------------------------------------------------------------------------
+  chat-server:
+    build:
+      context: ./server_chat
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - chat_server_logs:/app/logs/chat-server
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      - PORT=${CHAT_SERVER_PORT}
+      - DB_URL=""
+      - DB_HOST=postgres-chat
+      - DB_PORT=5432
+      - DB_NAME=${CHAT_DB_NAME}
+      - DB_USERNAME=${CHAT_DB_USERNAME}
+      - DB_PASSWORD=${CHAT_DB_PASSWORD}
+      - MAIN_SERVICE_URL=http://user-auth-service:8081
+      - DB_DRIVER_CLASS=${DB_DRIVER_CLASS}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
+      - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY}
+      - CORS_ALLOWED_ORIGINS=${CLIENT_URL}
+      - DB_SSL=false
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3001/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    depends_on:
+      postgres-chat:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      user-auth-service:
+        condition: service_healthy
+    networks:
+      - frontend
+      - backend
+      - data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  # ---------------------------------------------------------------------------
+  # Client (unchanged from monolith compose)
+  # ---------------------------------------------------------------------------
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_PATH=/api
+        - VITE_GOOGLE_LOGIN_CLIENT_ID=${GOOGLE_LOGIN_CLIENT_ID}
+        - VITE_SESSION_HINT_KEY=${SESSION_HINT_KEY}
+        - VITE_LOCAL_STORAGE_CART_KEY=${LOCAL_STORAGE_CART_KEY}
+        - VITE_WEB_SOCKET_ON=${WEB_SOCKET_ON}
+    restart: unless-stopped
+    env_file:
+      - .env
+    expose:
+      - "80"
+    volumes:
+      - client_logs:/var/log/nginx
+      - ./client/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:80/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      gateway:
+        condition: service_healthy
+    networks:
+      - frontend
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
+
+  # ---------------------------------------------------------------------------
+  # Nginx Proxy (unchanged from monolith compose)
+  # ---------------------------------------------------------------------------
+  nginx-proxy:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "0.0.0.0:${APP_PORT:-80}:80"
+      - "0.0.0.0:${APP_SSL_PORT:-443}:443"
+    volumes:
+      - ./nginx-proxy.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:80/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      client:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+    networks:
+      - frontend
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.5'
+
+volumes:
+  postgres_data:
+  postgres_chat_data:
+  redis_data:
+  user_auth_logs:
+  product_logs:
+  order_logs:
+  payment_logs:
+  gateway_logs:
+  chat_server_logs:
+  client_logs:
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+    internal: true
+  data:
+    driver: bridge
+    internal: true

@@ -44,7 +44,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: server-test-results
-          path: server/build/reports/tests/test/
+          path: server/apps/monolith/build/reports/tests/test/
           retention-days: 14
 
       - name: Upload Server JaCoCo coverage
@@ -52,7 +52,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: server-coverage
-          path: server/build/reports/jacoco/test/
+          path: server/apps/monolith/build/reports/jacoco/test/
           retention-days: 14
 
   gateway-build:
@@ -161,11 +161,11 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: SpotBugs — Server
+      - name: SpotBugs — Server (monolith)
         working-directory: ./server
         run: |
           chmod +x gradlew
-          ./gradlew spotbugsMain --no-daemon
+          ./gradlew :apps:monolith:spotbugsMain --no-daemon
 
       - name: SpotBugs — Gateway
         working-directory: ./gateway
@@ -179,7 +179,7 @@ jobs:
         with:
           name: spotbugs-reports
           path: |
-            server/build/reports/spotbugs/
+            server/apps/monolith/build/reports/spotbugs/
             gateway/build/reports/spotbugs/
           retention-days: 14
 
