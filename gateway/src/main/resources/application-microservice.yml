@@ -1,0 +1,100 @@
+# Gateway routes for microservice deployment mode.
+# Activated via SPRING_PROFILES_ACTIVE=microservice
+#
+# In this mode, the monolith "server" service is replaced by individual
+# per-domain services: user-auth-service, product-service, order-service,
+# payment-service. The gateway routes each API path to the correct service.
+
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            # --- WebSocket (unchanged — chat is a separate service) ---
+            - id: chat-service-ws
+              uri: ${CHAT_SERVICE_WS_URL}
+              predicates:
+                - Path=/socket.io/**
+
+            # --- Chat REST API (unchanged) ---
+            - id: chat-service-api
+              uri: ${CHAT_SERVICE_URL}
+              predicates:
+                - Path=/api/chats/**,/api/uploads/**
+              filters:
+                - StripPrefix=1
+
+            # --- User / Auth Service ---
+            - id: user-auth-service
+              uri: ${USER_SERVICE_URL}
+              predicates:
+                - Path=/api/auth/**,/api/users/**,/api/roles/**
+              filters:
+                - StripPrefix=1
+                - name: CircuitBreaker
+                  args:
+                    name: userServiceCB
+                - name: Retry
+                  args:
+                    retries: 2
+                    methods: GET
+                    statuses: SERVICE_UNAVAILABLE
+
+            # --- Product Service (products, categories, reviews, stock, sales) ---
+            - id: product-service
+              uri: ${PRODUCT_SERVICE_URL}
+              predicates:
+                - Path=/api/products/**,/api/categories/**,/api/reviews/**,/api/stock/**,/api/sales/**
+              filters:
+                - StripPrefix=1
+                - name: CircuitBreaker
+                  args:
+                    name: productServiceCB
+                - name: Retry
+                  args:
+                    retries: 2
+                    methods: GET
+                    statuses: SERVICE_UNAVAILABLE
+
+            # --- Order Service ---
+            - id: order-service
+              uri: ${ORDER_SERVICE_URL}
+              predicates:
+                - Path=/api/orders/**
+              filters:
+                - StripPrefix=1
+                - name: CircuitBreaker
+                  args:
+                    name: orderServiceCB
+                - name: Retry
+                  args:
+                    retries: 2
+                    methods: GET
+                    statuses: SERVICE_UNAVAILABLE
+
+            # --- Payment Service ---
+            - id: payment-service
+              uri: ${PAYMENT_SERVICE_URL}
+              predicates:
+                - Path=/api/payments/**
+              filters:
+                - StripPrefix=1
+                - name: CircuitBreaker
+                  args:
+                    name: paymentServiceCB
+                - name: Retry
+                  args:
+                    retries: 2
+                    methods: GET
+                    statuses: SERVICE_UNAVAILABLE
+
+            # --- CMS / Reports — still on user-auth-service (monolith fallback) ---
+            # In a full split, these would get their own services.
+            # For now, route to user-auth-service which includes cms and report modules.
+            - id: cms-service
+              uri: ${USER_SERVICE_URL}
+              predicates:
+                - Path=/api/banners/**,/api/blogs/**,/api/faqs/**,/api/reports/**
+              filters:
+                - StripPrefix=1
