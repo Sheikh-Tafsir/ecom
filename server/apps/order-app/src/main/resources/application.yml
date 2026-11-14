@@ -1,0 +1,152 @@
+app:
+  internal:
+    service-key: ${INTERNAL_SERVICE_KEY}
+
+  cache:
+    strategy: ${APP_CACHE_STRATEGY:redis}
+    ttl:
+      default-minutes: 5
+      idempotency-minutes: 60
+      otp-minutes: 5
+      cms-minutes: 10
+      token-rotation-seconds: 60
+
+  standalone: false
+
+services:
+  product:
+    url: ${PRODUCT_SERVICE_URL:http://product-service:8081}
+
+spring:
+  application:
+    name: ecom-order
+
+  config:
+    import:
+      - "optional:file:config/server-overrides.properties"
+      - "optional:file:/app/config/server-overrides.properties"
+
+  profiles:
+    active: ${DEPLOYMENT_ENVIRONMENT}
+    group:
+      production: prod
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: ${DB_DRIVER_CLASS}
+
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties.hibernate.hibernate.format_sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+
+  rabbitmq:
+    host: ${MQ_HOST}
+    port: ${MQ_PORT}
+    username: ${MQ_USERNAME}
+    password: ${MQ_PASSWORD}
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 2000
+          max-retries: 3
+
+    mail:
+      queue: mail.queue
+      exchange: mail.exchange
+      routing-key: mail.send
+
+    service:
+      queue: service.queue
+      exchange: service.exchange
+      routing-key: service.routing.key
+
+  http:
+    converters:
+      preferred-json-mapper: jackson
+
+cors:
+  allowed:
+    origins: ${CORS_ALLOWED_ORIGINS}
+
+server:
+  port: ${MAIN_SERVER_PORT}
+
+logging:
+  level:
+    root: INFO
+    com.example.ecom: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web.multipart: DEBUG
+
+  pattern.console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - [Req: %X{requestId}, IP: %X{clientIp}, UserId: %X{userId}] - %msg%n'
+
+jwt:
+  access-token:
+    expiration: 900 # 15 minutes
+    secret: ${ACCESS_TOKEN_SECRET}
+  refresh-token:
+    name: ${REFRESH_TOKEN_NAME}
+    expiration: 604800 # 7 days
+    secret: ${REFRESH_TOKEN_SECRET}
+
+rate-limit:
+  global:
+    rate: 2000
+    concurrency: 100
+  ip:
+    rate: 100
+    concurrency: 20
+  auth-ip:
+    rate: 20
+    concurrency: 5
+  user:
+    rate: 300
+    concurrency: 15
+  otp:
+    rate: 1
+    window-seconds: 60
+    max-tries: 3
+    validity-minutes: 5
+  window-seconds: 60
+
+service:
+  queue: service.queue
+  exchange: service.exchange
+  routing-key: service.events.#
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,refresh
+
+  endpoint:
+    health:
+      show-details: always
+
+  prometheus:
+    metrics:
+      export:
+        enabled: true

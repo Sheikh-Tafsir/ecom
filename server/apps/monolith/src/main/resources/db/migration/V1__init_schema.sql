@@ -132,10 +132,12 @@ CREATE TABLE IF NOT EXISTS orders (
 CREATE TABLE IF NOT EXISTS order_items (
     id         UUID PRIMARY KEY,
     order_id   UUID           REFERENCES orders(id) ON DELETE CASCADE,
-    product_id UUID           REFERENCES products(id),
-    quantity   INT            NOT NULL,
-    unit_price NUMERIC(19, 2) NOT NULL,
-    created_at TIMESTAMPTZ    NOT NULL DEFAULT NOW()
+    product_id    UUID           REFERENCES products(id),
+    product_name  VARCHAR(255),
+    product_image VARCHAR(500),
+    quantity      INT            NOT NULL,
+    unit_price    NUMERIC(19, 2) NOT NULL,
+    created_at    TIMESTAMPTZ    NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS order_history (
