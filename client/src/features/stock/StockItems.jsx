@@ -75,6 +75,7 @@ const StockItems = () => {
     } = useListPage({
         queryKey: (f) => queryKeys.stockItems.list(f),
         queryFn: fetchStockItems,
+        allowedSortFields: ["id", "quantity", "purchasePrice", "remaining"],
         extraFilters: (qp) => ({
             productName: qp.productName || "",
             fromDate: qp.fromDate || "",

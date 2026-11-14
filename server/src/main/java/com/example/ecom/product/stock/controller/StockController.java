@@ -12,6 +12,8 @@ import jakarta.validation.constraints.PastOrPresent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.SortDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -48,7 +50,7 @@ public class StockController {
                                                                              @RequestParam(required = false) @PastOrPresent LocalDate toDate,
                                                                              @RequestParam(required = false) UUID productId,
                                                                              @RequestParam(required = false) String productName,
-                                                                             Pageable pageable) {
+                                                                             @SortDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Page<StockItemResponse> stocks = stockService.findAllItems(fromDate, toDate, productId, productName, pageable);
         return ResponseUtils.ok(stocks, messageService.get("successfully.found", "Stock Item List"));

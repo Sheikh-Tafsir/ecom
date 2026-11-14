@@ -48,9 +48,13 @@ const parseSort = (sort = DEFAULT_SORT, allowedSortFields = []) => {
 
     const [field, order] = sort.split(",")
 
-    return fields.has(field)
-        ? `${field},${order == "ASC" ? "ASC" : DEFAULT_SORT_ORDER}`
-        : DEFAULT_SORT;
+    if (fields.has(field)) {
+        return `${field},${order == "ASC" ? "ASC" : DEFAULT_SORT_ORDER}`;
+    }
+
+    // Fall back to the first allowed field instead of DEFAULT_SORT
+    const firstAllowed = fields.values().next().value;
+    return `${firstAllowed},${DEFAULT_SORT_ORDER}`;
 }
 
 export const normalizeQuery = (q = {}, allowedSortFields = []) => {
