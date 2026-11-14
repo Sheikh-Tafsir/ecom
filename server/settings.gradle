@@ -1,1 +1,11 @@
 rootProject.name = 'ecom'
+
+include 'contracts'
+include 'common'
+include 'modules:user'
+include 'modules:product'
+include 'modules:order'
+include 'modules:payment'
+include 'modules:cms'
+include 'modules:report'
+include 'apps:monolith'
