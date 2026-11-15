@@ -3,6 +3,7 @@ package com.example.ecom.order.scheduler;
 import com.example.ecom.order.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +19,7 @@ public class OrderRejectScheduler {
      * and reject orders pending for more than 3 days.
      */
     @Scheduled(cron = "0 0 0 * * *")
+    @SchedulerLock(name = "cleanupPendingOrders", lockAtLeastFor = "PT5M", lockAtMostFor = "PT30M")
     public void cleanupPendingOrders() {
         log.info("Starting scheduled pending order cleanup task");
         orderService.notifyAndRejectPendingOrders();

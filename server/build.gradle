@@ -47,6 +47,10 @@ dependencies {
     // RabbitMQ
     implementation 'org.springframework.boot:spring-boot-starter-amqp'
 
+    // ShedLock — distributed scheduler locking
+    implementation 'net.javacrumbs.shedlock:shedlock-spring:7.11.0'
+    implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:7.11.0'
+
     // Database
     runtimeOnly 'org.postgresql:postgresql'
     implementation 'org.flywaydb:flyway-core'
