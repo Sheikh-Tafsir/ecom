@@ -10,6 +10,15 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.support.RestClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
+/**
+ * HTTP client configuration for the payment microservice.
+ * <p>
+ * Timeouts and error handling are provided by {@code InternalClientConfig} via
+ * the auto-configured {@link RestClient.Builder} customizer.
+ * <p>
+ * Retry is intentionally NOT applied: {@code acceptOrderForPrepayment} mutates
+ * order state and is not idempotent.
+ */
 @Configuration
 public class HttpClientConfig {
 

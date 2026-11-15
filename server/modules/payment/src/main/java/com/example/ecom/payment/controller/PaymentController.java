@@ -78,8 +78,18 @@ public class PaymentController {
             CreatePaymentResponse result = paymentService.execute(paymentID);
 
             if ("0000".equals(result.getStatusCode()) && "Completed".equals(result.getTransactionStatus())) {
-                paymentService.acceptOrderForPrepayment(orderId);
+                // Payment succeeded on bKash — record it first so we never lose track of the money
                 paymentService.updatePaymentStatus(paymentID, result, true);
+
+                try {
+                    paymentService.acceptOrderForPrepayment(orderId);
+                } catch (Exception orderEx) {
+                    // CRITICAL: Money was taken but order acceptance failed.
+                    // Payment is already recorded as COMPLETED — admin can reconcile.
+                    log.error("CRITICAL: Payment {} completed (trxID={}) but order {} acceptance failed. " +
+                            "Payment recorded as COMPLETED. Manual reconciliation required.",
+                            paymentID, result.getTrxID(), orderId, orderEx);
+                }
 
                 httpResponse.sendRedirect(config.getFrontendSuccessUrl()
                         + "?orderId=" + orderId

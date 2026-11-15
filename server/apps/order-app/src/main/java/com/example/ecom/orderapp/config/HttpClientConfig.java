@@ -10,6 +10,16 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.support.RestClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
+/**
+ * HTTP client configuration for the order microservice.
+ * <p>
+ * Timeouts and error handling are provided by {@code InternalClientConfig} via
+ * the auto-configured {@link RestClient.Builder} customizer.
+ * <p>
+ * Retry is intentionally NOT applied here: stock reservation/release/consume
+ * are non-idempotent writes, so retrying could double-reserve or double-release.
+ * Failures are handled by compensation logic in {@code OrderService}.
+ */
 @Configuration
 public class HttpClientConfig {
 

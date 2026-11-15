@@ -9,6 +9,15 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.support.RestClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
+/**
+ * HTTP client configuration for the product microservice.
+ * <p>
+ * Timeouts and error handling are provided by {@code InternalClientConfig} via
+ * the auto-configured {@link RestClient.Builder} customizer.
+ * <p>
+ * User lookups are read-only and safe to retry; retry is handled by
+ * {@code @Retryable} on the calling service method where appropriate.
+ */
 @Configuration
 public class HttpClientConfig {
 

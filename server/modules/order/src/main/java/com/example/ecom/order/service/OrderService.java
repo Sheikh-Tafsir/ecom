@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -159,13 +160,23 @@ public class OrderService {
         order.setUserId(userDetails.getId());
         request.items().forEach(itemRequest -> addProduct(order, itemRequest));
 
-        // Reserve stock at checkout
-        order.getItems().forEach(item -> productClient.reserveStock(item.getProductId(), item.getQuantity()));
+        // Reserve stock at checkout — track reservations for compensation
+        List<OrderItem> reserved = new ArrayList<>();
+        try {
+            for (OrderItem item : order.getItems()) {
+                productClient.reserveStock(item.getProductId(), item.getQuantity());
+                reserved.add(item);
+            }
 
-        Order savedOrder = orderRepository.save(order);
-        recordStatusChange(savedOrder, null, OrderStatus.PENDING, userDetails.getId(), "Order created");
+            Order savedOrder = orderRepository.save(order);
+            recordStatusChange(savedOrder, null, OrderStatus.PENDING, userDetails.getId(), "Order created");
 
-        return new CreateOrderResponse(savedOrder.getId(), savedOrder.getTotalPrice());
+            return new CreateOrderResponse(savedOrder.getId(), savedOrder.getTotalPrice());
+        } catch (Exception e) {
+            // Compensate: release all successfully reserved stock
+            compensateStockReservation(reserved);
+            throw e;
+        }
     }
 
     @Transactional
@@ -180,12 +191,22 @@ public class OrderService {
             throwAccessException(order.getUserId(), userDetails.getId(), "Order", order.getId());
         }
 
-        restoreOrderStock(order);
+        boolean stockReleased = false;
+        try {
+            restoreOrderStock(order);
+            stockReleased = true;
 
-        recordStatusChange(order, OrderStatus.PENDING, OrderStatus.CANCELLED, userDetails.getId(), "Order cancelled by customer");
-        order.setStatus(OrderStatus.CANCELLED);
+            recordStatusChange(order, OrderStatus.PENDING, OrderStatus.CANCELLED, userDetails.getId(), "Order cancelled by customer");
+            order.setStatus(OrderStatus.CANCELLED);
 
-        return new OrderResponse(orderRepository.save(order));
+            return new OrderResponse(orderRepository.save(order));
+        } catch (Exception e) {
+            if (stockReleased) {
+                log.error("CRITICAL: Stock released but cancel failed for order {}. " +
+                        "Manual reconciliation may be needed.", id, e);
+            }
+            throw e;
+        }
     }
 
     @PreAuthorize("hasAnyAuthority(T(com.example.ecom.common.enums.Permission).ADMIN_ACCESS.getValue()," +
@@ -216,17 +237,34 @@ public class OrderService {
             }
         }
 
-        if (status == OrderStatus.ACCEPTED && order.getStatus() != OrderStatus.ACCEPTED) {
-            consumeStockForAcceptedOrder(order);
-        } else if ((status == OrderStatus.CANCELLED || status == OrderStatus.REJECTED || status == OrderStatus.RETURNED)
-                && (order.getStatus() == OrderStatus.PENDING || order.getStatus() == OrderStatus.ACCEPTED || order.getStatus() == OrderStatus.SHIPPED)) {
-            restoreOrderStock(order);
+        boolean stockConsumed = false;
+        boolean stockReleased = false;
+        try {
+            if (status == OrderStatus.ACCEPTED && order.getStatus() != OrderStatus.ACCEPTED) {
+                consumeStockForAcceptedOrder(order);
+                stockConsumed = true;
+            } else if ((status == OrderStatus.CANCELLED || status == OrderStatus.REJECTED || status == OrderStatus.RETURNED)
+                    && (order.getStatus() == OrderStatus.PENDING || order.getStatus() == OrderStatus.ACCEPTED || order.getStatus() == OrderStatus.SHIPPED)) {
+                restoreOrderStock(order);
+                stockReleased = true;
+            }
+
+            recordStatusChange(order, oldStatus, status, userDetails.getId(), "Status updated to " + status.getValue());
+            order.setStatus(status);
+
+            return new OrderResponse(orderRepository.save(order));
+        } catch (Exception e) {
+            // Compensate: reverse the cross-service operation that succeeded
+            if (stockConsumed) {
+                log.warn("Compensating stock consumption for order {} due to: {}", id, e.getMessage());
+                compensateStockReservation(new ArrayList<>(order.getItems()));
+            }
+            if (stockReleased) {
+                log.error("CRITICAL: Stock released but order status update failed for order {}. " +
+                        "Manual reconciliation may be needed.", id, e);
+            }
+            throw e;
         }
-
-        recordStatusChange(order, oldStatus, status, userDetails.getId(), "Status updated to " + status.getValue());
-        order.setStatus(status);
-
-        return new OrderResponse(orderRepository.save(order));
     }
 
     // -- helpers --
@@ -240,13 +278,24 @@ public class OrderService {
     public void acceptOrderForPrepayment(UUID id) {
         Order order = findByIdHelper(id);
         OrderStatus oldStatus = order.getStatus();
-        if (order.getStatus() != OrderStatus.ACCEPTED) {
-            consumeStockForAcceptedOrder(order);
-            order.setStatus(OrderStatus.ACCEPTED);
-            recordStatusChange(order, oldStatus, OrderStatus.ACCEPTED, order.getUserId(), "Accepted upon payment confirmation");
+
+        boolean stockConsumed = false;
+        try {
+            if (order.getStatus() != OrderStatus.ACCEPTED) {
+                consumeStockForAcceptedOrder(order);
+                stockConsumed = true;
+                order.setStatus(OrderStatus.ACCEPTED);
+                recordStatusChange(order, oldStatus, OrderStatus.ACCEPTED, order.getUserId(), "Accepted upon payment confirmation");
+            }
+            order.setPaid(true);
+            orderRepository.save(order);
+        } catch (Exception e) {
+            if (stockConsumed) {
+                log.warn("Compensating stock consumption for prepayment order {} due to: {}", id, e.getMessage());
+                compensateStockReservation(new ArrayList<>(order.getItems()));
+            }
+            throw e;
         }
-        order.setPaid(true);
-        orderRepository.save(order);
     }
 
     public void notifyAndRejectPendingOrders() {
@@ -265,10 +314,22 @@ public class OrderService {
         List<Order> ordersToReject = orderRepository.findAllByStatusAndCreatedAtBefore(OrderStatus.PENDING, twoDaysAgo);
         ordersToReject.forEach(order -> {
             log.info("Rejecting order {} due to inactivity (more than 2 days old)", order.getId());
-            restoreOrderStock(order);
-            recordStatusChange(order, OrderStatus.PENDING, OrderStatus.REJECTED, null, "Auto-rejected due to inactivity (>2 days)");
-            order.setStatus(OrderStatus.REJECTED);
-            orderRepository.save(order);
+
+            boolean stockReleased = false;
+            try {
+                restoreOrderStock(order);
+                stockReleased = true;
+                recordStatusChange(order, OrderStatus.PENDING, OrderStatus.REJECTED, null, "Auto-rejected due to inactivity (>2 days)");
+                order.setStatus(OrderStatus.REJECTED);
+                orderRepository.save(order);
+            } catch (Exception e) {
+                if (stockReleased) {
+                    log.error("CRITICAL: Stock released but auto-reject failed for order {}. " +
+                            "Manual reconciliation required.", order.getId(), e);
+                } else {
+                    log.error("Failed to auto-reject order {}: {}", order.getId(), e.getMessage());
+                }
+            }
         });
     }
 
@@ -283,6 +344,22 @@ public class OrderService {
 
     private void restoreOrderStock(Order order) {
         order.getItems().forEach(item -> productClient.releaseStock(item.getProductId(), item.getQuantity()));
+    }
+
+    /**
+     * Compensation: best-effort release of stock that was reserved by a cross-service call.
+     * Each release is attempted independently — a failure in one does not block the others.
+     * Failures are logged at ERROR level for manual reconciliation.
+     */
+    private void compensateStockReservation(List<OrderItem> reservedItems) {
+        for (OrderItem item : reservedItems) {
+            try {
+                productClient.releaseStock(item.getProductId(), item.getQuantity());
+            } catch (Exception ex) {
+                log.error("CRITICAL: Failed to compensate stock reservation for product {} qty {}. " +
+                        "Manual reconciliation required.", item.getProductId(), item.getQuantity(), ex);
+            }
+        }
     }
 
     private Order findByIdHelper(UUID id) {
