@@ -74,16 +74,6 @@ spring:
           initial-interval: 2000
           max-retries: 3
 
-    mail:
-      queue: mail.queue
-      exchange: mail.exchange
-      routing-key: mail.send
-
-    service:
-      queue: service.queue
-      exchange: service.exchange
-      routing-key: service.routing.key
-
   http:
     converters:
       preferred-json-mapper: jackson
@@ -112,11 +102,6 @@ jwt:
     name: ${REFRESH_TOKEN_NAME}
     expiration: 604800 # 7 days
     secret: ${REFRESH_TOKEN_SECRET}
-
-service:
-  queue: service.queue
-  exchange: service.exchange
-  routing-key: service.events.#
 
 management:
   endpoints:
@@ -166,5 +151,3 @@ rate-limit:
 services:
   order:
     url: ${ORDER_SERVICE_URL:http://order-service:8081}
-  product:
-    url: ${PRODUCT_SERVICE_URL:http://product-service:8081}

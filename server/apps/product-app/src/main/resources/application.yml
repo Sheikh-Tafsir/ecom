@@ -84,16 +84,6 @@ spring:
           initial-interval: 2000
           max-retries: 3
 
-    mail:
-      queue: mail.queue
-      exchange: mail.exchange
-      routing-key: mail.send
-
-    service:
-      queue: service.queue
-      exchange: service.exchange
-      routing-key: service.routing.key
-
   http:
     converters:
       preferred-json-mapper: jackson
@@ -146,11 +136,6 @@ mail:
     port: ${MAIL_SMTP_PORT:587}
     username: ${MAIL_SMTP_USERNAME:}
     password: ${MAIL_SMTP_PASSWORD:}
-
-service:
-  queue: service.queue
-  exchange: service.exchange
-  routing-key: service.events.#
 
 management:
   endpoints:

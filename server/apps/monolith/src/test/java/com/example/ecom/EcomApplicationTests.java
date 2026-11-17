@@ -5,9 +5,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import com.example.ecom.common.event.EventPublisher;
 
 @SpringBootTest
 class EcomApplicationTests {
+
+    /** Provide a mock so the context loads without a real RabbitMQ connection. */
+    @MockitoBean
+    private EventPublisher domainEventPublisher;
 
     private static final Dotenv DOTENV = Dotenv.configure()
             .ignoreIfMissing()

@@ -1,6 +1,8 @@
 package com.example.ecom.order.service;
 
 import com.example.ecom.common.dto.CustomUserDetails;
+import com.example.ecom.common.event.EventConstants;
+import com.example.ecom.common.event.EventPublisher;
 import com.example.ecom.common.service.notification.NotificationService;
 import com.example.ecom.order.enums.OrderStatus;
 import com.example.ecom.order.enums.PaymentMethod;
@@ -56,6 +58,12 @@ class OrderServiceTest {
 
     @Mock
     private NotificationService notificationService;
+
+    @Mock
+    private EventPublisher domainEventPublisher;
+
+    @Mock
+    private OrderRejectionService orderRejectionService;
 
     @InjectMocks
     private OrderService orderService;
@@ -125,8 +133,8 @@ class OrderServiceTest {
     }
 
     @Test
-    @DisplayName("Should restore stock when order is cancelled by customer")
-    void cancelOrder_shouldRestoreStock() {
+    @DisplayName("Should publish stock-release event when order is cancelled by customer")
+    void cancelOrder_shouldPublishStockReleaseEvent() {
         // Arrange
         CustomUserDetails userDetails = createUserDetails();
 
@@ -144,7 +152,13 @@ class OrderServiceTest {
 
         // Assert
         assertNotNull(response);
-        verify(productClient, times(1)).releaseStock(PRODUCT_ID, 3);
+        verify(domainEventPublisher, times(1)).publish(
+                eq(EventConstants.SOURCE_ORDER),
+                eq(com.example.ecom.common.event.EventConstants.ORDER_STOCK_RELEASE),
+                any(com.example.ecom.common.event.OrderStockReleaseEvent.class)
+        );
+        // Stock is no longer released synchronously — handled by event consumer
+        verify(productClient, never()).releaseStock(any(), anyInt());
     }
 
     @Test
@@ -244,5 +258,19 @@ class OrderServiceTest {
         ValidationException ex = assertThrows(ValidationException.class,
                 () -> orderService.validateStockForPayment(ORDER_ID));
         assertTrue(ex.getMessage().contains("Insufficient stock"));
+    }
+
+    @Test
+    @DisplayName("notifyAndRejectPendingOrders should delegate order rejection to OrderRejectionService")
+    void notifyAndRejectPendingOrders_delegatesToRejectionService() {
+        Order expiredOrder = new Order();
+        expiredOrder.setId(ORDER_ID);
+
+        when(orderRepository.findAllByStatusAndCreatedAtBefore(eq(OrderStatus.PENDING), any()))
+                .thenReturn(java.util.List.of(expiredOrder));
+
+        orderService.notifyAndRejectPendingOrders();
+
+        verify(orderRejectionService).rejectSingleOrder(expiredOrder);
     }
 }

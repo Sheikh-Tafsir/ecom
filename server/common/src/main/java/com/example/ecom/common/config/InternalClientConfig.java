@@ -1,6 +1,7 @@
 package com.example.ecom.common.config;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestClientCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,8 +18,8 @@ import java.time.Duration;
  * <p>
  * Provides:
  * <ul>
- *     <li>Connection timeout (5s) and read timeout (10s)</li>
- *     <li>Automatic retry for read-only (GET) requests on server errors and timeouts (3 attempts)</li>
+ *     <li>Connection timeout and read timeout (externalized via {@code app.client.*})</li>
+ *     <li>Automatic retry for read-only (GET) requests on server errors and timeouts</li>
  *     <li>Standard error handling that converts HTTP errors into appropriate exceptions</li>
  * </ul>
  * <p>
@@ -29,10 +30,17 @@ import java.time.Duration;
 @Configuration
 public class InternalClientConfig {
 
-    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
-    private static final Duration READ_TIMEOUT = Duration.ofSeconds(10);
-    private static final int MAX_READ_RETRIES = 3;
-    private static final long RETRY_DELAY_MS = 500;
+    @Value("${app.client.connect-timeout-seconds:5}")
+    private int connectTimeoutSeconds;
+
+    @Value("${app.client.read-timeout-seconds:10}")
+    private int readTimeoutSeconds;
+
+    @Value("${app.client.max-read-retries:3}")
+    private int maxReadRetries;
+
+    @Value("${app.client.retry-delay-ms:500}")
+    private long retryDelayMs;
 
     /**
      * Customizes the auto-configured {@link RestClient.Builder} with timeouts, retry, and error handling.
@@ -68,12 +76,12 @@ public class InternalClientConfig {
             }
 
             IOException lastException = null;
-            for (int attempt = 1; attempt <= MAX_READ_RETRIES; attempt++) {
+            for (int attempt = 1; attempt <= maxReadRetries; attempt++) {
                 try {
                     ClientHttpResponse response = execution.execute(request, body);
-                    if (response.getStatusCode().is5xxServerError() && attempt < MAX_READ_RETRIES) {
+                    if (response.getStatusCode().is5xxServerError() && attempt < maxReadRetries) {
                         log.warn("Read retry {}/{} for {} {} → {}",
-                                attempt, MAX_READ_RETRIES, request.getMethod(),
+                                attempt, maxReadRetries, request.getMethod(),
                                 request.getURI(), response.getStatusCode());
                         response.close();
                         sleep(attempt);
@@ -82,9 +90,9 @@ public class InternalClientConfig {
                     return response;
                 } catch (IOException e) {
                     lastException = e;
-                    if (attempt < MAX_READ_RETRIES) {
+                    if (attempt < maxReadRetries) {
                         log.warn("Read retry {}/{} for {} {} due to: {}",
-                                attempt, MAX_READ_RETRIES, request.getMethod(),
+                                attempt, maxReadRetries, request.getMethod(),
                                 request.getURI(), e.getMessage());
                         sleep(attempt);
                     }
@@ -94,18 +102,18 @@ public class InternalClientConfig {
         };
     }
 
-    private static void sleep(int attempt) {
+    private void sleep(int attempt) {
         try {
-            Thread.sleep(RETRY_DELAY_MS * attempt);
+            Thread.sleep(retryDelayMs * attempt);
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
         }
     }
 
-    private static ClientHttpRequestFactory createRequestFactory() {
+    private ClientHttpRequestFactory createRequestFactory() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(CONNECT_TIMEOUT);
-        factory.setReadTimeout(READ_TIMEOUT);
+        factory.setConnectTimeout(Duration.ofSeconds(connectTimeoutSeconds));
+        factory.setReadTimeout(Duration.ofSeconds(readTimeoutSeconds));
         return factory;
     }
 }

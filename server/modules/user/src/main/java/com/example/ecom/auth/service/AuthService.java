@@ -4,11 +4,12 @@ import com.example.ecom.auth.dto.*;
 import com.example.ecom.auth.enums.OtpType;
 import com.example.ecom.auth.repository.AuthRepository;
 import com.example.ecom.common.dto.CustomUserDetails;
+import com.example.ecom.common.dto.MailMessageDto;
 import com.example.ecom.user.user.enums.RoleName;
 import com.example.ecom.common.enums.UserStatus;
 import com.example.ecom.user.user.model.Role;
 import com.example.ecom.user.user.model.User;
-import com.example.ecom.common.service.mail.MailService;
+import com.example.ecom.common.event.EventPublisher;
 import com.example.ecom.user.role.service.RoleService;
 import com.example.ecom.user.user.service.UserService;
 import jakarta.validation.ValidationException;
@@ -22,6 +23,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static com.example.ecom.common.event.EventConstants.MAIL_SEND;
+import static com.example.ecom.common.event.EventConstants.SOURCE_AUTH;
 import static java.util.Objects.isNull;
 
 @Slf4j
@@ -39,7 +42,7 @@ public class AuthService {
 
     private final AuthRepository authRepository;
 
-    private final MailService mailService;
+    private final EventPublisher eventPublisher;
 
     private final OtpService otpService;
 
@@ -84,7 +87,7 @@ public class AuthService {
         user = save(user, signupRequest.password());
         
         Otp otp = otpService.createOtp(user, OtpType.SIGNUP);
-        mailService.sendEmailAsync(user.getEmail(), SIGNUP_MAIL_SUBJECT, SIGNUP_MAIL_TEXT + otp.getValue());
+        publishMail(user.getEmail(), SIGNUP_MAIL_SUBJECT, SIGNUP_MAIL_TEXT + otp.getValue());
     }
 
     public void resendSignupOtp(OtpRequest request) {
@@ -99,7 +102,7 @@ public class AuthService {
         }
 
         Otp otp = otpService.getOrCreateOtp(user, OtpType.SIGNUP);
-        mailService.sendEmailAsync(user.getEmail(), SIGNUP_MAIL_SUBJECT, SIGNUP_MAIL_TEXT + otp.getValue());
+        publishMail(user.getEmail(), SIGNUP_MAIL_SUBJECT, SIGNUP_MAIL_TEXT + otp.getValue());
     }
 
     @Transactional
@@ -131,7 +134,7 @@ public class AuthService {
         }
 
         Otp userOtp = otpService.getOrCreateOtp(user, OtpType.FORGET);
-        mailService.sendEmailAsync(user.getEmail(), FORGET_PASSWORD_MAIL_SUBJECT, FORGET_PASSWORD_MAIL_TEXT + userOtp.getValue());
+        publishMail(user.getEmail(), FORGET_PASSWORD_MAIL_SUBJECT, FORGET_PASSWORD_MAIL_TEXT + userOtp.getValue());
     }
 
     @Transactional
@@ -155,5 +158,9 @@ public class AuthService {
     private User save(User user, String password) {
         user.setPassword(passwordEncoder.encode(password));
         return authRepository.save(user);
+    }
+
+    private void publishMail(String to, String subject, String body) {
+        eventPublisher.publish(SOURCE_AUTH, MAIL_SEND, new MailMessageDto(to, subject, body));
     }
 }

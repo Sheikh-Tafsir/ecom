@@ -21,6 +21,11 @@ public interface PaymentService {
 
     void updatePaymentStatus(String paymentID, com.example.ecom.payment.dto.CreatePaymentResponse result, boolean success);
 
+    /**
+     * @deprecated Replaced by async {@code PaymentCompletedEvent} published via {@code EventPublisher}.
+     *             Retained for microservice HTTP fallback — remove after full migration.
+     */
+    @Deprecated
     void acceptOrderForPrepayment(UUID orderId);
 }
 

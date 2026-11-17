@@ -242,6 +242,19 @@ class ProductServiceTest {
     }
 
     @Test
+    @DisplayName("decreaseForOrder by UUID should look up product and decrease stock")
+    void decreaseForOrder_byUuid_decreasesStock() {
+        when(productRepository.findById(PRODUCT_ID)).thenReturn(Optional.of(product));
+        when(productRepository.decreaseStockIfAvailable(PRODUCT_ID, 5)).thenReturn(1);
+
+        productService.decreaseForOrder(PRODUCT_ID, 5);
+
+        verify(productRepository).findById(PRODUCT_ID);
+        verify(productRepository).decreaseStockIfAvailable(PRODUCT_ID, 5);
+        verify(entityManager).refresh(product);
+    }
+
+    @Test
     @DisplayName("decreaseForOrder should throw ValidationException when stock is insufficient")
     void decreaseForOrder_insufficientStock_throwsValidationException() {
         when(productRepository.decreaseStockIfAvailable(PRODUCT_ID, 100)).thenReturn(0);
@@ -315,6 +328,18 @@ class ProductServiceTest {
     void increaseQuantity_validProduct_callsRepoAndRefreshes() {
         productService.increaseQuantity(product, 15);
 
+        verify(productRepository).increaseStock(PRODUCT_ID, 15);
+        verify(entityManager).refresh(product);
+    }
+
+    @Test
+    @DisplayName("increaseQuantity by UUID should look up product, call increaseStock and refresh entity")
+    void increaseQuantity_byUuid_callsRepoAndRefreshes() {
+        when(productRepository.findById(PRODUCT_ID)).thenReturn(Optional.of(product));
+
+        productService.increaseQuantity(PRODUCT_ID, 15);
+
+        verify(productRepository).findById(PRODUCT_ID);
         verify(productRepository).increaseStock(PRODUCT_ID, 15);
         verify(entityManager).refresh(product);
     }

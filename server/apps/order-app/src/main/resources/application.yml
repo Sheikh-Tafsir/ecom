@@ -72,16 +72,6 @@ spring:
           initial-interval: 2000
           max-retries: 3
 
-    mail:
-      queue: mail.queue
-      exchange: mail.exchange
-      routing-key: mail.send
-
-    service:
-      queue: service.queue
-      exchange: service.exchange
-      routing-key: service.routing.key
-
   http:
     converters:
       preferred-json-mapper: jackson
@@ -130,11 +120,6 @@ rate-limit:
     max-tries: 3
     validity-minutes: 5
   window-seconds: 60
-
-service:
-  queue: service.queue
-  exchange: service.exchange
-  routing-key: service.events.#
 
 management:
   endpoints:

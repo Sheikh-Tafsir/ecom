@@ -3,6 +3,8 @@ package com.example.ecom.payment.controller;
 import com.example.ecom.common.annotation.Idempotent;
 import com.example.ecom.payment.config.BkashConfigProperties;
 import com.example.ecom.common.dto.ApiResponse;
+import com.example.ecom.common.event.EventPublisher;
+import com.example.ecom.common.event.PaymentCompletedEvent;
 import com.example.ecom.common.utils.ResponseUtils;
 import com.example.ecom.payment.dto.CreatePaymentRequest;
 import com.example.ecom.payment.dto.CreatePaymentResponse;
@@ -19,6 +21,8 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
+import static com.example.ecom.common.event.EventConstants.*;
+
 import com.example.ecom.common.dto.CustomUserDetails;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -32,6 +36,8 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     private final BkashConfigProperties config;
+
+    private final EventPublisher domainEventPublisher;
 
     /**
      * Called by React to initiate payment
@@ -81,14 +87,19 @@ public class PaymentController {
                 // Payment succeeded on bKash — record it first so we never lose track of the money
                 paymentService.updatePaymentStatus(paymentID, result, true);
 
+                // Publish async event for order-service to accept the order.
+                // If MQ is down, we still redirect to success (payment IS recorded),
+                // but log CRITICAL so reconciliation picks up the orphaned payment.
                 try {
-                    paymentService.acceptOrderForPrepayment(orderId);
-                } catch (Exception orderEx) {
-                    // CRITICAL: Money was taken but order acceptance failed.
-                    // Payment is already recorded as COMPLETED — admin can reconcile.
-                    log.error("CRITICAL: Payment {} completed (trxID={}) but order {} acceptance failed. " +
-                            "Payment recorded as COMPLETED. Manual reconciliation required.",
-                            paymentID, result.getTrxID(), orderId, orderEx);
+                    domainEventPublisher.publish(
+                            SOURCE_PAYMENT,
+                            PAYMENT_COMPLETED,
+                            new PaymentCompletedEvent(orderId, result.getPaymentID(), result.getTrxID())
+                    );
+                } catch (Exception e) {
+                    log.error("CRITICAL: Payment {} recorded but event publish failed. " +
+                            "Order {} will NOT be accepted automatically. " +
+                            "Manual reconciliation required.", paymentID, orderId, e);
                 }
 
                 httpResponse.sendRedirect(config.getFrontendSuccessUrl()

@@ -30,18 +30,6 @@ spring:
   rabbitmq:
     host: localhost
     port: 5672
-    mail:
-      queue: mail.queue
-      exchange: mail.exchange
-      routing-key: mail.send
-    service:
-      queue: service.queue
-      exchange: service.exchange
-      routing-key: service.routing.key
-    listener:
-      simple:
-        auto-startup: false
-
 mail:
   smtp:
     host: localhost

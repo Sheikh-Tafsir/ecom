@@ -4,11 +4,13 @@ import com.example.ecom.auth.dto.*;
 import com.example.ecom.auth.enums.OtpType;
 import com.example.ecom.auth.repository.AuthRepository;
 import com.example.ecom.common.dto.CustomUserDetails;
+import com.example.ecom.common.dto.MailMessageDto;
+import com.example.ecom.common.event.EventConstants;
 import com.example.ecom.user.user.enums.RoleName;
 import com.example.ecom.common.enums.UserStatus;
 import com.example.ecom.user.user.model.Role;
 import com.example.ecom.user.user.model.User;
-import com.example.ecom.common.service.mail.MailService;
+import com.example.ecom.common.event.EventPublisher;
 import com.example.ecom.user.role.service.RoleService;
 import com.example.ecom.user.user.service.UserService;
 import jakarta.validation.ValidationException;
@@ -34,6 +36,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import static com.example.ecom.common.event.EventConstants.MAIL_SEND;
+
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
@@ -47,7 +51,7 @@ class AuthServiceTest {
     private AuthRepository authRepository;
 
     @Mock
-    private MailService mailService;
+    private EventPublisher eventPublisher;
 
     @Mock
     private OtpService otpService;
@@ -174,8 +178,9 @@ class AuthServiceTest {
         verify(passwordEncoder).encode(RAW_PASSWORD);
         verify(authRepository).save(any(User.class));
         verify(otpService).createOtp(any(User.class), eq(OtpType.SIGNUP));
-        verify(mailService).sendEmailAsync(eq(USER_EMAIL), eq(AuthService.SIGNUP_MAIL_SUBJECT),
-                eq(AuthService.SIGNUP_MAIL_TEXT + 123456));
+        verify(eventPublisher).publish(eq(EventConstants.SOURCE_AUTH), eq(MAIL_SEND),
+                eq(new MailMessageDto(USER_EMAIL, AuthService.SIGNUP_MAIL_SUBJECT,
+                        AuthService.SIGNUP_MAIL_TEXT + 123456)));
     }
 
     @Test
@@ -213,8 +218,9 @@ class AuthServiceTest {
         authService.resendSignupOtp(request);
 
         verify(otpService).getOrCreateOtp(notVerifiedUser, OtpType.SIGNUP);
-        verify(mailService).sendEmailAsync(eq(USER_EMAIL), eq(AuthService.SIGNUP_MAIL_SUBJECT),
-                eq(AuthService.SIGNUP_MAIL_TEXT + 654321));
+        verify(eventPublisher).publish(eq(EventConstants.SOURCE_AUTH), eq(MAIL_SEND),
+                eq(new MailMessageDto(USER_EMAIL, AuthService.SIGNUP_MAIL_SUBJECT,
+                        AuthService.SIGNUP_MAIL_TEXT + 654321)));
     }
 
     @Test
@@ -323,8 +329,9 @@ class AuthServiceTest {
         authService.forgetPassword(request);
 
         verify(otpService).getOrCreateOtp(activeUser, OtpType.FORGET);
-        verify(mailService).sendEmailAsync(eq(USER_EMAIL), eq(AuthService.FORGET_PASSWORD_MAIL_SUBJECT),
-                eq(AuthService.FORGET_PASSWORD_MAIL_TEXT + 999888));
+        verify(eventPublisher).publish(eq(EventConstants.SOURCE_AUTH), eq(MAIL_SEND),
+                eq(new MailMessageDto(USER_EMAIL, AuthService.FORGET_PASSWORD_MAIL_SUBJECT,
+                        AuthService.FORGET_PASSWORD_MAIL_TEXT + 999888)));
     }
 
     @Test

@@ -17,6 +17,8 @@ import com.example.ecom.common.client.order.OrderPaymentDto;
 import com.example.ecom.common.client.product.ProductClient;
 import com.example.ecom.common.client.product.ProductBasicDto;
 import com.example.ecom.common.client.stock.StockClient;
+import com.example.ecom.common.event.EventPublisher;
+import com.example.ecom.common.event.OrderStockReleaseEvent;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +41,7 @@ import static com.example.ecom.common.utils.DateUtils.resolveDates;
 import static com.example.ecom.common.utils.SecurityUtil.*;
 import static com.example.ecom.common.utils.Utils.getValidPageable;
 import static com.example.ecom.common.utils.Utils.isNull;
+import static com.example.ecom.common.event.EventConstants.*;
 
 import com.example.ecom.common.service.notification.NotificationService;
 
@@ -57,7 +60,11 @@ public class OrderService {
 
     private final NotificationService notificationService;
 
+    private final EventPublisher domainEventPublisher;
+
     private final OrderStatusHistoryRepository orderStatusHistoryRepository;
+
+    private final OrderRejectionService orderRejectionService;
 
     public Page<OrderListResponse> findAll(LocalDate fromDate, LocalDate toDate, OrderStatus status, String productName,
                                            CustomUserDetails userDetails, Pageable pageable) {
@@ -191,22 +198,14 @@ public class OrderService {
             throwAccessException(order.getUserId(), userDetails.getId(), "Order", order.getId());
         }
 
-        boolean stockReleased = false;
-        try {
-            restoreOrderStock(order);
-            stockReleased = true;
+        recordStatusChange(order, OrderStatus.PENDING, OrderStatus.CANCELLED, userDetails.getId(), "Order cancelled by customer");
+        order.setStatus(OrderStatus.CANCELLED);
+        Order saved = orderRepository.save(order);
 
-            recordStatusChange(order, OrderStatus.PENDING, OrderStatus.CANCELLED, userDetails.getId(), "Order cancelled by customer");
-            order.setStatus(OrderStatus.CANCELLED);
+        // Publish stock-release event AFTER transaction commits
+        publishStockReleaseEvent(order);
 
-            return new OrderResponse(orderRepository.save(order));
-        } catch (Exception e) {
-            if (stockReleased) {
-                log.error("CRITICAL: Stock released but cancel failed for order {}. " +
-                        "Manual reconciliation may be needed.", id, e);
-            }
-            throw e;
-        }
+        return new OrderResponse(saved);
     }
 
     @PreAuthorize("hasAnyAuthority(T(com.example.ecom.common.enums.Permission).ADMIN_ACCESS.getValue()," +
@@ -238,30 +237,29 @@ public class OrderService {
         }
 
         boolean stockConsumed = false;
-        boolean stockReleased = false;
         try {
             if (status == OrderStatus.ACCEPTED && order.getStatus() != OrderStatus.ACCEPTED) {
                 consumeStockForAcceptedOrder(order);
                 stockConsumed = true;
-            } else if ((status == OrderStatus.CANCELLED || status == OrderStatus.REJECTED || status == OrderStatus.RETURNED)
-                    && (order.getStatus() == OrderStatus.PENDING || order.getStatus() == OrderStatus.ACCEPTED || order.getStatus() == OrderStatus.SHIPPED)) {
-                restoreOrderStock(order);
-                stockReleased = true;
             }
 
             recordStatusChange(order, oldStatus, status, userDetails.getId(), "Status updated to " + status.getValue());
             order.setStatus(status);
 
-            return new OrderResponse(orderRepository.save(order));
-        } catch (Exception e) {
-            // Compensate: reverse the cross-service operation that succeeded
-            if (stockConsumed) {
-                log.warn("Compensating stock consumption for order {} due to: {}", id, e.getMessage());
-                compensateStockReservation(new ArrayList<>(order.getItems()));
+            Order saved = orderRepository.save(order);
+
+            // Publish stock-release event AFTER transaction commits (cancel/reject/return)
+            if ((status == OrderStatus.CANCELLED || status == OrderStatus.REJECTED || status == OrderStatus.RETURNED)
+                    && (oldStatus == OrderStatus.PENDING || oldStatus == OrderStatus.ACCEPTED || oldStatus == OrderStatus.SHIPPED)) {
+                publishStockReleaseEvent(order);
             }
-            if (stockReleased) {
-                log.error("CRITICAL: Stock released but order status update failed for order {}. " +
-                        "Manual reconciliation may be needed.", id, e);
+
+            return new OrderResponse(saved);
+        } catch (Exception e) {
+            if (stockConsumed) {
+                log.error("CRITICAL: Stock was consumed for order {} but order update failed: {}. " +
+                        "Manual reconciliation required — reservation is NOT released to prevent phantom stock.",
+                        id, e.getMessage(), e);
             }
             throw e;
         }
@@ -291,8 +289,9 @@ public class OrderService {
             orderRepository.save(order);
         } catch (Exception e) {
             if (stockConsumed) {
-                log.warn("Compensating stock consumption for prepayment order {} due to: {}", id, e.getMessage());
-                compensateStockReservation(new ArrayList<>(order.getItems()));
+                log.error("CRITICAL: Stock was consumed for prepayment order {} but order save failed: {}. " +
+                        "Manual reconciliation required — reservation is NOT released to prevent phantom stock.",
+                        id, e.getMessage(), e);
             }
             throw e;
         }
@@ -310,25 +309,13 @@ public class OrderService {
             log.info("Notified connected admins about {} pending orders", ordersToNotify.size());
         }
 
-        // 2. Reject orders > 2 days old
+        // 2. Reject orders > 2 days old (each in its own transaction via OrderRejectionService)
         List<Order> ordersToReject = orderRepository.findAllByStatusAndCreatedAtBefore(OrderStatus.PENDING, twoDaysAgo);
         ordersToReject.forEach(order -> {
-            log.info("Rejecting order {} due to inactivity (more than 2 days old)", order.getId());
-
-            boolean stockReleased = false;
             try {
-                restoreOrderStock(order);
-                stockReleased = true;
-                recordStatusChange(order, OrderStatus.PENDING, OrderStatus.REJECTED, null, "Auto-rejected due to inactivity (>2 days)");
-                order.setStatus(OrderStatus.REJECTED);
-                orderRepository.save(order);
+                orderRejectionService.rejectSingleOrder(order);
             } catch (Exception e) {
-                if (stockReleased) {
-                    log.error("CRITICAL: Stock released but auto-reject failed for order {}. " +
-                            "Manual reconciliation required.", order.getId(), e);
-                } else {
-                    log.error("Failed to auto-reject order {}: {}", order.getId(), e.getMessage());
-                }
+                log.error("Failed to auto-reject order {}: {}", order.getId(), e.getMessage(), e);
             }
         });
     }
@@ -342,8 +329,20 @@ public class OrderService {
         }
     }
 
-    private void restoreOrderStock(Order order) {
-        order.getItems().forEach(item -> productClient.releaseStock(item.getProductId(), item.getQuantity()));
+    /**
+     * Publishes an async stock-release event after the current transaction commits.
+     * The product-service consumer will handle the actual stock restoration.
+     */
+    private void publishStockReleaseEvent(Order order) {
+        List<OrderStockReleaseEvent.Item> items = order.getItems().stream()
+                .map(item -> new OrderStockReleaseEvent.Item(item.getProductId(), item.getQuantity()))
+                .toList();
+
+        domainEventPublisher.publish(
+                SOURCE_ORDER,
+                ORDER_STOCK_RELEASE,
+                new OrderStockReleaseEvent(order.getId(), items)
+        );
     }
 
     /**

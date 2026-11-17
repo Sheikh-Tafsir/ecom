@@ -3,15 +3,18 @@ package com.example.ecom.common.service.notification;
 import com.example.ecom.common.enums.NotificationType;
 import com.example.ecom.common.enums.Permission;
 import com.example.ecom.common.dto.NotificationEvent;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.ecom.common.event.EventPublisher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
+import static com.example.ecom.common.event.EventConstants.NOTIFICATION;
+import static com.example.ecom.common.event.EventConstants.SOURCE_NOTIFICATION;
 import static com.example.ecom.common.utils.Utils.isEmpty;
 import static org.springframework.util.StringUtils.hasText;
 
@@ -19,19 +22,15 @@ import static org.springframework.util.StringUtils.hasText;
 @Service
 public class NotificationService {
 
-    public static final String NOTIFICATION_CHANNEL = "ecom:notifications";
+    private final EventPublisher eventPublisher;
 
-    private final ObjectMapper objectMapper;
-    private final NotificationPublisher notificationPublisher;
-
-    public NotificationService(ObjectMapper objectMapper) {
-        this(objectMapper, null);
+    public NotificationService() {
+        this(null);
     }
 
     @Autowired
-    public NotificationService(ObjectMapper objectMapper, @Nullable NotificationPublisher notificationPublisher) {
-        this.objectMapper = objectMapper;
-        this.notificationPublisher = notificationPublisher;
+    public NotificationService(@Nullable @Qualifier("redisEventPublisher") EventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
     public void sendToUser(UUID userId, String message, NotificationType notificationType) {
@@ -69,13 +68,13 @@ public class NotificationService {
     }
 
     private void publish(NotificationEvent event) {
-        if (notificationPublisher == null) {
-            log.info("NotificationPublisher is null (Redis not enabled). Skipping notification: {}", event);
+        if (eventPublisher == null) {
+            log.info("EventPublisher is null. Skipping notification: {}", event);
             return;
         }
 
         try {
-            notificationPublisher.publish(objectMapper.writeValueAsString(event));
+            eventPublisher.publish(SOURCE_NOTIFICATION, NOTIFICATION, event);
         } catch (Exception e) {
             log.warn("Failed to publish notification: {}", e.getMessage(), e);
         }

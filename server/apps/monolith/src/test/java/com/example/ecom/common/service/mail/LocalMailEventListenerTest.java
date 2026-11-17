@@ -11,21 +11,21 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-class SynchronousMailEventPublisherTest {
+class LocalMailEventListenerTest {
 
     @Mock
     private MailService mailService;
 
     @InjectMocks
-    private SynchronousMailEventPublisher synchronousMailEventPublisher;
+    private LocalMailEventListener listener;
 
     @Test
-    @DisplayName("send should call MailService.sendEmailAsync directly, bypassing MQ")
-    void send_callsMailServiceDirectly() {
-        MailMessageDto dto = new MailMessageDto("user@test.com", "Reset Password", "Click here");
+    @DisplayName("onMailEvent should delegate to mailService.sendEmailAsync")
+    void onMailEvent_delegatesToMailService() {
+        MailMessageDto mail = new MailMessageDto("test@example.com", "Subject", "Body");
 
-        synchronousMailEventPublisher.send(dto);
+        listener.onMailEvent(mail);
 
-        verify(mailService).sendEmailAsync("user@test.com", "Reset Password", "Click here");
+        verify(mailService).sendEmailAsync("test@example.com", "Subject", "Body");
     }
 }
